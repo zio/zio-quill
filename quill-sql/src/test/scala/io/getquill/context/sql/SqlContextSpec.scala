@@ -21,7 +21,7 @@ class SqlContextSpec extends Spec {
         qr1.filter(t => t.i == lift(1)).update(t => t.l -> lift(2L))
       }
       val mirror = testContext.run(q)
-      mirror.string mustEqual "UPDATE TestEntity SET l = ? WHERE i = ?"
+      mirror.string mustEqual "UPDATE TestEntity AS t SET l = ? WHERE t.i = ?"
       mirror.prepareRow mustEqual Row(2L, 1)
     }
     "filter.map" in {
@@ -53,6 +53,12 @@ class SqlContextSpec extends Spec {
 
       type Encoder[T] = BaseEncoder[T]
       type Decoder[T] = BaseDecoder[T]
+
+      override type NullChecker = LocalNullChecker
+      class LocalNullChecker extends BaseNullChecker {
+        override def apply(index: Index, row: List[Any]): Boolean = row(index) == null
+      }
+      implicit val nullChecker: NullChecker = new LocalNullChecker()
 
       override def close = ()
 

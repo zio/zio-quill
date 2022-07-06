@@ -1,13 +1,11 @@
 package io.getquill.sqlite
 
-import io.getquill.{ Prefix, ZioSpec }
-import zio.{ Task, ZIO, ZLayer }
-import io.getquill.context.ZioJdbc._
+import io.getquill.ZioSpec
+import zio.{ ZIO, ZLayer }
 import javax.sql.DataSource
 
 class ZioJdbcContextSpec extends ZioSpec {
 
-  def prefix = Prefix("testSqliteDB")
   val context = testContext
   import testContext._
 
@@ -51,13 +49,13 @@ class ZioJdbcContextSpec extends ZioSpec {
             testContext.transaction {
               ZIO.collectAll(Seq(
                 testContext.run(qr1.insert(_.i -> 18)),
-                Task {
+                ZIO.attempt {
                   throw new IllegalStateException
                 }
               ))
             }
         }.catchSome {
-          case e: Exception => Task(e.getClass.getSimpleName)
+          case e: Exception => ZIO.attempt(e.getClass.getSimpleName)
         }
         r <- testContext.run(qr1)
       } yield (e, r.isEmpty)).runSyncUnsafe() mustEqual (("IllegalStateException", true))
@@ -72,7 +70,7 @@ class ZioJdbcContextSpec extends ZioSpec {
     "prepare" in {
       testContext.prepareParams(
         "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
-      ).onDataSource.runSyncUnsafe() mustEqual List("127", "'Sarah'")
+      ).runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }
   }
 }

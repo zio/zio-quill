@@ -5,11 +5,6 @@ import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly
 
-trait Quoted[+T] {
-  def ast: Ast
-  override def toString: String = ast.toString
-}
-
 /**
  * A Quill-Action-Concept centrally defines Quill Query, Insert, Update, Delete, etc... actions.
  * This ZIO-inspired construct makes it easier to reason about Quoted actions
@@ -60,6 +55,7 @@ sealed trait Query[+T] extends QAC[Nothing, T] {
   def contains[B >: T](value: B): Boolean = NonQuotedException()
 
   def distinct: Query[T] = NonQuotedException()
+  def distinctOn[R](f: T => R): Query[T] = NonQuotedException()
 
   def nested: Query[T] = NonQuotedException()
 
@@ -105,6 +101,9 @@ sealed trait Insert[E] extends QAC[E, Nothing] with Action[E] {
   def returningGenerated[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
+  def returningMany[R](f: E => R): ActionReturning[E, List[R]] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
   def onConflictIgnore: Insert[E] = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
@@ -139,11 +138,17 @@ sealed trait ActionReturning[E, +Output] extends QAC[E, Output] with Action[E]
 sealed trait Update[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
+  def returningMany[R](f: E => R): ActionReturning[E, List[R]] = NonQuotedException()
 }
 
 sealed trait Delete[E] extends QAC[E, Nothing] with Action[E] {
   @compileTimeOnly(NonQuotedException.message)
   def returning[R](f: E => R): ActionReturning[E, R] = NonQuotedException()
+
+  @compileTimeOnly(NonQuotedException.message)
+  def returningMany[R](f: E => R): ActionReturning[E, List[R]] = NonQuotedException()
 }
 
 sealed trait BatchAction[+A <: QAC[_, _] with Action[_]]

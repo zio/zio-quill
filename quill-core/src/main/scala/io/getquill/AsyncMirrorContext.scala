@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.{ ExecutionInfo, RowContext, StandardContext, TranslateContext }
+import io.getquill.context.{ Context, ContextVerbTranslate, ExecutionInfo, RowContext }
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSession, Row }
 
 import scala.concurrent.Future
@@ -14,9 +14,9 @@ import scala.util.Failure
 import scala.util.Success
 
 class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
-  extends StandardContext[Idiom, Naming]
+  extends Context[Idiom, Naming]
   with RowContext
-  with TranslateContext
+  with ContextVerbTranslate
   with MirrorEncoders
   with MirrorDecoders
   with ScalaFutureIOMonad {
@@ -29,12 +29,19 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
   override type RunQueryResult[T] = QueryMirror[T]
   override type RunQuerySingleResult[T] = QueryMirror[T]
   override type RunActionResult = ActionMirror
-  override type RunActionReturningResult[T] = ActionReturningMirror[T]
+  override type RunActionReturningResult[T] = ActionReturningMirror[_, T]
   override type RunBatchActionResult = BatchActionMirror
   override type RunBatchActionReturningResult[T] = BatchActionReturningMirror[T]
   override type Runner = Unit
+  override type NullChecker = MirrorNullChecker
 
   override def close = ()
+
+  class MirrorNullChecker extends BaseNullChecker {
+    override def apply(index: Index, row: Row): Boolean = row.nullAt(index)
+  }
+
+  implicit val nullChecker: NullChecker = new MirrorNullChecker()
 
   def probe(statement: String): Try[_] =
     if (statement.contains("Fail"))
@@ -60,7 +67,7 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
 
   case class ActionMirror(string: String, prepareRow: PrepareRow, info: ExecutionInfo)(implicit val ec: ExecutionContext)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)(implicit val ec: ExecutionContext)
+  case class ActionReturningMirror[T, R](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)(implicit val ec: ExecutionContext)
 
   case class BatchActionMirror(groups: List[(String, List[Row])], info: ExecutionInfo)(implicit val ec: ExecutionContext)
 
@@ -78,7 +85,10 @@ class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom
     Future(ActionMirror(string, prepare(Row(), session)._2, executionInfo))
 
   def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
-    Future(ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo))
+    Future(ActionReturningMirror[O, O](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo))
+
+  def executeActionReturningMany[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
+    Future(ActionReturningMirror[O, List[O]](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo))
 
   def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future {

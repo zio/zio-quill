@@ -15,15 +15,17 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.util.ContextLogger
 import io.getquill.monad.ScalaFutureIOMonad
-import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.context.{ Context, ContextVerbTranslate, ExecutionInfo }
 import kotlin.jvm.functions.Function1
 
+import java.time.ZoneId
+import java.util.TimeZone
 import scala.compat.java8.FutureConverters
 import scala.jdk.CollectionConverters._
 
 abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
   extends Context[D, N]
-  with TranslateContext
+  with ContextVerbTranslate
   with SqlContext[D, N]
   with Decoders
   with Encoders
@@ -42,7 +44,16 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = Seq[Long]
   override type RunBatchActionReturningResult[T] = Seq[T]
+  override type NullChecker = JasyncNullChecker
   type Runner = Unit
+
+  protected val dateTimeZone = ZoneId.systemDefault()
+
+  class JasyncNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: RowData): Boolean =
+      row.get(index) == null
+  }
+  implicit val nullChecker: NullChecker = new JasyncNullChecker()
 
   implicit def toFuture[T](cf: CompletableFuture[T]): Future[T] = FutureConverters.toScala(cf)
   implicit def toCompletableFuture[T](f: Future[T]): CompletableFuture[T] = FutureConverters.toJava(f).asInstanceOf[CompletableFuture[T]]
@@ -61,7 +72,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
       case other                                   => f(pool)
     }
 
-  protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: QueryResult): O
+  protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(result: QueryResult): List[O]
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
@@ -89,7 +100,7 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[T] =
-    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
+    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult(sql, _))
 
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[Long] = {
     val (params, values) = prepare(Nil, ())
@@ -97,7 +108,10 @@ abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteCo
     withConnection(_.sendPreparedStatement(sql, values.asJava)).map(_.getRowsAffected)
   }
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[T] =
+    executeActionReturningMany[T](sql, prepare, extractor, returningAction)(info, dc).map(handleSingleResult(sql, _))
+
+  def executeActionReturningMany[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[List[T]] = {
     val expanded = expandAction(sql, returningAction)
     val (params, values) = prepare(Nil, ())
     logger.logQuery(sql, params)

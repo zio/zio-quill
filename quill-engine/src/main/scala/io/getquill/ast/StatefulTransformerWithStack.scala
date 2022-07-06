@@ -135,6 +135,10 @@ trait StatefulTransformerWithStack[T] {
       case OptionGetOrNull(a) =>
         val (at, att) = apply(a)(History(o))
         (OptionGetOrNull(at), att)
+      case FilterIfDefined(a, b, c) =>
+        val (at, att) = apply(a)(History(o))
+        val (ct, ctt) = att.apply(c)(History(o))
+        (FilterIfDefined(at, b, ct), ctt)
       case OptionNone(_) => (o, this)
     }
 
@@ -212,6 +216,10 @@ trait StatefulTransformerWithStack[T] {
       case Distinct(a) =>
         val (at, att) = apply(a)(History(e))
         (Distinct(at), att)
+      case DistinctOn(a, b, c) =>
+        val (at, att) = apply(a)(History(e))
+        val (ct, ctt) = att.apply(c)(History(e))
+        (DistinctOn(at, b, ct), ctt)
       case Nested(a) =>
         val (at, att) = apply(a)(History(e))
         (Nested(at), att)

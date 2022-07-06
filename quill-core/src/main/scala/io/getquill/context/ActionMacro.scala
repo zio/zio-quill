@@ -78,6 +78,20 @@ class ActionMacro(val c: MacroContext)
       """
     }
 
+  def runActionReturningMany[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    c.untypecheck { // TODO return expanded.executionType since we now have this info
+      q"""
+        ..${EnableReflectiveCalls(c)}
+        val expanded = ${expand(extractAst(quoted), inferQuat(t.tpe))}
+        ${c.prefix}.executeActionReturningMany(
+          expanded.string,
+          expanded.prepare,
+          ${returningExtractor[T]},
+          $returningColumn
+        )(io.getquill.context.ExecutionInfo.unknown, ())
+      """
+    }
+
   def runBatchAction(quoted: Tree): Tree =
     batchAction(quoted, "executeBatchAction")
 

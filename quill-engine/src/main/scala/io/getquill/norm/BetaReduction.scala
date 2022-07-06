@@ -144,6 +144,8 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
         OptionForall(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
       case OptionExists(a, b, c) =>
         OptionExists(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
+      case FilterIfDefined(a, b, c) =>
+        FilterIfDefined(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
       case other =>
         super.apply(other)
     }
@@ -180,6 +182,8 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
         Join(t, apply(a), apply(b), iA, iB, BetaReduction(map - iA - iB, typeBehavior, emptyBehavior)(on))
       case FlatJoin(t, a, iA, on) =>
         FlatJoin(t, apply(a), iA, BetaReduction(map - iA, typeBehavior, emptyBehavior)(on))
+      case DistinctOn(a, b, c) =>
+        DistinctOn(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
       case _: Take | _: Entity | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
     }

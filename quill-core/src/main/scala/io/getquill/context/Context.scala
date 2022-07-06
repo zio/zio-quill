@@ -1,36 +1,16 @@
 package io.getquill.context
 
+import com.typesafe.scalalogging.Logger
+
 import scala.language.higherKinds
 import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
+import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
 
 import java.io.Closeable
 import scala.util.Try
 import io.getquill.{ Action, ActionReturning, BatchAction, NamingStrategy, Query, Quoted }
-
-trait StagedPrepare extends PrepareContext {
-  type PrepareQueryResult = Session => Result[PrepareRow]
-  type PrepareActionResult = Session => Result[PrepareRow]
-  type PrepareBatchActionResult = Session => Result[List[PrepareRow]]
-}
-
-trait PrepareContext extends CoreDsl {
-  type Result[T]
-  type Session
-
-  type PrepareQueryResult //Usually: Session => Result[PrepareRow]
-  type PrepareActionResult //Usually: Session => Result[PrepareRow]
-  type PrepareBatchActionResult //Usually: Session => Result[List[PrepareRow]]
-
-  def prepare[T](quoted: Quoted[Query[T]]): PrepareQueryResult = macro QueryMacro.prepareQuery[T]
-  def prepare(quoted: Quoted[Action[_]]): PrepareActionResult = macro ActionMacro.prepareAction
-  def prepare(quoted: Quoted[BatchAction[Action[_]]]): PrepareBatchActionResult = macro ActionMacro.prepareBatchAction
-}
-
-trait StandardContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy]
-  extends Context[Idiom, Naming]
-  with StagedPrepare
 
 trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends RowContext
   with Closeable
@@ -55,13 +35,24 @@ trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extend
   def run[T](quoted: Quoted[Query[T]]): Result[RunQueryResult[T]] = macro QueryMacro.runQuery[T]
 
   def run(quoted: Quoted[Action[_]]): Result[RunActionResult] = macro ActionMacro.runAction
+  def run[T](quoted: Quoted[ActionReturning[_, List[T]]]): Result[RunActionReturningResult[List[T]]] = macro ActionMacro.runActionReturningMany[T]
   def run[T](quoted: Quoted[ActionReturning[_, T]]): Result[RunActionReturningResult[T]] = macro ActionMacro.runActionReturning[T]
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
 
-  protected def handleSingleResult[T](list: List[T]) =
+  protected def handleSingleResult[T](sql: String, list: List[T]) =
     list match {
+      case Nil =>
+        fail(s"Expected a single result from the query: `${sql}` but got a empty result-set!")
       case value :: Nil => value
-      case other        => fail(s"Expected a single result but got $other")
+      case other =>
+        io.getquill.log.ContextLog(s"Expected a single result from the query: `${sql}` but got: ${abbrevList(other)}. Only the 1st result will be returned!")
+        other.head
     }
+
+  private def abbrevList[T](list: List[T]) =
+    if (list.length > 10)
+      list.take(10).mkString("List(", ",", "...)")
+    else
+      list.toString()
 }

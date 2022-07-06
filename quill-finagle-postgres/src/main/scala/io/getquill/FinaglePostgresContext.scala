@@ -9,12 +9,12 @@ import io.getquill.context.sql.SqlContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.util.Try
-import io.getquill.context.{ Context, ExecutionInfo, TranslateContext }
+import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
 import io.getquill.monad.TwitterFutureIOMonad
 
 class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)
   extends Context[FinaglePostgresDialect, N]
-  with TranslateContext
+  with ContextVerbTranslate
   with SqlContext[FinaglePostgresDialect, N]
   with FinaglePostgresEncoders
   with FinaglePostgresDecoders
@@ -42,6 +42,13 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
   type Runner = Unit
+  override type NullChecker = LocalNullChecker
+  class LocalNullChecker extends BaseNullChecker {
+    override def apply(index: Int, row: Row): Boolean = {
+      row.getAnyOption(index) == None
+    }
+  }
+  implicit val nullChecker: LocalNullChecker = new LocalNullChecker()
 
   private val currentClient = new Local[PostgresClient]
 
@@ -82,7 +89,7 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
   }
 
   def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Future[T] =
-    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult)
+    executeQuery(sql, prepare, extractor)(info, dc).map(handleSingleResult(sql, _))
 
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Future[Long] = {
     val (params, prepared) = prepare(Nil, ())
@@ -102,10 +109,13 @@ class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: Postgre
     }
   }.map(_.flatten.toList)
 
-  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Future[T] = {
+  def executeActionReturning[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Future[T] =
+    executeActionReturningMany[T](sql, prepare, extractor, returningAction)(info, dc).map(handleSingleResult(sql, _))
+
+  def executeActionReturningMany[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T], returningAction: ReturnAction)(info: ExecutionInfo, dc: Runner): Future[List[T]] = {
     val (params, prepared) = prepare(Nil, ())
     logger.logQuery(sql, params)
-    withClient(_.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(row => extractor(row, ()))).map(v => handleSingleResult(v.toList))
+    withClient(_.prepareAndQuery(expandAction(sql, returningAction), prepared: _*)(row => extractor(row, ()))).map(_.toList)
   }
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Future[List[T]] =

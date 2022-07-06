@@ -7,7 +7,7 @@ trait SqlDsl {
   this: SqlContext[_, _] =>
 
   implicit class Like(s1: String) {
-    def like(s2: String) = quote(infix"$s1 like $s2".as[Boolean])
+    def like(s2: String) = quote(infix"$s1 like $s2".pure.asCondition)
   }
 
   implicit class ForUpdate[T](q: Query[T]) {

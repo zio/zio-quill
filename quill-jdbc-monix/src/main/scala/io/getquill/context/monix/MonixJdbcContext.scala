@@ -4,7 +4,7 @@ import java.io.Closeable
 import java.sql.{ Array => _, _ }
 import cats.effect.ExitCase
 import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.context.{ ExecutionInfo, ProtoContext, StreamingContext }
+import io.getquill.context.{ ExecutionInfo, ProtoContext, ContextVerbStream }
 import io.getquill.context.jdbc.JdbcContextBase
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -28,7 +28,7 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
 ) extends MonixContext[Dialect, Naming]
   with ProtoContext[Dialect, Naming]
   with JdbcContextBase[Dialect, Naming]
-  with StreamingContext[Dialect, Naming]
+  with ContextVerbStream[Dialect, Naming]
   with MonixTranslateContext {
 
   override private[getquill] val logger = ContextLogger(classOf[MonixJdbcContext[_, _]])
@@ -49,6 +49,8 @@ abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
     super.executeQuerySingle(sql, prepare, extractor)(info, dc)
   override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Task[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
+  override def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Task[List[O]] =
+    super.executeActionReturningMany(sql, prepare, extractor, returningBehavior)(info, dc)
   override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Task[List[Long]] =
     super.executeBatchAction(groups)(info, dc)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Task[List[T]] =

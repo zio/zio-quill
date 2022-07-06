@@ -16,7 +16,7 @@ class SqlActionMacroSpec extends Spec {
           qr1.filter(t => t.s == null).update(_.s -> "s")
         }
         testContext.run(q).string mustEqual
-          "UPDATE TestEntity SET s = 's' WHERE s IS NULL"
+          "UPDATE TestEntity AS t SET s = 's' WHERE t.s IS NULL"
       }
       "insert" in {
         val q = quote {
@@ -30,7 +30,7 @@ class SqlActionMacroSpec extends Spec {
           qr1.filter(t => t.s == null).delete
         }
         testContext.run(q).string mustEqual
-          "DELETE FROM TestEntity WHERE s IS NULL"
+          "DELETE FROM TestEntity AS t WHERE t.s IS NULL"
       }
     }
     "with bindings" - {
@@ -146,6 +146,15 @@ class SqlActionMacroSpec extends Spec {
         import ctx._
         val q = quote {
           qr1.insertValue(lift(TestEntity("s", 0, 1L, None, true))).returning(r => r)
+        }
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING s, i, l, o, b"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "returning many clause - record" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.insertValue(lift(TestEntity("s", 0, 1L, None, true))).returningMany(r => r)
         }
         val mirror = ctx.run(q)
         mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING s, i, l, o, b"
@@ -733,6 +742,16 @@ class SqlActionMacroSpec extends Spec {
         mirror.string mustEqual "UPDATE TestEntity SET s = 's' RETURNING l"
         mirror.returningBehavior mustEqual ReturnRecord
       }
+      "returning many clause - single" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.update(_.s -> "s").returningMany(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "UPDATE TestEntity SET s = 's' RETURNING l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
       "returning clause - multi" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
         import ctx._
         val q = quote {
@@ -944,6 +963,16 @@ class SqlActionMacroSpec extends Spec {
         import ctx._
         val q = quote {
           qr1.delete.returning(_.l)
+        }
+
+        val mirror = ctx.run(q)
+        mirror.string mustEqual "DELETE FROM TestEntity RETURNING l"
+        mirror.returningBehavior mustEqual ReturnRecord
+      }
+      "returning many clause - single" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        import ctx._
+        val q = quote {
+          qr1.delete.returningMany(_.l)
         }
 
         val mirror = ctx.run(q)

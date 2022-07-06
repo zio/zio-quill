@@ -5,7 +5,7 @@ import java.sql.{ Connection, PreparedStatement }
 import javax.sql.DataSource
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.context.{ ExecutionInfo, ProtoContext, TranslateContext }
+import io.getquill.context.{ ExecutionInfo, ProtoContext, ContextVerbTranslate }
 
 import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
@@ -14,7 +14,7 @@ import io.getquill.monad.SyncIOMonad
 abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
   extends JdbcContextBase[Dialect, Naming]
   with ProtoContext[Dialect, Naming]
-  with TranslateContext
+  with ContextVerbTranslate
   with SyncIOMonad {
 
   // Need to override these with same values as JdbcRunContext because SyncIOMonad imports them. The imported values need to be overridden
@@ -40,6 +40,8 @@ abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
     super.executeQuerySingle(sql, prepare, extractor)(executionInfo, dc)
   override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner): O =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(executionInfo, dc)
+  override def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(executionInfo: ExecutionInfo, dc: Runner): List[O] =
+    super.executeActionReturningMany(sql, prepare, extractor, returningBehavior)(executionInfo, dc)
   override def executeBatchAction(groups: List[BatchGroup])(executionInfo: ExecutionInfo, dc: Runner): List[Long] =
     super.executeBatchAction(groups)(executionInfo, dc)
   override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(executionInfo: ExecutionInfo, dc: Runner): List[T] =

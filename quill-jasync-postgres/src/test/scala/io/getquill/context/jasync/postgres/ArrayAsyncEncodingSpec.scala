@@ -5,7 +5,6 @@ import java.util.{ Date, UUID }
 
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -22,25 +21,6 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     baseEntityDeepCheck(actual, e)
   }
 
-  "Joda times" in {
-    case class JodaTimes(timestamps: Seq[JodaLocalDateTime], dates: Seq[JodaLocalDate])
-    val jE = JodaTimes(Seq(JodaLocalDateTime.now()), Seq(JodaLocalDate.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    await(ctx.run(jQ.insertValue(lift(jE))))
-    val actual = await(ctx.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
-    actual.dates mustBe jE.dates
-  }
-
-  "Joda times 2" in {
-    case class JodaTimes(timestamps: Seq[JodaDateTime])
-    val jE = JodaTimes(Seq(JodaDateTime.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    await(ctx.run(jQ.insertValue(lift(jE))))
-    val actual = await(ctx.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
-  }
-
   "Java8 times" in {
     case class Java8Times(timestamps: Seq[LocalDateTime], dates: Seq[LocalDate])
     val jE = Java8Times(Seq(LocalDateTime.now()), Seq(LocalDate.now()))
@@ -55,20 +35,6 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
     await(ctx.run(wrapQ.insertValue(lift(wrapE))))
     await(ctx.run(wrapQ)).head mustBe wrapE
-  }
-
-  "Catch invalid decoders" in {
-    val newCtx = new TestContext {
-      // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
-        arrayDecoder[LocalDate, LocalDate, Col](identity)
-    }
-    import newCtx._
-    await(newCtx.run(query[ArraysTestEntity].insertValue(lift(e))))
-    intercept[IllegalStateException] {
-      await(newCtx.run(query[ArraysTestEntity])).head mustBe e
-    }
-    newCtx.close()
   }
 
   "Arrays in where clause" in {

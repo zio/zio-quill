@@ -17,8 +17,8 @@ import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.{ Hidden, Visible }
 import io.getquill.quat._
 import io.getquill.util.Messages.TraceType
-import io.getquill.util.{ Interleave, Interpolator }
-import io.getquill.{ Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate, Quoted }
+import io.getquill.util.{ Interleave, Interpolator, Messages }
+import io.getquill.{ Quoted, Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate }
 
 trait Parsing extends ValueComputation with QuatMaking {
   this: Quotation =>
@@ -33,7 +33,13 @@ trait Parsing extends ValueComputation with QuatMaking {
 
     def apply(tree: Tree) =
       unapply(tree).getOrElse {
-        c.fail(s"Tree '$tree' can't be parsed to '${ct.runtimeClass.getSimpleName}'")
+        lazy val errorDetail =
+          if (Messages.errorDetail)
+            "\n============ Raw Tree ===========\n" + showRaw(tree)
+          else
+            ""
+
+        c.fail(s"Tree '$tree' can't be parsed to '${ct.runtimeClass.getSimpleName}'" + errorDetail)
       }
 
     def unapply(tree: Tree): Option[T] =
@@ -265,6 +271,10 @@ trait Parsing extends ValueComputation with QuatMaking {
           Distinct(other)
       }
     }
+
+    case q"$source.distinctOn[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
+      DistinctOn(astParser(source), identParser(alias), astParser(body))
+
     // .distinct should not be allowed after a flatjoin
     case q"$source.nested" if (is[DslQuery[Any]](source)) => {
       astParser(source) match {
@@ -296,15 +306,25 @@ trait Parsing extends ValueComputation with QuatMaking {
       PropertyAlias(path(prop), alias)
   }
 
+  // It seems that in recent version of quasiquotes, things like Ord.asc are not the same io.getquill.Ord.asc
+  // which may not be the same as getquill.Ord.asc. Need to cover these cases separately.
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
     case q"$pack.implicitOrd[$t]"           => AscNullsFirst
+    case q"implicitOrd[$t]"                 => AscNullsFirst
     case q"$pack.Ord.apply[..$t](..$elems)" => TupleOrdering(elems.map(orderingParser(_)))
+    case q"Ord.apply[..$t](..$elems)"       => TupleOrdering(elems.map(orderingParser(_)))
     case q"$pack.Ord.asc[$t]"               => Asc
+    case q"Ord.asc[$t]"                     => Asc
     case q"$pack.Ord.desc[$t]"              => Desc
+    case q"Ord.desc[$t]"                    => Desc
     case q"$pack.Ord.ascNullsFirst[$t]"     => AscNullsFirst
+    case q"Ord.ascNullsFirst[$t]"           => AscNullsFirst
     case q"$pack.Ord.descNullsFirst[$t]"    => DescNullsFirst
+    case q"Ord.descNullsFirst[$t]"          => DescNullsFirst
     case q"$pack.Ord.ascNullsLast[$t]"      => AscNullsLast
+    case q"Ord.ascNullsLast[$t]"            => AscNullsLast
     case q"$pack.Ord.descNullsLast[$t]"     => DescNullsLast
+    case q"Ord.descNullsLast[$t]"           => DescNullsLast
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Option[Ast])] = Parser[(JoinType, Ast, Option[Ast])] {
@@ -494,6 +514,13 @@ trait Parsing extends ValueComputation with QuatMaking {
         OptionTableForall(astParser(o), identParser(alias), astParser(body))
       } else {
         warnConditionalsExist(OptionForall(astParser(o), identParser(alias), astParser(body)))
+      }
+
+    case q"$prefix.NullableColumnExtensions[$nt]($o).filterIfDefined({($alias) => $body})" if is[Option[Any]](o) =>
+      if (isOptionEmbedded(o) || isOptionRowType(o)) {
+        c.fail("filterIfDefined only allowed on individual columns, not on case classes or tuples.")
+      } else {
+        warnConditionalsExist(FilterIfDefined(astParser(o), identParser(alias), astParser(body)))
       }
 
     // For column values
@@ -831,7 +858,7 @@ trait Parsing extends ValueComputation with QuatMaking {
       .headOption
   }
 
-  private[getquill] def idiomReturnCapability: ReturningCapability = {
+  private[getquill] def idiomReturnCapability: Option[ReturningCapability] = {
     val returnAfterInsertType =
       currentIdiom
         .toSeq
@@ -843,15 +870,13 @@ trait Parsing extends ValueComputation with QuatMaking {
         .flatten
 
     returnAfterInsertType match {
-      case Some(returnType) if (returnType =:= typeOf[ReturningClauseSupported]) => ReturningClauseSupported
-      case Some(returnType) if (returnType =:= typeOf[OutputClauseSupported]) => OutputClauseSupported
-      case Some(returnType) if (returnType =:= typeOf[ReturningSingleFieldSupported]) => ReturningSingleFieldSupported
-      case Some(returnType) if (returnType =:= typeOf[ReturningMultipleFieldSupported]) => ReturningMultipleFieldSupported
-      case Some(returnType) if (returnType =:= typeOf[ReturningNotSupported]) => ReturningNotSupported
-      // Since most SQL Dialects support returning a single field (that is auto-incrementing) allow a return
-      // of a single field in the case that a dialect is not actually specified. E.g. when SqlContext[_, _]
-      // is used to define `returning` clauses.
-      case other => ReturningSingleFieldSupported
+      case Some(returnType) if (returnType =:= typeOf[ReturningClauseSupported]) => Some(ReturningClauseSupported)
+      case Some(returnType) if (returnType =:= typeOf[OutputClauseSupported]) => Some(OutputClauseSupported)
+      case Some(returnType) if (returnType =:= typeOf[ReturningSingleFieldSupported]) => Some(ReturningSingleFieldSupported)
+      case Some(returnType) if (returnType =:= typeOf[ReturningMultipleFieldSupported]) => Some(ReturningMultipleFieldSupported)
+      case Some(returnType) if (returnType =:= typeOf[ReturningNotSupported]) => Some(ReturningNotSupported)
+      // If there's no idiom selected, return None and this error check shouldn't be done
+      case other => None
     }
   }
 
@@ -892,6 +917,24 @@ trait Parsing extends ValueComputation with QuatMaking {
     }
   }
 
+  private def verifyCapability(clauseType: String) =
+    // Verify that the idiom supports this type of returning clause
+    idiomReturnCapability match {
+      case Some(ReturningMultipleFieldSupported) | Some(ReturningClauseSupported) | Some(OutputClauseSupported) =>
+      case Some(ReturningSingleFieldSupported) =>
+        c.fail(
+          s"The '${clauseType}' clause is not supported by the ${currentIdiom.getOrElse("specified")} idiom.\n" +
+            s"You can use 'returningGenerated' with this idiom but only for a single return-value."
+        )
+      case Some(ReturningNotSupported) =>
+        c.fail(s"The '${clauseType}' clause are not supported by the ${currentIdiom.getOrElse("specified")} idiom.")
+      // IF there is no returning capability specified it means we probably don't have a dialect specified
+      // i.g. the context is SqlContext[_, _] which means we shouldn't do any verification because the
+      // context that is eventually plugged in could be any context that has any kind of returning-idiom support
+      // and we don't know what it will be.
+      case None =>
+    }
+
   // (Query[Person]) example - query[Person] or query[Person].filter(p => p.name == "Jack")
   // (Action[Person] example - (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123)
   val actionParser: Parser[Ast] = Parser[Ast] {
@@ -917,16 +960,16 @@ trait Parsing extends ValueComputation with QuatMaking {
     case q"$action.returning[$r](($alias) => $body)" =>
       val ident = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
-      // Verify that the idiom supports this type of returning clause
-      idiomReturnCapability match {
-        case ReturningMultipleFieldSupported | ReturningClauseSupported | OutputClauseSupported =>
-        case ReturningSingleFieldSupported =>
-          c.fail(s"The 'returning' clause is not supported by the ${currentIdiom.getOrElse("specified")} idiom. Use 'returningGenerated' instead.")
-        case ReturningNotSupported =>
-          c.fail(s"The 'returning' or 'returningGenerated' clauses are not supported by the ${currentIdiom.getOrElse("specified")} idiom.")
-      }
-      // Verify that the AST in the returning-body is valid
-      idiomReturnCapability.verifyAst(bodyAst)
+      verifyCapability("returning")
+      idiomReturnCapability.foreach(_.verifyAst(bodyAst)) // Verify that the AST in the returning-body is valid
+      Returning(astParser(action), ident, bodyAst)
+
+    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returningMany(p => (p.id, p.age))
+    case q"$action.returningMany[$r](($alias) => $body)" =>
+      val ident = identParser(alias)
+      val bodyAst = reprocessReturnClause(ident, astParser(body), action)
+      verifyCapability("returningMany")
+      idiomReturnCapability.foreach(_.verifyAst(bodyAst)) // Verify that the AST in the returning-body is valid
       Returning(astParser(action), ident, bodyAst)
 
     // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returningGenerated(p => (p.id, p.otherGeneratedProp))
@@ -935,12 +978,12 @@ trait Parsing extends ValueComputation with QuatMaking {
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
       // Verify that the idiom supports this type of returning clause
       idiomReturnCapability match {
-        case ReturningNotSupported =>
+        case Some(ReturningNotSupported) =>
           c.fail(s"The 'returning' or 'returningGenerated' clauses are not supported by the ${currentIdiom.getOrElse("specified")} idiom.")
         case _ =>
       }
       // Verify that the AST in the returning-body is valid
-      idiomReturnCapability.verifyAst(bodyAst)
+      idiomReturnCapability.foreach(_.verifyAst(bodyAst))
       ReturningGenerated(astParser(action), ident, bodyAst)
 
     // Batch Action (https://getquill.io/#quotation-actions-batch-insert)

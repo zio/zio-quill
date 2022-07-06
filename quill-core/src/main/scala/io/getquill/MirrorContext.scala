@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSession, Row }
-import io.getquill.context.{ ExecutionInfo, ProtoContext, StandardContext, TranslateContext }
+import io.getquill.context.{ Context, ContextVerbPrepareLambda, ContextVerbTranslate, ExecutionInfo, ProtoContext }
 import io.getquill.idiom.{ Idiom => BaseIdiom }
 import io.getquill.monad.SyncIOMonad
 
@@ -10,10 +10,20 @@ import scala.util.{ Failure, Success, Try }
 object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
 
+/**
+ * This is supposed to emulate how Row retrieval works in JDBC
+ * Int JDBC, ResultSet won't ever actually have Option values inside, so the actual option-decoder
+ * needs to understand that fact e.g. `Deocder[Option[Int]](java.sql.ResultSet(foo:1, etc)).getInt(1)`* and wrap it into a Optional value
+ * for the equivalent row implementation: `Deocder[Option[Int]](Row(foo:1, etc)).apply(1)`.
+ * (*note that java.sql.ResultSet actually doesn't have this syntax because it isn't a product).
+ * Similarly, when doing `ResultSet(foo:null /*Expecting an int*/, etc).getInt(1)` the result will be 0 as opposed to throwing
+ * a NPE as would be the scala expectation. So we need to do `Row(foo:null /*Expecting an int*/, etc).apply(1)` do the same thing.
+ */
 class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
-  extends StandardContext[Idiom, Naming]
+  extends Context[Idiom, Naming]
   with ProtoContext[Idiom, Naming]
-  with TranslateContext
+  with ContextVerbTranslate
+  with ContextVerbPrepareLambda
   with MirrorEncoders
   with MirrorDecoders
   with SyncIOMonad {
@@ -26,10 +36,15 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
   override type RunQueryResult[T] = QueryMirror[T]
   override type RunQuerySingleResult[T] = QueryMirror[T]
   override type RunActionResult = ActionMirror
-  override type RunActionReturningResult[T] = ActionReturningMirror[T]
+  override type RunActionReturningResult[T] = ActionReturningMirror[_, T]
   override type RunBatchActionResult = BatchActionMirror
   override type RunBatchActionReturningResult[T] = BatchActionReturningMirror[T]
   override type Session = MirrorSession
+  override type NullChecker = MirrorNullChecker
+  class MirrorNullChecker extends BaseNullChecker {
+    override def apply(index: Index, row: Row): Boolean = row.nullAt(index)
+  }
+  implicit val nullChecker: NullChecker = new MirrorNullChecker()
 
   override def close = ()
 
@@ -43,7 +58,7 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
 
   case class ActionMirror(string: String, prepareRow: PrepareRow, info: ExecutionInfo)
 
-  case class ActionReturningMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)
+  case class ActionReturningMirror[T, R](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)
 
   case class BatchActionMirror(groups: List[(String, List[Row])], info: ExecutionInfo)
 
@@ -67,7 +82,10 @@ class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idi
     ActionMirror(string, prepare(Row(), session)._2, info)
 
   def executeActionReturning[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner) =
-    ActionReturningMirror[O](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
+    ActionReturningMirror[O, O](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
+
+  def executeActionReturningMany[O](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner) =
+    ActionReturningMirror[O, List[O]](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner) =
     BatchActionMirror(

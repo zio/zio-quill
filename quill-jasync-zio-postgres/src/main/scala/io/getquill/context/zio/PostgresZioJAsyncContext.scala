@@ -15,11 +15,8 @@ class PostgresZioJAsyncContext[N <: NamingStrategy](naming: N)
   with ArrayDecoders
   with UUIDObjectEncoding {
 
-  override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O =
-    result.getRows.asScala
-      .headOption
-      .map(row => returningExtractor(row, ()))
-      .getOrElse(fail("This is a bug. Cannot extract returning value."))
+  override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): List[O] =
+    result.getRows.asScala.toList.map(row => returningExtractor(row, ()))
 
   override protected def expandAction(sql: String, returningAction: ReturnAction): String =
     returningAction match {

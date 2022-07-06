@@ -1,13 +1,12 @@
 package io.getquill.oracle
 
 import io.getquill.PeopleZioSpec
-import io.getquill.Prefix
+
 import org.scalatest.matchers.should.Matchers._
 import io.getquill.context.ZioJdbc._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
-  def prefix = Prefix("testOracleDB")
   val context = testContext
   import testContext._
 
@@ -17,7 +16,7 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
       import testContext.underlying._
       for {
         _ <- testContext.underlying.run(query[Couple].delete)
-        _ <- testContext.underlying.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.underlying.run(query[Person].delete)
         _ <- testContext.underlying.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
         _ <- testContext.underlying.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()

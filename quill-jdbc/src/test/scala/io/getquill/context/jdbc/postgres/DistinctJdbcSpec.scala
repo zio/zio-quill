@@ -1,5 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
+import io.getquill.Ord
 import io.getquill.context.sql.DistinctSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -11,7 +12,7 @@ class DistinctJdbcSpec extends DistinctSpec {
   override def beforeAll = {
     testContext.transaction {
       testContext.run(query[Couple].delete)
-      testContext.run(query[Person].filter(_.age > 0).delete)
+      testContext.run(query[Person].delete)
       testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
     }
@@ -47,5 +48,14 @@ class DistinctJdbcSpec extends DistinctSpec {
   }
   "Ex 8 Distinct With Sort" in {
     testContext.run(`Ex 8 Distinct With Sort`) mustEqual `Ex 8 Distinct With Sort Result`
+  }
+  "Ex 9 DistinctOn With Sort" in {
+    testContext.run(`Ex 9 DistinctOn With Sort`) mustEqual `Ex 9 DistinctOn With Sort Result`
+  }
+  "Ex 10 DistinctOn With Applicative Join" in { //
+    testContext.run(`Ex 10 DistinctOn With Applicative Join`) mustEqual `Ex 10 DistinctOn With Applicative Join Result`
+  }
+  "Ex 11 DistinctOn With Monadic Join" in {
+    testContext.run(`Ex 11 DistinctOn With Monadic Join`) mustEqual `Ex 11 DistinctOn With Monadic Join Result`
   }
 }

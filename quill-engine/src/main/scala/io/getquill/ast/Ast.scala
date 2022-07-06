@@ -256,6 +256,11 @@ case class Distinct(a: Ast) extends Query {
   def bestQuat: Quat = a.bestQuat
 }
 
+case class DistinctOn(query: Ast, alias: Ident, body: Ast) extends Query {
+  def quat = query.quat
+  def bestQuat: Quat = query.bestQuat
+}
+
 case class Nested(a: Ast) extends Query {
   def quat = a.quat
   def bestQuat: Quat = a.bestQuat
@@ -494,6 +499,8 @@ case class OptionTableExists(ast: Ast, alias: Ident, body: Ast)
   extends OptionOperation { def quat = body.quat; def bestQuat = body.bestQuat }
 case class OptionTableForall(ast: Ast, alias: Ident, body: Ast)
   extends OptionOperation { def quat = body.quat; def bestQuat = body.bestQuat }
+case class FilterIfDefined(ast: Ast, alias: Ident, body: Ast)
+  extends OptionOperation { def quat = body.quat; def bestQuat: Quat = body.bestQuat }
 case object OptionNoneId
 final class OptionNone(theQuat: => Quat) extends OptionOperation with Terminal {
   private lazy val computedQuat = theQuat

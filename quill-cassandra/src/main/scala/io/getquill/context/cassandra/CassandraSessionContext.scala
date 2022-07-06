@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import com.datastax.oss.driver.api.core.cql.{ BoundStatement, Row }
 import io.getquill.NamingStrategy
-import io.getquill.context.{ CassandraSession, ExecutionInfo, StandardContext, UdtValueLookup }
+import io.getquill.context.{ CassandraSession, Context, ContextVerbPrepareLambda, ExecutionInfo, UdtValueLookup }
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
 import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
@@ -55,7 +55,7 @@ trait CassandraBaseContext[N <: NamingStrategy] extends CassandraRowContext[N] {
 
 trait CassandraRowContext[N <: NamingStrategy]
   extends CassandraContext[N]
-  with StandardContext[CqlIdiom, N]
+  with Context[CqlIdiom, N]
   with Encoders
   with Decoders
   with CassandraTypes
@@ -66,6 +66,12 @@ trait CassandraRowContext[N <: NamingStrategy]
   override type PrepareRow = BoundStatement
   override type ResultRow = Row
   type Runner = Unit
+
+  override type NullChecker = CassandraNullChecker
+  class CassandraNullChecker extends BaseNullChecker {
+    override def apply(index: Index, row: Row): Boolean = row.isNull(index)
+  }
+  implicit val nullChecker: NullChecker = new CassandraNullChecker()
 
   // Usually this is io.getquill.context.CassandraSession so you can use udtValueOf but not always e.g. for Lagom it is different
   type Session <: UdtValueLookup

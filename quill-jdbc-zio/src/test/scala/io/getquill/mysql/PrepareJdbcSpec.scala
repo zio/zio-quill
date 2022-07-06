@@ -2,12 +2,11 @@ package io.getquill.mysql
 
 import java.sql.{ Connection, ResultSet }
 import io.getquill.PrepareZioJdbcSpecBase
-import io.getquill.Prefix
+
 import org.scalatest.BeforeAndAfter
 
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
-  def prefix = Prefix("testMysqlDB")
   val context = testContext
   import context._
 

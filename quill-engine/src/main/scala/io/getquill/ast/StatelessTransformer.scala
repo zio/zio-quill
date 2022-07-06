@@ -61,6 +61,7 @@ trait StatelessTransformer {
       case OptionOrNull(a)             => OptionOrNull(apply(a))
       case OptionGetOrNull(a)          => OptionGetOrNull(apply(a))
       case OptionNone(quat)            => OptionNone(quat)
+      case FilterIfDefined(a, b, c)    => FilterIfDefined(apply(a), applyIdent(b), apply(c))
     }
 
   def apply(o: IterableOperation): IterableOperation =
@@ -88,8 +89,9 @@ trait StatelessTransformer {
         Join(t, apply(a), apply(b), applyIdent(iA), applyIdent(iB), apply(on))
       case FlatJoin(t, a, iA, on) =>
         FlatJoin(t, apply(a), applyIdent(iA), apply(on))
-      case Distinct(a) => Distinct(apply(a))
-      case Nested(a)   => Nested(apply(a))
+      case Distinct(a)         => Distinct(apply(a))
+      case DistinctOn(a, b, c) => DistinctOn(apply(a), applyIdent(b), apply(c))
+      case Nested(a)           => Nested(apply(a))
     }
 
   def apply(e: Assignment): Assignment =

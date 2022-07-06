@@ -126,6 +126,9 @@ trait MirrorIdiomBase extends Idiom {
     case Distinct(a) =>
       stmt"${a.token}.distinct"
 
+    case DistinctOn(source, alias, body) =>
+      stmt"${source.token}.distinctOn(${alias.token} => ${body.token})"
+
     case Nested(a) =>
       stmt"${a.token}.nested"
   }
@@ -160,6 +163,7 @@ trait MirrorIdiomBase extends Idiom {
     case OptionOrNull(ast)                    => stmt"${ast.token}.orNull"
     case OptionGetOrNull(ast)                 => stmt"${ast.token}.getOrNull"
     case OptionNone(_)                        => stmt"None"
+    case FilterIfDefined(ast, alias, body)    => stmt"${ast.token}.filterIfDefined((${alias.token}) => ${body.token})"
   }
 
   implicit def traversableOperationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[IterableOperation] = Tokenizer[IterableOperation] {

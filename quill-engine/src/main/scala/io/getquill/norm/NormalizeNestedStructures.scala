@@ -6,20 +6,21 @@ object NormalizeNestedStructures {
 
   def unapply(q: Query): Option[Query] =
     q match {
-      case e: Entity          => None
-      case Map(a, b, c)       => apply(a, c)(Map(_, b, _))
-      case FlatMap(a, b, c)   => apply(a, c)(FlatMap(_, b, _))
-      case ConcatMap(a, b, c) => apply(a, c)(ConcatMap(_, b, _))
-      case Filter(a, b, c)    => apply(a, c)(Filter(_, b, _))
-      case SortBy(a, b, c, d) => apply(a, c)(SortBy(_, b, _, d))
-      case GroupBy(a, b, c)   => apply(a, c)(GroupBy(_, b, _))
-      case Aggregation(a, b)  => apply(b)(Aggregation(a, _))
-      case Take(a, b)         => apply(a, b)(Take.apply)
-      case Drop(a, b)         => apply(a, b)(Drop.apply)
-      case Union(a, b)        => apply(a, b)(Union.apply)
-      case UnionAll(a, b)     => apply(a, b)(UnionAll.apply)
-      case Distinct(a)        => apply(a)(Distinct.apply)
-      case Nested(a)          => apply(a)(Nested.apply)
+      case e: Entity           => None
+      case Map(a, b, c)        => apply(a, c)(Map(_, b, _))
+      case FlatMap(a, b, c)    => apply(a, c)(FlatMap(_, b, _))
+      case ConcatMap(a, b, c)  => apply(a, c)(ConcatMap(_, b, _))
+      case Filter(a, b, c)     => apply(a, c)(Filter(_, b, _))
+      case SortBy(a, b, c, d)  => apply(a, c)(SortBy(_, b, _, d))
+      case GroupBy(a, b, c)    => apply(a, c)(GroupBy(_, b, _))
+      case Aggregation(a, b)   => apply(b)(Aggregation(a, _))
+      case Take(a, b)          => apply(a, b)(Take.apply)
+      case Drop(a, b)          => apply(a, b)(Drop.apply)
+      case Union(a, b)         => apply(a, b)(Union.apply)
+      case UnionAll(a, b)      => apply(a, b)(UnionAll.apply)
+      case Distinct(a)         => apply(a)(Distinct.apply)
+      case DistinctOn(a, b, c) => apply(a, c)(DistinctOn(_, b, _))
+      case Nested(a)           => apply(a)(Nested.apply)
       case FlatJoin(t, a, iA, on) =>
         (Normalize(a), Normalize(on)) match {
           case (`a`, `on`) => None

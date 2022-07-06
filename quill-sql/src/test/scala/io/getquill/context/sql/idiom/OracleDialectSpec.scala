@@ -180,4 +180,17 @@ class OracleDialectSpec extends Spec {
       }
     }
   }
+
+  case class Person(name: String, age: Int)
+  "No 'AS' aliases" in {
+    ctx.run(infix"SELECT name, age FROM Person p".as[Query[Person]]).string mustEqual
+      "SELECT x.name, x.age FROM (SELECT name, age FROM Person p) x"
+  }
+
+  case class Document(filename: String)
+  "Like operator should generate proper SQL" in {
+    val documents = quote(querySchema[Document]("document"))
+    ctx.run(documents.filter(d => d.filename like "A%")).string mustEqual
+      "SELECT d.filename FROM document d WHERE d.filename like 'A%'"
+  }
 }

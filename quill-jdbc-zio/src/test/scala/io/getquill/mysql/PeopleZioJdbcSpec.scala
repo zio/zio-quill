@@ -1,12 +1,11 @@
 package io.getquill.mysql
 
 import io.getquill.PeopleZioSpec
-import io.getquill.Prefix
+
 import org.scalatest.matchers.should.Matchers._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
-  def prefix = Prefix("testMysqlDB")
   val context = testContext
   import testContext._
 
@@ -15,7 +14,7 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
     testContext.transaction {
       for {
         _ <- testContext.run(query[Couple].delete)
-        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.run(query[Person].delete)
         _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
         _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()

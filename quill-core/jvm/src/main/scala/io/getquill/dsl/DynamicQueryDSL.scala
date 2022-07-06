@@ -11,6 +11,7 @@ import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.Messages._
 
 import scala.util.DynamicVariable
+import scala.reflect.ClassTag
 import scala.reflect.runtime.{ universe => u }
 import io.getquill.{ ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Quoted, Update, Action => DslAction }
 
@@ -89,10 +90,10 @@ trait DynamicQueryDsl {
     q.q
   implicit def toQuoted[T <: DslAction[_]](q: DynamicAction[T]): Quoted[T] = q.q
 
-  def dynamicQuery[T](implicit t: u.TypeTag[T]): DynamicEntityQuery[T] =
+  def dynamicQuery[T](implicit t: ClassTag[T]): DynamicEntityQuery[T] =
     DynamicEntityQuery(
       splice[EntityQuery[T]](
-        Entity(t.tpe.typeSymbol.name.decodedName.toString, Nil, quatMaking.inferQuat(t.tpe).probit)
+        Entity(t.runtimeClass.getSimpleName, Nil, RuntimeEntityQuat[T].probit)
       )
     )
 
@@ -359,6 +360,9 @@ trait DynamicQueryDsl {
 
     def distinct: DynamicQuery[T] =
       dyn(Distinct(q.ast))
+
+    def distinctOn[R](f: Quoted[T] => Quoted[R]): DynamicQuery[R] =
+      transform(f, DistinctOn)
 
     def nested: DynamicQuery[T] =
       dyn(Nested(q.ast))
