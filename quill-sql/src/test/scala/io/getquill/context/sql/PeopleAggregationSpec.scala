@@ -1,7 +1,6 @@
 package io.getquill.context.sql
 
 import io.getquill.Spec
-import org.scalatest.BeforeAndAfterEach
 
 trait PeopleAggregationSpec extends Spec {
 

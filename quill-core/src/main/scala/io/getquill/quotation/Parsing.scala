@@ -231,6 +231,8 @@ trait Parsing extends ValueComputation with QuatMaking {
       Aggregation(AggregationOperator.`min`, astParser(a))
     case q"$pack.max[$t]($a)" =>
       Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$pack.count[$t]($a)" =>
+      Aggregation(AggregationOperator.`size`, astParser(a))
     case q"$pack.avg[$t]($a)($imp)" =>
       Aggregation(AggregationOperator.`avg`, astParser(a))
     case q"$pack.sum[$t]($a)($imp)" =>
