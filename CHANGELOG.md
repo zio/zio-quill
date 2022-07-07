@@ -1,3 +1,7 @@
+# 4.1.0
+
+- [Implement groupByMap and EnableTrace/DisablePhase functionality](https://github.com/zio/zio-quill/pull/2517)
+
 # 4.0.0
 
 - [Bump to ZIO 2.0.0 Release Version](https://github.com/zio/zio-quill/pull/2511)
