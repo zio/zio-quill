@@ -34,6 +34,7 @@ class AggregationSpec extends Spec {
     "work in a map clause that is last in a query" - {
       "max" in { ctx.run { query[Person].map(p => max(p.name)) }.string mustEqual "SELECT MAX(p.name) FROM Person p" }
       "min" in { ctx.run { query[Person].map(p => min(p.name)) }.string mustEqual "SELECT MIN(p.name) FROM Person p" }
+      "count" in { ctx.run { query[Person].map(p => count(p.name)) }.string mustEqual "SELECT COUNT(p.name) FROM Person p" }
       "avg" in { ctx.run { query[Person].map(p => avg(p.age)) }.string mustEqual "SELECT AVG(p.age) FROM Person p" }
       "sum" in { ctx.run { query[Person].map(p => sum(p.age)) }.string mustEqual "SELECT SUM(p.age) FROM Person p" }
     }
@@ -58,6 +59,18 @@ class AggregationSpec extends Spec {
       }
       ctx.run(q).string mustEqual "SELECT MAX(p.name) FROM PersonOpt p"
     }
+    "work with optional mapping - external" in {
+      val q = quote {
+        query[PersonOpt].map(p => max(p.name))
+      }
+      ctx.run(q).string mustEqual "SELECT MAX(p.name) FROM PersonOpt p"
+    }
+    "work with optional mapping - external (avg)" in {
+      val q = quote {
+        query[PersonOpt].map(p => avg(p.age))
+      }
+      ctx.run(q).string mustEqual "SELECT AVG(p.age) FROM PersonOpt p"
+    }
     "work with optional mapping + nested + filter" in {
       val q = quote {
         query[PersonOpt].map(p => p.name.map(n => max(n))).nested.filter(p => p == Option("Joe"))
@@ -68,6 +81,7 @@ class AggregationSpec extends Spec {
     "work externally with optional mapping" - {
       "max" in { ctx.run { query[PersonOpt].map(p => max(p.name)) }.string mustEqual "SELECT MAX(p.name) FROM PersonOpt p" }
       "min" in { ctx.run { query[PersonOpt].map(p => min(p.name)) }.string mustEqual "SELECT MIN(p.name) FROM PersonOpt p" }
+      "count" in { ctx.run { query[PersonOpt].map(p => count(p.name)) }.string mustEqual "SELECT COUNT(p.name) FROM PersonOpt p" }
       "avg" in { ctx.run { query[PersonOpt].map(p => avg(p.age)) }.string mustEqual "SELECT AVG(p.age) FROM PersonOpt p" }
       "sum" in { ctx.run { query[PersonOpt].map(p => sum(p.age)) }.string mustEqual "SELECT SUM(p.age) FROM PersonOpt p" }
     }
@@ -77,6 +91,7 @@ class AggregationSpec extends Spec {
     "work in the simple form" - {
       "max" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, max(p.name))) }.string mustEqual "SELECT p.name AS _1, MAX(p.name) AS _2 FROM Person p GROUP BY p.id" }
       "min" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, min(p.name))) }.string mustEqual "SELECT p.name AS _1, MIN(p.name) AS _2 FROM Person p GROUP BY p.id" }
+      "count" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, count(p.name))) }.string mustEqual "SELECT p.name AS _1, COUNT(p.name) AS _2 FROM Person p GROUP BY p.id" }
       "avg" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, avg(p.age))) }.string mustEqual "SELECT p.name AS _1, AVG(p.age) AS _2 FROM Person p GROUP BY p.id" }
       "sum" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, sum(p.age))) }.string mustEqual "SELECT p.name AS _1, SUM(p.age) AS _2 FROM Person p GROUP BY p.id" }
     }
