@@ -10,15 +10,15 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 import scala.jdk.CollectionConverters._
 
-class PostgresJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection])
-  extends JAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming, pool)
+class PostgresJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection], release: Boolean = false)
+  extends JAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming, pool, release)
   with ArrayEncoders
   with ArrayDecoders
   with UUIDObjectEncoding {
 
-  def this(naming: N, config: PostgresJAsyncContextConfig) = this(naming, config.pool)
-  def this(naming: N, config: Config) = this(naming, PostgresJAsyncContextConfig(config))
-  def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
+  def this(naming: N, config: PostgresJAsyncContextConfig, release: Boolean) = this(naming, config.pool, release)
+  def this(naming: N, config: Config, release: Boolean) = this(naming, PostgresJAsyncContextConfig(config), release)
+  def this(naming: N, configPrefix: String, release: Boolean) = this(naming, LoadConfig(configPrefix), release)
 
   override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): List[O] =
     result.getRows.asScala.toList.map(row => returningExtractor(row, ()))
