@@ -879,7 +879,7 @@ lazy val basicSettings = Seq(
     )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.0")
   },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
