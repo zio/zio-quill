@@ -1,8 +1,9 @@
 package io.getquill.norm
 
 import io.getquill.ast._
+import io.getquill.util.TraceConfig
 
-object OrderTerms {
+class OrderTerms(traceConfig: TraceConfig) {
 
   def unapply(q: Query) =
     q match {

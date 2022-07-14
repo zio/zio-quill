@@ -7,7 +7,7 @@ import io.getquill.util.Messages.TraceType.Standard
 
 class InterpolatorSpec extends Spec {
 
-  val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true)
+  val interp = new Interpolator(Standard, TraceConfig.Empty, defaultIndent = 0, color = false, globalTracesEnabled = _ => true)
   import interp._
 
   case class Small(id: Int)
@@ -118,7 +118,7 @@ and bar $small""".generateString() mustEqual (
     "do not log if traces disabled" in {
       val buff = new ByteArrayOutputStream()
       val ps = new PrintStream(buff)
-      val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => false, out = ps)
+      val interp = new Interpolator(Standard, TraceConfig.Empty, defaultIndent = 0, color = false, globalTracesEnabled = _ => false, out = ps)
       import interp._
 
       trace"small object: $small".andLog()
@@ -129,7 +129,7 @@ and bar $small""".generateString() mustEqual (
     "log if traces disabled" in {
       val buff = new ByteArrayOutputStream()
       val ps = new PrintStream(buff)
-      val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true, out = ps)
+      val interp = new Interpolator(Standard, TraceConfig.Empty, defaultIndent = 0, color = false, globalTracesEnabled = _ => true, out = ps)
       import interp._
 
       trace"small object: $small".andLog()
@@ -140,7 +140,7 @@ and bar $small""".generateString() mustEqual (
     "traces large objects on multiple line - multi - with return" in {
       val buff = new ByteArrayOutputStream()
       val ps = new PrintStream(buff)
-      val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true, out = ps)
+      val interp = new Interpolator(Standard, TraceConfig.Empty, defaultIndent = 0, color = false, globalTracesEnabled = _ => true, out = ps)
       import interp._
 
       trace"large object: $large and $large".andReturn(large) mustEqual large

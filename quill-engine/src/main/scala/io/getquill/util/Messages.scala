@@ -82,33 +82,61 @@ object Messages {
 
   sealed trait TraceType { def value: String }
   object TraceType {
-    case object SqlNormalizations extends TraceType { val value = "sql" }
-    case object ExpandDistinct extends TraceType { val value = "distinct" }
-    case object Normalizations extends TraceType { val value = "norm" }
-    case object Standard extends TraceType { val value = "standard" }
-    case object NestedQueryExpansion extends TraceType { val value = "nest" }
-    case object AvoidAliasConflict extends TraceType { val value = "alias" }
-    case object ShealthLeaf extends TraceType { val value = "sheath" }
-    case object ReifyLiftings extends TraceType { val value = "reify" }
-    case object PatMatch extends TraceType { val value = "patmatch" }
-    case object Quotation extends TraceType { val value = "quote" }
-    case object RepropagateQuats extends TraceType { val value = "reprop" }
-    case object RenameProperties extends TraceType { val value = "rename" }
-    case object ApplyMap extends TraceType { val value = "applymap" }
+    // Note: We creates types as well as traits so these can be referred to easily by type-name (i.e. without .type)
+    //       this is useful when using the EnableTrace implicit pattern i.e:
+    //       implicit val t = new EnableTrace {  override type Trace = TraceType.Normalizations :: HNil }
+    //       Otherwise it would have to be override type Trace = TraceType.Normalizations.type
+
     // Specifically for situations where what needs to be printed is a type of warning to the user as opposed to an expansion
     // This kind of trace is always on by default and does not need to be enabled by the user.
-    case object Warning extends TraceType { val value = "warning" }
-    case object ExprModel extends TraceType { val value = "exprmodel" }
-    case object Meta extends TraceType { val value = "meta" }
-    case object Execution extends TraceType { val value = "exec" }
-    case object DynamicExecution extends TraceType { val value = "dynamicexec" }
-    case object Elaboration extends TraceType { val value = "elab" }
-    case object SqlQueryConstruct extends TraceType { val value = "sqlquery" }
+    sealed trait Warning extends TraceType { val value = "warning" }
+    sealed trait SqlNormalizations extends TraceType { val value = "sql" }
+    sealed trait ExpandDistinct extends TraceType { val value = "distinct" }
+    sealed trait Normalizations extends TraceType { val value = "norm" }
+    sealed trait Standard extends TraceType { val value = "standard" }
+    sealed trait NestedQueryExpansion extends TraceType { val value = "nest" }
+    sealed trait AvoidAliasConflict extends TraceType { val value = "alias" }
+    sealed trait ShealthLeaf extends TraceType { val value = "sheath" }
+    sealed trait ReifyLiftings extends TraceType { val value = "reify" }
+    sealed trait PatMatch extends TraceType { val value = "patmatch" }
+    sealed trait Quotation extends TraceType { val value = "quote" }
+    sealed trait RepropagateQuats extends TraceType { val value = "reprop" }
+    sealed trait RenameProperties extends TraceType { val value = "rename" }
+    sealed trait ApplyMap extends TraceType { val value = "applymap" }
+    sealed trait ExprModel extends TraceType { val value = "exprmodel" }
+    sealed trait Meta extends TraceType { val value = "meta" }
+    sealed trait Execution extends TraceType { val value = "exec" }
+    sealed trait DynamicExecution extends TraceType { val value = "dynamicexec" }
+    sealed trait Elaboration extends TraceType { val value = "elab" }
+    sealed trait SqlQueryConstruct extends TraceType { val value = "sqlquery" }
+    sealed trait FlattenOptionOperation extends TraceType { val value = "option" }
+
+    object Warning extends Warning
+    object SqlNormalizations extends SqlNormalizations
+    object ExpandDistinct extends ExpandDistinct
+    object Normalizations extends Normalizations
+    object Standard extends Standard
+    object NestedQueryExpansion extends NestedQueryExpansion
+    object AvoidAliasConflict extends AvoidAliasConflict
+    object ShealthLeaf extends ShealthLeaf
+    object ReifyLiftings extends ReifyLiftings
+    object PatMatch extends PatMatch
+    object Quotation extends Quotation
+    object RepropagateQuats extends RepropagateQuats
+    object RenameProperties extends RenameProperties
+    object ApplyMap extends ApplyMap
+    object ExprModel extends ExprModel
+    object Meta extends Meta
+    object Execution extends Execution
+    object DynamicExecution extends DynamicExecution
+    object Elaboration extends Elaboration
+    object SqlQueryConstruct extends SqlQueryConstruct
+    object FlattenOptionOperation extends FlattenOptionOperation
 
     def values: List[TraceType] = List(
       Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation,
       RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct, ExprModel, Meta, Execution, DynamicExecution,
-      Elaboration, SqlQueryConstruct
+      Elaboration, SqlQueryConstruct, FlattenOptionOperation
     )
   }
 

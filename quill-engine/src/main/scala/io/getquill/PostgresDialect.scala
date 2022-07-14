@@ -5,7 +5,7 @@ import io.getquill.ast._
 import io.getquill.context.CanReturnClause
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.ProductAggregationToken
+import io.getquill.norm.{ ProductAggregationToken, TranspileConfig }
 
 trait PostgresDialect
   extends SqlIdiom
@@ -16,7 +16,7 @@ trait PostgresDialect
 
   override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
 
-  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ast] =
+  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case ListContains(ast, body) => stmt"${body.token} = ANY(${ast.token})"
       case c: OnConflict           => conflictTokenizer.token(c)

@@ -591,18 +591,6 @@ ctx.run(q)
 // SELECT c.personId, c.phone FROM Person p, Contact c WHERE (p.age > 18) AND (c.personId = p.id)
 ```
 
-### concatMap
-```scala
-// similar to `flatMap` but for transformations that return a traversable instead of `Query`
-
-val q = quote {
-  query[Person].concatMap(p => p.name.split(" "))
-}
-
-ctx.run(q)
-// SELECT UNNEST(SPLIT(p.name, " ")) FROM Person p
-```
-
 ### sortBy
 ```scala
 val q1 = quote {
@@ -627,6 +615,92 @@ ctx.run(q3)
 // SELECT p.id, p.name, p.age FROM Person p ORDER BY p.name ASC, p.age DESC
 ```
 
+### aggregation
+
+You can use aggregators inside of map-clauses. Multiple aggregators can be used as needed.
+Available aggregators are `max`, `min`, `count`, `avg` and `sum`.
+```scala
+val q = quote {
+  query[Person].map(p => (min(p.age), max(p.age)))
+}
+// SELECT MIN(p.age), MAX(p.age) FROM Person p
+```
+
+
+### groupByMap
+
+The `groupByMap` method is the preferred way to do grouping in Quill. It provides a simple aggregation-syntax similar to SQL.
+Available aggregators are `max`, `min`, `count`, `avg` and `sum`.
+
+```scala
+val q = quote {
+  query[Person].groupByMap(p => p.name)(p => (p.name, max(p.age)))
+}
+ctx.run(q)
+// SELECT p.name, MAX(p.age) FROM Person p GROUP BY p.name
+```
+
+You can use as many aggregators as needed and group by multiple fields (using a Tuple).
+
+```scala
+val q = quote {
+  query[Person].groupByMap(p => (p.name, p.otherField))(p => (p.name, p.otherField, max(p.age)))
+}
+ctx.run(q)
+// SELECT p.name, p.otherField, MAX(p.age) FROM Person p GROUP BY p.name, p.otherField
+```
+
+Writing a custom aggregator using `infix` with the `groupByMax` syntax is also very simple.
+For example, in Postgres the `STRING_AGG` function is used to concatenate all the encountered strings.
+```scala
+val stringAgg = quote {
+  (str: String, separator: String) => infix"STRING_AGG($str, $separator)".pure.as[String]
+}
+val q = quote {
+  query[Person].groupByMap(p => p.age)(p => (p.age, stringAgg(p.name, ";")))
+}
+run(q)
+// SELECT p.age, STRING_AGG(p.name, ';') FROM Person p GROUP BY p.age
+```
+
+You can also map to a case class instead of a tuple. This will give you a `Query[YourCaseClass]` that you can further compose.
+```scala
+case class NameAge(name: String, age: Int)
+// Will return Query[NameAge]
+val q = quote {
+  query[Person].groupByMap(p => p.name)(p => NameAge(p.name, max(p.age)))
+}
+ctx.run(q)
+// SELECT p.name, MAX(p.age) FROM Person p GROUP BY p.name
+```
+
+> Note that it is a requirement in SQL for every column in the selection (without an aggregator) to be in the `GROUP BY` clause.
+> If it is not, an exception will be thrown by the database. Quill does not (yet!) protect the user in this situation.
+> ```scala
+> run( query[Person].groupByMap(p => p.name)(p => (p.name, p.otherField, max(p.age))) )
+> // > SELECT p.name, p.otherField, MAX(p.age) FROM Person p GROUP BY p.name
+> // ERROR: column "person.otherField" must appear in the GROUP BY clause or be used in an aggregate function
+> ```
+
+
+### groupBy
+
+Quill also provides a way to do `groupBy/map` in a more scala-idiomatic way. In this case (below), the `groupBy`
+produces a `Query[(Int,Query[Person])]` where the inner Query can be mapped to an expression with an aggregator 
+(as would be the Scala `List[Person]` in `Map[Int,List[Person]]` resulting from a `(people:List[Person]).groupBy(_.name)`. 
+
+```scala
+val q = quote {
+  query[Person].groupBy(p => p.age).map {
+    case (age, people) =>
+      (age, people.size)
+  }
+}
+
+ctx.run(q)
+// SELECT p.age, COUNT(*) FROM Person p GROUP BY p.age
+```
+
 ### drop/take
 
 ```scala
@@ -638,17 +712,16 @@ ctx.run(q)
 // SELECT x.id, x.name, x.age FROM Person x LIMIT 1 OFFSET 2
 ```
 
-### groupBy
+### concatMap (i.e. `UNNEST`)
 ```scala
+// similar to `flatMap` but for transformations that return a traversable instead of `Query`
+
 val q = quote {
-  query[Person].groupBy(p => p.age).map {
-    case (age, people) =>
-      (age, people.size)
-  }
+  query[Person].concatMap(p => p.name.split(" "))
 }
 
 ctx.run(q)
-// SELECT p.age, COUNT(*) FROM Person p GROUP BY p.age
+// SELECT UNNEST(SPLIT(p.name, " ")) FROM Person p
 ```
 
 ### union
@@ -2794,7 +2867,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 ### Importing Quill Spark
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "4.1.0"
 )
 ```
 
@@ -2994,7 +3067,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "4.1.0"
 )
 ```
 
@@ -3021,7 +3094,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "4.1.0"
 )
 ```
 
@@ -3047,7 +3120,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "4.1.0"
 )
 ```
 
@@ -3068,7 +3141,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "4.1.0"
 )
 ```
 
@@ -3090,7 +3163,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "4.1.0"
 )
 ```
 
@@ -3112,7 +3185,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "4.1.0"
 )
 ```
 
@@ -3259,7 +3332,7 @@ val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "4.1.0"
 )
 ```
 
@@ -3288,7 +3361,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "4.1.0"
 )
 ```
 
@@ -3316,7 +3389,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "4.1.0"
 )
 ```
 
@@ -3339,7 +3412,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "4.1.0"
 )
 ```
 
@@ -3363,7 +3436,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "4.1.0"
 )
 ```
 
@@ -3392,7 +3465,7 @@ Quill supports Oracle version 12c and up although due to licensing restrictions,
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "4.1.0"
 )
 ```
 
@@ -3494,7 +3567,7 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "4.1.0"
 )
 ```
 
@@ -3521,7 +3594,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "4.1.0"
 )
 ```
 
@@ -3547,7 +3620,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "4.1.0"
 )
 ```
 
@@ -3568,7 +3641,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "4.1.0"
 )
 ```
 
@@ -3590,7 +3663,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "4.1.0"
 )
 ```
 
@@ -3622,7 +3695,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "4.1.0"
 )
 ```
 
@@ -3664,7 +3737,7 @@ The body of transaction can contain calls to other methods and multiple run call
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "4.1.0"
 )
 ```
 
@@ -3771,7 +3844,7 @@ ctx.queryTimeout=10m
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "4.1.0"
 )
 ```
 
@@ -3795,7 +3868,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "4.1.0"
 )
 ```
 
@@ -3885,7 +3958,7 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-mysql" % "4.1.0"
 )
 ```
 
@@ -3910,7 +3983,7 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-postgres" % "4.1.0"
 )
 ```
 
@@ -3965,7 +4038,7 @@ ctx.sslkey=./path/to/key/file # optional, required to only allow connections fro
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-zio-postgres" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-zio-postgres" % "4.1.0"
 )
 ```
 
@@ -4013,7 +4086,7 @@ just add the below dependency and replace the `doobie.quill` package with `io.ge
 
 In order to use this feature, add the following dependency.
 ```
-libraryDependencies += "io.getquill" %% "quill-doobie" % "4.0.1-SNAPSHOT"
+libraryDependencies += "io.getquill" %% "quill-doobie" % "4.1.0"
 ```
 
 The examples below require the following imports.
@@ -4146,7 +4219,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "4.1.0"
 )
 ```
 
@@ -4186,7 +4259,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "4.1.0"
 )
 ```
 
@@ -4213,7 +4286,7 @@ ctx.binaryParams=false
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "4.1.0"
 )
 ```
 
@@ -4302,7 +4375,7 @@ More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/i
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-zio" % "4.1.0"
 )
 ```
 
@@ -4311,7 +4384,7 @@ libraryDependencies ++= Seq(
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "4.1.0"
 )
 ```
 
@@ -4330,7 +4403,7 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-alpakka" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-alpakka" % "4.1.0"
 )
 ```
 
@@ -4372,7 +4445,7 @@ quill-test-datastax-java-driver {
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "4.1.0"
 )
 ```
 
@@ -4434,7 +4507,7 @@ Have a look at the [CODEGEN.md](https://github.com/getquill/quill/blob/master/CO
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-codegen-jdbc" % "4.0.1-SNAPSHOT"
+  "io.getquill" %% "quill-codegen-jdbc" % "4.1.0"
 )
 ```
 

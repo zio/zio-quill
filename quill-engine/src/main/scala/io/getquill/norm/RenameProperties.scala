@@ -2,7 +2,7 @@ package io.getquill.norm
 
 import io.getquill.ast._
 import io.getquill.quat.Quat
-import io.getquill.util.Interpolator
+import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.{ TraceType, title }
 
 /**
@@ -27,17 +27,20 @@ import io.getquill.util.Messages.{ TraceType, title }
  * The entire process above can be done with a series of stateless transformations with straighforward operations
  * since the majority of the logic actually lives within the Quats themselves.
  */
-object RenameProperties {
+class RenameProperties(traceConfig: TraceConfig) {
   private def demarcate(heading: String) =
     ((ast: Ast) => title(heading)(ast))
+
+  val ApplyRenamesToPropsPhase = new ApplyRenamesToProps(traceConfig)
+  val RepropagateQuatsPhase = new RepropagateQuats(traceConfig)
 
   def apply(ast: Ast) = {
     (identity[Ast] _)
       .andThen(SeedRenames.apply(_: Ast)) // Stage field renames into the Quats of entities
       .andThen(demarcate("SeedRenames"))
-      .andThen(RepropagateQuats.apply(_: Ast))
+      .andThen(RepropagateQuatsPhase.apply(_: Ast))
       .andThen(demarcate("RepropagateQuats")) // Propagate the renames from Entity-Quats to the rest of the Quats in the AST
-      .andThen(ApplyRenamesToProps.apply(_: Ast))
+      .andThen(ApplyRenamesToPropsPhase.apply(_: Ast))
       .andThen(demarcate("ApplyRenamesToProps")) // Go through the Quats and 'commit' the renames
       .andThen(CompleteRenames.apply(_: Ast))
       .andThen(demarcate("CompleteRenames"))(ast) // Quats can be invalid in between this phase and the previous one
@@ -68,9 +71,9 @@ object CompleteRenames extends StatelessTransformer {
 }
 
 /** Take renames propogated to the quats and apply them to properties */
-object ApplyRenamesToProps extends StatelessTransformer {
+class ApplyRenamesToProps(traceConfig: TraceConfig) extends StatelessTransformer {
 
-  val interp = new Interpolator(TraceType.RenameProperties, 1)
+  val interp = new Interpolator(TraceType.RenameProperties, traceConfig, 1)
   import interp._
 
   override def apply(p: Property): Property =

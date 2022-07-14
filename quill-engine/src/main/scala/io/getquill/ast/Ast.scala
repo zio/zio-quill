@@ -195,6 +195,11 @@ case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query {
   def bestQuat: Quat = Quat.Tuple(body.bestQuat, query.bestQuat)
 }
 
+case class GroupByMap(query: Ast, byAlias: Ident, byBody: Ast, mapAlias: Ident, mapBody: Ast) extends Query {
+  def quat = mapBody.quat
+  def bestQuat: Quat = mapBody.bestQuat
+}
+
 case class Aggregation(operator: AggregationOperator, ast: Ast) extends Query {
   def quat =
     operator match {

@@ -6,10 +6,13 @@ import io.getquill.Literal
 import io.getquill.Query
 import io.getquill.Ord
 import io.getquill.context.sql.util.StringOps._
+import io.getquill.util.TraceConfig
 
 class SqlQuerySpec extends Spec {
 
   implicit val naming = new Literal {}
+
+  val SqlQuery = new SqlQueryApply(TraceConfig.Empty)
 
   "transforms the ast into a flatten sql-like structure" - {
 

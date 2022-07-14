@@ -4,12 +4,12 @@ import io.getquill.ast.Visibility.Hidden
 import io.getquill.ast._
 import io.getquill.quat.Quat
 import io.getquill.quat.QuatNestingHelper._
-import io.getquill.util.Interpolator
+import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.TraceType
 
-object ExpandDistinct {
+class ExpandDistinct(traceConfig: TraceConfig) {
 
-  val interp = new Interpolator(TraceType.ExpandDistinct, 3)
+  val interp = new Interpolator(TraceType.ExpandDistinct, traceConfig, 3)
   import interp._
 
   def apply(q: Ast): Ast =

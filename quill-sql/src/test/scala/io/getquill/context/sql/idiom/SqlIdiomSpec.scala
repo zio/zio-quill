@@ -552,7 +552,7 @@ class SqlIdiomSpec extends Spec {
         qr1.map(t => t.i).nested.filter(i => i > 1)
       }
       testContext.run(q).string mustEqual
-        "SELECT t.i FROM (SELECT x.i FROM TestEntity x) AS t WHERE t.i > 1"
+        "SELECT i.i FROM (SELECT t.i FROM TestEntity t) AS i WHERE i.i > 1"
     }
     "operations" - {
       "unary operation" - {
@@ -934,7 +934,7 @@ class SqlIdiomSpec extends Spec {
           qr1.map(t => infix"CONCAT(${t.s}, ${t.s})".as[String])
         }
         testContext.run(q).string mustEqual
-          "SELECT t._1 FROM (SELECT CONCAT(t.s, t.s) AS _1 FROM TestEntity t) AS t"
+          "SELECT CONCAT(t.s, t.s) FROM TestEntity t"
       }
       "source query" in {
         case class Entity(i: Int)

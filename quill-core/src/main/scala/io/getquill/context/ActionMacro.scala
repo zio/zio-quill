@@ -162,7 +162,7 @@ class ActionMacro(val c: MacroContext)
         case ret: io.getquill.ast.ReturningAction =>
             io.getquill.norm.ExpandReturning.applyMap(ret)(
               (ast, statement) => io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming, io.getquill.context.ExecutionType.Unknown).string
-            )(idiom, naming)
+            )(idiom, naming, ${ConfigLiftables.transpileConfigLiftable(transpileConfig)})
         case ast =>
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
       })

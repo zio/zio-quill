@@ -8,8 +8,11 @@ import io.getquill.testContext.qr2
 import io.getquill.testContext.query
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
+import io.getquill.util.TraceConfig
 
 class ApplyMapSpec extends Spec {
+
+  val ApplyMap = new ApplyMap(TraceConfig.Empty)
 
   "avoids applying the intermmediate map after a groupBy" - {
     "flatMap" in {
@@ -177,10 +180,16 @@ class ApplyMapSpec extends Spec {
       val q = quote {
         qr1.map(y => y.s).nested
       }
-      val n = quote {
-        qr1.nested.map(y => y.s)
-      }
-      ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
+      // I.e. apply-map should not change anything in a nested query. The original structure should be preserved
+      // since nesting a query should isolate everything inside the nesting.
+      // For example this:
+      //   ApplyMap(query[Person].nested.map(p => p.age + 1)
+      // Should NOT reduce to this:
+      //   ApplyMap(query[Person].map(p => p.age + 1).nested
+      // The original query should remain unaltered.
+      // That is the semantic meaning of `nested` and things like impure-infixes rely on that.
+      // (e.g. if the impure-infix is a partition-by it needs to remain as-is and not be moved around the query).
+      ApplyMap.unapply(q.ast) mustEqual None
     }
     "mapped join" - {
       "left" in {

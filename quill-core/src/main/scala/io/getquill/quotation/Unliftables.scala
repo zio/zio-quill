@@ -107,6 +107,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.ConcatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => ConcatMap(a, b, c)
     case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ast })" => SortBy(a, b, c, d)
     case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => GroupBy(a, b, c)
+    case q"$pack.GroupByMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ident }, ${ e: Ast })" => GroupByMap(a, b, c, d, e)
     case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })" => Take(a, b)
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })" => Drop(a, b)
     case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })" => Union(a, b)
