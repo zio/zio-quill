@@ -12,7 +12,7 @@ import java.io.Closeable
 import scala.util.Try
 import io.getquill.{ Action, ActionReturning, BatchAction, NamingStrategy, Query, Quoted }
 
-trait Context[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends RowContext
+trait Context[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy] extends RowContext
   with Closeable
   with CoreDsl {
 

@@ -1,9 +1,9 @@
 package io.getquill
 
-import io.getquill.context.ZioJdbc.DataSourceLayer
-import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import io.getquill.ZioSpec.runLayerUnsafe
+import io.getquill.ziojdbc.Quill
 
 package object h2 {
-  implicit val pool = zio.Unsafe.unsafe { implicit u => Implicit(zio.Runtime.unsafe.fromLayer(DataSourceLayer.fromPrefix("testH2DB"))) }
-  object testContext extends H2ZioJdbcContext(Literal) with TestEntities
+  val pool = runLayerUnsafe(Quill.DataSource.fromPrefix("testH2DB"))
+  object testContext extends Quill.H2Service(Literal, pool) with TestEntities
 }

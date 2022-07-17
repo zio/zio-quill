@@ -39,7 +39,7 @@ object CassandraZioContext {
  *   Runtime.default.unsafeRun(MyZioContext.run(query[Person]).provideCustomLayer(zioSession))
  * }}
  */
-class CassandraZioContext[N <: NamingStrategy](val naming: N)
+class CassandraZioContext[+N <: NamingStrategy](val naming: N)
   extends CassandraRowContext[N]
   with ZioContext[CqlIdiom, N]
   with Context[CqlIdiom, N] {

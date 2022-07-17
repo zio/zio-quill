@@ -1,10 +1,9 @@
 package io.getquill.postgres
 
-import io.getquill.PeopleZioSpec
-
+import io.getquill.{ PeopleZioSpec, ZioSpec }
 import org.scalatest.matchers.should.Matchers._
 
-class PeopleZioJdbcSpec extends PeopleZioSpec {
+class PeopleZioJdbcSpec extends PeopleZioSpec with ZioSpec {
 
   val context = testContext
   import testContext._

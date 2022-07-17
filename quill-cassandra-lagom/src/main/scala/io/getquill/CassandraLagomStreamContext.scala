@@ -8,7 +8,7 @@ import io.getquill.util.ContextLogger
 
 import scala.concurrent.ExecutionContext
 
-class CassandraLagomStreamContext[N <: NamingStrategy](
+class CassandraLagomStreamContext[+N <: NamingStrategy](
   naming:  N,
   session: CassandraSession
 ) extends CassandraLagomSessionContext[N](naming, session) {

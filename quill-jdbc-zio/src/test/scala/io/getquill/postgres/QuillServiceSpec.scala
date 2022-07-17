@@ -3,7 +3,7 @@ package io.getquill.postgres
 import io.getquill.ZioSpec
 import zio.{ ZIO, ZLayer }
 
-class ZioJdbcContextSpec extends ZioSpec {
+class QuillServiceSpec extends ZioSpec {
 
   val context = testContext
   import testContext._

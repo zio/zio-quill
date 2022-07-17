@@ -9,7 +9,7 @@ import io.getquill.util.LoadConfig
 
 import javax.sql.DataSource
 
-class PostgresMonixJdbcContext[N <: NamingStrategy](
+class PostgresMonixJdbcContext[+N <: NamingStrategy](
   val naming:     N,
   val dataSource: DataSource with Closeable,
   runner:         EffectWrapper

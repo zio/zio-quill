@@ -19,7 +19,7 @@ object mirrorContextWithQueryProbing
  * Similarly, when doing `ResultSet(foo:null /*Expecting an int*/, etc).getInt(1)` the result will be 0 as opposed to throwing
  * a NPE as would be the scala expectation. So we need to do `Row(foo:null /*Expecting an int*/, etc).apply(1)` do the same thing.
  */
-class MirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
+class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
   extends Context[Idiom, Naming]
   with ProtoContext[Idiom, Naming]
   with ContextVerbTranslate
