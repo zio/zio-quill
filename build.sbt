@@ -62,7 +62,7 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-cassandra`, `quill-cassandra-lagom`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-cassandra-alpakka`,
+  `quill-cassandra`, `quill-cassandra-monix`, `quill-cassandra-zio`, `quill-cassandra-alpakka`,
   `quill-orientdb`, `quill-spark`
 )
 
@@ -73,7 +73,6 @@ lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModul
   `quill-finagle-mysql`,
   `quill-cassandra`,
   `quill-cassandra-alpakka`,
-  `quill-cassandra-lagom`,
   `quill-cassandra-monix`,
   `quill-cassandra-zio`,
   `quill-orientdb`,
@@ -720,25 +719,25 @@ lazy val `quill-cassandra-alpakka` =
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-cassandra-lagom` =
-   (project in file("quill-cassandra-lagom"))
-    .settings(commonSettings: _*)
-    .settings(mimaSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= {
-        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
-        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.8") else Seq.empty
-        Seq(
-          "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
-          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
-          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.11.2",
-          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
-          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
-        ) ++ versionSpecificDependencies
-      }
-    )
-    .enablePlugins(MimaPlugin)
+//lazy val `quill-cassandra-lagom` =
+//   (project in file("quill-cassandra-lagom"))
+//    .settings(commonSettings: _*)
+//    .settings(mimaSettings: _*)
+//    .settings(
+//      Test / fork := true,
+//      libraryDependencies ++= {
+//        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
+//        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.8") else Seq.empty
+//        Seq(
+//          "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
+//          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
+//          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.11.2",
+//          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
+//          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
+//        ) ++ versionSpecificDependencies
+//      }
+//    )
+//    .enablePlugins(MimaPlugin)
 
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
