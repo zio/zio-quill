@@ -5,7 +5,7 @@ import io.getquill.context.ndbc._
 import io.getquill.util.LoadConfig
 import io.trane.ndbc._
 
-class PostgresNdbcContext[N <: NamingStrategy](naming: N, dataSource: DataSource[PostgresPreparedStatement, PostgresRow])
+class PostgresNdbcContext[+N <: NamingStrategy](naming: N, dataSource: DataSource[PostgresPreparedStatement, PostgresRow])
   extends NdbcContext[PostgresDialect, N, PostgresPreparedStatement, PostgresRow](PostgresDialect, naming, dataSource)
   with PostgresNdbcContextBase[N] {
 

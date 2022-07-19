@@ -8,7 +8,7 @@ import io.getquill.context.cassandra.encoding.{ CassandraMapper, Encodings }
 import java.time.{ Instant, LocalDate }
 import scala.reflect.ClassTag
 
-trait CassandraContext[N <: NamingStrategy]
+trait CassandraContext[+N <: NamingStrategy]
   extends Context[CqlIdiom, N]
   with Encodings
   with UdtMetaDsl

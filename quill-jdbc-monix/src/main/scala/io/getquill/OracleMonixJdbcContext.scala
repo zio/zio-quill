@@ -9,7 +9,7 @@ import io.getquill.context.monix.MonixJdbcContext
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
-class OracleMonixJdbcContext[N <: NamingStrategy](
+class OracleMonixJdbcContext[+N <: NamingStrategy](
   val naming:     N,
   val dataSource: DataSource with Closeable,
   runner:         EffectWrapper

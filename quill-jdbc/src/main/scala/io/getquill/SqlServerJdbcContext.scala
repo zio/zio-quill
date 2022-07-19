@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import io.getquill.context.jdbc.{ JdbcContext, SqlServerJdbcContextBase }
 import io.getquill.util.LoadConfig
 
-class SqlServerJdbcContext[N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
+class SqlServerJdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
   extends JdbcContext[SQLServerDialect, N]
   with SqlServerJdbcContextBase[N] {
 

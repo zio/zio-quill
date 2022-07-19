@@ -9,7 +9,7 @@ import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
-class SqlServerMonixJdbcContext[N <: NamingStrategy](
+class SqlServerMonixJdbcContext[+N <: NamingStrategy](
   val naming:     N,
   val dataSource: DataSource with Closeable,
   runner:         EffectWrapper

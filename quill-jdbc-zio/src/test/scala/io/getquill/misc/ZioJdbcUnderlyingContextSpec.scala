@@ -1,15 +1,13 @@
-package io.getquill.postgres
+package io.getquill.misc
 
-import io.getquill.context.ZioJdbc._
-import io.getquill.ZioSpec
+import io.getquill.ZioProxySpec
 import zio.{ ZIO, ZLayer }
+import io.getquill.context.ZioJdbc._
 
-import javax.sql.DataSource
-
-class ZioJdbcUnderlyingContextSpec extends ZioSpec {
+class ZioJdbcUnderlyingContextSpec extends ZioProxySpec {
 
   val context = testContext.underlying
-  import testContext.underlying._
+  import testContext._
 
   case class TestEntity(s: String, i: Int, l: Long, o: Option[Int], b: Boolean)
   val qr1 = quote {
@@ -17,6 +15,7 @@ class ZioJdbcUnderlyingContextSpec extends ZioSpec {
   }
 
   "provides transaction support" - {
+    import testContext.underlying._
     "success" in {
       (for {
         _ <- testContext.underlying.run(qr1.delete)
@@ -34,9 +33,10 @@ class ZioJdbcUnderlyingContextSpec extends ZioSpec {
           } yield qry
         }
         r <- testContext.underlying.run(qr1)
-      } yield r).onSomeDataSource.provideSomeLayer(ZLayer.service[DataSource] >>> ZLayer.succeed(33)).runSyncUnsafe().map(_.i) mustEqual List(33)
+      } yield r).onSomeDataSource.provideSomeLayer(ZLayer.succeed(io.getquill.postgres.pool) ++ ZLayer.succeed(33)).runSyncUnsafe().map(_.i) mustEqual List(33)
     }
     "success - stream" in {
+      import testContext.underlying._
       (for {
         _ <- testContext.underlying.run(qr1.delete)
         seq <- testContext.underlying.transaction {
@@ -49,6 +49,7 @@ class ZioJdbcUnderlyingContextSpec extends ZioSpec {
       } yield (seq.map(_.i), r.map(_.i))).onDataSource.runSyncUnsafe() mustEqual ((List(33), List(33)))
     }
     "failure - nested" in {
+      import testContext.underlying._
       (for {
         _ <- testContext.underlying.run(qr1.delete)
         e <- testContext.underlying.transaction {

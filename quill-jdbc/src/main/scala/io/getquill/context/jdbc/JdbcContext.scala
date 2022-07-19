@@ -11,7 +11,7 @@ import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
 import io.getquill.monad.SyncIOMonad
 
-abstract class JdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy]
+abstract class JdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   extends JdbcContextBase[Dialect, Naming]
   with ProtoContext[Dialect, Naming]
   with ContextVerbTranslate
