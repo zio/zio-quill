@@ -1,6 +1,6 @@
 package io.getquill.postgres
 
-import io.getquill.ziojdbc.Quill
+import io.getquill.jdbczio.Quill
 import io.getquill.{ testContext => _, _ }
 import zio.{ Unsafe, ZIO, ZLayer }
 

@@ -1,6 +1,6 @@
 package io.getquill.examples
 
-import io.getquill.ziojdbc.Quill
+import io.getquill.jdbczio.Quill
 import io.getquill._
 import zio._
 import zio.Console.printLine

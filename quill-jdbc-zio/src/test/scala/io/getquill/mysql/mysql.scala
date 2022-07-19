@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ZioSpec.runLayerUnsafe
-import io.getquill.ziojdbc.Quill
+import io.getquill.jdbczio.Quill
 
 package object mysql {
   implicit val pool = runLayerUnsafe(Quill.DataSource.fromPrefix("testMysqlDB"))
