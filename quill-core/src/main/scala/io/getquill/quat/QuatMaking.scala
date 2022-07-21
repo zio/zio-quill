@@ -33,7 +33,7 @@ trait QuatMaking extends QuatMakingBase {
         value
       case None =>
         val lookup =
-          (OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]"), OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$tpe]]"), OptionalTypecheck(c)(q"implicitly[io.getquill.quat.QuatMaking.IgnoreDecoders]")) match {
+          (OptionalTypecheck(c)(q"implicitly[io.getquill.dsl.GenericEncoder[$tpe, PrepareRow, Session]]"), OptionalTypecheck(c)(q"implicitly[io.getquill.dsl.GenericDecoder[ResultRow, Session, $tpe]]"), OptionalTypecheck(c)(q"implicitly[io.getquill.quat.QuatMaking.IgnoreDecoders]")) match {
             case (Some(_), Some(_), _)    => true
             case (Some(_), None, _)       => true
             case (None, Some(_), None)    => true // if there is a only a decoder available if the switch to IgnoreDecoders is enabled...

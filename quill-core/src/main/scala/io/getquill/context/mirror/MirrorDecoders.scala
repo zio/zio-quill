@@ -13,7 +13,7 @@ trait MirrorDecoders {
   override type ResultRow = Row
   override type Decoder[T] = MirrorDecoder[T]
 
-  case class MirrorDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
+  case class MirrorDecoder[T](decoder: DecoderMethod[T]) extends BaseDecoder[T] {
     override def apply(index: Index, row: ResultRow, session: Session) =
       decoder(index, row, session)
   }
@@ -31,10 +31,10 @@ trait MirrorDecoders {
 
   def decoderUnsafe[T]: Decoder[T] = MirrorDecoder((index: Index, row: ResultRow, session: Session) => row.data(index).asInstanceOf[T])
 
-  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: Decoder[I]): Decoder[O] =
+  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], d: BaseDecoder[I]): Decoder[O] =
     MirrorDecoder((index: Index, row: ResultRow, session: Session) => mapped.f(d.apply(index, row, session)))
 
-  implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
+  implicit def optionDecoder[T](implicit d: BaseDecoder[T]): Decoder[Option[T]] =
     MirrorDecoder((index: Index, row: ResultRow, session: Session) =>
       if (row.nullAt(index))
         None

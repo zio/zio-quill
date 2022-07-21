@@ -15,6 +15,18 @@ trait LowPriorityImplicits {
   implicit def anyValDecoder[T <: AnyVal]: Decoder[T] = macro EncodingDslMacro.anyValDecoder[T]
 }
 
+trait GenericEncoder[T, PrepareRow, Session] extends ((Int, T, PrepareRow, Session) => PrepareRow) {
+  def apply(i: Int, t: T, row: PrepareRow, session: Session): PrepareRow
+}
+
+trait GenericDecoder[ResultRow, Session, T] extends ((Int, ResultRow, Session) => T) {
+  def apply(i: Int, rr: ResultRow, s: Session): T
+}
+
+trait GenericNullChecker[ResultRow, Session] {
+  def apply(columnIndex: Int, resultRow: ResultRow): Boolean
+}
+
 trait EncodingDsl extends LowPriorityImplicits {
   this: CoreDsl =>
 
@@ -23,28 +35,28 @@ trait EncodingDsl extends LowPriorityImplicits {
   type Session
   type Index = Int
 
-  // Make sure the signature of this is different then the decoder, otherwise in abstract contexts
-  // it can be implicitly summoned up as the decoder and you'll see something like this when doing PrintMac:
-  // implicitly[Decoder[Boolean]](nullChecker). If session needs to be included, add a argument to differentiate
-  // it from Decoder[T] or use a inner-trait.
-  type BaseNullChecker = (Index, ResultRow) => Boolean
+  type EncoderMethod[T] = (Int, T, PrepareRow, Session) => PrepareRow
+  type DecoderMethod[T] = (Int, ResultRow, Session) => T
 
-  type NullChecker <: BaseNullChecker
+  // Final Encoder/Decoder classes that Context implementations will use for their actual signatures
+  // need to by subtypes GenericEncoder for encoder summoning to work from SqlContext where Encoders/Decoders
+  // are defined only abstractly.
+  type Encoder[T] <: GenericEncoder[T, PrepareRow, Session]
+  type Decoder[T] <: GenericDecoder[ResultRow, Session, T]
+  type NullChecker <: GenericNullChecker[ResultRow, Session]
 
-  type BaseEncoder[T] = (Index, T, PrepareRow, Session) => PrepareRow
-
-  type Encoder[T] <: BaseEncoder[T]
-
-  type BaseDecoder[T] = (Index, ResultRow, Session) => T
-
-  type Decoder[T] <: BaseDecoder[T]
+  // Initial Encoder/Decoder classes that Context implementations will subclass for their
+  // respective Encoder[T]/Decoder[T] implementations e.g. JdbcEncoder[T](...) extends BaseEncoder[T]
+  type BaseEncoder[T] = GenericEncoder[T, PrepareRow, Session]
+  type BaseDecoder[T] = GenericDecoder[ResultRow, Session, T]
+  type BaseNullChecker = GenericNullChecker[ResultRow, Session]
 
   /* ************************************************************************** */
 
   def lift[T](v: T): T = macro EncodingDslMacro.lift[T]
 
   @compileTimeOnly(NonQuotedException.message)
-  def liftScalar[T](v: T)(implicit e: Encoder[T]): T = NonQuotedException()
+  def liftScalar[T](v: T)(implicit e: BaseEncoder[T]): T = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
   def liftCaseClass[T](v: T): T = NonQuotedException()
@@ -54,7 +66,7 @@ trait EncodingDsl extends LowPriorityImplicits {
   def liftQuery[U[_] <: Iterable[_], T](v: U[T]): Query[T] = macro EncodingDslMacro.liftQuery[T]
 
   @compileTimeOnly(NonQuotedException.message)
-  def liftQueryScalar[U[_] <: Iterable[_], T](v: U[T])(implicit e: Encoder[T]): Query[T] = NonQuotedException()
+  def liftQueryScalar[U[_] <: Iterable[_], T](v: U[T])(implicit e: BaseEncoder[T]): Query[T] = NonQuotedException()
 
   @compileTimeOnly(NonQuotedException.message)
   def liftQueryCaseClass[U[_] <: Iterable[_], T](v: U[T]): Query[T] = NonQuotedException()
@@ -64,13 +76,13 @@ trait EncodingDsl extends LowPriorityImplicits {
   type MappedEncoding[I, O] = io.getquill.MappedEncoding[I, O]
   val MappedEncoding = io.getquill.MappedEncoding
 
-  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] = mappedEncoder
+  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit mapped: MappedEncoding[I, O], encoder: BaseEncoder[O]): Encoder[I] = mappedEncoder
 
-  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] = mappedDecoder
+  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit mapped: MappedEncoding[I, O], decoder: BaseDecoder[I]): Decoder[O] = mappedDecoder
 
-  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I]
+  implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: BaseEncoder[O]): Encoder[I]
 
-  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O]
+  implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: BaseDecoder[I]): Decoder[O]
 
   protected def mappedBaseEncoder[I, O](mapped: MappedEncoding[I, O], encoder: BaseEncoder[O]): BaseEncoder[I] =
     (index, value, row, session) => encoder(index, mapped.f(value), row, session)

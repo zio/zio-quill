@@ -12,7 +12,7 @@ class EncodingDslMacro(val c: MacroContext) {
       q"""
         ${c.prefix}.mappedEncoder(
           io.getquill.MappedEncoding((v: ${t.tpe}) => v.${param.name.toTermName}),
-          implicitly[${c.prefix}.Encoder[${param.typeSignature}]]
+          implicitly[io.getquill.dsl.GenericEncoder[${param.typeSignature}, PrepareRow, Session]]
         )
       """
     }.getOrElse(fail("Encoder", t.tpe))
@@ -22,7 +22,7 @@ class EncodingDslMacro(val c: MacroContext) {
       q"""
         ${c.prefix}.mappedDecoder(
           io.getquill.MappedEncoding((p: ${param.typeSignature}) => new ${t.tpe}(p)),
-          implicitly[${c.prefix}.Decoder[${param.typeSignature}]]
+          implicitly[io.getquill.dsl.GenericDecoder[ResultRow, Session, ${param.typeSignature}]]
         )
       """
     }.getOrElse(fail("Decoder", t.tpe))
@@ -34,7 +34,7 @@ class EncodingDslMacro(val c: MacroContext) {
     lift[T](v, "liftQuery")
 
   private def lift[T](v: Tree, method: String)(implicit t: WeakTypeTag[T]): Tree =
-    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$t]]") match {
+    OptionalTypecheck(c)(q"implicitly[io.getquill.dsl.GenericEncoder[$t, PrepareRow, Session]]") match {
       case Some(enc) =>
         q"${c.prefix}.${TermName(s"${method}Scalar")}($v)($enc)"
       case None =>

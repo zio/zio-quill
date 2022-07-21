@@ -5,14 +5,14 @@ import io.getquill.ast._
 import scala.collection.immutable.Map
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import scala.reflect.NameTransformer
-import io.getquill.dsl.EncodingDsl
+import io.getquill.dsl.{ EncodingDsl, GenericEncoder }
 import io.getquill.norm.{ BetaReduction, RepropagateQuats, TypeBehavior }
 import io.getquill.quat.{ Quat, QuatMaking }
 import io.getquill.util.{ Interpolator, OptionalTypecheck }
 import io.getquill.util.MacroContextExt._
 import io.getquill.util.Messages.TraceType
 
-case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
+case class ScalarValueLifting[T, U](value: T, encoder: GenericEncoder[U, _, _])
 case class CaseClassValueLifting[T](value: T)
 
 trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
@@ -54,7 +54,7 @@ trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
 
     private def lift(v: Tree): Lift = {
       val tpe = c.typecheck(q"import _root_.scala.language.reflectiveCalls; $v").tpe
-      OptionalTypecheck(c)(q"implicitly[${c.prefix}.Encoder[$tpe]]") match {
+      OptionalTypecheck(c)(q"implicitly[io.getquill.dsl.GenericEncoder[$tpe, PrepareRow, Session]]") match {
         case Some(enc) => ScalarValueLift(v.toString, v, enc, inferQuat(tpe))
         case None =>
           tpe.baseType(c.symbolOf[Product]) match {

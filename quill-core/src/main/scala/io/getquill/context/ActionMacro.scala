@@ -181,7 +181,7 @@ class ActionMacro(val c: MacroContext)
     }
 
   private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
-    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
+    OptionalTypecheck(c)(q"implicitly[io.getquill.dsl.GenericDecoder[ResultRow, Session, $t]]") match {
       case Some(decoder) =>
         q"(row: ${c.prefix}.ResultRow, session: ${c.prefix}.Session) => $decoder.apply(0, row, session)"
       case None =>

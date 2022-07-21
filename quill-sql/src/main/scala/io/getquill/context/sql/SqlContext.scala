@@ -15,8 +15,8 @@ trait SqlContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy]
 
   implicit val nullChecker: NullChecker
 
-  implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]]
-  implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]]
+  implicit def optionDecoder[T](implicit d: BaseDecoder[T]): Decoder[Option[T]]
+  implicit def optionEncoder[T](implicit d: BaseEncoder[T]): Encoder[Option[T]]
 
   implicit val stringDecoder: Decoder[String]
   implicit val bigDecimalDecoder: Decoder[BigDecimal]

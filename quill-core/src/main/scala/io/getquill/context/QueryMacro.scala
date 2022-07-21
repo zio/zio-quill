@@ -48,7 +48,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
 
   private def expandQuery[T](quoted: Tree, method: ContextMethod)(implicit t: WeakTypeTag[T]) = {
     val topLevelQuat = inferQuat(t.tpe)
-    OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
+    OptionalTypecheck(c)(q"implicitly[io.getquill.dsl.GenericDecoder[ResultRow, Session, $t]]") match {
       case Some(decoder) => expandQueryWithDecoder(quoted, method, decoder, topLevelQuat)
       case None          => expandQueryWithMeta[T](quoted, method, topLevelQuat)
     }
