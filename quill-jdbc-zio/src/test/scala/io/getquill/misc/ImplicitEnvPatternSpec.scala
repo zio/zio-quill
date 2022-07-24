@@ -1,16 +1,12 @@
-package io.getquill.postgres
+package io.getquill.misc
 
-import io.getquill.{ JdbcContextConfig, PeopleZioSpec }
-
-import java.io.Closeable
-import javax.sql.DataSource
+import io.getquill.PeopleZioProxySpec
 import io.getquill.context.qzio.ImplicitSyntax._
-import io.getquill.util.LoadConfig
 import zio.ZIO
 
-class ImplicitEnvPatternSpec extends PeopleZioSpec {
+import javax.sql.DataSource
 
-  // Need to specify prefix to use for the setup
+class ImplicitEnvPatternSpec extends PeopleZioProxySpec {
 
   val context = testContext
   import testContext._
@@ -27,7 +23,7 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
     }.runSyncUnsafe()
   }
 
-  case class MyService(ds: DataSource with Closeable) {
+  case class MyService(ds: DataSource) {
     implicit val env = Implicit(ds)
 
     def alexes = testContext.run(query[Person].filter(p => p.name == "Alex"))
@@ -35,12 +31,12 @@ class ImplicitEnvPatternSpec extends PeopleZioSpec {
     def coras = testContext.run(query[Person].filter(p => p.name == "Cora"))
   }
 
-  def makeDataSource() = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def makeDataSource() = io.getquill.postgres.pool
 
   "dataSource based context should fetch results" in {
     val (alexes, berts, coras) =
       ZIO.scoped {
-        ZIO.fromAutoCloseable(ZIO.attempt(makeDataSource())).flatMap { ds =>
+        ZIO.attempt(makeDataSource()).flatMap { ds =>
           for {
             svc <- ZIO.attempt(MyService(ds))
             alexes <- svc.alexes

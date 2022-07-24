@@ -4,7 +4,7 @@ import com.datastax.oss.driver.api.core.CqlSession
 import io.getquill.context.{ AsyncFutureCache, CassandraSession, SyncCache }
 import io.getquill.context.cassandra.CassandraSessionContext
 
-abstract class CassandraCqlSessionContext[N <: NamingStrategy](
+abstract class CassandraCqlSessionContext[+N <: NamingStrategy](
   val naming:                     N,
   val session:                    CqlSession,
   val preparedStatementCacheSize: Long

@@ -1,9 +1,9 @@
 package io.getquill.examples
 
-import io.getquill.context.ZioJdbc.DataSourceLayer
+import io.getquill.ziojdbc.Quill
 import io.getquill.{ Literal, PostgresZioJdbcContext }
-import zio.{ ZIOAppDefault, ZIO, ZLayer }
 import zio.Console._
+import zio.{ ZIO, ZIOAppDefault, ZLayer }
 
 import java.sql.SQLException
 import javax.sql.DataSource
@@ -33,7 +33,7 @@ object DBManager {
 
   val ctx = new PostgresZioJdbcContext(Literal)
   import ctx._
-  val zioDS: ZLayer[Any, Throwable, DataSource] = DataSourceLayer.fromPrefix("testPostgresDB")
+  val zioDS: ZLayer[Any, Throwable, DataSource] = Quill.DataSource.fromPrefix("testPostgresDB")
 
   trait Service {
     def persist(person: Person): ZIO[DataSource, SQLException, Long]

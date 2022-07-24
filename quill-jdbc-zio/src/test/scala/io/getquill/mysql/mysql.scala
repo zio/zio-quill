@@ -1,9 +1,9 @@
 package io.getquill
 
-import io.getquill.context.ZioJdbc.DataSourceLayer
-import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import io.getquill.ZioSpec.runLayerUnsafe
+import io.getquill.ziojdbc.Quill
 
 package object mysql {
-  implicit val pool = zio.Unsafe.unsafe { implicit u => Implicit(zio.Runtime.unsafe.fromLayer(DataSourceLayer.fromPrefix("testMysqlDB"))) }
-  object testContext extends MysqlZioJdbcContext(Literal) with TestEntities
+  implicit val pool = runLayerUnsafe(Quill.DataSource.fromPrefix("testMysqlDB"))
+  object testContext extends Quill.MysqlService(Literal, pool) with TestEntities
 }

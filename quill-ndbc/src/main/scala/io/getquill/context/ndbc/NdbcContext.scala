@@ -8,7 +8,7 @@ import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
 
 import scala.concurrent.duration.Duration
 
-abstract class NdbcContext[I <: SqlIdiom, N <: NamingStrategy, P <: PreparedStatement, R <: Row](
+abstract class NdbcContext[I <: SqlIdiom, +N <: NamingStrategy, P <: PreparedStatement, R <: Row](
   override val idiom: I, override val naming: N, val dataSource: DataSource[P, R]
 )
   extends NdbcContextBase[I, N, P, R]

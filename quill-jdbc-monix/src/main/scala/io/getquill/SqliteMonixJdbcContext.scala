@@ -9,7 +9,7 @@ import io.getquill.context.monix.MonixJdbcContext
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
-class SqliteMonixJdbcContext[N <: NamingStrategy](
+class SqliteMonixJdbcContext[+N <: NamingStrategy](
   val naming:     N,
   val dataSource: DataSource with Closeable,
   runner:         EffectWrapper

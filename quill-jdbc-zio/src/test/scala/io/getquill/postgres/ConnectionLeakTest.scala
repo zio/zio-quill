@@ -1,18 +1,19 @@
 package io.getquill.postgres
 
 import java.util.UUID
-import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, ZioSpec }
+import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, ZioProxySpec }
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import io.getquill.ziojdbc.Quill
 import zio.{ Runtime, Unsafe }
 
 import scala.util.Random
 
-class ConnectionLeakTest extends ProductSpec with ZioSpec {
+class ConnectionLeakTest extends ProductSpec with ZioProxySpec {
 
-  implicit val pool = Implicit(DataSourceLayer.fromPrefix("testPostgresDB"))
+  implicit val pool = Implicit(Quill.DataSource.fromPrefix("testPostgresDB"))
 
   val dataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
   val context = new PostgresZioJdbcContext(Literal)

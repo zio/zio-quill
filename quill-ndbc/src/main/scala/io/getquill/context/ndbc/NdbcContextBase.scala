@@ -45,7 +45,7 @@ object NdbcContextBase {
   }
 }
 
-trait NdbcContextBase[Idiom <: SqlIdiom, Naming <: NamingStrategy, P <: PreparedStatement, R <: Row]
+trait NdbcContextBase[+Idiom <: SqlIdiom, +Naming <: NamingStrategy, P <: PreparedStatement, R <: Row]
   extends SqlContext[Idiom, Naming] {
 
   private[getquill] val logger = ContextLogger(classOf[NdbcContext[_, _, _, _]])

@@ -22,7 +22,7 @@ import javax.sql.DataSource
  * case class Person(firstName:String, lastName:String, age:Int)
  * case class Address(...)
  *
- * trait PublicExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+ * trait PublicExtensions[+Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
  *   this:io.getquill.context.Context[Idiom, Naming] =>
  *
  *   object PersonDao { def query = querySchema[Person](...) }
@@ -54,7 +54,7 @@ import javax.sql.DataSource
  *
  * The following schema should result:
  * <pre>
- * trait CommonExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+ * trait CommonExtensions[+Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
  *   this:io.getquill.context.Context[Idiom, Naming] =>
  *
  *   object PersonDao {
@@ -64,7 +64,7 @@ import javax.sql.DataSource
  *   }
  * }
  *
- * trait PublicExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+ * trait PublicExtensions[+Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
  *   this:io.getquill.context.Context[Idiom, Naming] =>
  *
  *   object AddressDao {
@@ -76,13 +76,13 @@ import javax.sql.DataSource
  * <h2>When DAO Objects Collide</h2>
  * Now when you are trying to generate schemas which are not being stereotyped but have equivalent table names for example:
  * <pre>
- * trait AlphaExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+ * trait AlphaExtensions[+Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
  *   this:io.getquill.context.Context[Idiom, Naming] =>
  *
  *   object PersonDao { def query = querySchema[Person](...) }
  * }
  *
- * trait BravoExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+ * trait BravoExtensions[+Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
  *   this:io.getquill.context.Context[Idiom, Naming] =>
  *
  *   object PersonDao { def query = querySchema[Person](...) }
@@ -97,7 +97,7 @@ import javax.sql.DataSource
  * will collide inside of MyCustomContext. Use the parameter <code>nestedTrait=true</code> in order to get around this.
  *
  * <pre>
- * trait AlphaExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+ * trait AlphaExtensions[+Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
  *   this:io.getquill.context.Context[Idiom, Naming] =>
  *
  *   trait AlphaSchema {
@@ -105,7 +105,7 @@ import javax.sql.DataSource
  *   }
  * }
  *
- * trait BravoExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+ * trait BravoExtensions[+Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
  *   this:io.getquill.context.Context[Idiom, Naming] =>
  *
  *   trait BravoSchema {
@@ -178,7 +178,7 @@ class ComposeableTraitsJdbcCodegen(
     def traitName: String = packageName.getOrElse(defaultNamespace).capitalize + "Extensions"
 
     override def tableSchemasCode: String = super.tableSchemasCode.notEmpty.map(tsCode => s"""
-      |trait ${traitName}[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
+      |trait ${traitName}[+Idiom <: io.getquill.idiom.Idiom, +Naming <: io.getquill.NamingStrategy] {
       |  this:io.getquill.context.Context[Idiom, Naming] =>
       |
       |  ${indent(possibleTraitNesting(indent(tsCode)))}

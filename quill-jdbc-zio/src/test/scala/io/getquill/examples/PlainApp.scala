@@ -1,7 +1,7 @@
 package io.getquill.examples
 
+import io.getquill.ziojdbc.Quill
 import io.getquill.{ Literal, PostgresZioJdbcContext }
-import io.getquill.context.ZioJdbc._
 import zio.{ Runtime, Unsafe }
 
 object PlainApp {
@@ -11,7 +11,7 @@ object PlainApp {
 
   case class Person(name: String, age: Int)
 
-  val zioDS = DataSourceLayer.fromPrefix("testPostgresDB")
+  val zioDS = Quill.DataSource.fromPrefix("testPostgresDB")
 
   def main(args: Array[String]): Unit = {
     val people = quote {

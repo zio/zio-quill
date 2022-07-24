@@ -1,14 +1,12 @@
-package io.getquill.postgres
+package io.getquill.misc
 
-import io.getquill.PeopleZioSpec
-
-import org.scalatest.matchers.should.Matchers._
-import zio.{ ZIO, ZLayer }
+import io.getquill.PeopleZioProxySpec
 import io.getquill.context.ZioJdbc._
+import zio.{ ZIO, ZLayer }
 
 import javax.sql.DataSource
 
-class OnDataSourceSpec extends PeopleZioSpec {
+class OnDataSourceSpec extends PeopleZioProxySpec {
 
   val context = testContext
 
@@ -45,7 +43,7 @@ class OnDataSourceSpec extends PeopleZioSpec {
     "should work" in {
       // This is how you import the encoders/decoders of `underlying` context without importing things that will conflict
       // i.e. the quote and run methods
-      import testContext.underlying.{ quote => _, run => _, prepare => _, _ }
+      import testContext.underlying.{ prepare => _, quote => _, run => _, _ }
       val people =
         (for {
           out <- testContext.underlying.run(query[Person].filter(p => p.name == "Alex"))
@@ -58,13 +56,13 @@ class OnDataSourceSpec extends PeopleZioSpec {
   }
 
   "implicitDS on underlying context" - {
-    import io.getquill.context.qzio.ImplicitSyntax._
 
     "should work with additional dependency" in {
       // This is how you import the decoders of `underlying` context without importing things that will conflict
       // i.e. the quote and run methods
       case class Service(ds: DataSource) {
-        implicit val dsi = Implicit(ds)
+        // Note that implicit Implicit(dataSource) is given by the package-level `pool` object
+        //implicit val dsi = Implicit(ds)
         val people =
           (for {
             n <- ZIO.service[String]
@@ -84,7 +82,8 @@ class OnDataSourceSpec extends PeopleZioSpec {
       // This is how you import the decoders of `underlying` context without importing things that will conflict
       // i.e. the quote and run methods
       case class Service(ds: DataSource) {
-        implicit val dsi = Implicit(ds)
+        // Note that implicit Implicit(dataSource) is given by the package-level `pool` object
+        //implicit val dsi = Implicit(ds)
         val people =
           (for {
             out <- testContext.run(query[Person].filter(p => p.name == "Alex"))
