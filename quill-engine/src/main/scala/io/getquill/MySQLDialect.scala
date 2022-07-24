@@ -3,6 +3,7 @@ package io.getquill
 import io.getquill.ast.{ Ast, _ }
 import io.getquill.context.CanReturnField
 import io.getquill.context.sql.OrderByCriteria
+import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom.{ NoConcatSupport, QuestionMarkBindVariables, SqlIdiom }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, Token }
@@ -14,6 +15,8 @@ trait MySQLDialect
   with QuestionMarkBindVariables
   with NoConcatSupport
   with CanReturnField {
+
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
   override def prepareForProbing(string: String) = {
     val quoted = string.replace("'", "\\'")
