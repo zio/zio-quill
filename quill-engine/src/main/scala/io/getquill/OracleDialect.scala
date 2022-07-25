@@ -1,24 +1,24 @@
 package io.getquill
 
-import io.getquill.ast.{ Action => AstAction, _ }
+import io.getquill.ast._
 import io.getquill.context.CanReturnMultiField
 import io.getquill.context.sql._
+import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
-import io.getquill.norm.{ ConcatBehavior, TranspileConfig }
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
-import io.getquill.sql.idiom.{ BooleanLiteralSupport, NoActionAliases }
+import io.getquill.norm.{ ConcatBehavior, TranspileConfig }
+import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait OracleDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with ConcatSupport
   with CanReturnMultiField
-  with BooleanLiteralSupport
-  with NoActionAliases {
+  with BooleanLiteralSupport {
 
-  override def querifyAction(ast: AstAction) = HideTopLevelFilterAlias(super.querifyAction(ast))
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
   class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig)
     extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, transpileConfig) {

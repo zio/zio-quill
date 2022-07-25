@@ -2,7 +2,7 @@ package io.getquill.examples
 
 import com.zaxxer.hikari.HikariDataSource
 import io.getquill.util.LoadConfig
-import io.getquill.ziojdbc.Quill
+import io.getquill.jdbczio.Quill
 import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext }
 import zio.Console.printLine
 import zio.{ Runtime, Unsafe }

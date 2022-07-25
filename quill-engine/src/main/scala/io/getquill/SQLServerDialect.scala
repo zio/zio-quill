@@ -1,15 +1,16 @@
 package io.getquill
 
-import io.getquill.ast.{ Action => AstAction, _ }
+import io.getquill.ast._
 import io.getquill.context.CanOutputClause
+import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom._
 import io.getquill.context.sql.norm.AddDropToNestedOrderBy
 import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery, SqlQueryApply }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
-import io.getquill.norm.{ EqualityBehavior, TranspileConfig }
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
-import io.getquill.sql.idiom.{ BooleanLiteralSupport, NoActionAliases }
+import io.getquill.norm.{ EqualityBehavior, TranspileConfig }
+import io.getquill.sql.idiom.BooleanLiteralSupport
 import io.getquill.util.Messages.fail
 import io.getquill.util.TraceConfig
 
@@ -18,12 +19,11 @@ trait SQLServerDialect
   with QuestionMarkBindVariables
   with ConcatSupport
   with CanOutputClause
-  with BooleanLiteralSupport
-  with NoActionAliases {
+  with BooleanLiteralSupport {
+
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
   override def querifyAst(ast: Ast, transpileConfig: TraceConfig) = AddDropToNestedOrderBy(new SqlQueryApply(transpileConfig)(ast))
-
-  override def querifyAction(ast: AstAction) = HideTopLevelFilterAlias(super.querifyAction(ast))
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 

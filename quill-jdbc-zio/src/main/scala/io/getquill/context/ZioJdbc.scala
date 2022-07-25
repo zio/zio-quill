@@ -3,7 +3,7 @@ package io.getquill.context
 import com.typesafe.config.Config
 import io.getquill.JdbcContextConfig
 import io.getquill.util.{ ContextLogger, LoadConfig }
-import io.getquill.ziojdbc.Quill
+import io.getquill.jdbczio.Quill
 import zio.{ Scope, ZEnvironment, ZIO, ZLayer }
 import zio.stream.ZStream
 import izumi.reflect.Tag

@@ -6,7 +6,7 @@ import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax.Implicit
-import io.getquill.ziojdbc.Quill
+import io.getquill.jdbczio.Quill
 import zio.{ Runtime, Unsafe }
 
 import scala.util.Random

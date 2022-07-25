@@ -1,4 +1,4 @@
-package io.getquill.ziojdbc
+package io.getquill.jdbczio
 
 import io.getquill.{ NamingStrategy, ReturnAction }
 import io.getquill.context.{ ContextVerbStream, ExecutionInfo, ProtoContext }

@@ -1,4 +1,4 @@
-package io.getquill.ziojdbc
+package io.getquill.jdbczio
 
 import com.typesafe.config.Config
 import io.getquill._
