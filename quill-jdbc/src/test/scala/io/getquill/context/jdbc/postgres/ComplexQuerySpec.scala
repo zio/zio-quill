@@ -1,8 +1,8 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.Spec
 import org.scalatest.BeforeAndAfter
 import io.getquill.Ord
+import io.getquill.base.Spec
 
 class ComplexQuerySpec extends Spec with BeforeAndAfter {
 

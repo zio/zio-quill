@@ -1,6 +1,6 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import org.apache.spark.sql.Dataset
 import scala.language.reflectiveCalls
 

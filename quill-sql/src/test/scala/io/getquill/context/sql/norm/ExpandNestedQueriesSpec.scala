@@ -1,6 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.base.Spec
+import io.getquill.{ MirrorSqlDialect, Query, SnakeCase, SqlMirrorContext }
 import io.getquill.context.sql.{ testContext, testContextUpperEscapeColumn }
 import io.getquill.context.sql.util.StringOps._
 import io.getquill.norm.EnableTrace

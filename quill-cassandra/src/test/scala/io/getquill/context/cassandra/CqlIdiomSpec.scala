@@ -5,6 +5,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.ast.{ Action => AstAction, Query => _, _ }
 import io.getquill.idiom.StringToken
 import io.getquill.Query
+import io.getquill.base.Spec
 import io.getquill.context.ExecutionType
 import io.getquill.norm.TranspileConfig
 import io.getquill.quat.Quat

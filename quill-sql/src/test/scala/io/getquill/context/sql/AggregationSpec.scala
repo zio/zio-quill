@@ -1,7 +1,8 @@
 package io.getquill.context.sql
 
+import io.getquill.base.Spec
 import io.getquill.norm.{ DisablePhase, OptionalPhase }
-import io.getquill.{ Literal, MirrorSqlDialect, Spec, SqlMirrorContext, TestEntities }
+import io.getquill.{ Literal, MirrorSqlDialect, SqlMirrorContext, TestEntities }
 import io.getquill.norm.ConfigList._
 
 class AggregationSpec extends Spec {

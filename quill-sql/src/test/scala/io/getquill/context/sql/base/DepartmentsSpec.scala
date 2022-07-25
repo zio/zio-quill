@@ -1,7 +1,8 @@
 package io.getquill.context.sql.base
 
 import io.getquill.context.sql.SqlContext
-import io.getquill.{ Query, Spec }
+import io.getquill.Query
+import io.getquill.base.Spec
 
 trait DepartmentsSpec extends Spec {
 

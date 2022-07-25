@@ -1,5 +1,7 @@
 package io.getquill
 
+import io.getquill.base.Spec
+
 object iqContext extends MirrorContext(MirrorIdiom, Literal) with ImplicitQuery with TestEntities
 
 object Test extends Function1[String, Test] {

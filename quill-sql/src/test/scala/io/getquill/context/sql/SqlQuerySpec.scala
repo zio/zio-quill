@@ -1,10 +1,10 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.Literal
 import io.getquill.Query
 import io.getquill.Ord
+import io.getquill.base.Spec
 import io.getquill.context.sql.util.StringOps._
 import io.getquill.util.TraceConfig
 

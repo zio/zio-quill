@@ -1,6 +1,6 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class SqlIdiomOptionCompareSpec extends Spec {
 

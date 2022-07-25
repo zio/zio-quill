@@ -2,7 +2,8 @@ package io.getquill.context.sql.norm
 
 import io.getquill.ast._
 import io.getquill.context.sql.testContext._
-import io.getquill.{ Query, Spec }
+import io.getquill.Query
+import io.getquill.base.Spec
 
 class FlattenGroupByAggregationSpec extends Spec {
 

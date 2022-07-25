@@ -1,6 +1,6 @@
 package io.getquill.context.sql.base
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
 import org.scalatest.BeforeAndAfterEach
 

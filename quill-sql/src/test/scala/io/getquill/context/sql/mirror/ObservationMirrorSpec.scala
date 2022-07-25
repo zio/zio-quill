@@ -1,6 +1,6 @@
 package io.getquill.context.sql.mirror
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 
 class ObservationMirrorSpec extends Spec {

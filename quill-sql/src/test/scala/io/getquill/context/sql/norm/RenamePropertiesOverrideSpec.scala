@@ -1,9 +1,10 @@
 package io.getquill.context.sql.norm
 
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted, Spec }
+import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted }
 
 class RenamePropertiesOverrideSpec extends Spec {
 

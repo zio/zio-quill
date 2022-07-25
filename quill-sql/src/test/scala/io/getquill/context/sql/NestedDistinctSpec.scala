@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Literal, MirrorSqlDialect, Spec, SqlMirrorContext }
+import io.getquill.base.Spec
+import io.getquill.{ Literal, MirrorSqlDialect, SqlMirrorContext }
 import io.getquill.context.sql.util.StringOps._
 
 class NestedDistinctSpec extends Spec {

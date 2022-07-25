@@ -1,5 +1,6 @@
 package io.getquill
 
+import io.getquill.base.Spec
 import io.getquill.context.qzio.ImplicitSyntax._
 import org.scalatest.BeforeAndAfterAll
 import zio.stream.{ ZSink, ZStream }

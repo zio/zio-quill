@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.{ MirrorSqlDialectWithBooleanLiterals, Query, Quoted, Spec }
+import io.getquill.base.Spec
+import io.getquill.{ MirrorSqlDialectWithBooleanLiterals, Query, Quoted }
 
 class OptionSqlSpec extends Spec {
   import testContext._

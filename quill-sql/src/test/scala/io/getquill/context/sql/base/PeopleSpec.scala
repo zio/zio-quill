@@ -1,7 +1,8 @@
 package io.getquill.context.sql.base
 
+import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
-import io.getquill.{ Ord, Query, Quoted, Spec }
+import io.getquill.{ Ord, Query, Quoted }
 
 trait PeopleSpec extends Spec {
 

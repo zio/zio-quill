@@ -1,6 +1,7 @@
 package io.getquill.quat
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.norm.RepropagateQuats
 import io.getquill.quotation.QuatException
 

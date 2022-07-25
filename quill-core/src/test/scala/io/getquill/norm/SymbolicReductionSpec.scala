@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.testContext.qr1
 import io.getquill.testContext.qr2
 import io.getquill.testContext.qr3

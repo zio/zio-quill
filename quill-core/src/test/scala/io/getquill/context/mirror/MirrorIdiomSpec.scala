@@ -1,7 +1,6 @@
 package io.getquill.context.mirror
 
 import io.getquill.MirrorIdiom
-import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.Literal
@@ -10,6 +9,7 @@ import io.getquill.ast._
 import io.getquill.Ord
 import io.getquill.Query
 import io.getquill.Quoted
+import io.getquill.base.Spec
 
 class MirrorIdiomSpec extends Spec {
 

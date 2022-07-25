@@ -1,6 +1,5 @@
 package io.getquill.context
 
-import io.getquill.Spec
 import io.getquill.testContext
 import io.getquill.testContext._
 import mirror.Row
@@ -15,6 +14,7 @@ import io.getquill.UpperCase
 import io.getquill.SnakeCase
 import io.getquill.Action
 import io.getquill.Query
+import io.getquill.base.Spec
 
 class ContextMacroSpec extends Spec {
 

@@ -1,7 +1,8 @@
 package io.getquill.context.cassandra.zio
 
+import io.getquill.base.Spec
 import io.getquill.util.LoadConfig
-import io.getquill.{ CassandraContextConfig, CassandraZioSession, Spec }
+import io.getquill.{ CassandraContextConfig, CassandraZioSession }
 import zio.{ Runtime, Unsafe, ZEnvironment, ZIO }
 import zio.stream.{ ZSink, ZStream }
 

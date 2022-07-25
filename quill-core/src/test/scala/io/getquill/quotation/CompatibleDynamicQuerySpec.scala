@@ -1,6 +1,7 @@
 package io.getquill.quotation
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.dsl.DynamicQueryDsl
 
 class CompatibleDynamicQuerySpec extends Spec {

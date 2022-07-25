@@ -1,6 +1,6 @@
 package io.getquill.context
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.mirror.{ MirrorSession, Row }
 import io.getquill.testContext
 import io.getquill.testContext._

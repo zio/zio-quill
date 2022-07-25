@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class OracleDialectSpec extends Spec {
 

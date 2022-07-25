@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class NormalizeCachingSpec extends Spec {
 

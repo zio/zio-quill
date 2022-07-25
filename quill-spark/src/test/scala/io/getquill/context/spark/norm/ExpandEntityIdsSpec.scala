@@ -1,6 +1,6 @@
 package io.getquill.context.spark.norm
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.spark.{ sqlContext, testContext }
 
 case class Test(i: Int, j: Int, s: String)

@@ -1,6 +1,7 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ Ord, Spec }
+import io.getquill.Ord
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContext.qr1
 import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote

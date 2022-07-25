@@ -2,8 +2,8 @@ package io.getquill.context.sql
 
 import java.time.LocalDate
 import java.util.{ Date, UUID }
-
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.testContext._
