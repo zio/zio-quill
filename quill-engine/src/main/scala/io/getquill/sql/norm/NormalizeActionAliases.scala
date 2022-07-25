@@ -14,6 +14,9 @@ object NormalizeFilteredActionAliases extends StatelessTransformer {
         //   UPDATE Person p SET (p.name, p.age) VALUES (x1 => x1.name = 'Jim', x1 => x2.age = 123) WHERE p.name = 'Joe'
         // Becomes this:
         //   UPDATE Person p SET (p.name, p.age) VALUES (x1.name = 'Jim', x2.age = 123) WHERE p.name = 'Joe'
+        // Actually becomes this:
+        //   UPDATE Person p SET (name, age) VALUES (x1.name = 'Jim', x2.age = 123) WHERE p.name = 'Joe'
+        // (since we don't tokenize the identifier of the SET-clauses)
 
         // We need to change it to this:
         //   query[Person].filter(p => p.name == 'Joe').update(p => p.name -> 'Jim', p => p.age = 123
@@ -21,6 +24,9 @@ object NormalizeFilteredActionAliases extends StatelessTransformer {
         //   UPDATE Person p SET (p.name, p.age) VALUES (p => p.name = 'Jim', p => p.age = 123) WHERE p.name = 'Joe'
         // Becomes this:
         //   UPDATE Person p SET (p.name, p.age) VALUES (p.name = 'Jim', p.age = 123) WHERE p.name = 'Joe'
+        // Actually becomes this:
+        //   UPDATE Person p SET (name, age) VALUES (p.name = 'Jim', p.age = 123) WHERE p.name = 'Joe'
+        // (since we don't tokenize the identifier of the SET-clauses)
 
         Update(apply(query), assignments.map(a => realiasAssignment(a, alias)))
       case _ => super.apply(e)

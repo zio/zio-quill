@@ -16,7 +16,7 @@ trait MySQLDialect
   with NoConcatSupport
   with CanReturnField {
 
-  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.SkipAs
 
   override def prepareForProbing(string: String) = {
     val quoted = string.replace("'", "\\'")
