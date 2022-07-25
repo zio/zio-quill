@@ -3,7 +3,8 @@ package io.getquill.context.sql.encoding
 import java.time.LocalDate
 import java.util.Date
 
-import io.getquill.{ MappedEncoding, Spec }
+import io.getquill.MappedEncoding
+import io.getquill.base.Spec
 import org.scalatest.{ Assertion, BeforeAndAfterEach }
 
 trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {

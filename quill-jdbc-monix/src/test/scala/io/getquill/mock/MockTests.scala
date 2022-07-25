@@ -1,11 +1,12 @@
 package io.getquill.mock
 
+import io.getquill.base.Spec
 import java.io.Closeable
 import java.sql._
 
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import javax.sql.DataSource
-import io.getquill.{ Literal, PostgresMonixJdbcContext, Spec }
+import io.getquill.{ Literal, PostgresMonixJdbcContext }
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.mockito.scalatest.AsyncMockitoSugar

@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.{ Spec, TestEntities }
+import io.getquill.TestEntities
+import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
 
 trait OnConflictSpec extends Spec {

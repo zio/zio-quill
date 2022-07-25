@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.{ MirrorSqlDialectWithBooleanLiterals, Spec }
+import io.getquill.MirrorSqlDialectWithBooleanLiterals
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContext
 import io.getquill.norm.EnableTrace
 import io.getquill.util.Messages.TraceType

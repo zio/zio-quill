@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
 import io.getquill.Ord
+import io.getquill.base.Spec
 
 trait DistinctSpec extends Spec {
 

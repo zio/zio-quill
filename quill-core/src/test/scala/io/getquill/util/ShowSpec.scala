@@ -1,6 +1,6 @@
 package io.getquill.util
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class ShowSpec extends Spec {
 

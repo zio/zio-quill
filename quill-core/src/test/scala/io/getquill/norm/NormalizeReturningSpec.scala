@@ -1,8 +1,9 @@
 package io.getquill.norm
 
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
-import io.getquill.{ MirrorIdiomReturningSingle, MirrorIdiomReturningMulti, Spec, testContext }
+import io.getquill.{ MirrorIdiomReturningSingle, MirrorIdiomReturningMulti, testContext }
 import io.getquill.testContext._
 
 class NormalizeReturningSpec extends Spec {

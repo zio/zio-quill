@@ -2,6 +2,7 @@ package io.getquill.quotation
 
 import io.getquill._
 import io.getquill.ast.Entity
+import io.getquill.base.Spec
 import io.getquill.dsl.DynamicQueryDsl
 import io.getquill.quat.Quat
 

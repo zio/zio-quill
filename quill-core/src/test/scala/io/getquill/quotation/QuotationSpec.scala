@@ -1,6 +1,5 @@
 package io.getquill.quotation
 
-import io.getquill.Spec
 import io.getquill.ast.Implicits._
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Query => _, _ }
@@ -12,6 +11,7 @@ import io.getquill.Ord
 import io.getquill.Query
 import io.getquill.quat._
 import io.getquill.Quoted
+import io.getquill.base.Spec
 
 import scala.math.BigDecimal.{ double2bigDecimal, int2bigDecimal, javaBigDecimal2bigDecimal, long2bigDecimal }
 

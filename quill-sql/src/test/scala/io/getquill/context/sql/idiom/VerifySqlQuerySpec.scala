@@ -1,6 +1,6 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.{ SqlQuery, SqlQueryApply }
 

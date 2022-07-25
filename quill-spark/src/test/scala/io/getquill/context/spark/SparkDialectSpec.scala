@@ -1,7 +1,7 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
 import io.getquill.Literal
+import io.getquill.base.Spec
 import io.getquill.context.ExecutionType
 import io.getquill.norm.{ SheathLeafClauses, SheathLeafClausesApply, TranspileConfig }
 import io.getquill.quat.Quat

@@ -1,8 +1,8 @@
 package io.getquill.context.sql
 
+import io.getquill.base.Spec
 import java.time.{ LocalDate, LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime }
 import java.util.{ Date, UUID }
-import io.getquill.Spec
 
 case class EncodingTestType(value: String)
 

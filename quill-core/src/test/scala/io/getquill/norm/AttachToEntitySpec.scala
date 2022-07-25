@@ -1,9 +1,9 @@
 package io.getquill.norm
 
-import io.getquill.Spec
 import io.getquill.ast.{ AscNullsFirst, Constant, Ident, Map, SortBy }
 import io.getquill.testContext._
 import io.getquill.Query
+import io.getquill.base.Spec
 
 class AttachToEntitySpec extends Spec {
 

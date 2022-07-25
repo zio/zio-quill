@@ -1,5 +1,6 @@
 package io.getquill
 
+import io.getquill.base.Spec
 import io.getquill.context.monix.MonixNdbcContext
 import monix.execution.Scheduler
 import monix.reactive.Observable

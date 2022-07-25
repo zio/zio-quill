@@ -2,6 +2,7 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import io.getquill.ast.Ast
+import io.getquill.base.Spec
 
 class ExpandMappedInfixSpec extends Spec {
 

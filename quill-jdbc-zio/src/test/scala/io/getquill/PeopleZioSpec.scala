@@ -1,7 +1,7 @@
 package io.getquill
 
-import io.getquill.context.sql.PeopleSpec
 import io.getquill.context.qzio.ZioJdbcContext
+import io.getquill.context.sql.base.PeopleSpec
 import io.getquill.jdbczio.Quill
 
 trait PeopleZioSpec extends PeopleSpec with ZioSpec {

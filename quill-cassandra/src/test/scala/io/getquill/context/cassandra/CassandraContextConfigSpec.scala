@@ -1,7 +1,8 @@
 package io.getquill.context.cassandra
 
 import com.typesafe.config.ConfigFactory
-import io.getquill.{ CassandraContextConfig, Spec }
+import io.getquill.CassandraContextConfig
+import io.getquill.base.Spec
 
 class CassandraContextConfigSpec extends Spec {
   "load default preparedStatementCacheSize if not found in configs" in {

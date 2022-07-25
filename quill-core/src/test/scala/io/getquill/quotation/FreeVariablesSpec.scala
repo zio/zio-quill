@@ -1,7 +1,7 @@
 package io.getquill.quotation
 
-import io.getquill.Spec
 import io.getquill.ast.IdentName
+import io.getquill.base.Spec
 import io.getquill.testContext.implicitOrd
 import io.getquill.testContext.qr1
 import io.getquill.testContext.qr2

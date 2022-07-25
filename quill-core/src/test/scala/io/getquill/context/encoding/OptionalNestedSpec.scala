@@ -1,7 +1,8 @@
 package io.getquill.context.encoding
 
 import io.getquill.context.Context
-import io.getquill.{ Insert, Spec }
+import io.getquill.Insert
+import io.getquill.base.Spec
 import org.scalatest.BeforeAndAfterEach
 
 trait OptionalNestedSpec extends Spec with BeforeAndAfterEach {

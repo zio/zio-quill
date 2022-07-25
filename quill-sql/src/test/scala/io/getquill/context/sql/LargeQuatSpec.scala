@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class LargeQuatSpec extends Spec {
 

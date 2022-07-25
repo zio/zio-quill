@@ -1,6 +1,7 @@
 package io.getquill.quat
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class QuatRunSpec extends Spec {
 

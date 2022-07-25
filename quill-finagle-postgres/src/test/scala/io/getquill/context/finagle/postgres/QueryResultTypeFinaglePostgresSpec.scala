@@ -2,6 +2,8 @@ package io.getquill.context.finagle.postgres
 
 import io.getquill.context.sql._
 import com.twitter.util.{ Await, Future }
+import io.getquill.context.sql.base.QueryResultTypeSpec
+
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 

@@ -1,7 +1,8 @@
 package io.getquill.context
 
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
-import io.getquill.{ Spec, testContext }
+import io.getquill.testContext
 import io.getquill.testContext._
 
 class EncodeBindVariablesSpec extends Spec {

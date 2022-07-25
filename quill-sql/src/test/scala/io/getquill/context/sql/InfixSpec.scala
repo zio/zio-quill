@@ -4,7 +4,7 @@ import io.getquill.SqlMirrorContext
 import io.getquill.MirrorSqlDialect
 import io.getquill.TestEntities
 import io.getquill.Literal
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.norm.EnableTrace
 import io.getquill.util.Messages.TraceType
 

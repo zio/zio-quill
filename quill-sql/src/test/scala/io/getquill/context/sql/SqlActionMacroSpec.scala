@@ -2,6 +2,7 @@ package io.getquill.context.sql
 
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 
 class SqlActionMacroSpec extends Spec {

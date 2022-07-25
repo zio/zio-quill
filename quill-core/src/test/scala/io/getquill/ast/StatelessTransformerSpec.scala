@@ -1,8 +1,8 @@
 package io.getquill.ast
 
-import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Visible
+import io.getquill.base.Spec
 
 class StatelessTransformerSpec extends Spec {
 

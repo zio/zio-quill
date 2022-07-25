@@ -1,8 +1,8 @@
 package io.getquill.norm.capture
 
-import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.Query
+import io.getquill.base.Spec
 import io.getquill.util.TraceConfig
 
 class AvoidAliasConflictSpec extends Spec {

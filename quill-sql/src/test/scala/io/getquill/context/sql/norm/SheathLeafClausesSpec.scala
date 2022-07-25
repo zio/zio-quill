@@ -1,8 +1,9 @@
 package io.getquill.context.sql.norm
 
+import io.getquill.base.Spec
 import io.getquill.norm.SheathLeafClausesApply
 import io.getquill.util.TraceConfig
-import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, SqlMirrorContext }
 
 class SheathLeafClausesSpec extends Spec {
 

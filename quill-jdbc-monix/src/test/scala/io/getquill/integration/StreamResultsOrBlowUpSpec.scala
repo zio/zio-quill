@@ -1,8 +1,8 @@
 package io.getquill.integration
 
 import java.sql.{ Connection, ResultSet }
-
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import monix.execution.Scheduler
 import monix.execution.schedulers.CanBlock

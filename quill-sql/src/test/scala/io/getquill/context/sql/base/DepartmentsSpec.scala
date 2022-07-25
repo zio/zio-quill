@@ -1,7 +1,8 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.base
 
-import io.getquill.Spec
+import io.getquill.context.sql.SqlContext
 import io.getquill.Query
+import io.getquill.base.Spec
 
 trait DepartmentsSpec extends Spec {
 
@@ -10,7 +11,9 @@ trait DepartmentsSpec extends Spec {
   import context._
 
   case class Department(dpt: String)
+
   case class Employee(emp: String, dpt: String)
+
   case class Task(emp: String, tsk: String)
 
   val departmentInsert =

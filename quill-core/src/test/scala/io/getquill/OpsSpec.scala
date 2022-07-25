@@ -1,6 +1,5 @@
 package io.getquill
 
-import io.getquill.Spec
 import io.getquill.ast._
 import io.getquill.EntityQuery
 import io.getquill.testContext.InfixInterpolator
@@ -12,6 +11,7 @@ import io.getquill.testContext.query
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
 import io.getquill.Quoted
+import io.getquill.base.Spec
 
 class OpsSpec extends Spec {
 

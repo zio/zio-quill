@@ -1,7 +1,7 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
 import io.getquill.Query
+import io.getquill.base.Spec
 
 case class Department(dpt: String)
 case class Employee(emp: String, dpt: String)

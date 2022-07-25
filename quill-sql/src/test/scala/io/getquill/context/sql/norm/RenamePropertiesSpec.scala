@@ -1,10 +1,11 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
+import io.getquill.MirrorSqlDialectWithReturnClause
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
 import io.getquill.Query
+import io.getquill.base.Spec
 
 class RenamePropertiesSpec extends Spec {
 

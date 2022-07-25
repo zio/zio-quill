@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.testContext.TestEntity
 import io.getquill.testContext.implicitOrd
 import io.getquill.testContext.qr1
