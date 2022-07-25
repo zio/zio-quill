@@ -1,10 +1,10 @@
 package io.getquill.context.ndbc.postgres
 
+import io.getquill.context.sql.base.QueryResultTypeSpec
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.BigDecimal
 import scala.jdk.CollectionConverters._
 import scala.math.BigDecimal.int2bigDecimal
-import io.getquill.context.sql.QueryResultTypeSpec
 import io.getquill.util.PrintMac
 
 class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {

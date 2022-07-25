@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.h2
 
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleJdbcSpec extends PeopleSpec {
 

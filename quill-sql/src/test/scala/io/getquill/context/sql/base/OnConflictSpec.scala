@@ -1,9 +1,11 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.base
 
+import io.getquill.context.sql.SqlContext
 import io.getquill.{ Spec, TestEntities }
 
 trait OnConflictSpec extends Spec {
   val ctx: SqlContext[_, _] with TestEntities
+
   import ctx._
 
   object `onConflictIgnore` {

@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.h2
 
-import io.getquill.context.sql.PeopleReturningSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleJdbcReturningSpec extends PeopleReturningSpec {
 

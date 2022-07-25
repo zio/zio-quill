@@ -1,6 +1,7 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.base
 
 import io.getquill.Spec
+import io.getquill.context.sql.SqlContext
 
 trait CaseClassQuerySpec extends Spec {
 
@@ -9,8 +10,11 @@ trait CaseClassQuerySpec extends Spec {
   import context._
 
   case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
+
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
+
   case class Nickname(nickname: String)
+
   case class NicknameSameField(firstName: String)
 
   val peopleInsert =
@@ -32,6 +36,7 @@ trait CaseClassQuerySpec extends Spec {
   )
 
   case class ContactSimplified(firstName: String, lastName: String, age: Int)
+
   case class AddressableContact(firstName: String, lastName: String, age: Int, street: String, zip: Int)
 
   val `Ex 1 CaseClass Record Output` = quote {

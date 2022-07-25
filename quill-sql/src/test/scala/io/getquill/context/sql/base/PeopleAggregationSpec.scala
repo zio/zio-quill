@@ -1,13 +1,16 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.base
 
 import io.getquill.Spec
+import io.getquill.context.sql.SqlContext
 
 trait PeopleAggregationSpec extends Spec {
 
   val context: SqlContext[_, _]
+
   import context._
 
   case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: Option[String] = None)
+
   case class Address(id: Int, street: String, zip: Int = 0, otherExtraInfo: Option[String] = None)
 
   val people = List(
@@ -55,6 +58,7 @@ trait PeopleAggregationSpec extends Spec {
 
   object `Ex 5 map.groupByMap(col)(col,agg(c)).filter(agg)` {
     case class Name(first: String, last: String, age: Int)
+
     val get = quote {
       query[Contact].map(c => Name(c.firstName, c.lastName, c.age)).groupByMap(p => p.first)(p => (p.first, max(p.age))).filter(t => t._1 == "Joe")
     }

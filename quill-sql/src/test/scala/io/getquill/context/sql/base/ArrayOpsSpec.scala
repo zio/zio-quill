@@ -1,6 +1,7 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.base
 
 import io.getquill.Spec
+import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.encoding.ArrayEncoding
 
 trait ArrayOpsSpec extends Spec {

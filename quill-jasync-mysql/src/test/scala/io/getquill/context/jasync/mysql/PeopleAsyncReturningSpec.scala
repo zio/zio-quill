@@ -1,7 +1,6 @@
 package io.getquill.context.jasync.mysql
 
-import io.getquill.context.sql.PeopleReturningSpec
-
+import io.getquill.context.sql.base.PeopleReturningSpec
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 class PeopleAsyncReturningSpec extends PeopleReturningSpec {

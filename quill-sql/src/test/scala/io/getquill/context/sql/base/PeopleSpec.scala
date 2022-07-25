@@ -1,9 +1,7 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.base
 
-import io.getquill.Spec
-import io.getquill.Ord
-import io.getquill.Query
-import io.getquill.Quoted
+import io.getquill.context.sql.SqlContext
+import io.getquill.{ Ord, Query, Quoted, Spec }
 
 trait PeopleSpec extends Spec {
 
@@ -12,6 +10,7 @@ trait PeopleSpec extends Spec {
   import context._
 
   case class Person(name: String, age: Int)
+
   case class Couple(her: String, him: String)
 
   val peopleInsert =
@@ -107,19 +106,24 @@ trait PeopleSpec extends Spec {
   val `Ex 5 expected result` = List(Person("Cora", 33), Person("Drew", 31))
 
   sealed trait Predicate
+
   case class Above(i: Int) extends Predicate
+
   case class Below(i: Int) extends Predicate
+
   case class And(a: Predicate, b: Predicate) extends Predicate
+
   case class Or(a: Predicate, b: Predicate) extends Predicate
+
   case class Not(p: Predicate) extends Predicate
 
   def eval(t: Predicate): Quoted[Int => Boolean] =
     t match {
-      case Above(n)    => quote((x: Int) => x > lift(n))
-      case Below(n)    => quote((x: Int) => x < lift(n))
+      case Above(n) => quote((x: Int) => x > lift(n))
+      case Below(n) => quote((x: Int) => x < lift(n))
       case And(t1, t2) => quote((x: Int) => eval(t1)(x) && eval(t2)(x))
-      case Or(t1, t2)  => quote((x: Int) => eval(t1)(x) || eval(t2)(x))
-      case Not(t0)     => quote((x: Int) => !eval(t0)(x))
+      case Or(t1, t2) => quote((x: Int) => eval(t1)(x) || eval(t2)(x))
+      case Not(t0) => quote((x: Int) => !eval(t0)(x))
     }
 
   val `Ex 6 predicate` = And(Above(30), Below(40))
@@ -158,7 +162,7 @@ trait PeopleSpec extends Spec {
   val `Ex 11 filtered update expected` =
     peopleEntries.map {
       case Person("Bert", age) => Person("Bert", 44)
-      case other               => other
+      case other => other
     }
 
   val `Ex 12 filtered update co-related` = quote {
@@ -170,6 +174,6 @@ trait PeopleSpec extends Spec {
   val `Ex 12 filtered update co-related expected` =
     peopleEntries.map {
       case Person("Bert", age) => Person("Bert", 45)
-      case other               => other
+      case other => other
     }
 }
