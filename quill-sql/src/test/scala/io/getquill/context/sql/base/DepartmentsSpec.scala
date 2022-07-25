@@ -75,10 +75,10 @@ trait DepartmentsSpec extends Spec {
                   for {
                     t <- query[Task] if (e.emp == t.emp && t.tsk == u)
                   } yield {}
-                  ).isEmpty
-                )
+                ).isEmpty
+              )
             } yield {}).isEmpty
-            )
+          )
         } yield d.dpt
     }
 
@@ -87,11 +87,10 @@ trait DepartmentsSpec extends Spec {
   val `Example 8 expected result` = List("Quality", "Research")
 
   def any[T] =
-    quote { (xs: Query[T]) =>
-      (p: T => Boolean) =>
-        (for {
-          x <- xs if (p(x))
-        } yield {}).nonEmpty
+    quote { (xs: Query[T]) => (p: T => Boolean) =>
+      (for {
+        x <- xs if (p(x))
+      } yield {}).nonEmpty
     }
 
   val `Example 9 expertise` = {
@@ -115,15 +114,13 @@ trait DepartmentsSpec extends Spec {
       }
 
     def all[T] =
-      quote { (xs: Query[T]) =>
-        (p: T => Boolean) =>
-          !any(xs)(x => !p(x))
+      quote { (xs: Query[T]) => (p: T => Boolean) =>
+        !any(xs)(x => !p(x))
       }
 
     def contains[T] =
-      quote { (xs: Query[T]) =>
-        (u: T) =>
-          any(xs)(x => x == u)
+      quote { (xs: Query[T]) => (u: T) =>
+        any(xs)(x => x == u)
       }
 
     quote {

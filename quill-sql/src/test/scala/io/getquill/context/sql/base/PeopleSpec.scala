@@ -120,11 +120,11 @@ trait PeopleSpec extends Spec {
 
   def eval(t: Predicate): Quoted[Int => Boolean] =
     t match {
-      case Above(n) => quote((x: Int) => x > lift(n))
-      case Below(n) => quote((x: Int) => x < lift(n))
+      case Above(n)    => quote((x: Int) => x > lift(n))
+      case Below(n)    => quote((x: Int) => x < lift(n))
       case And(t1, t2) => quote((x: Int) => eval(t1)(x) && eval(t2)(x))
-      case Or(t1, t2) => quote((x: Int) => eval(t1)(x) || eval(t2)(x))
-      case Not(t0) => quote((x: Int) => !eval(t0)(x))
+      case Or(t1, t2)  => quote((x: Int) => eval(t1)(x) || eval(t2)(x))
+      case Not(t0)     => quote((x: Int) => !eval(t0)(x))
     }
 
   val `Ex 6 predicate` = And(Above(30), Below(40))
@@ -163,7 +163,7 @@ trait PeopleSpec extends Spec {
   val `Ex 11 filtered update expected` =
     peopleEntries.map {
       case Person("Bert", age) => Person("Bert", 44)
-      case other => other
+      case other               => other
     }
 
   val `Ex 12 filtered update co-related` = quote {
@@ -175,6 +175,6 @@ trait PeopleSpec extends Spec {
   val `Ex 12 filtered update co-related expected` =
     peopleEntries.map {
       case Person("Bert", age) => Person("Bert", 45)
-      case other => other
+      case other               => other
     }
 }
