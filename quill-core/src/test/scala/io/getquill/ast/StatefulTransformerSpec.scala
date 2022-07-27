@@ -331,7 +331,7 @@ class StatefulTransformerSpec extends Spec {
       }
     }
 
-    "infix" in {
+    "sql" in {
       val ast: Ast = Infix(List("test"), List(Ident("a")), false, false, QV)
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
         case (at, att) =>

@@ -220,7 +220,7 @@ class StatelessTransformerSpec extends Spec {
         Property.Opinionated(Ident("a'"), "b", Fixed, Visible)
     }
 
-    "infix" in {
+    "sql" in {
       val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false, false, QV)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
         Infix(List("test"), List(Ident("a'"), Ident("b'")), false, false, QV)

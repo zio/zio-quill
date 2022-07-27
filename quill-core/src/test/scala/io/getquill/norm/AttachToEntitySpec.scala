@@ -93,7 +93,7 @@ class AttachToEntitySpec extends Spec {
   }
 
   val iqr1 = quote {
-    infix"$qr1".as[Query[TestEntity]]
+    sql"$qr1".as[Query[TestEntity]]
   }
 
   "attaches clause to the root of the query (infix)" - {

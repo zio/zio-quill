@@ -48,12 +48,12 @@ class StreamResultsOrBlowUpSpec extends Spec {
   val numRows = 1000000L
 
   "stream a large result set without blowing up" in {
-    val deletes = runQuill { infix"TRUNCATE TABLE Person".as[Delete[Person]] }
+    val deletes = runQuill { sql"TRUNCATE TABLE Person".as[Delete[Person]] }
     deletes.runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
 
     val inserts = quote {
       (numRows: Long) =>
-        infix"""insert into person (name, age) select md5(random()::text), random()*10+1 from generate_series(1, ${numRows}) s(i)""".as[Insert[Int]]
+        sql"""insert into person (name, age) select md5(random()::text), random()*10+1 from generate_series(1, ${numRows}) s(i)""".as[Insert[Int]]
     }
 
     runQuill(inserts(lift(numRows))).runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)

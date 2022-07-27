@@ -54,7 +54,7 @@ class ExpandNestedQueriesSpec extends Spec {
         .on { case (one, two) => one.i == two.i }
         .filter(_._1.s == "foo")
         .map(_._2)
-        .map(e => (infix"DISTINCT ON (${e.s}) ${e.s}".as[String], e.i))
+        .map(e => (sql"DISTINCT ON (${e.s}) ${e.s}".as[String], e.i))
         .filter(_._2 == 123)
     }
     testContext.run(q).string mustEqual
@@ -646,7 +646,7 @@ class ExpandNestedQueriesSpec extends Spec {
     "should be handled correctly in a regular schema" in {
       case class Person(firstName: String, lastName: String)
       val q = quote {
-        infix"fromSomewhere()".as[Query[Person]]
+        sql"fromSomewhere()".as[Query[Person]]
       }
       testContext.run(q).string mustEqual
         "SELECT x.first_name AS firstName, x.last_name AS lastName FROM (fromSomewhere()) AS x"
@@ -656,7 +656,7 @@ class ExpandNestedQueriesSpec extends Spec {
       case class Name(firstName: String, lastName: String) extends Embedded
       case class Person(name: Name, theAge: Int)
       val q = quote {
-        infix"fromSomewhere()".as[Query[Person]]
+        sql"fromSomewhere()".as[Query[Person]]
       }
       testContext.run(q).string mustEqual
         "SELECT x.first_name AS firstName, x.last_name AS lastName, x.the_age AS theAge FROM (fromSomewhere()) AS x"

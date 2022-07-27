@@ -17,7 +17,7 @@ class NestedQueryNamingStrategySpec extends Spec {
     "inner aliases should not use naming strategy" in {
       val q = quote {
         query[Person].map {
-          p => (p, infix"foobar".as[Int])
+          p => (p, sql"foobar".as[Int])
         }.filter(_._1.id == 1)
       }
       testContextEscape.run(q).string mustEqual
@@ -28,7 +28,7 @@ class NestedQueryNamingStrategySpec extends Spec {
       import testContextEscapeElements._
       val q = quote {
         query[Person].map {
-          p => (p, infix"foobar".as[Int])
+          p => (p, sql"foobar".as[Int])
         }.filter(_._1.id == 1)
       }
       testContextEscapeElements.run(q).string mustEqual
@@ -43,7 +43,7 @@ class NestedQueryNamingStrategySpec extends Spec {
     "inner aliases should use naming strategy" in {
       val q = quote {
         query[Person].map {
-          p => (p, infix"foobar".as[Int])
+          p => (p, sql"foobar".as[Int])
         }.filter(_._1.id == 1)
       }
       testContextUpper.run(q).string mustEqual
@@ -57,7 +57,7 @@ class NestedQueryNamingStrategySpec extends Spec {
 
       val q = quote {
         qs.map {
-          p => (p, infix"foobar".as[Int])
+          p => (p, sql"foobar".as[Int])
         }.filter(_._1.id == 1)
       }
       testContextUpper.run(q).string mustEqual
@@ -76,7 +76,7 @@ class NestedQueryNamingStrategySpec extends Spec {
       val q = quote {
         joined.map { (ab) =>
           val (a, b) = ab
-          (a, b, infix"foobar".as[Int])
+          (a, b, sql"foobar".as[Int])
         }.filter(_._1.id == 1)
       }
       testContextUpper.run(q).string mustEqual
@@ -86,9 +86,9 @@ class NestedQueryNamingStrategySpec extends Spec {
     "inner alias should nest properly in multiple levels" in {
       val q = quote {
         query[Person].map {
-          p => (p, infix"foobar".as[Int])
+          p => (p, sql"foobar".as[Int])
         }.filter(_._1.id == 1).map {
-          pp => (pp, infix"barbaz".as[Int])
+          pp => (pp, sql"barbaz".as[Int])
         }.filter(_._1._1.id == 2)
       }
 
@@ -104,9 +104,9 @@ class NestedQueryNamingStrategySpec extends Spec {
 
       val q = quote {
         qs.map {
-          p => (p, infix"foobar".as[Int])
+          p => (p, sql"foobar".as[Int])
         }.filter(_._1.id == 1).map {
-          pp => (pp, infix"barbaz".as[Int])
+          pp => (pp, sql"barbaz".as[Int])
         }.filter(_._1._1.id == 2)
       }
 

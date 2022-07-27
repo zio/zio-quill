@@ -43,7 +43,7 @@ class QuatSpec extends Spec {
 
     "propagating from transparent infixes in: extension methods" in {
       implicit class QueryOps[Q <: Query[_]](q: Q) {
-        def appendFoo = quote(infix"$q APPEND FOO".transparent.pure.as[Q])
+        def appendFoo = quote(sql"$q APPEND FOO".transparent.pure.as[Q])
       }
       val q = quote(query[MyPerson].appendFoo)
       q.ast.quat mustEqual MyPersonQuat // I.e ReifyLiftings runs RepropagateQuats to take care of this
@@ -51,34 +51,34 @@ class QuatSpec extends Spec {
 
     "not propagating from non-transparent infixes in: extension methods" in {
       implicit class QueryOps[Q <: Query[_]](q: Q) {
-        def appendFoo = quote(infix"$q APPEND FOO".pure.as[Q])
+        def appendFoo = quote(sql"$q APPEND FOO".pure.as[Q])
       }
       val q = quote(query[MyPerson].appendFoo)
       q.ast.quat mustEqual Quat.Unknown
     }
 
     "not propagating from non-transparent infixes in: query-ops function" in {
-      def appendFooFun[Q <: Query[_]] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
+      def appendFooFun[Q <: Query[_]] = quote { (q: Q) => sql"$q APPEND FOO".pure.as[Q] }
       val q = quote(appendFooFun(query[MyPerson]))
       q.ast.quat mustEqual Quat.Unknown
       // TODO Should be Unknown here
     }
 
     "propagating from transparent infixes in: query-ops function" in {
-      def appendFooFun[Q <: Query[_]] = quote { (q: Q) => infix"$q APPEND FOO".transparent.pure.as[Q] }
+      def appendFooFun[Q <: Query[_]] = quote { (q: Q) => sql"$q APPEND FOO".transparent.pure.as[Q] }
       val q = quote(appendFooFun(query[MyPerson]))
       q.ast.quat mustEqual MyPersonQuat
     }
 
     "not propagating from transparent infixes in (where >1 param in the infix) in: query-ops function" in {
-      def appendFooFun[Q <: Query[_]] = quote { (q: Q, i: Int) => infix"$q APPEND $i FOO".transparent.pure.as[Q] }
+      def appendFooFun[Q <: Query[_]] = quote { (q: Q, i: Int) => sql"$q APPEND $i FOO".transparent.pure.as[Q] }
       val q = quote(appendFooFun(query[MyPerson], 123))
       q.ast.quat mustEqual Quat.Generic
     }
 
     "not propagating from transparent infixes where it is dynamic: query-ops function" in {
       // I.e. can't propagate from a dynamic query since don't know the inside of the quat varaible
-      def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote { (q: Q) => infix"$q APPEND FOO".pure.as[Q] }
+      def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote { (q: Q) => sql"$q APPEND FOO".pure.as[Q] }
       val q = quote(appendFooFun(query[MyPerson]))
       q.ast.quat mustEqual Quat.Unknown
     }

@@ -11,7 +11,7 @@ class DepartmentsJdbcSpec extends DepartmentsSpec {
 
   override def beforeAll = {
     testContext.transaction {
-      testContext.run(infix"alter session set current_schema=quill_test".as[Update[Unit]])
+      testContext.run(sql"alter session set current_schema=quill_test".as[Update[Unit]])
       testContext.run(query[Department].delete)
       testContext.run(query[Employee].delete)
       testContext.run(query[Task].delete)

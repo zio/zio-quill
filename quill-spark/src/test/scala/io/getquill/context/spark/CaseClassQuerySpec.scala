@@ -54,7 +54,7 @@ class CaseClassQuerySpec extends Spec {
   val noteEntries = liftQuery(noteList.toDS())
 
   val reverse = quote {
-    (str: String) => infix"reverse(${str})".pure.as[String]
+    (str: String) => sql"reverse(${str})".pure.as[String]
   }
 
   "Simple Join" in {
@@ -422,7 +422,7 @@ class CaseClassQuerySpec extends Spec {
     sparkSession.udf.register("statefulStringsUdf", statefulStrings)
 
     val statefulStringsUdf = quote {
-      infix"statefulStringsUdf()".as[String]
+      sql"statefulStringsUdf()".as[String]
     }
 
     val q = quote {

@@ -54,7 +54,7 @@ class ComplexQuerySpec extends Spec with BeforeAndAfter {
           .filter(_._1.s == "aaa")
           .map(_._2)
           .sortBy(t => (t.s, t.i))(Ord.desc)
-          .map(e => (infix"DISTINCT ON (${e.s}) ${e.s}".as[String], e.i))
+          .map(e => (sql"DISTINCT ON (${e.s}) ${e.s}".as[String], e.i))
           .filter(r => r._2 == 3 || r._2 == 4 || r._2 == 5)
       }
 

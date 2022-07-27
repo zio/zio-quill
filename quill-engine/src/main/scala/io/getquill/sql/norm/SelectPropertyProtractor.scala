@@ -109,7 +109,7 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
       case id @ Core() =>
         // The quat is considered to be an entity (i.e. thing whose fields need to be renamed) if it is either:
         // a) Found in the table references (i.e. it's an actual table in the subselect) or...
-        // b) We are selecting fields from an infix e.g. `infix"selectPerson()".as[Query[Person]]`
+        // b) We are selecting fields from an infix e.g. `sql"selectPerson()".as[Query[Person]]`
         val isEntity = inContext.isEntityReference(id)
         val effectiveQuat = nonAbstractQuat(id.quat, alternateQuat)
 

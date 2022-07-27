@@ -271,7 +271,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           //   SELECT c.firstName AS _1, MAX(c.age) AS _2 FROM Contact c GROUP BY c.firstName
           //
           // However... there are some situations in which this kind of reduction is not possible, for example:
-          //   query[Contact].map(c => NameAge(c.firstName, infix"someFunction(${c.age})".as[Int])).groupBy(p => p.name).map { case (f, q) => (f, q.map(_.age).max.getOrNull) }
+          //   query[Contact].map(c => NameAge(c.firstName, sql"someFunction(${c.age})".as[Int])).groupBy(p => p.name).map { case (f, q) => (f, q.map(_.age).max.getOrNull) }
           // This query has a impure-infix and therefore the apply-map cannot paper-over the issue and the following query
           // is created as a result of not being able to do the reduction (i.e. the same wrong-column-name issue as before).
           //   SELECT c.name AS _1, MAX(c.age) AS _2 FROM (SELECT c.firstName AS name, someFunction(c.age) AS age FROM Contact c) AS c GROUP BY c.name

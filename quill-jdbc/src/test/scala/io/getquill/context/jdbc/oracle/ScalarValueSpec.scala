@@ -16,6 +16,6 @@ class ScalarValueSpec extends Spec {
   }
 
   "Multi Scalar Select with Infix" in {
-    context.run("foo" + infix"""'bar'""".as[String]) mustEqual "foobar"
+    context.run("foo" + sql"""'bar'""".as[String]) mustEqual "foobar"
   }
 }
