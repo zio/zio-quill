@@ -32,6 +32,7 @@ class PostgresDoobieContextSuite extends AnyFreeSpec with Matchers {
   val dc = new DoobieContext.Postgres(Literal)
 
   import dc.{ SqlInfixInterpolator => _, _ }
+  import dc.compat._
 
   case class Country(code: String, name: String, population: Int)
 

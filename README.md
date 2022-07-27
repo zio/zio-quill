@@ -4101,6 +4101,7 @@ We can now construct a `DoobieContext` for our back-end database and import its 
 ```
 val dc = new DoobieContext.Postgres(Literal) // Literal naming scheme
 import dc.{ SqlInfixInterpolator => _, _ }   // Quill's `sql` interpolator conflicts with doobie so don't import it
+import dc.compat._                           // Import the qsql interpolator instead
 ```
 
 > Instead of using Quill's `sql"MyUDF(${something})"` interpolator, use `qsql"MyUDF(${something})"` since we have excluded it.
