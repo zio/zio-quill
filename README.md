@@ -42,32 +42,40 @@ A simple ZIO + Quill application looks like this:
 ```scala
 case class Person(name: String, age: Int)
 
-object QuillContext extends PostgresZioJdbcContext(SnakeCase)
-
-object DataService {
-  import QuillContext._
-  def getPeople = run(query[Person])
+class DataService(quill: Quill.Postgres[SnakeCase]) {
+  import quill._
+  def getPeople: ZIO[Any, SQLException, List[Person]] = run(query[Person])
 }
+object DataService {
+  def getPeople: ZIO[DataService, SQLException, List[Person]] =
+    ZIO.serviceWithZIO[DataService](_.getPeople)
 
-object Main extends App {
-  override def run(args: List[String]) =
+  val live = ZLayer.fromFunction(new DataService(_))
+}
+object Main extends ZIOAppDefault {
+  override def run = {
     DataService.getPeople
-      .inject(DataSourceLayer.fromPrefix("myDatabaseConfig").orDie)
+      .provide(
+        DataService.live,
+        Quill.Postgres.fromNamingStrategy(SnakeCase),
+        Quill.DataSource.fromPrefix("myDatabaseConfig")
+      )
       .debug("Results")
       .exitCode
+  }
 }
 ```
 
 Add the following to build.sbt:
 ```scala
 libraryDependencies ++= Seq(
-  "io.getquill"          %% "quill-jdbc-zio" % "3.12.0",
-  "io.github.kitlangton" %% "zio-magic"      % "0.3.11",
+  "io.getquill"          %% "quill-jdbc-zio" % "4.1.1-SNAPSHOT",
   "org.postgresql"       %  "postgresql"     % "42.3.1"
 )
 ```
 
 You can find this code (with some more examples) complete with a docker-provided Postgres database [here](https://github.com/deusaquilus/zio-quill-gettingstarted).
+A veriety of other examples using Quill with ZIO are available in the [examples](https://github.com/zio/zio-quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples) folder.
 
 ## Choosing a Module
 
