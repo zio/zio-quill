@@ -1,7 +1,7 @@
 package io.getquill.examples
 
 import io.getquill._
-import io.getquill.context.ZioJdbc._
+import io.getquill.jdbczio.Quill
 import zio.Console.printLine
 import zio.ZIOAppDefault
 
@@ -12,7 +12,7 @@ object ZioApp extends ZIOAppDefault {
 
   case class Person(name: String, age: Int)
 
-  val zioDS = DataSourceLayer.fromPrefix("testPostgresDB")
+  val zioDS = Quill.DataSource.fromPrefix("testPostgresDB")
 
   override def run = {
     val people = quote {

@@ -1,7 +1,8 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.ReturnAction.ReturnColumns
-import io.getquill.{ MirrorSqlDialectWithReturnMulti, Spec }
+import io.getquill.MirrorSqlDialectWithReturnMulti
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._

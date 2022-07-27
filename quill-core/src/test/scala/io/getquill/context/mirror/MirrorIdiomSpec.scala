@@ -1,7 +1,6 @@
 package io.getquill.context.mirror
 
 import io.getquill.MirrorIdiom
-import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.Literal
@@ -10,6 +9,7 @@ import io.getquill.ast._
 import io.getquill.Ord
 import io.getquill.Query
 import io.getquill.Quoted
+import io.getquill.base.Spec
 
 class MirrorIdiomSpec extends Spec {
 
@@ -474,30 +474,30 @@ class MirrorIdiomSpec extends Spec {
     }
   }
 
-  "shows infix" - {
+  "shows sql" - {
     "as part of the query" in {
       val q = quote {
-        qr1.filter(t => infix"true".as[Boolean])
+        qr1.filter(t => sql"true".as[Boolean])
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""querySchema("TestEntity").filter(t => infix"true")"""
+        stmt"""querySchema("TestEntity").filter(t => sql"true")"""
     }
     "with params" in {
       val q = quote {
-        qr1.filter(t => infix"${t.s} == 's'".as[Boolean])
+        qr1.filter(t => sql"${t.s} == 's'".as[Boolean])
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""querySchema("TestEntity").filter(t => infix"$${t.s} == 's'")"""
+        stmt"""querySchema("TestEntity").filter(t => sql"$${t.s} == 's'")"""
     }
     "as quoted" in {
       implicit class RichQuoted[T](q: Quoted[Query[T]]) {
-        def func = quote(infix"$q.func".as[Query[T]])
+        def func = quote(sql"$q.func".as[Query[T]])
       }
       val q = quote {
         qr1.func
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""infix"$${querySchema("TestEntity")}.func""""
+        stmt"""sql"$${querySchema("TestEntity")}.func""""
 
     }
   }

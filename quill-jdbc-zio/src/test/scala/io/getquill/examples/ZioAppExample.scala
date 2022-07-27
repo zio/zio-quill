@@ -1,14 +1,15 @@
 package io.getquill.examples
 
 import io.getquill._
-import io.getquill.context.ZioJdbc._
+import io.getquill.jdbczio.Quill
 import zio._
+
 import javax.sql.DataSource
 
 case class Person(name: String, age: Int)
 
 object QuillContext extends PostgresZioJdbcContext(SnakeCase) {
-  val dataSourceLayer = DataSourceLayer.fromPrefix("testPostgresDB").orDie
+  val dataSourceLayer = Quill.DataSource.fromPrefix("testPostgresDB").orDie
 }
 
 object DataService {

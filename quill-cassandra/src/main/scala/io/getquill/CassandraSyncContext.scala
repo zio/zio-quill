@@ -8,7 +8,7 @@ import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.jdk.CollectionConverters._
 
-class CassandraSyncContext[N <: NamingStrategy](
+class CassandraSyncContext[+N <: NamingStrategy](
   naming:                     N,
   session:                    CqlSession,
   preparedStatementCacheSize: Long

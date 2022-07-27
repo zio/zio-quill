@@ -4,8 +4,9 @@ import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
 import io.getquill.context.sql._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.StringToken
-import io.getquill.{ Literal, Spec }
+import io.getquill.Literal
 import io.getquill.Ord
+import io.getquill.base.Spec
 import io.getquill.norm.TranspileConfig
 import io.getquill.quat.Quat
 import io.getquill.util.TraceConfig

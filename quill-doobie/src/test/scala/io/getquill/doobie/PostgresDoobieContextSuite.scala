@@ -31,7 +31,7 @@ class PostgresDoobieContextSuite extends AnyFreeSpec with Matchers {
 
   val dc = new DoobieContext.Postgres(Literal)
 
-  import dc._
+  import dc.{ SqlInfixInterpolator => _, _ }
 
   case class Country(code: String, name: String, population: Int)
 
@@ -75,13 +75,17 @@ class PostgresDoobieContextSuite extends AnyFreeSpec with Matchers {
   }
 
   // For these last two we need a new table with an auto-generated id, so we'll do a temp table.
-  val create: ConnectionIO[Unit] =
-    sql"""
-      CREATE TEMPORARY TABLE QuillTest (
-        id    SERIAL,
-        value VARCHAR(42)
-      ) ON COMMIT DROP
-    """.update.run.void
+  val create = {
+    val q = quote {
+      qsql"""
+        CREATE TEMPORARY TABLE QuillTest (
+          id    SERIAL,
+          value VARCHAR(42)
+        ) ON COMMIT DROP
+      """.as[Action[Int]]
+    }
+    dc.run(q)
+  }
 
   case class QuillTest(id: Int, value: String)
 

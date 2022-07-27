@@ -1,7 +1,7 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
 import io.getquill.Literal
+import io.getquill.base.Spec
 import io.getquill.context.ExecutionType
 import io.getquill.norm.{ SheathLeafClauses, SheathLeafClausesApply, TranspileConfig }
 import io.getquill.quat.Quat
@@ -28,7 +28,7 @@ class SparkDialectSpec extends Spec {
       stmt.toString mustEqual "SELECT x.i AS i, x.j AS j, x.s AS s FROM Test x"
     }
     "non-query" in {
-      val ast = infix"SELECT 1".ast
+      val ast = sql"SELECT 1".ast
       val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, TranspileConfig.Empty)(Literal)
       norm mustEqual ast
       stmt.toString mustEqual "SELECT 1"

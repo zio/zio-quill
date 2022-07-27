@@ -103,7 +103,7 @@ trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
         case QuotedReference(ref: Tree, refAst) =>
 
           // Improve the type signature info if possible. This is for
-          // Spark's infix"${lift(ds)}" use case and could be enhanced to understand
+          // Spark's sql"${lift(ds)}" use case and could be enhanced to understand
           // other kinds of constructs.
           val reparsedAst =
             (ref.tpe, refAst) match {

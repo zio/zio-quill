@@ -1,6 +1,5 @@
 package io.getquill
 
-import io.getquill.Spec
 import io.getquill.ast._
 import io.getquill.EntityQuery
 import io.getquill.testContext.InfixInterpolator
@@ -12,6 +11,7 @@ import io.getquill.testContext.query
 import io.getquill.testContext.quote
 import io.getquill.testContext.unquote
 import io.getquill.Quoted
+import io.getquill.base.Spec
 
 class OpsSpec extends Spec {
 
@@ -50,7 +50,7 @@ class OpsSpec extends Spec {
     "boolean values" - {
       "with `as`" in {
         val q = quote {
-          infix"true".as[Boolean]
+          sql"true".as[Boolean]
         }
         q.ast mustEqual Infix(List("true"), Nil, false, false, Quat.BooleanValue)
       }
@@ -58,13 +58,13 @@ class OpsSpec extends Spec {
     "other values" - {
       "with `as`" in {
         val q = quote {
-          infix"1".as[Int]
+          sql"1".as[Int]
         }
         q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
       }
       "without `as`" in {
         val q = quote {
-          infix"1"
+          sql"1"
         }
         q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
       }
@@ -82,7 +82,7 @@ class OpsSpec extends Spec {
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
-    def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
+    def allowFiltering = quote(sql"$q ALLOW FILTERING".as[Q])
   }
 
   "unquotes quoted function bodies automatically" - {

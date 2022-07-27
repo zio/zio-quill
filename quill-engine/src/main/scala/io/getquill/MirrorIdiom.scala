@@ -302,7 +302,7 @@ trait MirrorIdiomBase extends Idiom {
       val pt = parts.map(_.token)
       val pr = params.map(tokenParam)
       val body = Statement(Interleave(pt, pr))
-      stmt"""infix"${body.token}""""
+      stmt"""sql"${body.token}""""
   }
 
   private def scopedTokenizer(ast: Ast)(implicit externalTokenizer: Tokenizer[External]) =

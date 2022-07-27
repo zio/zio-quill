@@ -1,6 +1,7 @@
 package io.getquill.context.spark
 
-import io.getquill.{ Query, Quoted, Spec }
+import io.getquill.base.Spec
+import io.getquill.{ Query, Quoted }
 
 case class Person(name: String, age: Int)
 case class Couple(her: String, him: String)

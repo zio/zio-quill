@@ -25,7 +25,7 @@ import io.getquill.util.ContextLogger
 import scala.language.implicitConversions
 
 /** Base trait from which vendor-specific variants are derived. */
-trait DoobieContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
+trait DoobieContextBase[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   extends JdbcContextBase[Dialect, Naming]
     with ContextVerbStream[Dialect, Naming] {
 

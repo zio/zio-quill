@@ -1,15 +1,15 @@
-package io.getquill.postgres
+package io.getquill.misc
 
-import io.getquill.util.LoadConfig
-import io.getquill.{ JdbcContextConfig, Literal, PostgresZioJdbcContext, Spec }
-import zio.{ Unsafe, ZEnvironment, Runtime }
+import io.getquill.base.Spec
+import io.getquill.{ Literal, PostgresZioJdbcContext }
+import zio.{ Runtime, Unsafe, ZEnvironment }
 
 class PeopleZioOuterJdbcSpec extends Spec {
   val testContext = new PostgresZioJdbcContext(Literal)
   import testContext._
   case class Person(name: String, age: Int)
 
-  def ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def ds = io.getquill.postgres.pool
 
   "test query" in {
     val q = quote {

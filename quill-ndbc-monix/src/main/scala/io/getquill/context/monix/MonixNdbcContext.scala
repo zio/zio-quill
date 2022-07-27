@@ -74,7 +74,7 @@ object MonixNdbcContext {
  * Quill context that wraps all NDBC calls in `monix.eval.Task`.
  *
  */
-abstract class MonixNdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy, P <: PreparedStatement, R <: Row](
+abstract class MonixNdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy, P <: PreparedStatement, R <: Row](
   dataSource: DataSource[P, R],
   runner:     Runner
 ) extends MonixContext[Dialect, Naming]

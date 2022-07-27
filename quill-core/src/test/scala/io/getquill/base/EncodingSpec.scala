@@ -1,10 +1,8 @@
-package io.getquill.context
+package io.getquill.base
+
+import io.getquill.context.Context
 
 import java.util.Date
-
-import scala.BigDecimal
-
-import io.getquill.Spec
 
 trait EncodingSpec extends Spec {
 

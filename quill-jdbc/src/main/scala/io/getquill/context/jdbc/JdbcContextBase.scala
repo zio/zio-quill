@@ -6,7 +6,7 @@ import io.getquill.context.sql.idiom.SqlIdiom
 
 import java.sql._
 
-trait JdbcContextBase[Dialect <: SqlIdiom, Naming <: NamingStrategy]
+trait JdbcContextBase[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   extends JdbcContextVerbExecute[Dialect, Naming]
   with JdbcContextVerbPrepare[Dialect, Naming]
   with ContextVerbPrepareLambda {

@@ -17,7 +17,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken, TranspileConfig }
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.{ NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects }
+import io.getquill.sql.norm.{ HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Messages, TraceConfig }
 import io.getquill.util.Messages.{ fail, trace }
 
@@ -40,7 +40,15 @@ trait SqlIdiom extends Idiom {
     SqlNormalize(ast, transpileConfig, concatBehavior, equalityBehavior)
 
   def querifyAst(ast: Ast, traceConfig: TraceConfig) = new SqlQueryApply(traceConfig)(ast)
-  def querifyAction(ast: Action) = NormalizeFilteredActionAliases(ast)
+
+  // See HideTopLevelFilterAlias for more detail on how this works
+  def querifyAction(ast: Action) = {
+    val norm = NormalizeFilteredActionAliases(ast)
+    useActionTableAliasAs match {
+      case ActionTableAliasBehavior.Hide => HideTopLevelFilterAlias(norm)
+      case _                             => norm
+    }
+  }
 
   private def doTranslate(ast: Ast, cached: Boolean, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
 
@@ -283,7 +291,7 @@ trait SqlIdiom extends Idiom {
 
         case Aggregation(op, Ident(id, _: Quat.Product)) => stmt"${op.token}(${makeProductAggregationToken(id)})"
         // Not too many cases of this. Can happen if doing a leaf-level infix inside of a select clause. For example in postgres:
-        // `infix"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(ap => ap._2.max)` which should yield:
+        // `sql"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(ap => ap._2.max)` which should yield:
         // SELECT MAX(inf) FROM (unnest(array['foo','bar'])) AS inf GROUP BY inf
         case Aggregation(op, Ident(id, _))               => stmt"${op.token}(${id.token})"
         case Aggregation(op, Tuple(_))                   => stmt"${op.token}(*)"
@@ -356,7 +364,7 @@ trait SqlIdiom extends Idiom {
   private def ` AS` =
     useActionTableAliasAs match {
       case ActionTableAliasBehavior.UseAs => stmt" AS"
-      case ActionTableAliasBehavior.Hide  => stmt""
+      case _                              => stmt""
     }
 
   implicit val joinTypeTokenizer: Tokenizer[JoinType] = Tokenizer[JoinType] {
@@ -554,8 +562,9 @@ trait SqlIdiom extends Idiom {
 
   private[getquill] def ` AS [table]`(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     useActionTableAliasAs match {
-      case ActionTableAliasBehavior.UseAs => actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")
-      case ActionTableAliasBehavior.Hide  => stmt""
+      case ActionTableAliasBehavior.UseAs  => actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")
+      case ActionTableAliasBehavior.SkipAs => actionAlias.map(alias => stmt" ${alias.token}").getOrElse(stmt"")
+      case ActionTableAliasBehavior.Hide   => stmt""
     }
 
   protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig): Tokenizer[Action] =
@@ -665,7 +674,7 @@ object SqlIdiom {
   sealed trait ActionTableAliasBehavior
   object ActionTableAliasBehavior {
     case object UseAs extends ActionTableAliasBehavior
-    // May want to insert SkipAs to have the alias but with no AS clause
+    case object SkipAs extends ActionTableAliasBehavior
     case object Hide extends ActionTableAliasBehavior
   }
 
@@ -727,8 +736,9 @@ object SqlIdiom {
 
     def ` AS [alias]`(alias: Ident) =
       useActionTableAliasAs match {
-        case ActionTableAliasBehavior.UseAs => stmt" AS ${alias.name.token}"
-        case ActionTableAliasBehavior.Hide  => stmt""
+        case ActionTableAliasBehavior.UseAs  => stmt" AS ${alias.name.token}"
+        case ActionTableAliasBehavior.SkipAs => stmt" ${alias.name.token}"
+        case ActionTableAliasBehavior.Hide   => stmt""
       }
 
     query match {

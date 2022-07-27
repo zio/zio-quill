@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Literal, MirrorSqlDialect, Spec, SqlMirrorContext }
+import io.getquill.base.Spec
+import io.getquill.{ Literal, MirrorSqlDialect, SqlMirrorContext }
 import io.getquill.context.sql.util.StringOps._
 
 class NestedDistinctSpec extends Spec {
@@ -147,9 +148,9 @@ class NestedDistinctSpec extends Spec {
       }
 
       val q = quote {
-        qschem.map(e => (e.a + 1, infix"foo(${e.b})".as[String]))
+        qschem.map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
           .nested
-          .map(e => (e._1 + 2, infix"bar(${e._2})".as[String]))
+          .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
           .nested
       }
 
@@ -166,8 +167,8 @@ class NestedDistinctSpec extends Spec {
 
       val q = quote {
         qschem
-          .map(e => (e.a + 1, infix"foo(${e.b})".as[String]))
-          .map(e => (e._1 + 2, infix"bar(${e._2})".as[String]))
+          .map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
+          .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
       }
 
       ctx.run(q).string mustEqual

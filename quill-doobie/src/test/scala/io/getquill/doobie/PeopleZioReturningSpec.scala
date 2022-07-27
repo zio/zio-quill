@@ -8,7 +8,7 @@ import io.getquill._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import io.getquill.Literal
-import io.getquill.context.sql.PeopleReturningSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleZioReturningSpec extends PeopleReturningSpec {
 

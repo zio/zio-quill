@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.h2
 
-import io.getquill.context.sql.DepartmentsSpec
+import io.getquill.context.sql.base.DepartmentsSpec
 
 class DepartmentsJdbcSpec extends DepartmentsSpec {
 

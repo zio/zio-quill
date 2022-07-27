@@ -5,6 +5,7 @@ import io.getquill._
 import io.getquill.ast.Renameable.ByStrategy
 import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
+import io.getquill.base.Spec
 import io.getquill.context.{ ExecutionType, Expand }
 import io.getquill.quat._
 

@@ -1,9 +1,8 @@
-package io.getquill.context.sql
+package io.getquill.context.sql.base
 
-import io.getquill.Spec
-import io.getquill.Ord
-import io.getquill.Query
-import io.getquill.Quoted
+import io.getquill.base.Spec
+import io.getquill.context.sql.SqlContext
+import io.getquill.{ Ord, Query, Quoted }
 
 trait PeopleSpec extends Spec {
 
@@ -12,6 +11,7 @@ trait PeopleSpec extends Spec {
   import context._
 
   case class Person(name: String, age: Int)
+
   case class Couple(her: String, him: String)
 
   val peopleInsert =
@@ -107,10 +107,15 @@ trait PeopleSpec extends Spec {
   val `Ex 5 expected result` = List(Person("Cora", 33), Person("Drew", 31))
 
   sealed trait Predicate
+
   case class Above(i: Int) extends Predicate
+
   case class Below(i: Int) extends Predicate
+
   case class And(a: Predicate, b: Predicate) extends Predicate
+
   case class Or(a: Predicate, b: Predicate) extends Predicate
+
   case class Not(p: Predicate) extends Predicate
 
   def eval(t: Predicate): Quoted[Int => Boolean] =

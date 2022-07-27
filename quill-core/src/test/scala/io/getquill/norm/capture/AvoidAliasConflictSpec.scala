@@ -1,8 +1,8 @@
 package io.getquill.norm.capture
 
-import io.getquill.Spec
 import io.getquill.testContext._
 import io.getquill.Query
+import io.getquill.base.Spec
 import io.getquill.util.TraceConfig
 
 class AvoidAliasConflictSpec extends Spec {
@@ -170,7 +170,7 @@ class AvoidAliasConflictSpec extends Spec {
 
   "considers infix as unaliased" in {
     val i = quote {
-      infix"$qr1".as[Query[TestEntity]]
+      sql"$qr1".as[Query[TestEntity]]
     }
     val q = quote {
       i.flatMap(a => qr2.flatMap(a => qr3))

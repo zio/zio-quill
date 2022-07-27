@@ -1,4 +1,4 @@
-package io.getquill
+package io.getquill.base
 
 import io.getquill.ast.{ Ident, StatelessTransformer }
 import io.getquill.norm.capture.TemporaryIdent

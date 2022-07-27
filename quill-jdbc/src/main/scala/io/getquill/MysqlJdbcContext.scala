@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import io.getquill.context.jdbc.{ JdbcContext, MysqlJdbcContextBase }
 import io.getquill.util.LoadConfig
 
-class MysqlJdbcContext[N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
+class MysqlJdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
   extends JdbcContext[MySQLDialect, N]
   with MysqlJdbcContextBase[N] {
 

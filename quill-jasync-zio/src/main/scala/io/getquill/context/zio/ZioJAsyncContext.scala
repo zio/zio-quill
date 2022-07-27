@@ -14,7 +14,7 @@ import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 import scala.util.Try
 
-abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N)
+abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N)
   extends Context[D, N]
   with ContextVerbTranslate
   with SqlContext[D, N]

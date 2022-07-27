@@ -3,7 +3,8 @@ package io.getquill.context.jasync.mysql
 import java.nio.charset.Charset
 
 import com.typesafe.config.ConfigFactory
-import io.getquill.{ MysqlJAsyncContextConfig, Spec }
+import io.getquill.MysqlJAsyncContextConfig
+import io.getquill.base.Spec
 
 import scala.jdk.CollectionConverters._
 

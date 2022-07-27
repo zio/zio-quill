@@ -1,8 +1,9 @@
 package io.getquill.context.sql.norm
 
+import io.getquill.base.Spec
 import io.getquill.norm.SheathLeafClausesApply
 import io.getquill.util.TraceConfig
-import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, SqlMirrorContext }
 
 class SheathLeafClausesSpec extends Spec {
 
@@ -42,10 +43,10 @@ class SheathLeafClausesSpec extends Spec {
       // this works even without SheathLeafClauses but is good test of the SheathLeafClauses
       val q = quote {
         // also this works even without SheathLeafClauses but is good test of the SheathLeafClauses transformation
-        query[Person].map(p => p.age + infix"foo".as[Int]).groupBy(p => p).map(p => p._2.max)
+        query[Person].map(p => p.age + sql"foo".as[Int]).groupBy(p => p).map(p => p._2.max)
       }
       val c = quote {
-        query[Person].map(p => Wrap.Int.X(p.age + infix"foo".as[Int])).groupBy(p => p.x).map(p => p._2.map(p => p.x).max)
+        query[Person].map(p => Wrap.Int.X(p.age + sql"foo".as[Int])).groupBy(p => p.x).map(p => p._2.map(p => p.x).max)
       }
       SheathLeafClauses.apply(q.ast) mustEqual c.ast
       // TODO Replace all p.x with p._1 in c then can use this
@@ -54,10 +55,10 @@ class SheathLeafClausesSpec extends Spec {
 
     "infix.as[Query[leaf]].groupBy.map" in {
       val q = quote {
-        infix"leaf".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
+        sql"leaf".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
       }
       val c = quote {
-        infix"leaf".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
+        sql"leaf".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
       }
       SheathLeafClauses.apply(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string
@@ -66,10 +67,10 @@ class SheathLeafClausesSpec extends Spec {
     // TODO This should actually live the quill-jdbc module and be executed since it should be a working example
     "(example) infix.as[Query[leaf]].groupBy.map" in {
       val q = quote {
-        infix"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
+        sql"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
       }
       val c = quote {
-        infix"unnest(array['foo','bar'])".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
+        sql"unnest(array['foo','bar'])".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
       }
       SheathLeafClauses.apply(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string

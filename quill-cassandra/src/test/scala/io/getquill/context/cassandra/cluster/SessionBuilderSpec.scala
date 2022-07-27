@@ -3,7 +3,7 @@ package io.getquill.context.cassandra.cluster
 import com.datastax.oss.driver.api.core.CqlIdentifier
 
 import com.typesafe.config.ConfigFactory
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 import java.util
 import scala.jdk.CollectionConverters._

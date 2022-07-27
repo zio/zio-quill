@@ -23,7 +23,7 @@ object OperationType {
   case object Write extends OperationType
 }
 
-class FinagleMysqlContext[N <: NamingStrategy](
+class FinagleMysqlContext[+N <: NamingStrategy](
   val naming:                               N,
   client:                                   OperationType => Client with Transactions,
   private[getquill] val injectionTimeZone:  TimeZone,

@@ -1,9 +1,10 @@
 package io.getquill.context.sql.norm
 
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted, Spec }
+import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted }
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -421,12 +422,12 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
     }
 
-    "infix" - {
+    "sql" - {
       case class B(b: Int) extends Embedded
       case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+          sql"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual
@@ -434,7 +435,7 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "with filter" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
+          sql"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual

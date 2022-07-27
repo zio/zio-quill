@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import io.getquill.context.jdbc.{ JdbcContext, H2JdbcContextBase }
 import io.getquill.util.LoadConfig
 
-class H2JdbcContext[N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
+class H2JdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
   extends JdbcContext[H2Dialect, N]
   with H2JdbcContextBase[N] {
 

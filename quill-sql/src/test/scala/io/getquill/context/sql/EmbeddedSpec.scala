@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class EmbeddedSpec extends Spec {
 

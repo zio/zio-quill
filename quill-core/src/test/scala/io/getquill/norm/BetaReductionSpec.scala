@@ -1,9 +1,9 @@
 package io.getquill.norm
 
-import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
+import io.getquill.base.Spec
 import io.getquill.quat.Quat
 
 class BetaReductionSpec extends Spec {

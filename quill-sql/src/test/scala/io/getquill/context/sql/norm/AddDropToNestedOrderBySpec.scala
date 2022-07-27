@@ -1,6 +1,7 @@
 package io.getquill.context.sql.norm
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.sql.{ TestDecoders, TestEncoders }
 
 class AddDropToNestedOrderBySpec extends Spec {
