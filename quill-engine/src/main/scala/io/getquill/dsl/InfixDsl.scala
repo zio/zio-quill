@@ -27,10 +27,12 @@ private[getquill] trait InfixDsl {
     def sql(args: Any*): InfixValue = NonQuotedException()
   }
 
-  // For compatibility with Slick/Doobie/etc... that already have an SQL interpolator
-  implicit class QsqlInfixInterpolator(val sc: StringContext) {
+  object compat {
+    // For compatibility with Slick/Doobie/etc... that already have an SQL interpolator
+    implicit class QsqlInfixInterpolator(val sc: StringContext) {
 
-    @compileTimeOnly(NonQuotedException.message)
-    def qsql(args: Any*): InfixValue = NonQuotedException()
+      @compileTimeOnly(NonQuotedException.message)
+      def qsql(args: Any*): InfixValue = NonQuotedException()
+    }
   }
 }
