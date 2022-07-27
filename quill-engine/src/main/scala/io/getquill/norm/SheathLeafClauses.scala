@@ -18,7 +18,7 @@ import io.getquill.util.Messages.TraceType
  * e.v - this dot-shorthand means Property(e, v) where e is an Ast Ident. This is essentially a scalar-projection
  *       from the entity e.
  * leaf - Typically this is a query-ast clause that results in a scalar type. It could be M(ent,e,e.v) or
- *        an `infix"stuff".as[Query[Int/String/Boolean/etc...] ]`
+ *        an `sql"stuff".as[Query[Int/String/Boolean/etc...] ]`
  */
 case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig) extends StatefulTransformerWithStack[Option[String]] {
 
@@ -150,7 +150,7 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig) ex
        *  // SELECT p.x FROM (SELECT MAX(p.age) AS x FROM Person p GROUP BY p.name) AS p WHERE p.x > 1000
        *
        *  // Works Right! (Although the query itself is not very useful!)
-       *  run { query[Person].map(p => infix"someFunc(${p.age})".as[Int]).groupByMap(p => p)(p => max(p)).filter(a => a > 1000) }
+       *  run { query[Person].map(p => sql"someFunc(${p.age})".as[Int]).groupByMap(p => p)(p => max(p)).filter(a => a > 1000) }
        *  // SELECT p.x FROM (SELECT MAX(p._1) AS x FROM (SELECT someFunc(p.age) AS _1 FROM Person p) AS p GROUP BY p._1) AS p WHERE p.x > 1000
        *
        *  // Does not work!
@@ -282,7 +282,7 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig) ex
       // we immediately map back to the leaf node before the join happens.
       // For example, say we have J(M(ent,e,e.v+123),M(ent,e,e.v+456)) that the sheathing changes to J(M(ent,e,CC(x->e.v+123)),M(ent,e,CC(x->e.v+456))).
       // We would then like to add an extra layer of mapping J(M(M(ent,e,CC(v->e.v+123)),e,e.x)),M(M(ent,e,CC(v->e.v+456)),e,e.x).
-      // This might seem to do undo the original intent however, this if the parts e.g. v+123 are not actually reducible e.g. infix"AVG($v) OVER (PARTITION BY...)"
+      // This might seem to do undo the original intent however, this if the parts e.g. v+123 are not actually reducible e.g. sql"AVG($v) OVER (PARTITION BY...)"
       // this additional information will not be removed via the applyMap normalization and actually help SqlQuery understand that the variable `x` should
       // be used to identify this column.
       // Also note that the alternative could be to produce an outer join e.g.

@@ -10,7 +10,7 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   override def beforeAll = {
     testContext.transaction {
-      testContext.run(infix"alter session set current_schema=quill_test".as[Update[Unit]])
+      testContext.run(sql"alter session set current_schema=quill_test".as[Update[Unit]])
       testContext.run(query[Couple].delete)
       testContext.run(query[Person].delete)
       testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))

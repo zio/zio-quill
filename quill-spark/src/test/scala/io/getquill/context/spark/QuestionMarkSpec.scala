@@ -50,7 +50,7 @@ class QuestionMarkSpec extends Spec {
   "infix usage must work" in {
     val q = quote {
       for {
-        p <- liftQuery(peopleList.toDS()) if p.extraInfo == infix"'?'".as[String] && p.firstName == lift("Alex")
+        p <- liftQuery(peopleList.toDS()) if p.extraInfo == sql"'?'".as[String] && p.firstName == lift("Alex")
       } yield p
     }
     testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))

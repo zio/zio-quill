@@ -105,7 +105,7 @@ object SeedRenames extends StatelessTransformer {
    * renames from the entity inside of the infix to the external AST. For example say we have something like this:
    * {{{
    * val q = quote {
-   *  infix"$${querySchema[A]("C", _.v -> "m")} LIMIT 10".as[Query[A]].filter(x => x.v == 1)
+   *  sql"$${querySchema[A]("C", _.v -> "m")} LIMIT 10".as[Query[A]].filter(x => x.v == 1)
    * }
    * run(q)
    * }}}

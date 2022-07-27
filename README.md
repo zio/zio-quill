@@ -434,7 +434,7 @@ ctx.run(q.returning(r => r.id + 100)) //: List[Int]
 
 Pass the value of `id` into a UDF:
 ```scala
-val udf = quote { (i: Long) => infix"myUdf($i)".as[Int] }
+val udf = quote { (i: Long) => sql"myUdf($i)".as[Int] }
 ctx.run(q.returning(r => udf(r.id))) //: List[Int]
 // UPDATE Product AS p SET description = 'My Product', sku = 1011L WHERE p.id = 42 RETURNING myUdf(p.id)
 ```
@@ -654,7 +654,7 @@ Writing a custom aggregator using `infix` with the `groupByMax` syntax is also v
 For example, in Postgres the `STRING_AGG` function is used to concatenate all the encountered strings.
 ```scala
 val stringAgg = quote {
-  (str: String, separator: String) => infix"STRING_AGG($str, $separator)".pure.as[String]
+  (str: String, separator: String) => sql"STRING_AGG($str, $separator)".pure.as[String]
 }
 val q = quote {
   query[Person].groupByMap(p => p.age)(p => (p.age, stringAgg(p.name, ";")))
@@ -2368,7 +2368,7 @@ For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still b
 
 ```scala
 implicit class ForUpdate[T](q: Query[T]) {
-  def forUpdate = quote(infix"$q FOR UPDATE".as[Query[T]])
+  def forUpdate = quote(sql"$q FOR UPDATE".as[Query[T]])
 }
 
 val a = quote {
@@ -2392,7 +2392,7 @@ case class DataAndRandom(id: Int, value: Int)
 
 // This should be alright:
 val q = quote {
-  query[Data].map(e => DataAndRandom(e.id, infix"RAND()".as[Int])).filter(r => r.value <= 10)
+  query[Data].map(e => DataAndRandom(e.id, sql"RAND()".as[Int])).filter(r => r.value <= 10)
 }
 run(q)
 // SELECT e.id, e.value FROM (SELECT RAND() AS value, e.id AS id FROM Data e) AS e WHERE e.value <= 10
@@ -2400,9 +2400,9 @@ run(q)
 // This might not be:
 val q = quote {
   query[Data]
-    .map(e => DataAndRandom(e.id, infix"SOME_UDF(${e.id})".as[Int]))
+    .map(e => DataAndRandom(e.id, sql"SOME_UDF(${e.id})".as[Int]))
     .filter(r => r.value <= 10)
-    .map(e => DataAndRandom(e.id, infix"SOME_OTHER_UDF(${e.value})".as[Int]))
+    .map(e => DataAndRandom(e.id, sql"SOME_OTHER_UDF(${e.value})".as[Int]))
     .filter(r => r.value <= 100)
 }
 // Produces too many layers of nesting!
@@ -2421,9 +2421,9 @@ more leeway to flatten your query, possibly improving performance.
 ```scala
 val q = quote {
   query[Data]
-    .map(e => DataAndRandom(e.id, infix"SOME_UDF(${e.id})".pure.as[Int]))
+    .map(e => DataAndRandom(e.id, sql"SOME_UDF(${e.id})".pure.as[Int]))
     .filter(r => r.value <= 10)
-    .map(e => DataAndRandom(e.id, infix"SOME_OTHER_UDF(${e.value})".pure.as[Int]))
+    .map(e => DataAndRandom(e.id, sql"SOME_OTHER_UDF(${e.value})".pure.as[Int]))
     .filter(r => r.value <= 100)
 }
 // Copying SOME_UDF and SOME_OTHER_UDF allows the query to be completely flattened.
@@ -2435,7 +2435,7 @@ run(q)
 ### Infixes With Conditions
 
 #### Summary
-Use `infix"...".asCondition` to express an infix that represents a conditional expression.
+Use `sql"...".asCondition` to express an infix that represents a conditional expression.
 
 #### Explination
 
@@ -2465,19 +2465,19 @@ case class Node(name: String, isUp: Boolean)
 val maxUptime:Boolean = getState
 
 quote {
-  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".as[Boolean])
+  query[Node].filter(n => sql"${n.uptime} > ${lift(maxUptime)}".as[Boolean])
 }
 run(q)
 // Should be this:
 //  SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
-// However since infix"...".as[Boolean] is treated as a Boolean Value (as opposed to an expression) it will be converted to this:
+// However since sql"...".as[Boolean] is treated as a Boolean Value (as opposed to an expression) it will be converted to this:
 //  SELECT n.name, n.isUp, n.uptime WHERE 1 == n.uptime > ?
 ```
 
-In order to avoid this problem, use infix"...".asCondition so that Quill understands that the boolean is an expression:
+In order to avoid this problem, use sql"...".asCondition so that Quill understands that the boolean is an expression:
 ```scala
 quote {
-  query[Node].filter(n => infix"${n.uptime} > ${lift(maxUptime)}".asCondition)
+  query[Node].filter(n => sql"${n.uptime} > ${lift(maxUptime)}".asCondition)
 }
 run(q) // SELECT n.name, n.isUp, n.uptime WHERE n.uptime > ?
 ```
@@ -2488,7 +2488,7 @@ Infix supports runtime string values through the `#$` prefix. Example:
 
 ```scala
 def test(functionName: String) =
-  ctx.run(query[Person].map(p => infix"#$functionName(${p.name})".as[Int]))
+  ctx.run(query[Person].map(p => sql"#$functionName(${p.name})".as[Int]))
 ```
 
 ### Implicit Extensions
@@ -2556,7 +2556,7 @@ You can also use infix to port raw SQL queries to Quill and map it to regular Sc
 
 ```scala
 val rawQuery = quote {
-  (id: Int) => infix"""SELECT id, name FROM my_entity WHERE id = $id""".as[Query[(Int, String)]]
+  (id: Int) => sql"""SELECT id, name FROM my_entity WHERE id = $id""".as[Query[(Int, String)]]
 }
 ctx.run(rawQuery(1))
 //SELECT x._1, x._2 FROM (SELECT id AS "_1", name AS "_2" FROM my_entity WHERE id = 1) x
@@ -2564,7 +2564,7 @@ ctx.run(rawQuery(1))
 
 Note that in this case the result query is nested.
 It's required since Quill is not aware of a query tree and cannot safely unnest it.
-This is different from the example above because infix starts with the query `infix"$q...` where its tree is already compiled
+This is different from the example above because infix starts with the query `sql"$q...` where its tree is already compiled
 
 ### Database functions
 
@@ -2572,7 +2572,7 @@ A custom database function can also be used through infix:
 
 ```scala
 val myFunction = quote {
-  (i: Int) => infix"MY_FUNCTION($i)".as[Int]
+  (i: Int) => sql"MY_FUNCTION($i)".as[Int]
 }
 
 val q = quote {
@@ -2591,9 +2591,9 @@ You can implement comparison operators by defining implicit conversion and using
 import java.util.Date
 
 implicit class DateQuotes(left: Date) {
-  def >(right: Date) = quote(infix"$left > $right".as[Boolean])
+  def >(right: Date) = quote(sql"$left > $right".as[Boolean])
 
-  def <(right: Date) = quote(infix"$left < $right".as[Boolean])
+  def <(right: Date) = quote(sql"$left < $right".as[Boolean])
 }
 ```
 
@@ -2601,7 +2601,7 @@ implicit class DateQuotes(left: Date) {
 
 ```scala
 implicit class OnDuplicateKeyIgnore[T](q: Insert[T]) {
-  def ignoreDuplicate = quote(infix"$q ON DUPLICATE KEY UPDATE id=id".as[Insert[T]])
+  def ignoreDuplicate = quote(sql"$q ON DUPLICATE KEY UPDATE id=id".as[Insert[T]])
 }
 
 ctx.run(
@@ -2735,7 +2735,7 @@ The QueryMeta customizes the expansion of query types and extraction of the fina
 implicit val personQueryMeta =
   queryMeta(
     (q: Query[Person]) =>
-      q.map(p => (p.id, infix"CONVERT(${p.name} USING utf8)".as[String], p.age))
+      q.map(p => (p.id, sql"CONVERT(${p.name} USING utf8)".as[String], p.age))
   ) {
     case (id, name, age) =>
       Person(id, name, age)
@@ -4100,8 +4100,10 @@ We can now construct a `DoobieContext` for our back-end database and import its 
 
 ```
 val dc = new DoobieContext.Postgres(Literal) // Literal naming scheme
-import dc._
+import dc.{ SqlInfixInterpolator => _, _ }   // Quill's `sql` interpolator conflicts with doobie so don't import it
 ```
+
+> Instead of using Quill's `sql"MyUDF(${something})"` interpolator, use `qsql"MyUDF(${something})"` since we have excluded it.
 
 We will be using the `country` table from our test database, so we need a data type of that name, with fields whose names and types line up with the table definition.
 

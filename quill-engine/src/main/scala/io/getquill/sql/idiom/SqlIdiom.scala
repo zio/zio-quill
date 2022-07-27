@@ -291,7 +291,7 @@ trait SqlIdiom extends Idiom {
 
         case Aggregation(op, Ident(id, _: Quat.Product)) => stmt"${op.token}(${makeProductAggregationToken(id)})"
         // Not too many cases of this. Can happen if doing a leaf-level infix inside of a select clause. For example in postgres:
-        // `infix"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(ap => ap._2.max)` which should yield:
+        // `sql"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(ap => ap._2.max)` which should yield:
         // SELECT MAX(inf) FROM (unnest(array['foo','bar'])) AS inf GROUP BY inf
         case Aggregation(op, Ident(id, _))               => stmt"${op.token}(${id.token})"
         case Aggregation(op, Tuple(_))                   => stmt"${op.token}(*)"

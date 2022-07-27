@@ -10,7 +10,7 @@ class ExpandMappedInfixSpec extends Spec {
 
   "removes identity map" in {
     val i = quote {
-      infix"test".as[Query[Int]]
+      sql"test".as[Query[Int]]
     }
     val q = quote {
       i.map(x => x)
@@ -20,10 +20,10 @@ class ExpandMappedInfixSpec extends Spec {
 
   "expands mapped infix wrapping single query" in {
     val q = quote {
-      infix"$qr1 ALLOW FILTERING".as[Query[TestEntity]].map(t => t.i)
+      sql"$qr1 ALLOW FILTERING".as[Query[TestEntity]].map(t => t.i)
     }
     val n = quote {
-      infix"${qr1.map(t => t.i)} ALLOW FILTERING".as[Query[TestEntity]]
+      sql"${qr1.map(t => t.i)} ALLOW FILTERING".as[Query[TestEntity]]
     }
     ExpandMappedInfixCassandra(q.ast: Ast) mustEqual n.ast
   }

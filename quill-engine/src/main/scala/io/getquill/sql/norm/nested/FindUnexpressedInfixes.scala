@@ -12,7 +12,7 @@ import io.getquill.context.sql.SelectValue
  * been selected, or inside of sibling elements which have been selected.
  * Take for instance a query that looks like this:
  * <pre><code>
- *   query[Person].map(p => (p.name, (p.id, infix"foo(\${p.other})".as[Int]))).map(p => (p._1, p._2._1))
+ *   query[Person].map(p => (p.name, (p.id, sql"foo(\${p.other})".as[Int]))).map(p => (p._1, p._2._1))
  * </code></pre>
  * In this situation, `p.id` which is the sibling of the non-selected infix has been selected
  * via `p._2._1` (whose select-order is List(1,0) to represent 1st element in 2nd tuple.
@@ -20,7 +20,7 @@ import io.getquill.context.sql.SelectValue
  *
  * Or take the following situation:
  * <pre><code>
- *   query[Person].map(p => (p.name, (p.id, infix"foo(\${p.other})".as[Int]))).map(p => (p._1, p._2))
+ *   query[Person].map(p => (p.name, (p.id, sql"foo(\${p.other})".as[Int]))).map(p => (p._1, p._2))
  * </code></pre>
  * In this case, we have selected the entire 2nd element including the infix. We need to know that
  * `P._2._2` does not need to be selected since `p._2` was.

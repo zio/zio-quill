@@ -370,8 +370,18 @@ trait Parsing extends ValueComputation with QuatMaking {
 
   val impureInfixParser = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
 
+  object InfixMatch {
+    def unapply(tree: Tree) =
+      tree match {
+        case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" => Some((parts, params))
+        case q"$pack.QsqlInfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).qsql(..$params)" => Some((parts, params))
+        case q"$pack.SqlInfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).sql(..$params)" => Some((parts, params))
+        case _ => None
+      }
+  }
+
   def combinedInfixParser(infixIsPure: Boolean, quat: Quat, infixIsTransparent: Boolean = false): Parser[Ast] = Parser[Ast] {
-    case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" =>
+    case InfixMatch(parts, params) =>
       // Parts that end with # indicate this is a dynamic infix.
       if (parts.find(_.endsWith("#")).isDefined) {
         val elements =
