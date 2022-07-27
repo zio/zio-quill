@@ -5,5 +5,5 @@ import io.getquill.jdbczio.Quill
 
 package object mysql {
   implicit val pool = runLayerUnsafe(Quill.DataSource.fromPrefix("testMysqlDB"))
-  object testContext extends Quill.MysqlService(Literal, pool) with TestEntities
+  object testContext extends Quill.Mysql(Literal, pool) with TestEntities
 }
