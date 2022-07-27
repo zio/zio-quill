@@ -373,8 +373,8 @@ trait Parsing extends ValueComputation with QuatMaking {
   object InfixMatch {
     def unapply(tree: Tree) =
       tree match {
-        case q"$pack.SqlInfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" => Some((parts, params))
-        case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).sql(..$params)" => Some((parts, params))
+        case q"$pack.InfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).infix(..$params)" => Some((parts, params))
+        case q"$pack.SqlInfixInterpolator(scala.StringContext.apply(..${ parts: List[String] })).sql(..$params)" => Some((parts, params))
         case _ => None
       }
   }
