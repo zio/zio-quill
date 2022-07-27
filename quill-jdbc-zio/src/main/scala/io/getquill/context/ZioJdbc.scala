@@ -28,7 +28,7 @@ object ZioJdbc {
   }
 
   object DataSourceLayer {
-    @deprecated("Use Quill.DataSource.live instead", "3.3.0")
+    @deprecated("Use Quill.Connection.acquireScoped instead", "3.3.0")
     val live: ZLayer[DataSource, SQLException, Connection] =
       ZLayer.scoped {
         for {
@@ -42,27 +42,27 @@ object ZioJdbc {
     def fromDataSource(ds: => DataSource): ZLayer[Any, Throwable, DataSource] =
       ZLayer.fromZIO(ZIO.attempt(ds))
 
-    @deprecated("Use Quill.fromConfig instead", "3.3.0")
+    @deprecated("Use Quill.DataSource.fromConfig instead", "3.3.0")
     def fromConfig(config: => Config): ZLayer[Any, Throwable, DataSource] =
       fromConfigClosable(config)
 
-    @deprecated("Use Quill.fromPrefix instead", "3.3.0")
+    @deprecated("Use Quill.DataSource.fromPrefix instead", "3.3.0")
     def fromPrefix(prefix: String): ZLayer[Any, Throwable, DataSource] =
       fromPrefixClosable(prefix)
 
-    @deprecated("Use Quill.fromJdbcConfig instead", "3.3.0")
+    @deprecated("Use Quill.DataSource.fromJdbcConfig instead", "3.3.0")
     def fromJdbcConfig(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, DataSource] =
       fromJdbcConfigClosable(jdbcContextConfig)
 
-    @deprecated("Use Quill.fromConfigClosable instead", "3.3.0")
+    @deprecated("Use Quill.DataSource.fromConfigClosable instead", "3.3.0")
     def fromConfigClosable(config: => Config): ZLayer[Any, Throwable, DataSource with Closeable] =
       fromJdbcConfigClosable(JdbcContextConfig(config))
 
-    @deprecated("Use Quill.fromPrefixClosable instead", "3.3.0")
+    @deprecated("Use Quill.DataSource.fromPrefixClosable instead", "3.3.0")
     def fromPrefixClosable(prefix: String): ZLayer[Any, Throwable, DataSource with Closeable] =
       fromJdbcConfigClosable(JdbcContextConfig(LoadConfig(prefix)))
 
-    @deprecated("Use Quill.fromJdbcConfigClosable instead", "3.3.0")
+    @deprecated("Use Quill.DataSource.fromJdbcConfigClosable instead", "3.3.0")
     def fromJdbcConfigClosable(jdbcContextConfig: => JdbcContextConfig): ZLayer[Any, Throwable, DataSource with Closeable] =
       ZLayer.scoped {
         for {
@@ -97,20 +97,20 @@ object ZioJdbc {
 
     def onDataSource: ZIO[DataSource, SQLException, T] =
       (for {
-        q <- qzio.provideSomeLayer(Quill.DataSource.live)
+        q <- qzio.provideSomeLayer(Quill.Connection.acquireScoped)
       } yield q).refineToOrDie[SQLException]
 
     def implicitDS(implicit implicitEnv: Implicit[DataSource]): ZIO[Any, SQLException, T] =
       (for {
         q <- qzio
-          .provideSomeLayer(Quill.DataSource.live)
+          .provideSomeLayer(Quill.Connection.acquireScoped)
           .provideEnvironment(ZEnvironment(implicitEnv.env))
       } yield q).refineToOrDie[SQLException]
   }
 
   implicit class QuillZioExt[T, R](qzio: ZIO[Connection with R, Throwable, T])(implicit tag: Tag[R]) {
     /**
-     * Change `Connection` of a QIO to `DataSource with Closeable` by providing a `Quill.DataSource.live` instance
+     * Change `Connection` of a QIO to `DataSource with Closeable` by providing a `Quill.Connection.acquireScoped` instance
      * which will grab a connection from the data-source, perform the QIO operation, and the immediately release the connection.
      * This is used for data-sources that have pooled connections e.g. Hikari.
      * {{{
@@ -123,7 +123,7 @@ object ZioJdbc {
         r <- ZIO.environment[R]
         q <- qzio
           .provideSomeLayer[Connection](ZLayer.succeedEnvironment(r))
-          .provideSomeLayer(Quill.DataSource.live)
+          .provideSomeLayer(Quill.Connection.acquireScoped)
       } yield q).refineToOrDie[SQLException]
   }
 

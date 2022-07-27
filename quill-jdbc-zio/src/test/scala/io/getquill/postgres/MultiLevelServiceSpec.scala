@@ -56,7 +56,7 @@ class MultiLevelServiceSpec extends PeopleZioSpec with ZioSpec {
   "All Composition variations must work" in {
 
     val dataSourceLive = ZLayer.succeed(io.getquill.postgres.pool)
-    val postgresServiceLive = ZLayer.fromFunction(Quill.PostgresService(Literal, _: DataSource))
+    val postgresLive = ZLayer.fromFunction(Quill.Postgres(Literal, _: DataSource))
 
     val (a, b, c, d, e) =
       Unsafe.unsafe { implicit u =>
@@ -67,7 +67,7 @@ class MultiLevelServiceSpec extends PeopleZioSpec with ZioSpec {
             c <- Application.getPeopleByName2("Joe")
             d <- Application.getPeopleByName3("Joe")
             e <- Application.getAllPeople()
-          } yield (a, b, c, d, e)).provide(applicationLive, dataServiceLive, dataSourceLive, postgresServiceLive)
+          } yield (a, b, c, d, e)).provide(applicationLive, dataServiceLive, dataSourceLive, postgresLive)
         ).getOrThrow()
       }
 

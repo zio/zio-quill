@@ -14,63 +14,63 @@ import java.sql.{ Connection, SQLException }
 import javax.sql.DataSource
 
 object Quill {
-  case class PostgresService[+N <: NamingStrategy](naming: N, override val ds: DataSource)
+  case class Postgres[+N <: NamingStrategy](naming: N, override val ds: DataSource)
     extends Quill[PostgresDialect, N] with PostgresJdbcTypes[N] {
     val dsDelegate = new PostgresZioJdbcContext[N](naming)
   }
 
-  object PostgresService {
-    def apply[N <: NamingStrategy: Tag](naming: N): LayerConstructor[ZLayer[javax.sql.DataSource, Nothing, PostgresService[N]]] =
-      new LayerConstructor(ZLayer.fromFunction((ds: javax.sql.DataSource) => new PostgresService[N](naming, ds)))
+  object Postgres {
+    def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Postgres[N]] =
+      ZLayer.fromFunction((ds: javax.sql.DataSource) => new Postgres[N](naming, ds))
   }
 
-  case class SqlServerService[+N <: NamingStrategy](naming: N, override val ds: DataSource)
+  case class SqlServer[+N <: NamingStrategy](naming: N, override val ds: DataSource)
     extends Quill[SQLServerDialect, N] with SqlServerJdbcTypes[N] {
     val dsDelegate = new SqlServerZioJdbcContext[N](naming)
   }
-  object SqlServerService {
-    def apply[N <: NamingStrategy: Tag](naming: N): LayerConstructor[ZLayer[javax.sql.DataSource, Nothing, SqlServerService[N]]] =
-      new LayerConstructor(ZLayer.fromFunction((ds: javax.sql.DataSource) => new SqlServerService[N](naming, ds)))
+  object SqlServer {
+    def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, SqlServer[N]] =
+      ZLayer.fromFunction((ds: javax.sql.DataSource) => new SqlServer[N](naming, ds))
   }
 
-  case class H2Service[+N <: NamingStrategy](naming: N, override val ds: DataSource)
+  case class H2[+N <: NamingStrategy](naming: N, override val ds: DataSource)
     extends Quill[H2Dialect, N] with H2JdbcTypes[N] {
     val dsDelegate = new H2ZioJdbcContext[N](naming)
   }
-  object H2Service {
-    def apply[N <: NamingStrategy: Tag](naming: N): LayerConstructor[ZLayer[javax.sql.DataSource, Nothing, H2Service[N]]] =
-      new LayerConstructor(ZLayer.fromFunction((ds: javax.sql.DataSource) => new H2Service[N](naming, ds)))
+  object H2 {
+    def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, H2[N]] =
+      ZLayer.fromFunction((ds: javax.sql.DataSource) => new H2[N](naming, ds))
   }
 
-  case class MysqlService[+N <: NamingStrategy](naming: N, override val ds: DataSource)
+  case class Mysql[+N <: NamingStrategy](naming: N, override val ds: DataSource)
     extends Quill[MySQLDialect, N] with MysqlJdbcTypes[N] {
     val dsDelegate = new MysqlZioJdbcContext[N](naming)
   }
-  object MysqlService {
-    def apply[N <: NamingStrategy: Tag](naming: N): LayerConstructor[ZLayer[javax.sql.DataSource, Nothing, MysqlService[N]]] =
-      new LayerConstructor(ZLayer.fromFunction((ds: javax.sql.DataSource) => new MysqlService[N](naming, ds)))
+  object Mysql {
+    def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Mysql[N]] =
+      ZLayer.fromFunction((ds: javax.sql.DataSource) => new Mysql[N](naming, ds))
   }
 
-  case class SqliteService[+N <: NamingStrategy](naming: N, override val ds: DataSource)
+  case class Sqlite[+N <: NamingStrategy](naming: N, override val ds: DataSource)
     extends Quill[SqliteDialect, N] with SqliteJdbcTypes[N] {
     val dsDelegate = new SqliteZioJdbcContext[N](naming)
   }
-  object SqliteService {
-    def apply[N <: NamingStrategy: Tag](naming: N): LayerConstructor[ZLayer[javax.sql.DataSource, Nothing, SqliteService[N]]] =
-      new LayerConstructor(ZLayer.fromFunction((ds: javax.sql.DataSource) => new SqliteService[N](naming, ds)))
+  object Sqlite {
+    def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Sqlite[N]] =
+      ZLayer.fromFunction((ds: javax.sql.DataSource) => new Sqlite[N](naming, ds))
   }
 
-  case class OracleService[+N <: NamingStrategy](naming: N, override val ds: DataSource)
+  case class Oracle[+N <: NamingStrategy](naming: N, override val ds: DataSource)
     extends Quill[OracleDialect, N] with OracleJdbcTypes[N] {
     val dsDelegate = new OracleZioJdbcContext[N](naming)
   }
-  object OracleService {
-    def apply[N <: NamingStrategy: Tag](naming: N): LayerConstructor[ZLayer[javax.sql.DataSource, Nothing, OracleService[N]]] =
-      new LayerConstructor(ZLayer.fromFunction((ds: javax.sql.DataSource) => new OracleService[N](naming, ds)))
+  object Oracle {
+    def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Oracle[N]] =
+      ZLayer.fromFunction((ds: javax.sql.DataSource) => new Oracle[N](naming, ds))
   }
 
-  object DataSource {
-    val live: ZLayer[DataSource, SQLException, Connection] =
+  object Connection {
+    def acquireScoped: ZLayer[DataSource, SQLException, Connection] =
       ZLayer.scoped {
         for {
           blockingExecutor <- ZIO.blockingExecutor
@@ -78,7 +78,9 @@ object Quill {
           r <- ZioJdbc.scopedBestEffort(ZIO.attempt(ds.getConnection)).refineToOrDie[SQLException].onExecutor(blockingExecutor)
         } yield r
       }
+  }
 
+  object DataSource {
     def fromDataSource(ds: => DataSource): ZLayer[Any, Throwable, DataSource] =
       ZLayer.fromZIO(ZIO.attempt(ds))
 
