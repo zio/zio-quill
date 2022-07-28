@@ -31,6 +31,7 @@ object Messages {
   def querySubexpand = cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
   def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
   def errorDetail = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
+  def disableReturning = cache("quill.query.disableReturning", variable("quill.query.disableReturning", "quill_query_disableReturning", "false").toBoolean)
 
   sealed trait LogToFile
   object LogToFile {
