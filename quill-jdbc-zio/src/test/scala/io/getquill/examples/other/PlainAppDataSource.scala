@@ -1,4 +1,4 @@
-package io.getquill.examples
+package io.getquill.examples.other
 
 import com.zaxxer.hikari.HikariDataSource
 import io.getquill.util.LoadConfig
