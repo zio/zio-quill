@@ -7,7 +7,7 @@ import zio.Console.printLine
 
 import java.sql.SQLException
 
-object PlainAppQuillService {
+object IdiomaticAppPlain {
 
   case class DataService(quill: Quill.Postgres[Literal]) {
     import quill._

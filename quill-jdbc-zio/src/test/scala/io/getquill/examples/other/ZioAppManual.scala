@@ -1,4 +1,4 @@
-package io.getquill.examples
+package io.getquill.examples.other
 
 import io.getquill._
 import io.getquill.util.LoadConfig

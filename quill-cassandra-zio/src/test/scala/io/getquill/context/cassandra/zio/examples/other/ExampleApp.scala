@@ -1,4 +1,4 @@
-package io.getquill.context.cassandra.zio.examples
+package io.getquill.context.cassandra.zio.examples.other
 
 import io.getquill.{ CassandraZioContext, _ }
 import zio.ZIOAppDefault
