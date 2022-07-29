@@ -1,3 +1,18 @@
+# 4.2.0
+
+- [Implement ZIO-Idiomatic JDBC Context](https://github.com/zio/zio-quill/pull/2537)
+- [Update idiomatic pattern based on discussions](https://github.com/zio/zio-quill/pull/2546)
+- [Implement ZIO idiomatic pattern for cassandra](https://github.com/zio/zio-quill/pull/2549)
+- [Add switch to manually disable returning/output-clauses](https://github.com/zio/zio-quill/pull/2550)
+- [cassandra - update if exists](https://github.com/zio/zio-quill/pull/2359)
+- [Change infix”$content” to sql”$content”](https://github.com/zio/zio-quill/pull/2547)
+- [Remove mysql as](https://github.com/zio/zio-quill/pull/2540)
+
+#### Migration Notes:
+- The `infix` interpolator is now deprecated because in Scala 2, infix is a keyword. Instead of
+  `infix"MyUdf(${person.name})"` use `sql"MyUdf(${person.name})"`. For contexts such as Doobie that already
+  have an `sql` interpolator. Import `context.compat._` and use the `qsql` interpolator instead. 
+
 # 4.1.0
 
 - [Implement groupByMap and EnableTrace/DisablePhase functionality](https://github.com/zio/zio-quill/pull/2517)
