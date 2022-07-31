@@ -581,7 +581,7 @@ trait SqlIdiom extends Idiom {
 
       case Insert(entity: Entity, assignments) =>
         val (table, columns, values) = insertInfo(insertEntityTokenizer, entity, assignments)
-        stmt"INSERT $table${` AS [table]`} (${columns.mkStmt(",")}) VALUES (${values.mkStmt(", ")})"
+        stmt"INSERT $table${` AS [table]`} (${columns.mkStmt(",")}) VALUES (${ValuesClauseToken(values.mkStmt(", "))})"
 
       case Update(table: Entity, assignments) =>
         stmt"UPDATE ${table.token}${` AS [table]`} SET ${assignments.token}"
@@ -615,7 +615,7 @@ trait SqlIdiom extends Idiom {
             action match {
               case Insert(entity: Entity, assignments) =>
                 val (table, columns, values) = insertInfo(insertEntityTokenizer, entity, assignments)
-                stmt"INSERT $table${` AS [table]`} (${columns.mkStmt(",")}) OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy, transpileConfig).map(_._1))} VALUES (${values.mkStmt(", ")})"
+                stmt"INSERT $table${` AS [table]`} (${columns.mkStmt(",")}) OUTPUT ${returnListTokenizer.token(ExpandReturning(r, Some("INSERTED"))(this, strategy, transpileConfig).map(_._1))} VALUES (${ValuesClauseToken(values.mkStmt(", "))})"
 
               // query[Person].filter(...).update/updateValue(...)
               case action @ Update(Filter(_: Entity, alias, _), _) =>
