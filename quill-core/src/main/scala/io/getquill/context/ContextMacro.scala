@@ -42,14 +42,18 @@ trait ContextMacro extends Quotation {
   abstract class TokenLift(numQuatFields: Int) extends LiftUnlift(numQuatFields) {
     import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
+    implicit val statementLiftable: Liftable[Statement] = Liftable[Statement] {
+      case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
+    }
+
     implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
       case ScalarTagToken(lift)       => q"io.getquill.idiom.ScalarTagToken(${lift: Tag})"
       case QuotationTagToken(lift)    => q"io.getquill.idiom.QuotationTagToken(${lift: Tag})"
       case StringToken(string)        => q"io.getquill.idiom.StringToken($string)"
       case ScalarLiftToken(lift)      => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
-      case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
+      case s: Statement               => statementLiftable(s)
       case SetContainsToken(a, op, b) => q"io.getquill.idiom.SetContainsToken($a, $op, $b)"
-      case ValuesClauseToken(stmt)    => q"io.getquill.idiom.ValuesClauseToken(${stmt: Token})"
+      case ValuesClauseToken(stmt)    => q"io.getquill.idiom.ValuesClauseToken($stmt)"
     }
   }
 
