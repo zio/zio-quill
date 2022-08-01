@@ -49,6 +49,7 @@ trait ContextMacro extends Quotation {
       case ScalarLiftToken(lift)      => q"io.getquill.idiom.ScalarLiftToken(${lift: Lift})"
       case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
       case SetContainsToken(a, op, b) => q"io.getquill.idiom.SetContainsToken($a, $op, $b)"
+      case ValuesClauseToken(stmt)    => q"io.getquill.idiom.ValuesClauseToken(${stmt: Token})"
     }
   }
 
