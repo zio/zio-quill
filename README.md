@@ -2766,31 +2766,21 @@ Quill provides a mirror context for testing purposes. Instead of running the que
 
 ## Dependent contexts
 
-The context instance provides all methods and types to interact with quotations and the database. Depending on how the context import happens, Scala won't be able to infer that the types are compatible.
-
-For instance, this example **will not** compile:
+The context instance provides all methods and types to interact with quotations and the database.
+Contexts can be imported and passed around normally in constructors and function arguments.
 
 ```
 class MyContext extends SqlMirrorContext(MirrorSqlDialect, Literal)
-
 case class MySchema(c: MyContext) {
-
   import c._
   val people = quote {
     querySchema[Person]("people")
   }
 }
-
 case class MyDao(c: MyContext, schema: MySchema) {
-
-  def allPeople =
-    c.run(schema.people)
-// ERROR: [T](quoted: MyDao.this.c.Quoted[MyDao.this.c.Query[T]])MyDao.this.c.QueryResult[T]
- cannot be applied to (MyDao.this.schema.c.Quoted[MyDao.this.schema.c.EntityQuery[Person]]{def quoted: io.getquill.ast.ConfiguredEntity; def ast: io.getquill.ast.ConfiguredEntity; def id1854281249(): Unit; val bindings: Object})
+  def allPeople = c.run(schema.people)
 }
 ```
-> In ProtoQuill/Scala3 the above pattern will work as expected because the types Quoted, EntityQuery, etc... are no longer path dependent.
-> Have a look at the following [scastie example](https://scastie.scala-lang.org/TO5dF87jQQegUGqmIQtbew).
 
 ### Context Traits
 
