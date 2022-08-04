@@ -2884,7 +2884,7 @@ val session =
     .getOrCreate()
 
 // The Spark SQL Context must be provided by the user through an implicit value:
-implicit val sqlContext = session
+implicit val sqlContext = session.sqlContext
 import sqlContext.implicits._      // Also needed...
 
 // Import the Quill Spark Context
@@ -2898,20 +2898,21 @@ import io.getquill.QuillSparkContext._
 ### Using Quill-Spark
 
 The `run` method returns a `Dataset` transformed by the Quill query using the SQL engine.
+
 ```scala
 // Typically you start with some type dataset.
-val peopleDS: Dataset[Person] = spark.read.parquet("path/to/people")
-val addressesDS: Dataset[Address] = spark.read.parquet("path/to/addresses")
+val peopleDS: Dataset[Person] = spark.read.parquet("path/to/people").as[Person]
+val addressesDS: Dataset[Address] = spark.read.parquet("path/to/addresses").as[Address]
 
 // The liftQuery method converts Datasets to Quill queries:
-val people: Query[Person] = quote { liftQuery(peopleDS) }
-val addresses: Query[Address] = quote { liftQuery(addressesDS) }
+val people = quote { liftQuery(peopleDS) }
+val addresses = quote { liftQuery(addressesDS) }
 
-val people: Query[(Person] = quote {
-  people.join(addresses).on((p, a) => p.id == a.ownerFk)
+val peopleAndAddresses = quote {
+  (people join addresses).on((p, a) => p.id == a.ownerFk)
 }
 
-val peopleAndAddressesDS: Dataset[(Person, Address)] = run(people)
+val peopleAndAddressesDS: Dataset[(Person, Address)] = run(peopleAndAddresses)
 ```
 
 #### Simplify it
