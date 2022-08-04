@@ -2,11 +2,11 @@ package io.getquill.idiom
 
 import io.getquill.ast._
 import io.getquill.NamingStrategy
-import io.getquill.context.{ Capabilities, ExecutionType }
+import io.getquill.context.{ IdiomReturningCapability, ExecutionType }
 import io.getquill.norm.TranspileConfig
 import io.getquill.quat.Quat
 
-trait Idiom extends Capabilities {
+trait Idiom extends IdiomReturningCapability {
 
   def emptySetContainsToken(field: Token): Token = StringToken("FALSE")
 

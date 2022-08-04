@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ast._
-import io.getquill.context.CanOutputClause
+import io.getquill.context.{ CanInsertWithMultiValues, CanOutputClause }
 import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom._
 import io.getquill.context.sql.norm.AddDropToNestedOrderBy
@@ -19,7 +19,8 @@ trait SQLServerDialect
   with QuestionMarkBindVariables
   with ConcatSupport
   with CanOutputClause
-  with BooleanLiteralSupport {
+  with BooleanLiteralSupport
+  with CanInsertWithMultiValues {
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
