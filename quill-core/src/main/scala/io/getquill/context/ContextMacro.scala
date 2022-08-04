@@ -43,7 +43,7 @@ trait ContextMacro extends Quotation {
     import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
     implicit val statementLiftable: Liftable[Statement] = Liftable[Statement] {
-      case Statement(tokens)          => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
+      case Statement(tokens) => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
     }
 
     implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {

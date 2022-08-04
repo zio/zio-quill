@@ -5,7 +5,7 @@ import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator.Tokenizer
 import io.getquill.idiom.{ StringToken, Token }
 import io.getquill.ast._
-import io.getquill.context.CanReturnField
+import io.getquill.context.{ CanInsertWithMultiValues, CanReturnField }
 import io.getquill.context.sql.OrderByCriteria
 import io.getquill.norm.TranspileConfig
 
@@ -14,7 +14,8 @@ trait SqliteDialect
   with QuestionMarkBindVariables
   with NoConcatSupport
   with OnConflictSupport
-  with CanReturnField {
+  with CanReturnField
+  with CanInsertWithMultiValues {
 
   override def emptySetContainsToken(field: Token) = StringToken("0")
 

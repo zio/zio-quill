@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ast._
-import io.getquill.context.CanReturnMultiField
+import io.getquill.context.{ CanInsertWithSingleValue, CanReturnMultiField }
 import io.getquill.context.sql._
 import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom._
@@ -16,7 +16,8 @@ trait OracleDialect
   with QuestionMarkBindVariables
   with ConcatSupport
   with CanReturnMultiField
-  with BooleanLiteralSupport {
+  with BooleanLiteralSupport
+  with CanInsertWithSingleValue {
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
