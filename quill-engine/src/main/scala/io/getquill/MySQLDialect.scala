@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ast.{ Ast, _ }
-import io.getquill.context.{ CanInsertWithMultiValues, CanReturnField }
+import io.getquill.context.{ CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnField }
 import io.getquill.context.sql.OrderByCriteria
 import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom.{ NoConcatSupport, QuestionMarkBindVariables, SqlIdiom }
@@ -15,7 +15,8 @@ trait MySQLDialect
   with QuestionMarkBindVariables
   with NoConcatSupport
   with CanReturnField
-  with CanInsertWithMultiValues {
+  with CanInsertWithMultiValues
+  with CanInsertReturningWithMultiValues {
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.SkipAs
 
