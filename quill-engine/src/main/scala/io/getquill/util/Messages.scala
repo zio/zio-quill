@@ -32,6 +32,8 @@ object Messages {
   def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
   def errorDetail = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
   def disableReturning = cache("quill.query.disableReturning", variable("quill.query.disableReturning", "quill_query_disableReturning", "false").toBoolean)
+  def logBinds = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
+  def queryTooLongForLogs = cache("quill.query.tooLong", variable("quill.query.tooLong", "quill_query_tooLong", "200").toInt)
 
   sealed trait LogToFile
   object LogToFile {
@@ -55,7 +57,7 @@ object Messages {
       values.find(_.value == str).getOrElse(throw new IllegalArgumentException(s"The value ${str} is an invalid quat trace setting. Value values are: ${values.map(_.value).mkString(",")}"))
   }
 
-  private[util] def traces: List[TraceType] = {
+  private[getquill] def traces: List[TraceType] = {
     val argValue = variable("quill.trace.types", "quill_trace_types", "standard")
     cache("quill.trace.types", {
       if (argValue == "all")
