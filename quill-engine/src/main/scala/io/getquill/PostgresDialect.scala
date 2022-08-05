@@ -2,7 +2,7 @@ package io.getquill
 
 import java.util.concurrent.atomic.AtomicInteger
 import io.getquill.ast._
-import io.getquill.context.{ CanInsertWithMultiValues, CanReturnClause }
+import io.getquill.context.{ CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnClause }
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.norm.{ ProductAggregationToken, TranspileConfig }
@@ -13,7 +13,8 @@ trait PostgresDialect
   with ConcatSupport
   with OnConflictSupport
   with CanReturnClause
-  with CanInsertWithMultiValues {
+  with CanInsertWithMultiValues
+  with CanInsertReturningWithMultiValues {
 
   override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
 
