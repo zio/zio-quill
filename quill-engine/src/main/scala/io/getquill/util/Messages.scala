@@ -113,6 +113,7 @@ object Messages {
     sealed trait Elaboration extends TraceType { val value = "elab" }
     sealed trait SqlQueryConstruct extends TraceType { val value = "sqlquery" }
     sealed trait FlattenOptionOperation extends TraceType { val value = "option" }
+    sealed trait Particularization extends TraceType { val value = "parti" }
 
     object Warning extends Warning
     object SqlNormalizations extends SqlNormalizations
@@ -135,11 +136,12 @@ object Messages {
     object Elaboration extends Elaboration
     object SqlQueryConstruct extends SqlQueryConstruct
     object FlattenOptionOperation extends FlattenOptionOperation
+    object Particularization extends Particularization
 
     def values: List[TraceType] = List(
       Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation,
       RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct, ExprModel, Meta, Execution, DynamicExecution,
-      Elaboration, SqlQueryConstruct, FlattenOptionOperation
+      Elaboration, SqlQueryConstruct, FlattenOptionOperation, Particularization
     )
   }
 

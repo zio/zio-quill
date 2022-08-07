@@ -99,6 +99,7 @@ trait TranspileConfigSummoning {
       case TraceType.Elaboration            => q"io.getquill.util.Messages.TraceType.Elaboration"
       case TraceType.SqlQueryConstruct      => q"io.getquill.util.Messages.TraceType.SqlQueryConstruct"
       case TraceType.FlattenOptionOperation => q"io.getquill.util.Messages.TraceType.FlattenOptionOperation"
+      case TraceType.Particularization      => q"io.getquill.util.Messages.TraceType.Particularization"
     }
 
     implicit val traceConfigLiftable: Liftable[TraceConfig] = Liftable[TraceConfig] {
