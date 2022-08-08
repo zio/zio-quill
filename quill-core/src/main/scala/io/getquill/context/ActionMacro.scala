@@ -103,15 +103,27 @@ class ActionMacro(val c: MacroContext)
       case (batch, param, expanded) =>
         q"""
           ..${EnableReflectiveCalls(c)}
-          ${c.prefix}.${TermName(method)}(
-            $batch.map { $param =>
+          ${c.prefix}.${TermName(method)}({
+            /* for liftQuery(people:List[Person]) `batch` is `people` */
+            /* TODO this value should be injected via configuration */
+            val batchesRaw = $batch.grouped(1000).map { $param =>
+              val numRowsOfBatch = $batch.length
+              /* `expanded` is io.getquill.context.Expand(ast) */'
               val expanded = $expanded
               (expanded.string, expanded.prepare)
-            }.groupBy(_._1).map {
+            }
+            /* If there is a INSERT ... VALUES clause this will be cnoded as ValuesClauseToken(lifts) which we need to duplicate */
+            val batches =
+              if (io.getquill.context.ValueClauseExistsIn(expanded.statement)) {
+
+              } else {
+                batchesRaw
+              }
+            batches.groupBy(_._1).map {
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
             }.toList
-          )(io.getquill.context.ExecutionInfo.unknown, ())
+          })(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
 
@@ -136,10 +148,15 @@ class ActionMacro(val c: MacroContext)
   def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
     BetaReduction(extractAst(quoted)) match {
       case ast @ Foreach(lift: Lift, alias, body) =>
+        // for liftQuery(people:List[Person]) this is: `people`
         val batch = lift.value.asInstanceOf[Tree]
+        // This would be the Type[Person]
         val batchItemType = batch.tpe.typeArgs.head
+        // So we type-check (value: Person) => value
         c.typecheck(q"(value: $batchItemType) => value") match {
           case q"($param) => $value" =>
+            // So this becomes: (value: Person) => ScalarValueLift("value", value, Encoder[Person], quatOf[Person])
+            //     or possibly: (value: Person) => CaseClassValueLift("value", value, Encoder[Person], quatOf[Person])
             val nestedLift =
               lift match {
                 case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
@@ -147,9 +164,20 @@ class ActionMacro(val c: MacroContext)
                 case CaseClassQueryLift(name, batch: Tree, quat) =>
                   CaseClassValueLift("value", value, quat)
               }
+            // So then on the AST-level we transform the alias `p` **
+            // from this: `foreach(people).map(p => insert(p.name, p.age))`
+            // into this: `foreach(people).map(p => insert(CaseClassValue("value", value:Person, encoder[Person], quatOf[Person]).name, CCV(...).age)))
+            // ReifyLiftings will then turn it
+            // into this: `foreach(people).map(p => insert(CaseClassValue("value", (value:Person).name, encoder[Person], quatOf[Person]), CCV(... (value:Person).age ...))))
+            //
+            // (** Note that I mixing the scala-api way of seeing this DSL i.e. foreach instead of ast.Foreach
+            // and the regular one i.e CaseClassValue. That's the only way to see what's going on without information-overload.
+            // also CCV:=CaseClassValue)
             val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
+            // Splice into the code to tokenize the ast (i.e. the Expand class) and compile-time translate the AST if possible
+            val expanded = expand(ast, Quat.Unknown)
             c.untypecheck {
-              call(batch, param, expand(ast, Quat.Unknown))
+              call(batch, param, expanded)
             }
         }
       case other =>

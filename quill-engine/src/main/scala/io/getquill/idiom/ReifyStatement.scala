@@ -12,12 +12,13 @@ object ReifyStatement {
     liftingPlaceholder:    Int => String,
     emptySetContainsToken: Token => Token,
     statement:             Statement,
-    forProbing:            Boolean
+    forProbing:            Boolean,
+    numRowsOfBatch:        Int = 1
   ): (String, List[External]) = {
     val expanded =
       forProbing match {
         case true  => statement
-        case false => expandLiftings(statement, emptySetContainsToken)
+        case false => expandLiftings(statement, emptySetContainsToken, numRowsOfBatch)
       }
     token2string(expanded, liftingPlaceholder)
   }
@@ -47,9 +48,14 @@ object ReifyStatement {
     apply(List(token), Seq(), Seq(), 0)
   }
 
-  private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token) = {
+  private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token, numRowsOfBatch: Int) = {
+
     Statement {
       statement.tokens.foldLeft(List.empty[Token]) {
+        case (tokens, ValuesClauseToken(insertColumns)) =>
+          val duplicatedStatements = (0 until numRowsOfBatch).map(_ => insertColumns)
+          val separators = List.fill(duplicatedStatements.size - 1)(StringToken(", "))
+          Interleave(duplicatedStatements.toList, separators)
         case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
           lift.value.asInstanceOf[Iterable[Any]].toList match {
             case Nil => tokens :+ emptySetContainsToken(a)
