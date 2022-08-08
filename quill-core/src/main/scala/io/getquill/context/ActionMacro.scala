@@ -119,6 +119,18 @@ class ActionMacro(val c: MacroContext)
               } else {
                 batchesRaw
               }
+            /*
+            So when you have:
+            List(joe, jack, jim, jill, caboose)
+            it will expand to:
+            So
+              (INSERT ... VALUES (? ?), (?, ?), List(joe, jack)),
+              (INSERT ... VALUES (? ?), (?, ?), List(jim, jill)),
+              (INSERT ... VALUES (? ?),         List(caboose))
+            ...but then will be grouped into (using the Query-string):
+              (INSERT ... VALUES (? ?), (?, ?), List(List(joe, jack), List(jim, jill))),
+              (INSERT ... VALUES (? ?),         List(caboose))
+            */
             batches.groupBy(_._1).map {
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
