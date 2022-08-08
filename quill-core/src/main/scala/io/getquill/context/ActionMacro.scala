@@ -113,7 +113,7 @@ class ActionMacro(val c: MacroContext)
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.${TermName(method)}({
             /* for liftQuery(people:List[Person]) `batch` is `people` */
-            /* TODO this value should be injected via configuration */
+            /* TODO Need secondary check to see if context is actually capable of batch-values insert */
             val batchesRaw = $batch.grouped(1000).map { $param =>
               val numRowsOfBatch = $batch.length
               /* `expanded` is io.getquill.context.Expand(ast) */'
