@@ -95,10 +95,18 @@ class ActionMacro(val c: MacroContext)
   def runBatchAction(quoted: Tree): Tree =
     batchAction(quoted, "executeBatchAction")
 
+  def runBatchActionRows(quoted: Tree, numRows: Tree): Tree =
+    batchActionRows(quoted, "executeBatchAction", numRows)
+
   def prepareBatchAction(quoted: Tree): Tree =
     batchAction(quoted, "prepareBatchAction")
 
-  def batchAction(quoted: Tree, method: String): Tree =
+  def batchAction(quoted: Tree, method: String): Tree = {
+    // TODO The default should be something injected from Config
+    batchActionRows(quoted, method, q"1")
+  }
+
+  def batchActionRows(quoted: Tree, method: String, numRows: Tree): Tree =
     expandBatchAction(quoted) {
       case (batch, param, expanded) =>
         q"""
