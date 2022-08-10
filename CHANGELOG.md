@@ -1,3 +1,9 @@
+# 4.3.0
+
+- [Values clause batch insert](https://github.com/zio/zio-quill/pull/2565)
+- [Slightly better batch logging](https://github.com/zio/zio-quill/pull/2562)
+- ["transaction" supports ZIO effects with mixed environments](https://github.com/zio/zio-quill/pull/2515)
+
 # 4.2.0
 
 - [Implement ZIO-Idiomatic JDBC Context](https://github.com/zio/zio-quill/pull/2537)
