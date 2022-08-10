@@ -3,7 +3,7 @@ package io.getquill.dsl
 import io.getquill.base.Spec
 import io.getquill.context.mirror.{ MirrorSession, Row }
 import io.getquill.quotation.{ CaseClassValueLifting, ScalarValueLifting }
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 
 import scala.language.reflectiveCalls
 

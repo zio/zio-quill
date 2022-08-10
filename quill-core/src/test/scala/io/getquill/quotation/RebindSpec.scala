@@ -1,7 +1,7 @@
 package io.getquill.quotation
 
-import io.getquill.testContext._
-import io.getquill.testContext
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.MirrorContexts.testContext
 import io.getquill.Action
 import io.getquill.base.Spec
 

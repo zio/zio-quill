@@ -5,7 +5,7 @@ import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.context.ValueClass
 import io.getquill.norm.NormalizeStringConcat
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.util.Messages
 import io.getquill.Ord
 import io.getquill.Query
@@ -1666,7 +1666,7 @@ class QuotationSpec extends Spec {
           object implicits extends Implicits
           import implicits._
           val q = quote(query[TestEntity].toRandom)
-          val l = q.liftings.`implicits.ToRadom(null.asInstanceOf[io.getquill.EntityQuery[io.getquill.testContext.TestEntity]]).toRandom.Implicits.this.random`
+          val l = q.liftings.`implicits.ToRadom(null.asInstanceOf[io.getquill.EntityQuery[io.getquill.MirrorContexts.testContext.TestEntity]]).toRandom.Implicits.this.random`
           l.value mustEqual 999
           l.encoder mustEqual intEncoder
         }

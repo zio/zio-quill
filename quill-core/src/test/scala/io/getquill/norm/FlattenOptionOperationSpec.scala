@@ -1,7 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.ast._
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.{ AnsiConcat, NonAnsiConcat }
 import io.getquill.MoreAstOps._

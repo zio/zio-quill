@@ -3,7 +3,7 @@ package io.getquill.norm
 import io.getquill.ast._
 import io.getquill.base.Spec
 import io.getquill.quat._
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import scala.collection.immutable.{ Map => IMap }
 
 class StablizeLiftsSpec extends Spec {

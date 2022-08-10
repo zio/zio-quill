@@ -1,6 +1,6 @@
 package io.getquill.dsl
 
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.context.mirror.{ MirrorSession, Row }
 import io.getquill.Query
 import io.getquill.base.Spec

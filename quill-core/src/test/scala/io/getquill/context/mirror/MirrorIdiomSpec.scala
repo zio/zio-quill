@@ -1,7 +1,7 @@
 package io.getquill.context.mirror
 
 import io.getquill.MirrorIdiom
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.Literal
 import io.getquill.ast.Ast

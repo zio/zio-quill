@@ -9,6 +9,8 @@ import io.getquill.util.MacroContextExt._
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
 
+import java.util.UUID
+
 class ActionMacro(val c: MacroContext)
   extends ContextMacro
   with ReifyLiftings {
@@ -92,46 +94,200 @@ class ActionMacro(val c: MacroContext)
       """
     }
 
-  def runBatchAction(quoted: Tree): Tree =
-    batchAction(quoted, "executeBatchAction")
+  // Called from: run(BatchAction)
+  def runBatchAction(quoted: Tree): Tree = batchAction(quoted, "executeBatchAction")
+  // Called from: run(BatchAction, 10)
+  def runBatchActionRows(quoted: Tree, numRows: Tree): Tree = batchActionRows(quoted, "executeBatchAction", numRows)
 
   def prepareBatchAction(quoted: Tree): Tree =
     batchAction(quoted, "prepareBatchAction")
 
-  def batchAction(quoted: Tree, method: String): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
+  def batchAction(quoted: Tree, method: String): Tree = {
+    // In the future, default num rows should be injected from a Messages variable
+    batchActionRows(quoted, method, q"1")
+  }
+
+  def batchActionRows(quoted: Tree, method: String, numRows: Tree): Tree =
+    expandBatchActionNew(quoted) {
+      case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars) =>
         q"""
           ..${EnableReflectiveCalls(c)}
-          ${c.prefix}.${TermName(method)}(
-            $batch.map { $param =>
-              val expanded = $expanded
-              (expanded.string, expanded.prepare)
-            }.groupBy(_._1).map {
+          ${c.prefix}.${TermName(method)}({
+            /*
+            Using this to preserver order of inserts generated from the tokenization using the groupByOrdered below.
+            Practically this means that we want the encountered insert queries `INSERT (...) VALUES (x,y,z),(x,y,z)... INSERT (...) VALUES (x,y,z)`
+            to stay in the same order
+            */
+            import io.getquill.util.OrderedGroupByExt._
+            val originalAst = $idiomNamingOriginalAstVars
+            /* for liftQuery(people:List[Person]) `batch` is `people` */
+            /* TODO Need secondary check to see if context is actually capable of batch-values insert */
+            /* If there is a INSERT ... VALUES clause this will be cnoded as ValuesClauseToken(lifts) which we need to duplicate */
+            /* batches: List[List[Person]] */
+            val batches =
+              if (io.getquill.context.CanDoBatchedInsert(originalAst, $numRows, idiom, naming, false, ${ConfigLiftables.transpileConfigLiftable(transpileConfig)}) && $numRows != 1) {
+                $batch.toList.grouped($numRows).toList
+              } else {
+                $batch.toList.map(element => List(element))
+              }
+            /* batchesSharded: List[(String, (Row, MirrorSession) => (List[Any], Row) <a.k.a: prepare>)] */
+            val batchesSharded = batches.map { subBatch => {
+                /* `expanded` is io.getquill.context.ExpandWithInjectables(ast, subBatch, injectableLiftList) */
+                val expanded = $expanded
+                (expanded.string, expanded.prepare)
+              }
+            }
+            /*
+            So when you have:
+            List(joe, jack, jim, jill, caboose)
+            it will expand to batchesSharded:
+            So
+              (INSERT ... VALUES (? ?), (?, ?), List(joe, jack)),
+              (INSERT ... VALUES (? ?), (?, ?), List(jim, jill)),
+              (INSERT ... VALUES (? ?),         List(caboose))
+            ...but then will be grouped into (using the Query-string):
+              (INSERT ... VALUES (? ?), (?, ?), List(List(joe, jack), List(jim, jill))),
+              (INSERT ... VALUES (? ?),         List(caboose))
+            */
+            batchesSharded.groupByOrdered(_._1).map {
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
             }.toList
-          )(io.getquill.context.ExecutionInfo.unknown, ())
+          })(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
 
-  def runBatchActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
+  // Called from: run(BatchAction)
+  def runBatchActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree = batchActionReturningRows(quoted, q"1")
+  // Called from: run(BatchAction, 10)
+  def runBatchActionReturningRows[T](quoted: Tree, numRows: Tree)(implicit t: WeakTypeTag[T]): Tree = batchActionReturningRows(quoted, numRows)
+
+  def batchActionReturningRows[T](quoted: Tree, numRows: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    expandBatchActionNew(quoted) {
+      case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars) =>
         q"""
           ..${EnableReflectiveCalls(c)}
-          ${c.prefix}.executeBatchActionReturning(
-            $batch.map { $param =>
-              val expanded = $expanded
-              ((expanded.string, $returningColumn), expanded.prepare)
-            }.groupBy(_._1).map {
+          ${c.prefix}.executeBatchActionReturning({
+            import io.getquill.util.OrderedGroupByExt._
+            val originalAst = $idiomNamingOriginalAstVars
+            val batches =
+              if (io.getquill.context.CanDoBatchedInsert(originalAst, $numRows, idiom, naming, true, ${ConfigLiftables.transpileConfigLiftable(transpileConfig)}) && $numRows != 1) {
+                $batch.toList.grouped($numRows).toList
+              } else {
+                $batch.toList.map(element => List(element))
+              }
+            val batchesSharded = batches.map { subBatch => {
+                /* `expanded` is io.getquill.context.ExpandWithInjectables(ast, subBatch, injectableLiftList) */
+                val expanded = $expanded
+                ((expanded.string, $returningColumn), expanded.prepare)
+              }
+            }
+            batchesSharded.groupByOrdered(_._1).map {
               case ((string, column), items) =>
                 ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2).toList)
-            }.toList,
-            ${returningExtractor[T]}
-          )(io.getquill.context.ExecutionInfo.unknown, ())
+            }.toList
+          }, ${returningExtractor[T]})(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
+
+  def expandBatchActionNew(quoted: Tree)(call: (Tree, Tree, Tree, Tree, Tree) => Tree): Tree =
+    BetaReduction(extractAst(quoted)) match {
+      case Foreach(lift: Lift, alias, body) =>
+        // for liftQuery(people:List[Person]) this is: `people`
+        val batch = lift.value.asInstanceOf[Tree]
+        // This would be the Type[Person]
+        val batchItemType = batch.tpe.typeArgs.head
+        // So we type-check (value: Person) => value
+        c.typecheck(q"(value: $batchItemType) => value") match {
+          case q"($param) => $values" =>
+            // So this becomes: (value: Person) => ScalarValueLift("value", value, Encoder[Person], quatOf[Person])
+            //     or possibly: (value: Person) => CaseClassValueLift("value", value, Encoder[Person], quatOf[Person])
+            val nestedLift =
+              lift match {
+                case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
+                  ScalarValueLift("value", q"$values", encoder, quat)
+                case CaseClassQueryLift(name, batch: Tree, quat) =>
+                  CaseClassValueLift("value", q"$values", quat)
+              }
+
+            // So then on the AST-level we transform the alias `p` **
+            // from this: `foreach(people).map(p => insert(p.name, p.age))`
+            // into this: `foreach(people).map(p => insert(CaseClassValue("value", value:Person, encoder[Person], quatOf[Person]).name, CCV(...).age)))
+            // ReifyLiftings will then turn it
+            // into this: `foreach(people).map(p => insert(CaseClassValue("value", (value:Person).name, encoder[Person], quatOf[Person]), CCV(... (value:Person).age ...))))
+            //
+            // (** Note that I mixing the scala-api way of seeing this DSL i.e. foreach instead of ast.Foreach
+            // and the regular one i.e CaseClassValue. That's the only way to see what's going on without information-overload.
+            // also CCV:=CaseClassValue)
+            val (valuePluggingAst, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
+            // this is the ast with ScalarTag placeholders for the lifts
+            val (ast, valuePlugList) = ExtractLiftings.of(valuePluggingAst)
+            val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
+            // List(id1 -> ((p: Person) => CCV(p.name), id2 -> ((p: Person) => CCV(p.age), ...)
+            val injectableLiftListTrees =
+              valuePlugList.map {
+                case (id, valuePlugLift) =>
+                  q"($id, ($param) => ${liftUnlift.astLiftable(valuePlugLift)})"
+              }
+            val injectableLiftList = q"$injectableLiftListTrees"
+
+            // Splice into the code to tokenize the ast (i.e. the Expand class) and compile-time translate the AST if possible
+            val expanded =
+              q"""
+              val (ast, statement, executionType) = ${translate(ast, Quat.Unknown, transpileConfig)}
+              io.getquill.context.ExpandWithInjectables(${c.prefix}, ast, statement, idiom, naming, executionType, subBatch, $injectableLiftList)
+              """
+
+            val idiomNamingOriginalAstVars =
+              q"""
+              val (idiom, naming) = ${idiomAndNamingDynamic}
+              ${liftUnlift.astLiftable.apply((ast))}
+              """
+
+            c.untypecheck {
+              call(batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars)
+            }
+        }
+      case other =>
+        c.fail(s"Batch actions must be static quotations. Found: '$other'")
+    }
+
+  object ExtractLiftings {
+    def of(ast: Ast): (Ast, List[(String, ScalarLift)]) = {
+      val (outputAst, extracted) = ExtractLiftings(List())(ast)
+      (outputAst, extracted.state)
+    }
+  }
+  case class ExtractLiftings(state: List[(String, ScalarLift)]) extends StatefulTransformer[List[(String, ScalarLift)]] {
+    override def apply(e: Action): (Action, StatefulTransformer[List[(String, ScalarLift)]]) =
+      e match {
+        // TODO Can we absolutely assume that this insert will yield a Values clause?
+        case Insert(body, assignments) =>
+          val (newAssignments, assignmentMappings) = apply(assignments)(_.apply)
+          (Insert(body, newAssignments), assignmentMappings)
+        case _ =>
+          super.apply(e)
+      }
+    override def apply(e: Ast): (Ast, StatefulTransformer[List[(String, ScalarLift)]]) =
+      e match {
+        case lift: ScalarLift =>
+          val uuid = UUID.randomUUID().toString
+          (ScalarTag(uuid), ExtractLiftings((uuid -> lift) +: state))
+        case _ => super.apply(e)
+      }
+  }
+
+  private def returningColumn =
+    q"""
+      (expanded.ast match {
+        case ret: io.getquill.ast.ReturningAction =>
+            io.getquill.norm.ExpandReturning.applyMap(ret)(
+              (ast, statement) => io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming, io.getquill.context.ExecutionType.Unknown).string
+            )(idiom, naming, ${ConfigLiftables.transpileConfigLiftable(transpileConfig)})
+        case ast =>
+          io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
+      })
+    """
 
   def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
     BetaReduction(extractAst(quoted)) match {
@@ -155,18 +311,6 @@ class ActionMacro(val c: MacroContext)
       case other =>
         c.fail(s"Batch actions must be static quotations. Found: '$other'")
     }
-
-  private def returningColumn =
-    q"""
-      (expanded.ast match {
-        case ret: io.getquill.ast.ReturningAction =>
-            io.getquill.norm.ExpandReturning.applyMap(ret)(
-              (ast, statement) => io.getquill.context.Expand(${c.prefix}, ast, statement, idiom, naming, io.getquill.context.ExecutionType.Unknown).string
-            )(idiom, naming, ${ConfigLiftables.transpileConfigLiftable(transpileConfig)})
-        case ast =>
-          io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
-      })
-    """
 
   def prepareAction(quoted: Tree): Tree =
     c.untypecheck {

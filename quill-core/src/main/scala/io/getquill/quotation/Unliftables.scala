@@ -10,6 +10,7 @@ trait Unliftables extends QuatUnliftable {
 
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
     case liftUnliftable(ast) => ast
+    case q"ScalarTag(${ uid: String })" => ScalarTag(uid)
     case queryUnliftable(ast) => ast
     case actionUnliftable(ast) => ast
     case valueUnliftable(ast) => ast

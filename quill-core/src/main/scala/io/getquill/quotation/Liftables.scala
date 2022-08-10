@@ -19,6 +19,7 @@ trait Liftables extends QuatLiftable {
     case ast: ExternalIdent => externalIdentLiftable(ast)
     case ast: Ordering => orderingLiftable(ast)
     case ast: Lift => liftLiftable(ast)
+    case ScalarTag(uid) => q"$pack.ScalarTag($uid)"
     case ast: Assignment => assignmentLiftable(ast)
     case ast: AssignmentDual => assignmentDualLiftable(ast)
     case ast: OptionOperation => optionOperationLiftable(ast)
