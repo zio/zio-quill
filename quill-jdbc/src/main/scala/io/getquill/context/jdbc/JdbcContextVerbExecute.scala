@@ -3,7 +3,8 @@ package io.getquill.context.jdbc
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
 import io.getquill.context.ExecutionInfo
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.util.ContextLogger
+import io.getquill.jdbc.VirtualPreparedStatement
+import io.getquill.util.{ ContextLogger, Messages }
 import io.getquill.{ NamingStrategy, ReturnAction }
 
 import java.sql.{ Connection, ResultSet, Statement }
@@ -66,20 +67,58 @@ trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] ex
       case ReturnNothing          => conn.prepareStatement(sql)
     }
 
+  private def runInTransaction[T](conn: Connection)(op: => T): T = {
+    val wasAutoCommit = conn.getAutoCommit
+    conn.setAutoCommit(false)
+    val result = op
+    try {
+      conn.commit()
+      result
+    } catch {
+      case scala.util.control.NonFatal(e) =>
+        conn.rollback()
+        throw e
+    } finally
+      conn.setAutoCommit(wasAutoCommit)
+  }
+
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Result[List[Long]] =
     withConnectionWrapped { conn =>
-      groups.flatMap {
-        case BatchGroup(sql, prepare) =>
-          val ps = conn.prepareStatement(sql)
-          logger.underlying.debug("Batch: {}", sql)
-          prepare.foreach { f =>
-            val (params, _) = f(ps, conn)
-            logger.logBatchItem(sql, params)
-            ps.addBatch()
-          }
-          ps.executeBatch().map(_.toLong)
+      groups.flatMap { group =>
+        if (Messages.plugInVars) {
+          //println("=========== EXECUTE PLUGGED")
+          preparePlugged(group, conn)
+        } else {
+          //println("=========== EXECUTE REGULAR")
+          prepareNormal(group, conn)
+        }
       }
     }
+
+  private def prepareNormal(batchGroup: BatchGroup, conn: Connection) = {
+    val BatchGroup(sql, prepare) = batchGroup
+    val ps = conn.prepareStatement(sql)
+    logger.underlying.debug("Batch: {}", sql)
+    prepare.foreach { f =>
+      val (params, _) = f(ps, conn)
+      logger.logBatchItem(sql, params)
+      ps.addBatch()
+    }
+    ps.executeBatch().map(_.toLong).toList
+  }
+
+  private def preparePlugged(batchGroup: BatchGroup, conn: Connection) = {
+    val BatchGroup(sql, prepare) = batchGroup
+    logger.underlying.debug("Batch: {}", sql)
+    prepare.map { f =>
+      val vps = new VirtualPreparedStatement()
+      val (params, _) = f(vps, conn)
+      logger.logBatchItem(sql, params)
+      val realSql = vps.plugIn(sql).fold(msg => throw new IllegalArgumentException(msg), value => value)
+      val ps = conn.prepareStatement(realSql)
+      ps.executeUpdate().toLong
+    }
+  }
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Result[List[T]] =
     withConnectionWrapped { conn =>
