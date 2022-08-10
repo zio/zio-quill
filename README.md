@@ -1608,6 +1608,12 @@ val a = quote {
 ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was inserted E.g List(1,1)
 // INSERT INTO Person (id,name,age) VALUES (?, ?, ?)
 ```
+> In addition to regular JDBC batching, Quill can optimize batch queries by using multiple VALUES-clauses e.g:
+> ```scala
+> ctx.run(a, 2)
+> // INSERT INTO Person (id,name,age) VALUES (?, ?, ?), (?, ?, ?) // Note, the extract (?, ?, ?) will not be visible in the compiler output. 
+> ```
+> In situations with high network latency this can improve performance by 20-40x! See the [Batch Optimization](#batch-optimization) below for more info.
 
 Just as in regular queries use the extended insert/update syntaxes to achieve finer-grained control of the data being created/modified modified.
 For example, if the ID is a generated value you can skip ID insertion like this:
@@ -1622,7 +1628,7 @@ ctx.run(a)
 // INSERT INTO Person (name,age) VALUES (?, ?)
 ```
 
-Batch queries can also have a returning/returningGenerate clause:
+Batch queries can also have a returning/returningGenerated clause:
 ```scala
 // case class Person(id: Int, name: String, age: Int)
 val a = quote {
@@ -1802,6 +1808,87 @@ val a = quote {
 
 // INSERT INTO Product (id,sku) VALUES (1, 10) ON DUPLICATE KEY UPDATE sku = (sku + VALUES(sku))
 ```
+
+## Batch Optimization
+
+When doing batch INSERT queries (as well as UPDATE, and DELETE), Quill mostly delegates the functionality to standard JDBC batching.
+This functionality works roughtly in the following way.
+```scala
+val ps: PreparedStatement = connection.prepareStatement("INSERT ... VALUES ...")
+// 1. Iterate over the rows
+for (row <- rowsToInsert) {
+  // 2. For each row, add the columns to the prepared statement
+  for ((column, columnIndex) <- row)
+    row.setColumn(column, columnIndex)
+  // 3. Add the row to the list of things being added in the batch
+  ps.addBatch()
+}
+// 4. Write everything in the batch to the Database
+ps.executeBatch()
+```
+Reasonably speaking, we would expect each call in Stage #3 to locally stage the value of the row and then submit
+all of the rows to the database in Stage #4 but that basically every database that is not what happens. In Stage #3,
+a network call is actually made to the Database to remotely stage the row. Practically this means that the performance of
+addBatch/executeBatch degrades per-row, per-millisecond-network-latency. Even at 50 milliseconds of network latency
+the impact of this is highly significant:
+
+|Network Latency | Rows Inserted | Total Time
+|-------|-----------|---------|
+| 0ms   | 10k rows  | 0.486   |
+| 50ms  | 10k rows  | 3.226   |
+| 100ms | 10k rows  | 5.266   |
+| 0ms   | 100k rows | 1.416   |
+| 50ms  | 100k rows | 23.248  |
+| 100ms | 100k rows | 43.077  |
+| 0ms   | 1m rows   | 13.616  |
+| 50ms  | 1m rows   | 234.452 |
+| 100ms | 1m rows   | 406.101 |
+
+In order to alleviate this problem Quill can take advantage of the ability of most database dialects to use multiple
+VALUES-clauses to batch-insert rows. Conceptually, this works in the following way:
+```scala
+case class Person(name: String, age: Int)
+val people = List(Person("Joe", 22), Person("Jack", 33), Person("Jill", 44))
+val q = quote { liftQuery(people).foreach(p => query[Person].insertValue(p)) }
+run(q, 2) // i.e. insert rows from the `people` list in batches of 2
+//
+// Query1) INSERT INTO Person (name, age) VALUES ([Joe] , [22]), ([Jack], [33])
+//         INSERT INTO Person (name, age) VALUES (  ?   ,  ?  ), (   ?  ,  ?  ) <- actual query
+// Query2) INSERT INTO Person (name, age) VALUES ([Jill], [44])
+//         INSERT INTO Person (name, age) VALUES (  ?   ,  ?  )                 <- actual query
+```
+> Note that only `INSERT INTO Person (name, age) VALUES (?, ?)` will appear in the compiler-output for this query!
+
+Using a batch-count of about 1000-5000 rows (i.e. `run(q, 1000)`) can significantly improve query performance:
+
+|Network Latency | Rows Inserted | Total Time 
+|-------|-----------|---------|
+| 0ms   | 10k rows  | 3.772   |
+| 50ms  | 10k rows  | 3.899   |
+| 100ms | 10k rows  | 4.63    |
+| 0ms   | 100k rows | 2.902   |
+| 50ms  | 100k rows | 3.225   |
+| 100ms | 100k rows | 3.554   |
+| 0ms   | 1m rows   | 9.923   |
+| 50ms  | 1m rows   | 10.035  |
+| 100ms | 1m rows   | 10.328  |
+
+One thing to take note of is that each one of the `?` placeholders above is a prepared-statement variable. This means
+that in batch-sizes of 1000, there will be 1000 `?` variables in each query. In many databases this has a strict limit.
+For example, in Postgres this is restricted to 32767. This means that when using batches of 1000 rows, each row can have
+up to 32 columns or the following error will occur:
+```
+IOException: Tried to send an out-of-range integer as a 2-byte value
+```
+In other database e.g. SQL Server, unfortunately this limit is much smaller. For example in SQL Server it is just 2100 variables
+or the following error will occur.
+```
+The server supports a maximum of 2100 parameters. Reduce the number of parameters and resend the request
+```
+This means that in SQL Server, for a batch-size of 100, you can only insert into a table of up to 21 columns.
+
+In the future, we hope to alleviate this issue by directly substituting variables into `?` variables before the query is executed
+however such functionality could potentially come at the risk of SQL-injection vunerabilities.
 
 ## Printing Queries
 
