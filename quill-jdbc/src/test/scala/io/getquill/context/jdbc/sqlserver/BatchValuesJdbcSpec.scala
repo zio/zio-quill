@@ -1,7 +1,7 @@
 package io.getquill.context.jdbc.sqlserver
 
+import io.getquill.Delete
 import io.getquill.context.sql.base.BatchValuesSpec
-import io.getquill._
 
 class BatchValuesJdbcSpec extends BatchValuesSpec {
 

@@ -3,8 +3,9 @@ package io.getquill.context
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
-import io.getquill.testContext._
-import io.getquill.{ MirrorIdiomReturningMulti, MirrorIdiomReturningSingle, testContext }
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.{ MirrorIdiomReturningMulti, MirrorIdiomReturningSingle }
+import io.getquill.MirrorContexts.testContext
 
 class ActionMacroSpec extends Spec {
 

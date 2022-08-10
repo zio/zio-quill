@@ -1,9 +1,9 @@
-package io
+package io.getquill
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Try }
 
-package object getquill {
+object MirrorContexts {
 
   object testContext extends TestMirrorContextTemplate(MirrorIdiom, Literal) with TestEntities
   object testAsyncContext extends AsyncMirrorContext(MirrorIdiom, Literal) with TestEntities {

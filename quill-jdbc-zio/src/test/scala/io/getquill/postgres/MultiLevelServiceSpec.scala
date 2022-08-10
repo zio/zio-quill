@@ -1,7 +1,7 @@
 package io.getquill.postgres
 
 import io.getquill.jdbczio.Quill
-import io.getquill.{ testContext => _, _ }
+import io.getquill._
 import zio.{ Unsafe, ZIO, ZLayer }
 
 import java.sql.SQLException

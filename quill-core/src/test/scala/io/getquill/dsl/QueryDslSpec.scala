@@ -1,6 +1,6 @@
 package io.getquill.dsl
 
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.EntityQuery
 import io.getquill.base.Spec
 
