@@ -235,7 +235,7 @@ class ActionMacroSpec extends Spec {
     }
   }
 
-  "runs batched action" - {
+  "runs batched action" - { //
     val entities = List(
       TestEntity("s1", 2, 3L, Some(4), true),
       TestEntity("s5", 6, 7L, Some(8), false)

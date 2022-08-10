@@ -4,11 +4,15 @@ import io.getquill.context.mirror.{ MirrorDecoders, MirrorEncoders, MirrorSessio
 import io.getquill.context.{ Context, ContextVerbPrepareLambda, ContextVerbTranslate, ExecutionInfo, ProtoContext }
 import io.getquill.idiom.{ Idiom => BaseIdiom }
 import io.getquill.monad.SyncIOMonad
+import scala.language.higherKinds
 
 import scala.util.{ Failure, Success, Try }
 
 object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
+
+case class BatchActionMirrorGeneric[Row](groups: List[(String, List[Row])], info: ExecutionInfo)
+case class BatchActionReturningMirrorGeneric[T, PrepareRow, Extractor[_]](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T], info: ExecutionInfo)
 
 /**
  * This is supposed to emulate how Row retrieval works in JDBC
@@ -60,9 +64,11 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](val idiom: I
 
   case class ActionReturningMirror[T, R](string: String, prepareRow: PrepareRow, extractor: Extractor[T], returningBehavior: ReturnAction, info: ExecutionInfo)
 
-  case class BatchActionMirror(groups: List[(String, List[Row])], info: ExecutionInfo)
+  type BatchActionReturningMirror[T] = BatchActionReturningMirrorGeneric[T, PrepareRow, Extractor]
+  val BatchActionReturningMirror = BatchActionReturningMirrorGeneric
 
-  case class BatchActionReturningMirror[T](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T], info: ExecutionInfo)
+  type BatchActionMirror = BatchActionMirrorGeneric[Row]
+  val BatchActionMirror = BatchActionMirrorGeneric
 
   case class QueryMirror[T](string: String, prepareRow: PrepareRow, extractor: Extractor[T], info: ExecutionInfo) {
     def string(pretty: Boolean): String =
@@ -97,7 +103,7 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](val idiom: I
     )
 
   def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner) =
-    BatchActionReturningMirror[T](
+    new BatchActionReturningMirror[T](
       groups.map {
         case BatchGroupReturning(string, returningBehavior, prepare) =>
           (string, returningBehavior, prepare.map(_(Row(), session)._2))

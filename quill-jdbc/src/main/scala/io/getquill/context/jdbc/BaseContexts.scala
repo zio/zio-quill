@@ -16,6 +16,7 @@ trait MysqlJdbcContextBase[+N <: NamingStrategy]
 
 trait SqliteJdbcContextBase[+N <: NamingStrategy]
   extends SqliteJdbcTypes[N]
+  with SqliteExecuteOverride[N]
   with JdbcContextBase[SqliteDialect, N]
 
 trait SqlServerJdbcContextBase[+N <: NamingStrategy]

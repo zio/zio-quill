@@ -33,7 +33,7 @@ trait ContextMacro extends Quotation {
         Dynamic(quoted)
       }
 
-  private def translate(ast: Ast, topLevelQuat: Quat, transpileConfig: TranspileConfig): Tree =
+  def translate(ast: Ast, topLevelQuat: Quat, transpileConfig: TranspileConfig): Tree =
     IsDynamic(ast) match {
       case false => translateStatic(ast, topLevelQuat, transpileConfig)
       case true  => translateDynamic(ast, topLevelQuat, transpileConfig)
@@ -108,7 +108,7 @@ trait ContextMacro extends Quotation {
     (idiom, n)
   }
 
-  private def idiomAndNamingDynamic =
+  def idiomAndNamingDynamic =
     q"(${c.prefix}.idiom, ${c.prefix}.naming)"
 
   private def idiomAndNamingStatic = {
