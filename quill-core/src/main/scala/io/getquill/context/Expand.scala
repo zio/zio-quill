@@ -3,11 +3,11 @@ package io.getquill.context
 import io.getquill.ast._
 import io.getquill.NamingStrategy
 import io.getquill.idiom._
-import io.getquill.norm.TranspileConfig
+import io.getquill.IdiomContext
 import io.getquill.quat.Quat
 
 object CanDoBatchedInsert {
-  def apply(ast: Ast, numRows: Int, idiom: Idiom, naming: NamingStrategy, isReturning: Boolean, transpileConfig: TranspileConfig): Boolean = {
+  def apply(ast: Ast, numRows: Int, idiom: Idiom, naming: NamingStrategy, isReturning: Boolean, idiomContext: IdiomContext): Boolean = {
     // find any actions that could have a VALUES clause. Right now just ast.Insert,
     // in the future might be Update and Dlete
     val actions = CollectAst.byType[Action](ast)
@@ -19,7 +19,7 @@ object CanDoBatchedInsert {
     else {
       // In order to see if there's a VALUES-clause in the action, we don't need to tokenize the entire AST,
       // just the ast.Insert (or ast.Update or ast.Delete)
-      val statement = idiom.translate(actions.head, Quat.Unknown, ExecutionType.Unknown, transpileConfig)(naming)._2
+      val statement = idiom.translate(actions.head, Quat.Unknown, ExecutionType.Unknown, idiomContext)(naming)._2
 
       val validations =
         for {

@@ -718,6 +718,13 @@ object Dynamic {
 case class QuotedReference(tree: Any, ast: Ast) extends Ast { def quat = ast.quat; def bestQuat = ast.bestQuat; }
 
 sealed trait External extends Ast
+object External {
+  sealed trait Source
+  object Source {
+    case class UnparsedProperty(name: String) extends Source
+    case object Parser extends Source
+  }
+}
 
 /***********************************************************************/
 /*                      Only Quill 2                                   */
@@ -732,26 +739,26 @@ sealed trait ScalarLift extends Lift with Terminal {
   val encoder: Any
 }
 
-final class ScalarValueLift(val name: String, val value: Any, val encoder: Any)(theQuat: => Quat)
+final class ScalarValueLift(val name: String, val source: External.Source, val value: Any, val encoder: Any)(theQuat: => Quat)
   extends ScalarLift {
   def quat: Quat = theQuat
   def bestQuat = quat
   override def withQuat(quat: => Quat) = this.copy(quat = quat)
 
-  private val id = ScalarValueLift.Id(name, value, encoder)
+  private val id = ScalarValueLift.Id(name, source, value, encoder)
   override def hashCode(): Int = id.hashCode()
   override def equals(obj: Any): Boolean =
     obj match {
       case e: ScalarValueLift => e.id == this.id
       case _                  => false
     }
-  def copy(name: String = this.name, value: Any = this.value, encoder: Any = this.encoder, quat: => Quat = this.quat) =
-    ScalarValueLift(name, value, encoder, quat)
+  def copy(name: String = this.name, source: External.Source = this.source, value: Any = this.value, encoder: Any = this.encoder, quat: => Quat = this.quat) =
+    ScalarValueLift(name, source, value, encoder, quat)
 }
 object ScalarValueLift {
-  private case class Id(name: String, value: Any, encoder: Any)
-  def apply(name: String, value: Any, encoder: Any, quat: => Quat): ScalarValueLift = new ScalarValueLift(name, value, encoder)(quat)
-  def unapply(svl: ScalarValueLift) = Some((svl.name, svl.value, svl.encoder, svl.quat))
+  private case class Id(name: String, source: External.Source, value: Any, encoder: Any)
+  def apply(name: String, source: External.Source, value: Any, encoder: Any, quat: => Quat): ScalarValueLift = new ScalarValueLift(name, source, value, encoder)(quat)
+  def unapply(svl: ScalarValueLift) = Some((svl.name, svl.source, svl.value, svl.encoder, svl.quat))
 }
 
 final class ScalarQueryLift(val name: String, val value: Any, val encoder: Any)(theQuat: => Quat)
@@ -779,25 +786,25 @@ object ScalarQueryLift {
 
 sealed trait CaseClassLift extends Lift
 
-final class CaseClassValueLift(val name: String, val value: Any)(theQuat: => Quat) extends CaseClassLift {
+final class CaseClassValueLift(val name: String, val simpleName: String, val value: Any)(theQuat: => Quat) extends CaseClassLift {
   def quat: Quat = theQuat
   def bestQuat = quat
   override def withQuat(quat: => Quat) = this.copy(quat = quat)
 
-  private val id = CaseClassValueLift.Id(name, value)
+  private val id = CaseClassValueLift.Id(name, simpleName, value)
   override def hashCode(): Int = id.hashCode()
   override def equals(obj: Any): Boolean =
     obj match {
       case e: CaseClassValueLift => e.id == this.id
       case _                     => false
     }
-  def copy(name: String = this.name, value: Any = this.value, quat: => Quat = this.quat) =
-    CaseClassValueLift(name, value, quat)
+  def copy(name: String = this.name, simpleName: String = this.simpleName, value: Any = this.value, quat: => Quat = this.quat) =
+    CaseClassValueLift(name, simpleName, value, quat)
 }
 object CaseClassValueLift {
-  private case class Id(name: String, value: Any)
-  def apply(name: String, value: Any, quat: => Quat): CaseClassValueLift = new CaseClassValueLift(name, value)(quat)
-  def unapply(l: CaseClassValueLift) = Some((l.name, l.value, l.quat))
+  private case class Id(name: String, simpleName: String, value: Any)
+  def apply(name: String, simpleName: String, value: Any, quat: => Quat): CaseClassValueLift = new CaseClassValueLift(name, simpleName, value)(quat)
+  def unapply(l: CaseClassValueLift) = Some((l.name, l.simpleName, l.value, l.quat))
 }
 
 final class CaseClassQueryLift(val name: String, val value: Any)(theQuat: => Quat) extends CaseClassLift {
@@ -832,7 +839,7 @@ sealed trait Tag extends External {
 }
 
 case class ScalarTagId(uid: String)
-case class ScalarTag(uid: String) extends Tag {
+case class ScalarTag(uid: String, source: External.Source) extends Tag {
   def quat = Quat.Value
   def bestQuat = quat
 

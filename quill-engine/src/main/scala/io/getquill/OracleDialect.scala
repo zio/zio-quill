@@ -8,7 +8,7 @@ import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
-import io.getquill.norm.{ ConcatBehavior, TranspileConfig }
+import io.getquill.norm.ConcatBehavior
 import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait OracleDialect
@@ -22,8 +22,8 @@ trait OracleDialect
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
-  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig)
-    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, transpileConfig) {
+  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext)
+    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
     import q._
 
     override def withFrom: Statement = from match {
@@ -34,7 +34,7 @@ trait OracleDialect
     }
   }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case q: FlattenSqlQuery =>
       new OracleFlattenSqlQueryTokenizerHelper(q).apply
     case other =>

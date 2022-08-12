@@ -1,6 +1,6 @@
 package io.getquill.context.spark
 
-import io.getquill.NamingStrategy
+import io.getquill.{ IdiomContext, NamingStrategy }
 import io.getquill.ast.{ Ast, BinaryOperation, CaseClass, Constant, ExternalIdent, Ident, Operation, Property, Query, StringOperator, Tuple, Value }
 import io.getquill.context.spark.norm.EscapeQuestionMarks
 import io.getquill.context.sql.{ FlattenSqlQuery, SelectValue, SetOperationSqlQuery, SqlQuery, SqlQueryApply, UnaryOperationSqlQuery }
@@ -10,14 +10,13 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
 import io.getquill.context.{ CannotReturn, ExecutionType }
-import io.getquill.norm.TranspileConfig
 import io.getquill.quat.Quat
 
 class SparkDialect extends SparkIdiom
 
 trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
-  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig) = super.sqlQueryTokenizer
+  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) = super.sqlQueryTokenizer
 
   def liftingPlaceholder(index: Int): String = "?"
 
@@ -25,16 +24,16 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   override implicit def externalIdentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ExternalIdent] = super.externalIdentTokenizer
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy) = {
-    val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, transpileConfig))
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy) = {
+    val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, idiomContext.config))
 
-    implicit val transpileConfigImplicit: TranspileConfig = transpileConfig
+    implicit val implicitIdiomContext: IdiomContext = idiomContext
     implicit val tokernizer = defaultTokenizer
 
     val token =
       normalizedAst match {
         case q: Query =>
-          val sql = new SqlQueryApply(transpileConfig.traceConfig)(q)
+          val sql = new SqlQueryApply(idiomContext.config.traceConfig)(q)
           trace("sql")(sql)
           val expanded = SimpleNestedExpansion(sql)
           trace("expanded sql")(expanded)
@@ -63,8 +62,8 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
       stmt"${name.token}"
   }
 
-  class SparkFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig)
-    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, transpileConfig) {
+  class SparkFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext)
+    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
 
     override def selectTokenizer: Token = {
       // Note that by the time we have reached this point, all Idents representing case classes/tuples in selection have
@@ -108,7 +107,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case q: FlattenSqlQuery =>
       new SparkFlattenSqlQueryTokenizerHelper(q).apply
     case SetOperationSqlQuery(a, op, b) =>

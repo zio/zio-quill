@@ -45,4 +45,18 @@ trait BatchValuesSpec extends Spec with BeforeAndAfterEach {
     def get = quote { query[Product] }
     def result = productsOriginal
   }
+
+  object `Ex 3 - Batch Insert Mixed` {
+    val products = makeProducts(20)
+    val batchSize = 40
+    def op = quote {
+      liftQuery(products).foreach(p => query[Product].insert(_.id -> p.id, _.description -> lift("BlahBlah"), _.sku -> p.sku))
+    }
+    def opExt = quote {
+      (transform: Insert[Product] => Insert[Product]) =>
+        liftQuery(products).foreach(p => transform(query[Product].insert(_.id -> p.id, _.description -> lift("BlahBlah"), _.sku -> p.sku)))
+    }
+    def get = quote { query[Product] }
+    def result = products.map(_.copy(description = "BlahBlah"))
+  }
 }

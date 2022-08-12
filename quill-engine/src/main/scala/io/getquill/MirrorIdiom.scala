@@ -6,9 +6,10 @@ import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
 import io.getquill.context.{ CanReturnClause, ExecutionType }
 import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.{ Normalize, NormalizeCaching, TranspileConfig }
+import io.getquill.norm.{ Normalize, NormalizeCaching }
 import io.getquill.quat.Quat
 import io.getquill.util.Interleave
+import io.getquill.IdiomContext
 
 object MirrorIdiom extends MirrorIdiom
 class MirrorIdiom extends MirrorIdiomBase with CanReturnClause
@@ -25,14 +26,14 @@ trait MirrorIdiomBase extends Idiom {
 
   override def liftingPlaceholder(index: Int): String = "?"
 
-  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    val normalize = new Normalize(transpileConfig)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    val normalize = new Normalize(idiomContext.config)
     val normalizedAst = NormalizeCaching(normalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    val normalize = new Normalize(transpileConfig)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    val normalize = new Normalize(idiomContext.config)
     val normalizedAst = normalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }

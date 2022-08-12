@@ -2,11 +2,11 @@ package io.getquill.context.sql
 
 import io.getquill.ast._
 import io.getquill.context.sql.norm.{ ExpandSelection, FlattenGroupByAggregation }
-import io.getquill.norm.{ BetaReduction, TranspileConfig }
+import io.getquill.norm.BetaReduction
 import io.getquill.quat.Quat
 import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.{ TraceType, fail }
-import io.getquill.{ Literal, PseudoAst }
+import io.getquill.{ Literal, PseudoAst, IdiomContext }
 import io.getquill.sql.Common.ContainsImpurities
 
 case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
@@ -24,7 +24,7 @@ sealed trait SqlQuery {
   override def toString = {
     import io.getquill.MirrorSqlDialect._
     import io.getquill.idiom.StatementInterpolator._
-    implicit val transpileConfig = TranspileConfig.Empty
+    implicit val idiomContext = IdiomContext.Empty
     implicit val naming: Literal = Literal
     implicit val tokenizer: Tokenizer[Ast] = defaultTokenizer
     this.token.toString

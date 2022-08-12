@@ -9,6 +9,7 @@
 	<logger name="io.getquill" level="DEBUG" />
 	<logger name="com.zaxxer.hikari" level="ERROR" />
 	<logger name="io.netty" level="ERROR" />
+	<logger name="com.github.jasync" level="WARN" />
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>

@@ -25,4 +25,10 @@ class BatchValuesJdbcSpec extends BatchValuesSpec {
     ids mustEqual expectedIds
     testContext.run(get) mustEqual result
   }
+
+  "Ex 3 - Batch Insert Mixed" in {
+    import `Ex 3 - Batch Insert Mixed`._
+    testContext.run(op, batchSize)
+    testContext.run(get) mustEqual result
+  }
 }

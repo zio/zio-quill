@@ -3,7 +3,25 @@ package io.getquill.sql.norm
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
 
-object NormalizeFilteredActionAliases extends StatelessTransformer {
+object NormalizeFilteredActionAliases {
+  private[getquill] def chooseAlias(entityName: String, batchAlias: Option[String]) = {
+    val lowerEntityName = entityName.toLowerCase
+    val possibleEntityNameChar =
+      if (lowerEntityName.length > 0 && lowerEntityName.take(1).matches("[a-z]"))
+        Some(lowerEntityName.take(1))
+      else
+        None
+    (possibleEntityNameChar, batchAlias) match {
+      case (Some(t), Some(b)) if (b != t) => t
+      case (Some(t), Some(b)) if (b == t) => s"${t}Tbl"
+      case (Some(t), None)                => t
+      case (None, Some(b))                => s"${b}Tbl"
+      case (None, None)                   => "x"
+    }
+  }
+}
+
+case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends StatelessTransformer {
 
   override def apply(e: Action): Action =
     e match {
@@ -29,6 +47,11 @@ object NormalizeFilteredActionAliases extends StatelessTransformer {
         // (since we don't tokenize the identifier of the SET-clauses)
 
         Update(apply(query), assignments.map(a => realiasAssignment(a, alias)))
+
+      case Update(e: Entity, assignments) =>
+        val alias = NormalizeFilteredActionAliases.chooseAlias(e.name, batchAlias)
+        Update(e, assignments.map(a => realiasAssignment(a, alias)))
+
       case _ => super.apply(e)
     }
 
@@ -36,6 +59,16 @@ object NormalizeFilteredActionAliases extends StatelessTransformer {
     a match {
       case Assignment(alias, prop, value) =>
         val newProp = BetaReduction(prop, alias -> newAlias)
-        Assignment(newAlias, newProp, value)
+        val newVal = BetaReduction(value, alias -> newAlias)
+        Assignment(newAlias, newProp, newVal)
+    }
+
+  private def realiasAssignment(a: Assignment, newAliasName: String) =
+    a match {
+      case Assignment(alias, prop, value) =>
+        val newAlias = alias.copy(name = newAliasName)
+        val newProp = BetaReduction(prop, alias -> newAlias)
+        val newVal = BetaReduction(value, alias -> newAlias)
+        Assignment(newAlias, newProp, newVal)
     }
 }
