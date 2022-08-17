@@ -6,6 +6,10 @@ import scala.BigDecimal
 import scala.jdk.CollectionConverters._
 import scala.math.BigDecimal.int2bigDecimal
 import io.getquill.util.PrintMac
+import java.util.LinkedList
+import org.scalatest.concurrent.Eventually._
+import org.reactivestreams.Subscription
+import org.reactivestreams.Subscriber
 
 class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
 
@@ -102,6 +106,33 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
     }
     "isEmpty" in {
       get(context.run(isEmpty)) mustEqual false
+    }
+  }
+
+  "streaming" - {
+
+    class CollectingSubscriber extends Subscriber[Product] {
+      val received = new LinkedList[Product]()
+      private var subscription: Subscription = null
+      override def onSubscribe(s: Subscription): Unit = {
+        subscription = s
+        subscription.request(1)
+      }
+      override def onComplete(): Unit = {}
+      override def onNext(p: Product): Unit = {
+        received.add(p)
+        subscription.request(1)
+      }
+      override def onError(t: Throwable) = fail(t)
+    }
+
+    "select all" in {
+      val subscriber = new CollectingSubscriber()
+      context.stream(selectAll).subscribe(subscriber)
+
+      eventually {
+        subscriber.received must contain theSameElementsAs (products)
+      }
     }
   }
 }

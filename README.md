@@ -3807,6 +3807,20 @@ Async support via [NDBC driver](https://ndbc.io/) is available with Postgres dat
 
 ### quill-ndbc-postgres
 
+#### running and streaming
+
+NDBC supports both single result queries and streaming:
+
+```scala
+val q1 = quote { query[Country].filter(_.code == "GBR") }
+
+// Select all at once
+run(q1)
+
+// Stream in chunks of 16
+stream(q1, 16)
+```
+
 #### transactions
 
 Transaction support is provided out of the box by NDBC:

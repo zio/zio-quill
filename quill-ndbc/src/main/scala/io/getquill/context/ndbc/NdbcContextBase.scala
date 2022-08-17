@@ -18,6 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 import scala.language.{ higherKinds, implicitConversions }
 import scala.util.Try
+import io.getquill.context.ContextVerbStream
 
 object NdbcContextBase {
   trait ContextEffect[F[_], FutureExecutionContext_] {
@@ -46,13 +47,14 @@ object NdbcContextBase {
 }
 
 trait NdbcContextBase[+Idiom <: SqlIdiom, +Naming <: NamingStrategy, P <: PreparedStatement, R <: Row]
-  extends SqlContext[Idiom, Naming] {
+  extends SqlContext[Idiom, Naming] with ContextVerbStream[Idiom, Naming] {
 
   private[getquill] val logger = ContextLogger(classOf[NdbcContext[_, _, _, _]])
 
   final override type PrepareRow = P
   final override type ResultRow = R
   override type Session = Unit
+
   type Runner = Unit
 
   protected implicit val resultEffect: NdbcContextBase.ContextEffect[Result, _]

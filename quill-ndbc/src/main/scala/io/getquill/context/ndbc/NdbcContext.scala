@@ -7,11 +7,14 @@ import io.trane.future.scala.{ Await, Future, Promise }
 import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
 
 import scala.concurrent.duration.Duration
+import org.reactivestreams.Publisher
+import io.getquill.context.ContextVerbStream
 
 abstract class NdbcContext[I <: SqlIdiom, +N <: NamingStrategy, P <: PreparedStatement, R <: Row](
   override val idiom: I, override val naming: N, val dataSource: DataSource[P, R]
 )
   extends NdbcContextBase[I, N, P, R]
+  with ContextVerbStream[I, N]
   with ContextTranslateProto {
 
   override type Result[T] = Future[T]
@@ -21,6 +24,8 @@ abstract class NdbcContext[I <: SqlIdiom, +N <: NamingStrategy, P <: PreparedSta
   override type RunActionReturningResult[T] = T
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
+
+  override type StreamResult[T] = Publisher[T]
 
   override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Future, Unit] = NdbcContext.ContextEffect
 
@@ -54,6 +59,21 @@ abstract class NdbcContext[I <: SqlIdiom, +N <: NamingStrategy, P <: PreparedSta
   /* TODO: I'm assuming that we don't need to bracket and close the dataSource like with JDBC
       because previously it wasn't done here either */
   override def withDataSource[T](f: DataSource[P, R] => Future[T]): Future[T] = f(dataSource)
+
+  def streamQuery[T](fetchSize: Option[Index], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Publisher[T] = {
+    // Can be inlined to (row) => extractor(row, ()) after dropping scala 2.11
+    val extract = new java.util.function.Function[R, T] {
+      override def apply(row: R): T = {
+        extractor(row, ())
+      }
+    }
+    val stmt = createPreparedStatement(sql)
+    val (params, ps) = prepare(stmt, ())
+    logger.logQuery(sql, params)
+
+    dataSource.stream(ps).map(extract)
+
+  }
 
   def close(): Unit = {
     dataSource.close()
