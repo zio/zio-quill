@@ -25,4 +25,10 @@ class BatchValuesJdbcSpec extends BatchValuesSpec {
     ids mustEqual productsOriginal.map(_.id)
     testContext.run(get) mustEqual productsOriginal
   }
+
+  "Ex 3 - Batch Insert Mixed" in {
+    import `Ex 3 - Batch Insert Mixed`._
+    testContext.run(op, batchSize)
+    testContext.run(get).toSet mustEqual result.toSet
+  }
 }

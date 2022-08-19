@@ -11,7 +11,7 @@ import scala.util.{ Failure, Success, Try }
 object mirrorContextWithQueryProbing
   extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
 
-case class BatchActionMirrorGeneric[Row](groups: List[(String, List[Row])], info: ExecutionInfo)
+case class BatchActionMirrorGeneric[A](groups: List[(String, List[A])], info: ExecutionInfo)
 case class BatchActionReturningMirrorGeneric[T, PrepareRow, Extractor[_]](groups: List[(String, ReturnAction, List[PrepareRow])], extractor: Extractor[T], info: ExecutionInfo)
 
 /**

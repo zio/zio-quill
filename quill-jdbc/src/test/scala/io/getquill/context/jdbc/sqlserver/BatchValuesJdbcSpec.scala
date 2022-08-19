@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.sqlserver
 
-import io.getquill.Delete
+import io.getquill.{ Delete, Insert }
 import io.getquill.context.sql.base.BatchValuesSpec
 
 class BatchValuesJdbcSpec extends BatchValuesSpec {
@@ -35,5 +35,14 @@ class BatchValuesJdbcSpec extends BatchValuesSpec {
     val ids = testContext.run(op, batchSize)
     ids mustEqual productsOriginal
     testContext.run(get) mustEqual productsOriginal
+  }
+
+  "Ex 3 - Batch Insert Mixed" in {
+    import `Ex 3 - Batch Insert Mixed`._
+    def splicedOp = quote {
+      opExt(insert => sql"SET IDENTITY_INSERT Product ON; ${insert}".as[Insert[Product]])
+    }
+    testContext.run(splicedOp, batchSize)
+    testContext.run(get) mustEqual result
   }
 }

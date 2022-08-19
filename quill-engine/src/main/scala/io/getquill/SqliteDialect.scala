@@ -7,7 +7,6 @@ import io.getquill.idiom.{ StringToken, Token }
 import io.getquill.ast._
 import io.getquill.context.{ CanInsertReturningWithSingleValue, CanInsertWithMultiValues, CanReturnField }
 import io.getquill.context.sql.OrderByCriteria
-import io.getquill.norm.TranspileConfig
 
 trait SqliteDialect
   extends SqlIdiom
@@ -22,7 +21,7 @@ trait SqliteDialect
 
   override def prepareForProbing(string: String) = s"sqlite3_prepare_v2($string)"
 
-  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig): Tokenizer[Ast] =
+  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case c: OnConflict => conflictTokenizer.token(c)
       case ast           => super.astTokenizer.token(ast)
