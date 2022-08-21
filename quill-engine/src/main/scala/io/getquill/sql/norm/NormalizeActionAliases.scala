@@ -58,8 +58,9 @@ case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends St
   private def realiasAssignment(a: Assignment, newAlias: Ident) =
     a match {
       case Assignment(alias, prop, value) =>
-        val newProp = BetaReduction(prop, alias -> newAlias)
-        val newVal = BetaReduction(value, alias -> newAlias)
+        // Beta reduction will not swap an alias out from under a property so need to use a full transform
+        val newProp = Transform(prop) { case `alias` => newAlias }
+        val newVal = Transform(value) { case `alias` => newAlias }
         Assignment(newAlias, newProp, newVal)
     }
 
@@ -67,8 +68,8 @@ case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends St
     a match {
       case Assignment(alias, prop, value) =>
         val newAlias = alias.copy(name = newAliasName)
-        val newProp = BetaReduction(prop, alias -> newAlias)
-        val newVal = BetaReduction(value, alias -> newAlias)
+        val newProp = Transform(prop) { case `alias` => newAlias }
+        val newVal = Transform(value) { case `alias` => newAlias }
         Assignment(newAlias, newProp, newVal)
     }
 }
