@@ -5,12 +5,11 @@ import io.getquill.ast.{ Ast, Dynamic, Lift, Tag }
 import io.getquill.quotation.{ IsDynamic, LiftUnlift, Quotation }
 import io.getquill.util.LoadObject
 import io.getquill.util.MacroContextExt._
-import io.getquill.{ NamingStrategy, IdiomContext }
+import io.getquill.{ IdiomContext, NamingStrategy }
 import io.getquill.idiom._
 import io.getquill.quat.Quat
-
-import scala.util.Success
 import scala.util.Failure
+import scala.util.Success
 
 trait ContextMacro extends Quotation {
   val c: MacroContext
@@ -57,32 +56,46 @@ trait ContextMacro extends Quotation {
     }
   }
 
-  private def translateStatic(ast: Ast, topLevelQuat: Quat, batchAlias: Option[String]): Tree = {
-    val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
-    import liftUnlift._
+  protected def tryTranslateStatic(ast: Ast, topLevelQuat: Quat, batchAlias: Option[String]): Either[String, (Ast, Token, ExecutionType, IdiomContext, String, Idiom)] = {
     val transpileConfig = summonTranspileConfig()
     val queryType = IdiomContext.QueryType.discoverFromAst(ast, batchAlias)
     val idiomContext = IdiomContext(transpileConfig, queryType)
 
     idiomAndNamingStatic match {
+      case Failure(_) =>
+        Left(s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point.")
       case Success((idiom, naming)) =>
-        val (normalizedAst, statement, _) = idiom.translate(ast, topLevelQuat, ExecutionType.Static, idiomContext)(naming)
+        try {
+          val (normalizedAst, statement, _) = idiom.translate(ast, topLevelQuat, ExecutionType.Static, idiomContext)(naming)
 
-        val (string, _) =
-          ReifyStatement(
-            idiom.liftingPlaceholder,
-            idiom.emptySetContainsToken,
-            statement,
-            forProbing = true
-          )
+          val (string, _) =
+            ReifyStatement(
+              idiom.liftingPlaceholder,
+              idiom.emptySetContainsToken,
+              statement,
+              forProbing = true
+            )
 
-        ProbeStatement(idiom.prepareForProbing(string), c)
+          ProbeStatement(idiom.prepareForProbing(string), c)
+          c.query(string, idiom)
+          Right((normalizedAst, statement: Token, io.getquill.context.ExecutionType.Static, idiomContext, string, idiom))
+        } catch {
+          case e: Exception =>
+            c.fail(s"Query compilation failed. ${e.getMessage}")
+        }
+    }
+  }
 
-        c.query(string, idiom)
+  private def translateStatic(ast: Ast, topLevelQuat: Quat, batchAlias: Option[String]): Tree = {
+    val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
+    import liftUnlift._
+    import ConfigLiftables._
+    tryTranslateStatic(ast, topLevelQuat, batchAlias) match {
+      case Right((normalizedAst, statement, executionType, idiomContext, _, _)) =>
+        q"($normalizedAst, ${statement: Token}, ${executionType: ExecutionType}, $idiomContext)"
 
-        q"($normalizedAst, ${statement: Token}, io.getquill.context.ExecutionType.Static, ${ConfigLiftables.transpileContextLiftable(idiomContext)})"
-      case Failure(ex) =>
-        c.info(s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point.")
+      case Left(msg) =>
+        c.info(msg)
         translateDynamic(ast, topLevelQuat, batchAlias)
     }
   }

@@ -7,31 +7,23 @@ import io.getquill.IdiomContext
 import io.getquill.quat.Quat
 
 object CanDoBatchedInsert {
-  def apply(ast: Ast, numRows: Int, idiom: Idiom, naming: NamingStrategy, isReturning: Boolean, idiomContext: IdiomContext): Boolean = {
+  def apply(ast: Ast, idiom: Idiom, statement: Token, isReturning: Boolean, idiomContext: IdiomContext): Boolean = {
     // find any actions that could have a VALUES clause. Right now just ast.Insert,
     // in the future might be Update and Dlete
     val actions = CollectAst.byType[Action](ast)
-    if (numRows == 1)
-      false
     // only one action allowed per-query in general
-    else if (actions.length != 1)
+    if (actions.length != 1)
       false
     else {
-      // In order to see if there's a VALUES-clause in the action, we don't need to tokenize the entire AST,
-      // just the ast.Insert (or ast.Update or ast.Delete)
-      val statement = idiom.translate(actions.head, Quat.Unknown, ExecutionType.Unknown, idiomContext)(naming)._2
-
       val validations =
         for {
-          _ <- validateConcatenatedIterationPossible(statement, numRows).right
+          _ <- validateConcatenatedIterationPossible(statement).right
           _ <- validateIdiomSupportsConcatenatedIteration(idiom, isReturning).right
         } yield ()
 
       validations match {
-        case Right(_) => true
-        case Left(msg) =>
-          println("[WARNING] Cannot do true batched insert: " + msg)
-          false
+        case Right(_)  => true
+        case Left(msg) => false
       }
     }
   }
@@ -81,7 +73,7 @@ object CanDoBatchedInsert {
       )
   }
 
-  private def validateConcatenatedIterationPossible(realQuery: Token, entitiesPerQuery: Int): Either[String, Unit] = {
+  private def validateConcatenatedIterationPossible(realQuery: Token): Either[String, Unit] = {
     import io.getquill.idiom._
     def valueClauseExistsIn(token: Token): Boolean =
       token match {
@@ -99,7 +91,7 @@ object CanDoBatchedInsert {
       Right(())
     else
       Left(
-        s"""|Cannot insert multiple (i.e. ${entitiesPerQuery}) rows per-batch-query since the query has no VALUES clause.
+        s"""|Cannot insert multiple rows per-batch-query since the query has no VALUES clause.
             |Currently this functionality is only supported for INSERT queries for select databases (Postgres, H2, SQL Server, Sqlite).
             |Falling back to the regular single-row-per-batch insert behavior.
             |""".stripMargin

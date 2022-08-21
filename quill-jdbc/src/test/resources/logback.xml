@@ -6,11 +6,11 @@
         </encoder>
     </appender>
 
-<!--    <logger name="io.getquill" level="DEBUG" />-->
-<!--    <logger name="com.zaxxer.hikari" level="DEBUG" />-->
-<!--    <logger name="io.netty" level="ERROR" />-->
-<!--    <logger name="com.github.jasync" level="WARN" />-->
-    <root level="DEBUG">
+    <logger name="io.getquill" level="INFO" />
+    <logger name="com.zaxxer.hikari" level="INFO" />
+    <logger name="io.netty" level="ERROR" />
+    <logger name="com.github.jasync" level="WARN" />
+    <root level="WARN">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

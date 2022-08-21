@@ -3,7 +3,7 @@ package io.getquill.context.jdbc.sqlite
 import io.getquill.context.sql.base.BatchValuesSpec
 import io.getquill._
 
-class BatchValuesJdbcSpec extends BatchValuesSpec {
+class BatchValuesJdbcSpec extends BatchValuesSpec { //
 
   val context = testContext
   import testContext._

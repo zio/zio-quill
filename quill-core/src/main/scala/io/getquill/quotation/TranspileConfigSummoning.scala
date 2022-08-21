@@ -1,8 +1,9 @@
 package io.getquill.quotation
 
-import io.getquill.{ IdiomContext }
+import io.getquill.IdiomContext
 import io.getquill.IdiomContext.QueryType
 import io.getquill.IdiomContext.QueryType.{ Batch, Regular }
+import io.getquill.context.ExecutionType
 import io.getquill.norm.{ OptionalPhase, TranspileConfig }
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.TraceConfig
@@ -132,6 +133,12 @@ trait TranspileConfigSummoning {
 
     implicit val transpileContextLiftable: Liftable[IdiomContext] = Liftable[IdiomContext] {
       case IdiomContext(transpileConfig, queryType) => q"io.getquill.IdiomContext(${transpileConfig}, ${queryType})"
+    }
+
+    implicit val executionTypeLiftable: Liftable[ExecutionType] = Liftable[ExecutionType] {
+      case ExecutionType.Dynamic => q"io.getquill.context.ExecutionType.Dynamic"
+      case ExecutionType.Static  => q"io.getquill.context.ExecutionType.Static"
+      case ExecutionType.Unknown => q"io.getquill.context.ExecutionType.Unknown"
     }
   }
 }
