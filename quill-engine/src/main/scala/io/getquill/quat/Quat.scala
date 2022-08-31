@@ -50,6 +50,7 @@ sealed trait Quat {
     }
 
   def isPrimitive = false
+  def isProduct = false
   def applyRenames: Quat = this
   def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat
   def withRenames(renames: List[(String, String)]): Quat =
@@ -196,6 +197,7 @@ object Quat {
   def fromSerialized(serial: String): Quat = BooQuatSerializer.deserialize(serial)
 
   class Product(val fields: mutable.LinkedHashMap[String, Quat], override val renames: mutable.LinkedHashMap[String, String], val tpe: Quat.Product.Type) extends Quat {
+    override def isProduct = true
     private val id = Product.Id(fields)
 
     override def equals(that: Any) =

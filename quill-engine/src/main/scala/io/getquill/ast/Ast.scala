@@ -452,6 +452,9 @@ final class Property(val ast: Ast, val name: String)(val renameable: Renameable,
   def copy(ast: Ast = this.ast, name: String = this.name): Property =
     Property.Opinionated(ast, name, this.renameable, this.visibility)
 
+  def copyAll(ast: Ast = this.ast, name: String = this.name, renameable: Renameable = this.renameable, visibility: Visibility = this.visibility): Property =
+    Property.Opinionated(ast, name, renameable, visibility)
+
   override def equals(that: Any) =
     that match {
       case e: Property => this.id == e.id
