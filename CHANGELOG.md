@@ -1,3 +1,7 @@
+# 4.4.0
+
+- [UPDATE with VALUES optimization for Postgres. Various macro refactoring.](https://github.com/zio/zio-quill/pull/2571)
+
 # 4.3.0
 
 - [Values clause batch insert](https://github.com/zio/zio-quill/pull/2565)
