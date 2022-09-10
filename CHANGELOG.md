@@ -1,3 +1,7 @@
+# 4.4.1
+
+- [Fixing VALUES-clause update query naming](https://github.com/zio/zio-quill/pull/2595)
+
 # 4.4.0
 
 - [UPDATE with VALUES optimization for Postgres. Various macro refactoring.](https://github.com/zio/zio-quill/pull/2571)

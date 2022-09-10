@@ -228,7 +228,7 @@ case class ReplaceLiftings(foreachIdentName: String, existingColumnNames: List[S
       case lift @ ScalarTag(_, External.Source.UnparsedProperty(propNameRaw)) =>
         val id = Ident(foreachIdentName, lift.quat)
         val propName = freshIdent(propNameRaw)
-        (Property(id, propName), ReplaceLiftings(foreachIdentName, existingColumnNames, state + (propName -> lift)))
+        (Property.Opinionated(id, propName, Renameable.Fixed, Visibility.neutral), ReplaceLiftings(foreachIdentName, existingColumnNames, state + (propName -> lift)))
       case _ => super.apply(e)
     }
 }
