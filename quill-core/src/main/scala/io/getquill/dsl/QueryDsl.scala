@@ -4,6 +4,7 @@ import scala.language.experimental.macros
 import io.getquill.quotation.NonQuotedException
 import io.getquill.EntityQuery
 
+import java.time.{ OffsetDateTime, ZonedDateTime }
 import scala.annotation.compileTimeOnly
 
 private[getquill] trait QueryDsl {
@@ -36,7 +37,7 @@ private[getquill] trait QueryDsl {
   def avg[A](a: Option[A])(implicit n: Numeric[A]): Option[BigDecimal] = NonQuotedException()
   def sum[A](a: Option[A])(implicit n: Numeric[A]): Option[A] = NonQuotedException()
 
-  object extras extends LowPriorityExtras {
+  object extras extends LowPriorityExtras with DateOps {
     implicit class NumericOptionOps[A: Numeric](a: Option[A]) {
       def ===[B: Numeric](b: Option[B]): Boolean = a.exists(av => b.exists(bv => av == bv))
       def ===[B: Numeric](b: B): Boolean = a.exists(av => av == b)

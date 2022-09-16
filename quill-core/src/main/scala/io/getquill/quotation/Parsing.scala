@@ -65,6 +65,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case `infixParser`(value)                => value
     case `orderingParser`(value)             => value
     case `operationParser`(value)            => value
+    case `orderedOperationParser`(value)     => value
     case `identParser`(value)                => value
     case `optionOperationParser`(value)      => value
     case `propertyParser`(value)             => value
@@ -714,6 +715,32 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         case (a, b) =>
           BinaryOperation(a, StringOperator.`+`, b)
       }
+  }
+
+  private object operator {
+    def unapply(t: TermName) =
+      t.decodedName.toString match {
+        case ">"  => Some(NumericOperator.`>`)
+        case ">=" => Some(NumericOperator.`>=`)
+        case "<"  => Some(NumericOperator.`<`)
+        case "<=" => Some(NumericOperator.`<=`)
+        case _    => None
+      }
+  }
+
+  private object IsExtensionClass {
+    def unapply(tree: Tree) =
+      tree match {
+        case cls @ q"$extension($a)" if (cls.tpe.baseClasses.contains(typeOf[Ordered[Any]].typeSymbol)) =>
+          Some((extension, a))
+        case _ =>
+          None
+      }
+  }
+
+  val orderedOperationParser: Parser[Operation] = Parser[Operation] {
+    case q"${ cls @ IsExtensionClass(extension, a) }.${ operator(op: BinaryOperator) } ($b)" =>
+      BinaryOperation(astParser(a), op, astParser(b))
   }
 
   val stringOperationParser: Parser[Operation] =

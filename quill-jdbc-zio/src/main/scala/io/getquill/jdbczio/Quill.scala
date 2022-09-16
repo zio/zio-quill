@@ -15,7 +15,8 @@ import javax.sql.DataSource
 
 object Quill {
   case class Postgres[+N <: NamingStrategy](naming: N, override val ds: DataSource)
-    extends Quill[PostgresDialect, N] with PostgresJdbcTypes[N] {
+    extends Quill[PostgresDialect, N] with PostgresJdbcTypes[PostgresDialect, N] {
+    val idiom: PostgresDialect = PostgresDialect
     val dsDelegate = new PostgresZioJdbcContext[N](naming)
   }
 
@@ -25,7 +26,8 @@ object Quill {
   }
 
   case class SqlServer[+N <: NamingStrategy](naming: N, override val ds: DataSource)
-    extends Quill[SQLServerDialect, N] with SqlServerJdbcTypes[N] {
+    extends Quill[SQLServerDialect, N] with SqlServerJdbcTypes[SQLServerDialect, N] {
+    val idiom: SQLServerDialect = SQLServerDialect
     val dsDelegate = new SqlServerZioJdbcContext[N](naming)
   }
   object SqlServer {
@@ -34,7 +36,8 @@ object Quill {
   }
 
   case class H2[+N <: NamingStrategy](naming: N, override val ds: DataSource)
-    extends Quill[H2Dialect, N] with H2JdbcTypes[N] {
+    extends Quill[H2Dialect, N] with H2JdbcTypes[H2Dialect, N] {
+    val idiom: H2Dialect = H2Dialect
     val dsDelegate = new H2ZioJdbcContext[N](naming)
   }
   object H2 {
@@ -43,7 +46,8 @@ object Quill {
   }
 
   case class Mysql[+N <: NamingStrategy](naming: N, override val ds: DataSource)
-    extends Quill[MySQLDialect, N] with MysqlJdbcTypes[N] {
+    extends Quill[MySQLDialect, N] with MysqlJdbcTypes[MySQLDialect, N] {
+    val idiom: MySQLDialect = MySQLDialect
     val dsDelegate = new MysqlZioJdbcContext[N](naming)
   }
   object Mysql {
@@ -52,7 +56,8 @@ object Quill {
   }
 
   case class Sqlite[+N <: NamingStrategy](naming: N, override val ds: DataSource)
-    extends Quill[SqliteDialect, N] with SqliteJdbcTypes[N] {
+    extends Quill[SqliteDialect, N] with SqliteJdbcTypes[SqliteDialect, N] {
+    val idiom: SqliteDialect = SqliteDialect
     val dsDelegate = new SqliteZioJdbcContext[N](naming)
   }
   object Sqlite {
@@ -61,7 +66,8 @@ object Quill {
   }
 
   case class Oracle[+N <: NamingStrategy](naming: N, override val ds: DataSource)
-    extends Quill[OracleDialect, N] with OracleJdbcTypes[N] {
+    extends Quill[OracleDialect, N] with OracleJdbcTypes[OracleDialect, N] {
+    val idiom: OracleDialect = OracleDialect
     val dsDelegate = new OracleZioJdbcContext[N](naming)
   }
   object Oracle {
