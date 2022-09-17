@@ -156,30 +156,35 @@ trait PostgresDialect
           val (Update(Filter(table: Entity, tableAlias, replacedWhere), assignments), valuesColumns, valuesLifts) = {
             ReplaceLiftings.of(clause)(batchAlias, List())
           }
-
-          // The SET columns/values i.e. ([name, id], [STag(uid:1), STag(uid:2)]
-          val columnsAndValues = columnsAndValuesTogether(assignments)
-          // the `ps`
-          val colsId = batchAlias
-          // The columns that go in the SET clause i.e. `SET name = ps.name, id = ps.id`
-          val setColumns = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
-          // The columns that go inside ps(name, id, id1) i.e. stmt"name, id, id1"
-          val asColumns = valuesColumns.toList.mkStmt(", ")
-          val output = stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})")}) AS ${colsId.token}($asColumns) WHERE ${specialPropertyTokenizer.token(replacedWhere)}"
-          Some(output)
+          if (valuesLifts.nonEmpty) {
+            // The SET columns/values i.e. ([name, id], [STag(uid:1), STag(uid:2)]
+            val columnsAndValues = columnsAndValuesTogether(assignments)
+            // the `ps`
+            val colsId = batchAlias
+            // The columns that go in the SET clause i.e. `SET name = ps.name, id = ps.id`
+            val setColumns = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
+            // The columns that go inside ps(name, id, id1) i.e. stmt"name, id, id1"
+            val asColumns = valuesColumns.toList.mkStmt(", ")
+            val output = stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})")}) AS ${colsId.token}($asColumns) WHERE ${specialPropertyTokenizer.token(replacedWhere)}"
+            Some(output)
+          } else None
 
         case (clause @ Update(_: Entity, _), IdiomContext.QueryType.Batch(batchAlias)) =>
-          val (Update(table: Entity, assignments), valuesColumns, valuesLifts) =
+          val (Update(table: Entity, assignments), valuesColumns, valuesLifts) = {
             ReplaceLiftings.of(clause)(batchAlias, List())
+          }
+
           // Choose table alias based on how assignments clauses were realized. Batch-Alias should mean the same thing as when NormalizeFilteredActionAliases was run in Idiom should the
           // value should be the same thing as the cluases that were realiased.
-          val tableAlias = NormalizeFilteredActionAliases.chooseAlias(table.name, Some(batchAlias))
-          val colsId = batchAlias
-          val columnsAndValues = columnsAndValuesTogether(assignments)
-          val setColumns = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
-          val asColumns = valuesColumns.toList.mkStmt(", ")
-          val output = stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})")}) AS ${colsId.token}($asColumns)"
-          Some(output)
+          if (valuesLifts.nonEmpty) {
+            val tableAlias = NormalizeFilteredActionAliases.chooseAlias(table.name, Some(batchAlias))
+            val colsId = batchAlias
+            val columnsAndValues = columnsAndValuesTogether(assignments)
+            val setColumns = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
+            val asColumns = valuesColumns.toList.mkStmt(", ")
+            val output = stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})")}) AS ${colsId.token}($asColumns)"
+            Some(output)
+          } else None
 
         case _ =>
           None
@@ -223,7 +228,7 @@ case class ReplaceLiftings(foreachIdentName: String, existingColumnNames: List[S
       case lift @ ScalarTag(_, External.Source.UnparsedProperty(propNameRaw)) =>
         val id = Ident(foreachIdentName, lift.quat)
         val propName = freshIdent(propNameRaw)
-        (Property(id, propName), ReplaceLiftings(foreachIdentName, existingColumnNames, state + (propName -> lift)))
+        (Property.Opinionated(id, propName, Renameable.Fixed, Visibility.neutral), ReplaceLiftings(foreachIdentName, existingColumnNames, state + (propName -> lift)))
       case _ => super.apply(e)
     }
 }

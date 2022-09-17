@@ -3,6 +3,8 @@ package io.getquill.context.jdbc.oracle
 import io.getquill.context.sql.{ EncodingSpec, EncodingTestType }
 import io.getquill.Query
 
+import java.time.ZoneId
+
 class JdbcEncodingSpec extends EncodingSpec {
 
   val context = testContext
@@ -22,6 +24,15 @@ class JdbcEncodingSpec extends EncodingSpec {
         query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     verify(testContext.run(q(liftQuery(insertValues.map(_.v6).toSet))))
+  }
+
+  "Encode/Decode Other Time Types" in {
+    context.run(query[TimeEntity].delete)
+    val zid = ZoneId.systemDefault()
+    val timeEntity = TimeEntity.make(zid)
+    context.run(query[TimeEntity].insertValue(lift(timeEntity)))
+    val actual = context.run(query[TimeEntity]).head
+    timeEntity mustEqual actual
   }
 
   def emptyAsNull(e: EncodingTestType) = e.copy(value = if (e.value == "") null else e.value)

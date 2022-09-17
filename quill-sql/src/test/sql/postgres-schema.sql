@@ -23,6 +23,20 @@ CREATE TABLE Task(
     tsk VARCHAR(255)
 );
 
+CREATE TABLE TimeEntity(
+    sqlDate        DATE,                     -- java.sql.Date
+    sqlTime        TIME,                     -- java.sql.Time
+    sqlTimestamp   TIMESTAMP,                -- java.sql.Timestamp
+    timeLocalDate      DATE,                     -- java.time.LocalDate
+    timeLocalTime      TIME,                     -- java.time.LocalTime
+    timeLocalDateTime  TIMESTAMP,                -- java.time.LocalDateTime
+    timeZonedDateTime  TIMESTAMP WITH TIME ZONE, -- java.time.ZonedDateTime
+    timeInstant        TIMESTAMP WITH TIME ZONE, -- java.time.Instant
+    -- Postgres actually has a notion of a Time+Timezone type unlike most DBs
+    timeOffsetTime     TIME WITH TIME ZONE,      -- java.time.OffsetTime
+    timeOffsetDateTime TIMESTAMP WITH TIME ZONE  -- java.time.OffsetDateTime
+);
+
 CREATE TABLE EncodingTestEntity(
     v1 VARCHAR(255),
     v2 DECIMAL(5,2),

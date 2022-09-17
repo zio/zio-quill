@@ -1,7 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
-import java.time.LocalDateTime
-
+import java.time._
 import io.getquill.context.sql.EncodingSpec
 import io.getquill.Query
 
@@ -51,5 +50,14 @@ class JdbcEncodingSpec extends EncodingSpec {
     }
     res._1 must contain theSameElementsAs List(EncodingTestEntity(Some(now)))
     res._2 must contain theSameElementsAs List(EncodingTestEntity(None))
+  }
+
+  "Encode/Decode Other Time Types" in {
+    context.run(query[TimeEntity].delete)
+    val zid = ZoneId.systemDefault()
+    val timeEntity = TimeEntity.make(zid)
+    context.run(query[TimeEntity].insertValue(lift(timeEntity)))
+    val actual = context.run(query[TimeEntity]).head
+    timeEntity mustEqual actual
   }
 }

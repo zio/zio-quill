@@ -2,7 +2,7 @@ package io.getquill.context.sql
 
 import io.getquill.context.ExecutionType.Unknown
 import io.getquill.context.sql.base.BatchUpdateValuesSpec
-import io.getquill.{ Literal, PostgresDialect, SqlMirrorContext }
+import io.getquill.{ Literal, PostgresDialect, SnakeCase, SqlMirrorContext }
 import io.getquill.context.sql.util.StringOps._
 
 class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
@@ -22,6 +22,61 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
           Unknown
       ), (
         "UPDATE Contact AS p SET firstName = ps.firstName1, lastName = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.firstName = ps.firstName",
+        List(
+          List("Caboose", "Caboose", "CastleU", 66)
+        ),
+          Unknown
+      )
+    )
+  }
+
+  // Need to make sure that values inside ps._ parts part are not changed by the naming convention
+  // otherwise they wont correspond to their definition in the `AS ps(...)` part.
+  "Ex 1 - Simple Contact (with Snake Case)" in {
+    val context = new SqlMirrorContext(PostgresDialect, SnakeCase)
+    import context._
+
+    import `Ex 1 - Simple Contact`._
+    context.run(update, 2).tripleBatchMulti mustEqual List(
+      (
+        "UPDATE contact AS p SET first_name = ps.firstName1, last_name = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?), (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.first_name = ps.firstName",
+        List(
+          List("Joe", "Joe", "BloggsU", 22, "Jan", "Jan", "RoggsU", 33),
+          List("James", "James", "JonesU", 44, "Dale", "Dale", "DomesU", 55)
+        ),
+          Unknown
+      ), (
+        "UPDATE contact AS p SET first_name = ps.firstName1, last_name = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.first_name = ps.firstName",
+        List(
+          List("Caboose", "Caboose", "CastleU", 66)
+        ),
+          Unknown
+      )
+    )
+  }
+
+  "Ex 1 - Simple Contact (with Snake Case and renames)" in {
+    val context = new SqlMirrorContext(PostgresDialect, SnakeCase)
+    import context._
+
+    import `Ex 1 - Simple Contact`._
+    val contacts = quote {
+      querySchema[Contact]("tblContact", _.firstName -> "colFirstName")
+    }
+    val update = quote {
+      liftQuery(updateData: List[Contact]).foreach(ps =>
+        contacts.filter(p => p.firstName == ps.firstName).updateValue(ps))
+    }
+    context.run(update, 2).tripleBatchMulti mustEqual List(
+      (
+        "UPDATE tblContact AS p SET colFirstName = ps.firstName1, last_name = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?), (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.colFirstName = ps.firstName",
+        List(
+          List("Joe", "Joe", "BloggsU", 22, "Jan", "Jan", "RoggsU", 33),
+          List("James", "James", "JonesU", 44, "Dale", "Dale", "DomesU", 55)
+        ),
+          Unknown
+      ), (
+        "UPDATE tblContact AS p SET colFirstName = ps.firstName1, last_name = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.colFirstName = ps.firstName",
         List(
           List("Caboose", "Caboose", "CastleU", 66)
         ),

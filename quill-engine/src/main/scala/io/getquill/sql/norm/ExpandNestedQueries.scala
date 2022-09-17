@@ -167,6 +167,12 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
         val distinctSelects =
           distinctIfNotTopLevel(select)
 
+        val distinctKind =
+          q.distinct match {
+            case DistinctKind.DistinctOn(props) => DistinctKind.DistinctOn(props.map(p => flattenNestedProperty.inside(p)))
+            case other                          => other
+          }
+
         q.copy(
           select = distinctSelects.map(sv => sv.copy(ast = flattenNestedProperty.inside(sv.ast))),
           from = newFroms,
@@ -174,7 +180,8 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
           groupBy = groupBy.map(flattenNestedProperty.inside(_)),
           orderBy = orderBy.map(ob => ob.copy(ast = flattenNestedProperty.inside(ob.ast))),
           limit = limit.map(flattenNestedProperty.inside(_)),
-          offset = offset.map(flattenNestedProperty.inside(_))
+          offset = offset.map(flattenNestedProperty.inside(_)),
+          distinct = distinctKind
         )(q.quat)
     }
 
