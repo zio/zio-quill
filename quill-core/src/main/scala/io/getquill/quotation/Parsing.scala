@@ -589,12 +589,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       if (caseAccessors.nonEmpty && !caseAccessors.contains(property))
         c.fail(s"Can't find case class property: ${property.decodedName.toString}")
 
-      val visibility = {
-        val tpe = c.typecheck(q"$e.$property")
-        val innerParam = innerOptionParam(q"$tpe".tpe, None)
-        if (is[Embedded](q"$innerParam")) Hidden
-        else Visible
-      }
+      val visibility = Visible
 
       Property.Opinionated(astParser(e), property.decodedName.toString,
         Renameable.neutral, //Renameability of the property is determined later in the RenameProperties normalization phase

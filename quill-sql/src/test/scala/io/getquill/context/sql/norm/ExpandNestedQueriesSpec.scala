@@ -217,7 +217,7 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id))
       }
-      ctx.run(q).string mustEqual "SELECT e.name AS _1, e.id AS _2 FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e"
+      ctx.run(q).string mustEqual "SELECT p._1name AS _1, p._1id AS _2 FROM (SELECT DISTINCT p.name AS _1name, p.id AS _1id FROM Parent p) AS p"
     }
 
     "can be propagated across distinct query with naming intact - double distinct" in {
@@ -227,7 +227,7 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct
       }
-      ctx.run(q).string mustEqual "SELECT DISTINCT e.name AS _1, e.id AS _2 FROM (SELECT DISTINCT p.name, p.id FROM Parent p) AS e"
+      ctx.run(q).string mustEqual "SELECT DISTINCT p._1name AS _1, p._1id AS _2 FROM (SELECT DISTINCT p.name AS _1name, p.id AS _1id FROM Parent p) AS p"
     }
 
     "can be propagated across distinct query with naming intact then re-wrapped into the parent" in {
