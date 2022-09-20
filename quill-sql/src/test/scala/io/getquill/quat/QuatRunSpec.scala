@@ -34,7 +34,7 @@ class QuatRunSpec extends Spec {
       result.string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
     }
 
-    "should support query-ops function - multile var" in {
+    "should support query-ops function - multiple var" in {
       def appendFooFun[Q <: Query[_]] = quote((q: Q, i: Int) => sql"$q APPEND $i FOO".transparent.pure.as[Q])
       val q                           = quote(appendFooFun(query[MyPerson], 123))
       q.ast.quat mustEqual Quat.Generic // Is it unknown, how should the reducing work from an infix with multiple vars?

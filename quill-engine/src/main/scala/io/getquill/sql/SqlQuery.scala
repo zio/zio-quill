@@ -259,7 +259,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
 
         // Note: In the future, in the GroupByMap case need to verify that columns used in aggregations are actually contained in the grouping
         //       we can use the list that comes out of flatGroupByAsts for reference for fields being grouped-by
-        //       (e.g. need to keep in mind embedded objects could be in them... so we might have to traverse mutliple levels
+        //       (e.g. need to keep in mind embedded objects could be in them... so we might have to traverse multiple levels
         //       of properties in order to verify)
 
         // Given a clause that looks like:
