@@ -21,7 +21,7 @@ import io.getquill.util.Messages.{TraceType, title}
  * This has the simple requirement that renames must be propagated fully before
  * they are actually committed so that the knowledge of what needs to be renamed
  * into what can be distributed easily throughout the AST. <li> Once these
- * future-renames are staged to Quats throught the AST, a simple stateless
+ * future-renames are staged to Quats through the AST, a simple stateless
  * reduction will then apply the renames to the Property AST elements around the
  * Ident's (and potentially Lifts etc...) with the renamed Quats. </ul>
  *
