@@ -187,7 +187,7 @@ trait Generator {
       override def code: String               = surroundByObject(body)
       override def objectName: Option[String] = Some(escape(tableColumns.table.name))
 
-      // TODO Have this come directly from the Generator's context (but make sure to override it in the structural tests so it doesn't distrub them)
+      // TODO Have this come directly from the Generator's context (but make sure to override it in the structural tests so it doesn't disturb them)
       def imports = querySchemaImports
 
       // generate variables for every schema e.g.
