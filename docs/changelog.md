@@ -279,7 +279,7 @@ The type `Runner` needs to be used by ProtoQuill to define quill-context-specifi
 #### Migration Notes:
 
 All ZIO JDBC context `run` methods have now switched from have switched their dependency (i.e. `R`) from `Has[Connection]` to
-`Has[DataSource]`. This should clear up many innocent errors that have happened because how this `Has[Connecction]` is supposed
+`Has[DataSource]`. This should clear up many innocent errors that have happened because how this `Has[Connection]` is supposed
 to be provided was unclear. As I have come to understand, nearly all DAO service patterns involve grabbing a connection from a
 pooled DataSource, doing one single crud operation, and then returning the connection back to the pool. The new JDBC ZIO context
 memorialize this pattern.
