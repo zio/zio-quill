@@ -80,7 +80,7 @@ run(q)
 #### Summary
 Use `sql"...".asCondition` to express an infix that represents a conditional expression.
 
-#### Explination
+#### Explanation
 
 When synthesizing queries for databases which do not have proper boolean-type support (e.g. SQL Server,
 Oracle etc...) boolean infix clauses inside projections must become values.
