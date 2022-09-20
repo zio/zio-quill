@@ -120,9 +120,9 @@ object StatementInterpolator {
 
     private def flatten(tokens: List[Token]): List[Token] = {
 
-      def unestStatements(tokens: List[Token]): List[Token] =
+      def unnestStatements(tokens: List[Token]): List[Token] =
         tokens.flatMap {
-          case Statement(innerTokens) => unestStatements(innerTokens)
+          case Statement(innerTokens) => unnestStatements(innerTokens)
           case token                  => token :: Nil
         }
 
@@ -146,7 +146,7 @@ object StatementInterpolator {
         resultBuilder.result()
       }
 
-      (unestStatements _)
+      (unnestStatements _)
         .andThen(mergeStringTokens _)
         .apply(tokens)
     }
