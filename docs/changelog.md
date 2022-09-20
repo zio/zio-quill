@@ -384,7 +384,7 @@ to use them as well.
 
 # 3.9.0
 
-- [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session varaible in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)
+- [Pass Session to all Encoders/Decoders allowing UDT Encoding without local session variable in contexts e.g. ZIO and others](https://github.com/getquill/quill/pull/2219)
 - [Fixing on-conflict case with querySchema/schemaMeta renamed columns](https://github.com/getquill/quill/pull/2218)
 
 #### Migration Notes:
