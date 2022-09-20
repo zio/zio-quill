@@ -6,7 +6,7 @@ import scala.collection.immutable.{Map => IMap}
 private[getquill] object StabilizeLifts {
 
   def stabilize(ast: Ast): (Ast, State) = {
-    val (a, t) = StubLiftValus(State(IMap.empty, Token(0))).apply(ast)
+    val (a, t) = StubLiftValues(State(IMap.empty, Token(0))).apply(ast)
     (a, t.state)
   }
 
@@ -49,11 +49,11 @@ private[getquill] object StabilizeLifts {
     }
   }
 
-  case class StubLiftValus(state: State) extends StatefulTransformer[State] {
+  case class StubLiftValues(state: State) extends StatefulTransformer[State] {
     override def apply(e: Ast): (Ast, StatefulTransformer[State]) = e match {
       case l: Lift =>
         val (ast, ss) = applyLift(l)
-        (ast, StubLiftValus(ss))
+        (ast, StubLiftValues(ss))
       case others =>
         super.apply(others)
     }
