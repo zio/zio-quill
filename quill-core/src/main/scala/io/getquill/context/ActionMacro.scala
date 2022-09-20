@@ -307,7 +307,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
           super.apply(e)
       }
 
-    // Only extrace lifts that come from values-clauses:
+    // Only extract lifts that come from values-clauses:
     // liftQuery(people).foreach(ps => query[Person].filter(_.name == lift("not this")).insertValue(_.name -> <these!>, ...))
     override def apply(e: Ast): (Ast, StatefulTransformer[List[(ScalarTag, ScalarLift)]]) =
       e match {
