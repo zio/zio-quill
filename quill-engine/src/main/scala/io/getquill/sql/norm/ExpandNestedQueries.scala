@@ -45,7 +45,7 @@ class ExpandSelection(from: List[FromContext]) {
         val exp = SelectPropertyProtractor(from)(ast, alternateQuat)
         exp.map {
           case (p: Property, Nil) =>
-            // If the quat-path is nothing and there is some pre-existing alias (e.g. if we came from a case-class or quat)
+            // If the quat-path is nothing and there is some preexisting alias (e.g. if we came from a case-class or quat)
             // the use that. Otherwise the selection is of an individual element so use the element name (before the rename)
             // as the alias.
             alias match {
