@@ -68,7 +68,7 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
       }
     }
 
-    "custom naming strateogy" - {
+    "custom naming strategy" - {
 
       val personData =
         fdgConv("id" -> "Int", "firstname" -> "Option[String]", "lastname" -> "Option[String]", "age" -> "Int")(
