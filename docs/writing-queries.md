@@ -1530,7 +1530,7 @@ ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was insert
 
 Just as in regular queries use the extended insert/update syntaxes to achieve finer-grained control of the data being created/modified modified.
 For example, if the ID is a generated value you can skip ID insertion like this:
-(This can also be accomplied with an insert-meta).
+(This can also be accomplished with an insert-meta).
 ```scala
 // case class Person(id: Int, name: String, age: Int)
 val a = quote {
