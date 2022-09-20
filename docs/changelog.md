@@ -575,7 +575,7 @@ Migration Notes:
    // SELECT ... FROM Person p WHERE isJoe(p.name)
    // Becomes> SELECT ... FROM Person p WHERE 1 = isJoe(p.name)
    ```
-   This is because the aforementioned databases not not directly support boolean literals (i.e. true/false) or expressions
+   This is because the aforementioned databases do not directly support boolean literals (i.e. true/false) or expressions
    that yield them.
 
    In some cases however, it is desirable for the above behavior not to happen and for the whole infix statement to be treated
@@ -615,7 +615,7 @@ Migration Notes:
    // SELECT ... FROM Person p WHERE isJoe(p.name)
    // Becomes> SELECT ... FROM Person p WHERE 1 = isJoe(p.name)
    ```
-   This is because the aforementioned databases not not directly support boolean literals (i.e. true/false) or expressions
+   This is because the aforementioned databases do not directly support boolean literals (i.e. true/false) or expressions
    that yield them.
 
    In some cases however, it is desirable for the above behavior not to happen and for the whole infix statement to be treated
