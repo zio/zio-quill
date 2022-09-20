@@ -209,7 +209,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
                  attemptBlocking(connection.setAutoCommit(prevAutoCommit)).orDie
                }
           _ <- ZIO.acquireRelease(currentConnection.set(Some(connection))) { _ =>
-                 // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggresive.
+                 // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggressive.
                  // If the connection pool e.g. Hikari resets this property for a recycled connection anyway doing it here
                  // might not be necessary
                  currentConnection.set(None)
