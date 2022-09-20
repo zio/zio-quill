@@ -323,7 +323,7 @@ private[getquill] object AvoidAliasConflict {
     }
 
   /**
-   * Make sure query parameters do not collide with paramters of a AST function.
+   * Make sure query parameters do not collide with parameters of a AST function.
    * Do this by walkning through the function's subtree and transforming and
    * queries encountered.
    */
