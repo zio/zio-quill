@@ -38,7 +38,7 @@ trait OrientDBIdiom extends Idiom {
   private def doTranslate(ast: Ast, cached: Boolean, executionType: ExecutionType, idiomContext: IdiomContext)(implicit
     naming: NamingStrategy
   ): (Ast, Statement, ExecutionType) = {
-    implicit val implcitIdiomContext: IdiomContext = idiomContext
+    implicit val implicitIdiomContext: IdiomContext = idiomContext
     val normalizedAst =
       if (cached)
         NormalizeCaching { ast: Ast => SqlNormalize(ast, idiomContext.config) }(ast)
