@@ -264,7 +264,7 @@ Some additional arguments you can add to your compiler's VM args provide insight
 -DdebugMacro=true                              // Enables libraries needed to debug via an IntelliJ Application session (default=false)
 -DexcludeTests=false                           // Excludes testing code from being build. Useful during development times that require rapid iteration
 -Dquill.macro.log.pretty=true                  // Pretty print the SQL Queries that Quill produces (default=false)
--Dquill.macro.log=true                         // Enable/Disable priting of the SQL Queries Quill generates during compile-time (default=true)
+-Dquill.macro.log=true                         // Enable/Disable printing of the SQL Queries Quill generates during compile-time (default=true)
 -Dquill.trace.enabled=true                     // Global switch that Enables/Disables printing of Quill ASTs during compilation (default=false)
 -Dquill.trace.color=true                       // Print Quill ASTs in color (default=false) 
 -Dquill.trace.opinion=false                    // Print the parts of Quill ASTs not directly used in the main transformation phases (called Opinions).  (default=false) 
