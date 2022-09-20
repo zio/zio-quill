@@ -514,34 +514,32 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
 
     case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
-      if (isOptionRowType(o) || isOptionEmbedded(o))
+      if (isOptionOfRowType(o))
         OptionTableFlatMap(astParser(o), identParser(alias), astParser(body))
       else
         warnConditionalsExist(OptionFlatMap(astParser(o), identParser(alias), astParser(body)))
 
     case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
-      if (isOptionRowType(o) || isOptionEmbedded(o))
+      if (isOptionOfRowType(o))
         OptionTableMap(astParser(o), identParser(alias), astParser(body))
       else
         warnConditionalsExist(OptionMap(astParser(o), identParser(alias), astParser(body)))
 
     case q"$o.exists({($alias) => $body})" if is[Option[Any]](o) =>
-      if (isOptionRowType(o) || isOptionEmbedded(o))
+      if (isOptionOfRowType(o))
         OptionTableExists(astParser(o), identParser(alias), astParser(body))
       else
         warnConditionalsExist(OptionExists(astParser(o), identParser(alias), astParser(body)))
 
     case q"$o.forall({($alias) => $body})" if is[Option[Any]](o) =>
-      if (isOptionEmbedded(o)) {
+      if (isOptionOfRowType(o)) {
         c.fail("Please use Option.exists() instead of Option.forall() with embedded case classes and other row-objects.")
-      } else if (isOptionRowType(o)) {
-        OptionTableForall(astParser(o), identParser(alias), astParser(body))
       } else {
         warnConditionalsExist(OptionForall(astParser(o), identParser(alias), astParser(body)))
       }
 
     case q"$prefix.NullableColumnExtensions[$nt]($o).filterIfDefined({($alias) => $body})" if is[Option[Any]](o) =>
-      if (isOptionEmbedded(o) || isOptionRowType(o)) {
+      if (isOptionOfRowType(o)) {
         c.fail("filterIfDefined only allowed on individual columns, not on case classes or tuples.")
       } else {
         warnConditionalsExist(FilterIfDefined(astParser(o), identParser(alias), astParser(body)))
@@ -800,15 +798,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     }
   }
 
-  private def isOptionEmbedded(tree: Tree) = {
-    val param = innerOptionParam(tree.tpe, None)
-    param <:< typeOf[Embedded]
-  }
-
-  private def isOptionRowType(tree: Tree) = {
-    val param = innerOptionParam(tree.tpe, None)
-    isTypeCaseClass(param) || isTypeTuple(param)
-  }
+  private def isOptionOfRowType(tree: Tree) =
+    inferQuat(tree.tpe).isProduct
 
   private def isCaseClass[T: WeakTypeTag] =
     isTypeCaseClass(c.weakTypeTag[T].tpe)

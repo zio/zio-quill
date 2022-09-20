@@ -13,7 +13,7 @@ class NestedDistinctSpec extends Spec {
     import ctx._
 
     "first operation" - {
-      case class MyEmb(name: String) extends Embedded
+      case class MyEmb(name: String)
       case class MyParent(myEmb: MyEmb)
 
       "first operation nesting with filter" in {
@@ -49,7 +49,7 @@ class NestedDistinctSpec extends Spec {
       }
 
       "first operation nesting with filter before and after - groupBy" in { //hello
-        case class MyEmb(name: Int) extends Embedded
+        case class MyEmb(name: Int)
         case class MyParent(myEmb: MyEmb)
 
         val q = quote {
@@ -176,7 +176,7 @@ class NestedDistinctSpec extends Spec {
     }
 
     "embedded entity from parent" - {
-      case class Emb(id: Int, name: String) extends Embedded
+      case class Emb(id: Int, name: String)
       case class Parent(idP: Int, emb: Emb)
       implicit val parentMeta = schemaMeta[Parent]("Parent", _.emb.name -> "theName")
 
@@ -263,8 +263,8 @@ class NestedDistinctSpec extends Spec {
     }
 
     "double embedded entity from parent" - {
-      case class Emb(id: Int, name: String) extends Embedded
-      case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+      case class Emb(id: Int, name: String)
+      case class Parent(id: Int, name: String, emb: Emb)
       case class GrandParent(id: Int, par: Parent)
       implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
 
@@ -619,7 +619,7 @@ class NestedDistinctSpec extends Spec {
 
     "adversarial tests" - {
       "should correctly rename the right property when multiple nesting layers have the same one" in {
-        case class Emb(name: String, id: Int) extends Embedded
+        case class Emb(name: String, id: Int)
         case class Parent(name: String, emb1: Emb, emb2: Emb)
         case class GrandParent(name: String, par: Parent)
 
@@ -745,7 +745,7 @@ class NestedDistinctSpec extends Spec {
     }
 
     "query with single embedded element" - {
-      case class Emb(a: Int, b: Int) extends Embedded
+      case class Emb(a: Int, b: Int)
       case class Parent(id: Int, emb1: Emb)
       case class Parent2(emb1: Emb, id: Int)
 
@@ -801,12 +801,12 @@ class NestedDistinctSpec extends Spec {
     }
 
     "query with multiple embedded elements with same names" - {
-      case class Emb(name: String, id: Int) extends Embedded
+      case class Emb(name: String, id: Int)
       case class Parent(name: String, emb1: Emb, emb2: Emb)
       case class GrandParent(name: String, par: Parent)
 
-      case class One(name: String, id: Int) extends Embedded
-      case class Two(name: String, id: Int) extends Embedded
+      case class One(name: String, id: Int)
+      case class Two(name: String, id: Int)
       case class Dual(one: One, two: Two)
 
       // Try parent and embedded children with same name, schema on parent

@@ -147,8 +147,8 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
          * In sub-queries, need to make sure that the same field/alias pair is not selected twice
          * which is possible when aliases are used. For example, something like this:
          *
-         * case class Emb(id: Int, name: String) extends Embedded
-         * case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+         * case class Emb(id: Int, name: String)
+         * case class Parent(id: Int, name: String, emb: Emb)
          * case class GrandParent(id: Int, par: Parent)
          * val q = quote { query[GrandParent].map(g => g.par).distinct.map(p => (p.name, p.emb, p.id, p.emb.id)).distinct.map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct }
          * Will cause double-select inside the innermost subselect:
