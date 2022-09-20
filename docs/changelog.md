@@ -1282,7 +1282,7 @@ Migration steps:
 * [support contains for Traversable](https://github.com/getquill/quill/pull/290)
 * [`equals` support](https://github.com/getquill/quill/pull/328)
 * [Always return List for any type of query](https://github.com/getquill/quill/pull/324)
-* [quilll-sql: support value queries](https://github.com/getquill/quill/pull/354)
+* [quill-sql: support value queries](https://github.com/getquill/quill/pull/354)
 * [quill-sql: `in`/`contains` - support empty sets](https://github.com/getquill/quill/pull/329)
 * [Support `Ord` quotation](https://github.com/getquill/quill/pull/301)
 * [`blockParser` off-by-one error](https://github.com/getquill/quill/pull/292)
