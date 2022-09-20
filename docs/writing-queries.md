@@ -1725,7 +1725,7 @@ val a = quote {
 ## Batch Optimization
 
 When doing batch INSERT queries (as well as UPDATE, and DELETE), Quill mostly delegates the functionality to standard JDBC batching.
-This functionality works roughtly in the following way.
+This functionality works roughly in the following way.
 ```scala
 val ps: PreparedStatement = connection.prepareStatement("INSERT ... VALUES ...")
 // 1. Iterate over the rows
