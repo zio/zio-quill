@@ -7,7 +7,7 @@ import io.getquill.util.Messages.{TraceType, title}
 
 /**
  * Rename properties now relies on the Quats themselves to propagate field
- * renames. The previous itreations of this phase relied on schema propagation
+ * renames. The previous iterations of this phase relied on schema propagation
  * via stateful transforms holding field-renames which were then compared to
  * Property AST elements. This was a painstakingly complex and highly
  * error-prone especially when embedded objects were used requiring computation
