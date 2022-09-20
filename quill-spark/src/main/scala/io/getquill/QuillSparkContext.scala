@@ -88,7 +88,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
       node.structField.dataType match {
         case st: StructType =>
           // Recursively convert all parent array columns to single null values if all their children are null
-          val preculatedColumn = struct(node.children.map(percolateNullArraysRecursive(_)).toIndexedSeq: _*)
+          val percolatedColumn = struct(node.children.map(percolateNullArraysRecursive(_)).toIndexedSeq: _*)
           // Then express that column back out the schema
 
           val mapped =
@@ -99,7 +99,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
               ).otherwise(c)
             }
 
-          mapped(preculatedColumn).as(node.structField.name)
+          mapped(percolatedColumn).as(node.structField.name)
         case _ =>
           node.column.as(node.structField.name)
       }
