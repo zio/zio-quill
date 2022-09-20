@@ -542,7 +542,7 @@ Similarly for quill-cassandra-zio
 # 3.6.1
 
 - [Memoize Passed-By-Name Quats of Asts Ident, Entity, and Others](https://github.com/getquill/quill/pull/2084)
-- [Minior Quat Fixes and More Tests](https://github.com/getquill/quill/pull/2057)
+- [Minor Quat Fixes and More Tests](https://github.com/getquill/quill/pull/2057)
 
 Migration Notes:
 
