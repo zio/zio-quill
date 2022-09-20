@@ -73,7 +73,7 @@ object CompleteRenames extends StatelessTransformer {
   }
 }
 
-/** Take renames propogated to the quats and apply them to properties */
+/** Take renames propagated to the quats and apply them to properties */
 class ApplyRenamesToProps(traceConfig: TraceConfig) extends StatelessTransformer {
 
   val interp = new Interpolator(TraceType.RenameProperties, traceConfig, 1)

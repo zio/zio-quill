@@ -27,7 +27,7 @@ class AggregationSpec extends Spec {
   // SELECT p.age FROM (SELECT x.age + 1 FROM Person x) AS p WHERE p.age = 123
   //   => SELECT p.age + 1 FROM (SELECT x.age FROM Person x) AS p WHERE (p.age + 1) = 123
   // Instead it should remain as the former query
-  "simple operation should not propogate from nested" in {
+  "simple operation should not propagate from nested" in {
     ctx.run {
       query[Person].map(p => p.age + 1).nested.filter(p => p == 123)
     }.string mustEqual "SELECT p.x FROM (SELECT p.age + 1 AS x FROM Person p) AS p WHERE p.x = 123"

@@ -332,7 +332,7 @@ final class Ident private (val name: String)(theQuat: => Quat)(val visibility: V
   override def withQuat(quat: => Quat): Ident =
     Ident.Opinionated(this.name, quat, this.visibility)
 
-  // need to define a copy which will propogate current value of visibility into the copy
+  // need to define a copy which will propagate current value of visibility into the copy
   def copy(name: String = this.name, quat: => Quat = this.quat): Ident =
     Ident.Opinionated(name, quat, this.visibility)
 }
@@ -379,7 +379,7 @@ final class ExternalIdent private (val name: String)(theQuat: => Quat)(val renam
 
   override def hashCode = id.hashCode()
 
-  // need to define a copy which will propogate current value of visibility into the copy
+  // need to define a copy which will propagate current value of visibility into the copy
   def copy(name: String = this.name, quat: => Quat = this.quat): ExternalIdent =
     ExternalIdent.Opinionated(name, quat, this.renameable)
 }
