@@ -15,7 +15,7 @@ trait OptionalNestedSpec extends Spec with BeforeAndAfterEach {
   }
 
   object `1.Optional Inner Product` {
-    case class LastNameAge(lastName: String, age: Int) extends Embedded
+    case class LastNameAge(lastName: String, age: Int)
     case class Contact(firstName: String, opt: Option[LastNameAge], addressFk: Int)
 
     val data = quote { query[Contact] }
@@ -34,8 +34,8 @@ trait OptionalNestedSpec extends Spec with BeforeAndAfterEach {
   }
 
   object `2.Optional Inner Product with Optional Leaf` {
-    case class Age(age: Option[Int]) extends Embedded
-    case class LastNameAge(lastName: String, age: Age) extends Embedded
+    case class Age(age: Option[Int])
+    case class LastNameAge(lastName: String, age: Age)
     case class Contact(firstName: String, opt: Option[LastNameAge], addressFk: Int)
 
     val data = quote { query[Contact] }
@@ -60,8 +60,8 @@ trait OptionalNestedSpec extends Spec with BeforeAndAfterEach {
   }
 
   object `3.Optional Nested Inner Product` {
-    case class Age(age: Int) extends Embedded
-    case class LastNameAge(lastName: String, age: Option[Age]) extends Embedded
+    case class Age(age: Int)
+    case class LastNameAge(lastName: String, age: Option[Age])
     case class Contact(firstName: String, opt: Option[LastNameAge], addressFk: Int)
 
     val data = quote { query[Contact] }

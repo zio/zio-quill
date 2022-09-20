@@ -11,7 +11,7 @@ class NormalizeReturningSpec extends Spec {
 
   "do not remove assignment if embedded has columns with the same name" - {
 
-    case class EmbEntity(id: Int) extends Embedded
+    case class EmbEntity(id: Int)
     case class Entity(id: Int, emb: EmbEntity)
 
     val e = Entity(1, EmbEntity(2))

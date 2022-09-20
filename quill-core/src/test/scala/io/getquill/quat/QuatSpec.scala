@@ -29,8 +29,8 @@ class QuatSpec extends Spec {
   }
 
   "should support embedded" in {
-    case class MyName(first: String, last: String) extends Embedded
-    case class MyPerson(name: MyName, age: Int) extends Embedded
+    case class MyName(first: String, last: String)
+    case class MyPerson(name: MyName, age: Int)
     val MyPersonQuat = Quat.Product("name" -> Quat.LeafProduct("first", "last"), "age" -> Quat.Value)
 
     quote(query[MyPerson]).ast.quat mustEqual MyPersonQuat
@@ -85,8 +85,8 @@ class QuatSpec extends Spec {
   }
 
   "should support multi-level embedded" in {
-    case class MyName(first: String, last: String) extends Embedded
-    case class MyId(name: MyName, memberNum: Int) extends Embedded
+    case class MyName(first: String, last: String)
+    case class MyId(name: MyName, memberNum: Int)
     case class MyPerson(name: MyId, age: Int)
     val MyPersonQuat = Quat.Product("name" -> Quat.Product("name" -> Quat.LeafProduct("first", "last"), "memberNum" -> Quat.Value), "age" -> Quat.Value)
 

@@ -71,7 +71,7 @@ class GroupBySpec extends Spec {
   }
 
   "Embedded entity expansion" - {
-    case class Language(name: String, dialect: String) extends Embedded
+    case class Language(name: String, dialect: String)
     case class Country(countryCode: String, language: Language)
     case class City(countryCode: String, name: String)
 

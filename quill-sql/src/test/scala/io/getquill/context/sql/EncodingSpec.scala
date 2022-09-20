@@ -54,10 +54,16 @@ trait EncodingSpec extends Spec {
   }
 
   object TimeEntity {
-    def make(zoneIdRaw: ZoneId) = {
+    case class TimeEntityInput(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int, nano: Int) {
+      def toLocalDate = LocalDateTime.of(year, month, day, hour, minute, second, nano)
+    }
+    object TimeEntityInput {
+      def default = new TimeEntityInput(2022, 1, 2, 3, 4, 6, 0)
+    }
+    def make(zoneIdRaw: ZoneId, timeEntity: TimeEntityInput = TimeEntityInput.default) = {
       val zoneId = zoneIdRaw.normalized()
       // Millisecond precisions in SQL Server and many contexts are wrong so not using them
-      val nowInstant = LocalDateTime.of(2022, 1, 2, 3, 4, 6, 0).atZone(zoneId).toInstant
+      val nowInstant = timeEntity.toLocalDate.atZone(zoneId).toInstant
       val nowDateTime = LocalDateTime.ofInstant(nowInstant, zoneId)
       val nowDate = nowDateTime.toLocalDate
       val nowTime = nowDateTime.toLocalTime

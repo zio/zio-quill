@@ -334,8 +334,8 @@ final class Ident private (val name: String)(theQuat: => Quat)(val visibility: V
  * Invisible identities are a rare case where a user returns an embedded table from a map clause:
  *
  * <pre><code>
- *     case class Emb(id: Int, name: String) extends Embedded
- *     case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+ *     case class Emb(id: Int, name: String)
+ *     case class Parent(id: Int, name: String, emb: Emb)
  *     case class GrandParent(id: Int, par: Parent)
  *
  *     query[GrandParent]

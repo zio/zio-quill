@@ -569,10 +569,10 @@ class MirrorIdiomSpec extends Spec {
       }
       "row" in {
         val q = quote {
-          (o: Option[Row]) => o.forall(v => v.id == 1)
+          (o: Option[Row]) => o.exists(v => v.id == 1)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
-          stmt"(o) => o.forall((v) => v.id == 1)"
+          stmt"(o) => o.exists((v) => v.id == 1)"
       }
     }
     "exists" - {
