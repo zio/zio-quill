@@ -167,7 +167,7 @@ Finally, you can use `sbt` locally.
 
 ### All In One ###
 
-To restart the database services, rebuild them, and start with locally explosed ports run:
+To restart the database services, rebuild them, and start with locally exposed ports run:
 
 docker-compose down && docker-compose build && docker-compose run --rm --service-ports setup
 
