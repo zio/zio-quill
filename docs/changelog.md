@@ -924,7 +924,7 @@ idiomatic way i.e. `None == None := false`. See the 'equals' section of the docu
 - [#1204 add explicit `AS` for aliases (except table context)](https://github.com/getquill/quill/pull/1252)
 - [sqlite dialect - translate boolean literals into 1/0](https://github.com/getquill/quill/pull/1248)
 - [sqlite dialect - ignore null ordering](https://github.com/getquill/quill/pull/1247)
-- [fail is property is not a case acessor](https://github.com/getquill/quill/pull/1246)
+- [fail is property is not a case accessor](https://github.com/getquill/quill/pull/1246)
 - [verify table references](https://github.com/getquill/quill/pull/1244)
 - [fix property renaming for nested queries within infixes](https://github.com/getquill/quill/pull/1243)
 - [expand map.distinct](https://github.com/getquill/quill/pull/1242)
