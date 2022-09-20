@@ -44,7 +44,7 @@ class SymbolicReduction(traceConfig: TraceConfig) {
         val er = AttachToEntity(Filter(_, _, cr))(e)
         Some(FlatMap(a, d, er))
 
-      // This transformation does not have an analogue in Wadler's paper, it represents the fundemental nature of the Monadic 'bind' function
+      // This transformation does not have an analogue in Wadler's paper, it represents the fundamental nature of the Monadic 'bind' function
       // that A.flatMap(a => B).flatMap(b => C) is isomorphic to A.flatMap(a => B.flatMap(b => C)).
       //
       // a.flatMap(b => c).flatMap(d => e) =>
