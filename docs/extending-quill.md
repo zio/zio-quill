@@ -57,7 +57,7 @@ run(q)
 // ) AS e WHERE e.value <= 100
 ```
 
-If you are sure that the the content of your infix is a pure function, you canse use the `pure` method
+If you are sure that the the content of your infix is a pure function, you can use the `pure` method
 in order to indicate to Quill that the infix clause can be copied in the query. This gives Quill much
 more leeway to flatten your query, possibly improving performance.
 
