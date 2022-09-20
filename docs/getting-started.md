@@ -48,7 +48,7 @@ libraryDependencies ++= Seq(
 ```
 
 You can find this code (with some more examples) complete with a docker-provided Postgres database [here](https://github.com/deusaquilus/zio-quill-gettingstarted).
-A veriety of other examples using Quill with ZIO are available in the [examples](https://github.com/zio/zio-quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples) folder.
+A variety of other examples using Quill with ZIO are available in the [examples](https://github.com/zio/zio-quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples) folder.
 
 ## Choosing a Module
 
