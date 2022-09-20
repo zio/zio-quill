@@ -12,7 +12,7 @@ import scala.collection.immutable.{Map => IMap}
  * CC(foo:V) and T is CC(foo:V, bar:V)</pre> (NOTE: see the notes on Quat
  * Shorthand Syntax in Quats.scala if unfamiliar with the syntax above) However
  * if T is not a subtype of X, then we need to throw an error. The exception to
- * this is in the case where we are substutiting a real type for a Quat.Null or
+ * this is in the case where we are substituting a real type for a Quat.Null or
  * Quat.Generic (roughly speaking, a 'Bottom Type'). In that case, just do the
  * substitution. This general behavior we call `SubstituteSubtypes`, it is also
  * considered the default.
