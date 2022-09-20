@@ -64,7 +64,7 @@ object TopHashtagsExample extends App {
   object quill {
     def topHashtags(tweets: Dataset[Tweet], n: Int): Dataset[(String, Long)] =
       run {                             // produce a dataset from the Quill query
-        liftQuery(tweets)               // trasform the dataset into a Quill query
+        liftQuery(tweets)               // transform the dataset into a Quill query
           .concatMap(_.text.split(" ")) // split into words and unnest results
           .filter(_.startsWith("#"))    // filter hashtag words
           .map(_.toLowerCase)           // normalize hashtags
