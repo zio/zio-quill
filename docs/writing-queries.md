@@ -1801,7 +1801,7 @@ The server supports a maximum of 2100 parameters. Reduce the number of parameter
 This means that in SQL Server, for a batch-size of 100, you can only insert into a table of up to 21 columns.
 
 In the future, we hope to alleviate this issue by directly substituting variables into `?` variables before the query is executed
-however such functionality could potentially come at the risk of SQL-injection vunerabilities.
+however such functionality could potentially come at the risk of SQL-injection vulnerabilities.
 
 ## Printing Queries
 
