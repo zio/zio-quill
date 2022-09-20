@@ -696,7 +696,7 @@ case class Val(name: Ident, body: Ast) extends Ast {
 
 sealed trait Action extends Ast
 
-// Note, technically return type of Actions for most Actions is a Int value but Quat here is used for Retruning Quat types
+// Note, technically return type of Actions for most Actions is a Int value but Quat here is used for Returning Quat types
 case class Update(query: Ast, assignments: List[Assignment]) extends Action {
   def quat = query.quat; def bestQuat = query.bestQuat
 }
