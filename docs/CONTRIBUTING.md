@@ -173,12 +173,12 @@ docker-compose down && docker-compose build && docker-compose run --rm --service
 
 Note: Make sure you have exposed all the ports as mentioned above.
 
-## Debugging using Intellij
+## Debugging using IntelliJ
 
-[Intellij](https://www.jetbrains.com/idea/) has a comprehensive debugger that also works with macros which is very
-helpful when working on Quill. There are two ways to debug Quill macros using Intellij. The first way is to launch SBT in 
-debug mode and use Intellij to remote debug it. The second way is to launch a debug session 
-from Intellij from the "Run/Debug Configurations" menu.
+[IntelliJ](https://www.jetbrains.com/idea/) has a comprehensive debugger that also works with macros which is very
+helpful when working on Quill. There are two ways to debug Quill macros using IntelliJ. The first way is to launch SBT in 
+debug mode and use IntelliJ to remote debug it. The second way is to launch a debug session 
+from IntelliJ from the "Run/Debug Configurations" menu.
 
 ### Debug Macros by Remote Debugging SBT
 
@@ -190,10 +190,10 @@ After this you need to launch sbt with `sbt -jvm-debug 5005`. Note that since th
 recommended to launch sbt with additional memory, i.e. `sbt -jvm-debug 5005 -mem 4096` otherwise sbt may complain about
 having memory issues.
 
-Then in Intellij you need to
+Then in IntelliJ you need to
 [add a remote configuration](https://www.jetbrains.com/help/idea/run-debug-configuration-remote-debug.html). The default
 parameters will work fine (note that we started sbt with the debug port `5005` which is also the default debug port
-in Intellij). After you have added the configuration you should be able to start it to start debugging! Feel to free
+in IntelliJ). After you have added the configuration you should be able to start it to start debugging! Feel to free
 to add breakpoints to step through the code.
 
 Note that its possible to debug macros (you can even
@@ -204,12 +204,12 @@ invocations are cached on a file basis. You can easily do this just by adding ne
 ### Debug Macros by Launching a Session
 
 Firstly, you will need to build Quill with some additional dependencies that include the file `scala.tools.nsc.Main`.
-You can do this adding the argument `-DdebugMacro=true` to the sbt launcher. You can do this in the Intellij SBT
+You can do this adding the argument `-DdebugMacro=true` to the sbt launcher. You can do this in the IntelliJ SBT
 menu:
 
-![Intellij-SBT-Settings.png](etc/Intellij-SBT-Settings.png)
+![IntelliJ-SBT-Settings.png](etc/IntelliJ-SBT-Settings.png)
 
-In Intellij, go to `Run -> Edit Configurations...` click on the Plus (i.e. `+`) button (or `Add New Configuration`) 
+In IntelliJ, go to `Run -> Edit Configurations...` click on the Plus (i.e. `+`) button (or `Add New Configuration`) 
 and select `Application`. Then enter the following settings:
 
 ```
@@ -222,12 +222,12 @@ Build, no error check (make sure to set this since you will frequently want to d
 ```
 
 It should look like this:
-![Intellij-Run-Debug-Config.png](etc/Intellij-Run-Debug-Config.png)
+![IntelliJ-Run-Debug-Config.png](etc/IntelliJ-Run-Debug-Config.png)
 
 > NOTE In this example, our entry-point into Quill-macro-debugging is `MySqlTest.scala`.
-> In our Intellij application configuration this file name is being explicitly specified.<br /> 
+> In our IntelliJ application configuration this file name is being explicitly specified.<br /> 
 > If you wish to easily be able to macro-debug multiple entry-point files, an alternative method would be to
-> use some Intellij variables to automatically pass whatever file is currently selected. You can do this by using
+> use some IntelliJ variables to automatically pass whatever file is currently selected. You can do this by using
 > the configuration:
 > ```
 > -cp $FileFQPackage$$FileName$ $FilePath$
@@ -254,14 +254,14 @@ object MySqlTest {
 ```
 
 Set a breakpoint anywhere in the Quill codebase and run this configuration from the top-right menu shortcut:
-![Intellij-Debug-App-Launcher](etc/Intellij-Debug-App-Launcher.png)
+![IntelliJ-Debug-App-Launcher](etc/IntelliJ-Debug-App-Launcher.png)
 
 ## Additional Debug Arguments
 
 Some additional arguments you can add to your compiler's VM args provide insight into Quill's compilation:
 
 ```
--DdebugMacro=true                              // Enables libraries needed to debug via an Intellij Application session (default=false)
+-DdebugMacro=true                              // Enables libraries needed to debug via an IntelliJ Application session (default=false)
 -DexcludeTests=false                           // Excludes testing code from being build. Useful during development times that require rapid iteration
 -Dquill.macro.log.pretty=true                  // Pretty print the SQL Queries that Quill produces (default=false)
 -Dquill.macro.log=true                         // Enable/Disable priting of the SQL Queries Quill generates during compile-time (default=true)
@@ -272,8 +272,8 @@ Some additional arguments you can add to your compiler's VM args provide insight
 -Dquill.trace.types=sql,standard,alias,norm    // What parts of the Quill transformations to print during compilation?
 ```
 
-In Intellij, add them in the SBT settings if your are compiling using SBT:
-![Intellj-SBT-Settings-Additional.png](etc/Intellj-SBT-Settings-Additional.png)
+In IntelliJ, add them in the SBT settings if your are compiling using SBT:
+![IntelliJ-SBT-Settings-Additional.png](etc/IntelliJ-SBT-Settings-Additional.png)
 
 ## 'Trick' Debugging via the Dynamic Query API
 

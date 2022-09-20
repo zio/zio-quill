@@ -794,7 +794,7 @@ implementation. This means that things like `Query` are no longer part of `Conte
 
 Documentation Updates:
 - [Update database drivers versions to latest in docs](https://github.com/getquill/quill/pull/1617)
-- [Document remote debugging in Intellij](https://github.com/getquill/quill/pull/1615)
+- [Document remote debugging in IntelliJ](https://github.com/getquill/quill/pull/1615)
 
 Migration Notes:
 - Monix 3.0.0 is not binary compatible with 3.0.0-RC3 which was a dependency of Quill 3.4.7.
