@@ -56,7 +56,7 @@ object TopHashtagsExample extends App {
         .map(_.toLowerCase)          // normalize hashtags     (Dataset)
         .groupBy($"value")           // group by each hashtag  (Dataframe)
         .agg(fcount("*") as "count") // aggregate the count    (Dataframe)
-        .orderBy($"count" desc)      // order                  (Datafeame)
+        .orderBy($"count" desc)      // order                  (Dataframe)
         .limit(n)                    // limit to top results   (Dataframe)
         .as[(String, BigInt)]        // set the type again     (Dataset)
   }
