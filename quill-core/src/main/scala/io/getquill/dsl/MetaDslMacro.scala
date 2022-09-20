@@ -118,7 +118,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
             // E.g. for Person("Joe", 123) the List(q"!nullChecker(0,row)", q"!nullChecker(1,row)") columns
             // that eventually turn into List(!NullChecker("Joe"), !NullChecker(123)) columns.
             // Once you are in a product that has a product inside e.g. Person(name: Name("Joe", "Bloggs"), age: 123)
-            // they will be the concatonations of the Or-clauses e.g.
+            // they will be the concatenations of the Or-clauses e.g.
             // List( (NullChecker("Joe") || NullChecker("Bloggs")), NullChecker(123))
             // This is what needs to be the null-checker of the outer entity i.e.
             // if ((NullChecker("Joe") || NullChecker("Bloggs")) || NullChecker(123)) Some(new Name(...)) else None
