@@ -72,7 +72,7 @@ object VerifySqlQuery {
         case free =>
           Some(
             Error(free.map(f => Ident(f.name, Quat.Value)), ast)
-          ) // Quat is not actually needed here here just for the sake of the Error Ident
+          ) // Quat is not actually needed here just for the sake of the Error Ident
       }
     }
 
