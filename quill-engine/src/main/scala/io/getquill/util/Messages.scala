@@ -46,8 +46,8 @@ object Messages {
   def traceQuats =
     cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
   def cacheDynamicQueries = cache(
-    "quill.query.cacheDaynamic",
-    variable("quill.query.cacheDaynamic", "query_query_cacheDaynamic", "true").toBoolean
+    "quill.query.cacheDynamic",
+    variable("quill.query.cacheDynamic", "query_query_cacheDynamic", "true").toBoolean
   )
   def querySubexpand =
     cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)

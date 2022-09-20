@@ -2362,5 +2362,5 @@ Normalization caching was introduced to improve the situation, which will speedu
 To disable dynamic normalization caching, pass following property to sbt during compile time
 
 ```
-sbt -Dquill.query.cacheDaynamic=false
+sbt -Dquill.query.cacheDynamic=false
 ```
