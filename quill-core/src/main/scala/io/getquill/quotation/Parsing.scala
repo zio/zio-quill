@@ -1185,7 +1185,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   /**
    * Type-check two trees, if one of them has optionals, go into the optionals
    * to find the root types in each of them. Then compare the types that are
-   * inside. If they are not compareable, abort the build. Otherwise return type
+   * inside. If they are not comparable, abort the build. Otherwise return type
    * of which side (or both) has the optional. In order to do the actual
    * comparison, the 'weak conformance' operator is used and a subclass is
    * allowed on either side of the `==`. Weak conformance is necessary so that
