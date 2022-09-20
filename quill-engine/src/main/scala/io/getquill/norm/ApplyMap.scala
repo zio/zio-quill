@@ -21,7 +21,7 @@ class ApplyMap(traceConfig: TraceConfig) {
   val interp = new Interpolator(TraceType.ApplyMap, traceConfig, 3)
   import interp._
 
-  // Note, since the purpose of this beta reduction is to check isomophism types should not actually be
+  // Note, since the purpose of this beta reduction is to check isomorphism types should not actually be
   // checked here since they may be wrong (i.e. if there is no actual isomorphism).
   private def isomorphic(e: Ast, c: Ast, alias: Ident) =
     BetaReduction(e, TypeBehavior.ReplaceWithReduction, alias -> c) == c
