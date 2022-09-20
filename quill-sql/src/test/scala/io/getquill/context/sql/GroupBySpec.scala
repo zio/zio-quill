@@ -239,7 +239,7 @@ class GroupBySpec extends Spec {
         "SELECT p.* FROM (SELECT MAX(p.age) FROM Person p GROUP BY p.age) AS p WHERE p > 1000"
     }
 
-    // Disable thte apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
+    // Disable the apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
     // Infix has a special case already so want to not use that specifically.
     "work with a map(to-leaf).groupByMap.map.filter - no ApplyMap" in {
       implicit val d = new DisablePhase { override type Phase = OptionalPhase.ApplyMap :: HNil }

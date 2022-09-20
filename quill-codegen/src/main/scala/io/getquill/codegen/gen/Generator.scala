@@ -23,7 +23,7 @@ trait Generator {
 
   /**
    * Should we prefix object/package produced by this generator? Set this as the
-   * the value of that. Otherwise set this to be the empty string.
+   * value of that. Otherwise set this to be the empty string.
    */
   def packagePrefix: String
   def connectionMakers: Seq[ConnectionMaker]
