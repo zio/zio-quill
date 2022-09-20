@@ -248,7 +248,7 @@ class MirrorIdiomSpec extends Spec {
           stmt"""(s) => !(s == "s")"""
       }
     }
-    "prostfix" - {
+    "postfix" - {
       "isEmpty" in {
         val q = quote { (xs: Query[_]) =>
           xs.isEmpty
