@@ -333,7 +333,7 @@ trait QuatMakingBase extends MacroUtilUniverse {
           Quat.Null
 
         // For other types of case classes (and if there does not exist an encoder for it)
-        // the exception to that is a cassandra UDT that we treat like an encodeable entity even if it has a parsed type
+        // the exception to that is a cassandra UDT that we treat like an encodable entity even if it has a parsed type
         case CaseClassBaseType(name, fields) if !existsEncoderFor(tpe) || tpe <:< typeOf[Udt] =>
           Quat.Product(
             name.split('.').last,
