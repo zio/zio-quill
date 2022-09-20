@@ -157,7 +157,7 @@ class ApplyMap(traceConfig: TraceConfig) {
       // === Conceptual Example (same as for groupBy.map) ===
       // Instead of transforming spirit into gin and the bottling the gin, bottle the
       // spirit first, then have the spirit transform into gin inside of the bottles.
-      // (The only differnce between this and groupByMap is that we have two kinds of bottles: A and B)
+      // (The only difference between this and groupByMap is that we have two kinds of bottles: A and B)
       //
       // spirits.map(spirit => ginifySpirit).groupByMap(gin => bottleGinA)(gin => bottleGinB) =>
       //    spirits.groupByMap(spirit => bottleGinA[gin := ginifySpirit])(spirit => bottleGinB[gin := ginifySpirit])
