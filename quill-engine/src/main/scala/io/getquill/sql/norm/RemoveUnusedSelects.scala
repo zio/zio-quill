@@ -65,7 +65,7 @@ object RemoveUnusedSelects {
           q.copy(from = fromContexts, select = newSelect)(q.quat)
         } else {
           // If we are on the top level, the list of aliases being used by clauses outer to 'us'
-          // don't exist since we are the outermost level of the sql. Therefore no filteration
+          // don't exist since we are the outermost level of the sql. Therefore no filtration
           // should happen in that case.
           q.copy(from = fromContexts)(q.quat)
         }
