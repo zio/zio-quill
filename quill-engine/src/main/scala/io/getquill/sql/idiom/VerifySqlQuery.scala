@@ -141,9 +141,9 @@ object VerifySqlQuery {
           throw new IllegalArgumentException("Cannot use Option.tableExists on a table or embedded case class")
 
         case cond: If if cond.`then`.isInstanceOf[Quat.Product] =>
-          throw throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
+          throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
         case cond: If if cond.`else`.isInstanceOf[Quat.Product] =>
-          throw throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
+          throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
 
         case cond: If => checkIllegalIdents(cond.condition)
         case other    => None
