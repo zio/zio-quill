@@ -1025,7 +1025,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     }
 
   // (Query[Person]) example - query[Person] or query[Person].filter(p => p.name == "Jack")
-  // (Action[Person] example - (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123)
+  // (Action[Person] example - (Query[Person]).insert(_.name -> "Joe", _.age -> 123)
   val actionParser: Parser[Ast] = Parser[Ast] {
     // (Query[Person]).update(_.name -> "Joe", _.age > 123)
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
@@ -1040,12 +1040,12 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$query.delete" =>
       Delete(astParser(query))
 
-    // Theory:  ( (Query[Perosn]).update(....) ).returning[T]
+    // Theory:  ( (Query[Person]).update(....) ).returning[T]
     // Example: ( query[Person].filter(p => p.name == "Joe").update(....) ).returning[Something]
     case q"$action.returning[$r]" =>
       c.fail(s"A 'returning' clause must have arguments.")
 
-    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returning(p => (p.id, p.age))
+    // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returning(p => (p.id, p.age))
     case q"$action.returning[$r](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
@@ -1053,7 +1053,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       idiomReturnCapability.foreach(_.verifyAst(bodyAst)) // Verify that the AST in the returning-body is valid
       Returning(astParser(action), ident, bodyAst)
 
-    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returningMany(p => (p.id, p.age))
+    // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returningMany(p => (p.id, p.age))
     case q"$action.returningMany[$r](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
@@ -1061,7 +1061,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       idiomReturnCapability.foreach(_.verifyAst(bodyAst)) // Verify that the AST in the returning-body is valid
       Returning(astParser(action), ident, bodyAst)
 
-    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returningGenerated(p => (p.id, p.otherGeneratedProp))
+    // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returningGenerated(p => (p.id, p.otherGeneratedProp))
     case q"$action.returningGenerated[$r](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
