@@ -28,7 +28,7 @@ Be nice to your M1 system - stop your services - don't down them.  Running `dock
 If you plan to have some rapid build/test cycles - run: `docker-compose -f docker-compose-m1.yml stop` to stop your services.  It will preserve the volumes that were created when you ran setup.  It'll save you a good amount of time. 
 
 ## Build With a Specific Scala Version
-By default the build executes with Scala 2.13.  Not horrible - but if you want to take advantage of the improved compiler of a more recent 2.x verison of Scala you can specify that!
+By default the build executes with Scala 2.13.  Not horrible - but if you want to take advantage of the improved compiler of a more recent 2.x version of Scala you can specify that!
 You can simply set the `quill.scala.version` when you start your build:
 
 `docker-compose -f docker-compose-m1.yml run sbt sbt -Dquill.scala.version=2.13.6 -Dmodules=db test`
