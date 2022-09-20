@@ -4,7 +4,7 @@ import io.getquill.ast._
 import io.getquill.context.sql._
 import io.getquill.sql.norm.{InContext, QueryLevel, SelectPropertyProtractor, StatelessQueryTransformer}
 import io.getquill.ast.PropertyOrCore
-import io.getquill.norm.PropertyMatroshka
+import io.getquill.norm.PropertyMatryoshka
 import io.getquill.quat.Quat
 
 class ExpandSelection(from: List[FromContext]) {
@@ -103,7 +103,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
 
     def apply(p: Ast): Ast =
       p match {
-        case p @ PropertyMatroshka(inner, path, renameables) =>
+        case p @ PropertyMatryoshka(inner, path, renameables) =>
           val isSubselect       = inContext.isSubselect(p)
           val propsAlreadyFixed = renameables.forall(_ == Renameable.Fixed)
           val isPropertyRenamed = p.prevName.isDefined

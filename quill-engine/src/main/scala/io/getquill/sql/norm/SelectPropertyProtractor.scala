@@ -3,7 +3,7 @@ package io.getquill.sql.norm
 import io.getquill.ast.{Ast, Core, Ident, Property, Renameable}
 import io.getquill.ast.Visibility.{Hidden, Visible}
 import io.getquill.context.sql.{FlatJoinContext, FromContext, InfixContext, JoinContext, QueryContext, TableContext}
-import io.getquill.norm.PropertyMatroshka
+import io.getquill.norm.PropertyMatryoshka
 import io.getquill.quat.Quat
 import io.getquill.sql.norm.InContext.{InContextType, InInfixContext, InQueryContext, InTableContext}
 
@@ -52,9 +52,9 @@ case class InContext(from: List[FromContext]) {
   def contextReferenceType(ast: Ast) = {
     val references = collectTableAliases(from)
     ast match {
-      case Ident(v, _)                          => references.get(v)
-      case PropertyMatroshka(Ident(v, _), _, _) => references.get(v)
-      case _                                    => None
+      case Ident(v, _)                           => references.get(v)
+      case PropertyMatryoshka(Ident(v, _), _, _) => references.get(v)
+      case _                                     => None
     }
   }
 
@@ -124,7 +124,7 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
         }
       // Assuming a property contains only an Ident, Infix or Constant at this point
       // and all situations where there is a case-class, tuple, etc... inside have already been beta-reduced
-      case prop @ PropertyMatroshka(id @ Core(), _, _) =>
+      case prop @ PropertyMatryoshka(id @ Core(), _, _) =>
         val isEntity      = inContext.isEntityReference(id)
         val effectiveQuat = nonAbstractQuat(prop.quat, alternateQuat)
 

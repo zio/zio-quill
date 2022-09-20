@@ -161,7 +161,7 @@ object SeedRenames extends StatelessTransformer {
 }
 
 // Represents a nested property path to an identity i.e. Property(Property(... Ident(), ...))
-object PropertyMatroshka {
+object PropertyMatryoshka {
 
   def traverse(initial: Property): Option[(Ast, List[String], List[Renameable])] =
     initial match {
