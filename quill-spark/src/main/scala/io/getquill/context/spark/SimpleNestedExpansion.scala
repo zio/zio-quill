@@ -61,7 +61,7 @@ object TopLevelExpansion {
  *
  *   - unless the Ident has a Concrete Quat.Proudct with a single value, but
  *     that has already been expanded into it's composite elements in
- *     TopLevelExpanion.apply and the Ident shuold no longer exist in the select
+ *     TopLevelExpansion.apply and the Ident shuold no longer exist in the select
  *     values.
  *
  * Technically, all we we need to do here is to check that the ast element is
