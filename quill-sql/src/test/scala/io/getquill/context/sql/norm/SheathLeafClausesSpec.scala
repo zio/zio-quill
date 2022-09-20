@@ -114,7 +114,7 @@ class SheathLeafClausesSpec extends Spec {
             .join(query[Person].concatMap(t => t.firstName.split(" ")))
             .on { case (a, b) => a == b }
         )
-        // TODO star idenfiers should not have aliases
+        // TODO star identifiers should not have aliases
         ctx.run(q).string mustEqual "SELECT x01.*, x11.* FROM (SELECT UNNEST(SPLIT(p.first_name, ' ')) AS x FROM person p) AS x01 INNER JOIN (SELECT UNNEST(SPLIT(t.first_name, ' ')) AS x FROM person t) AS x11 ON x01.x = x11.x"
       }
 
