@@ -83,7 +83,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
       }
   }
 
-  // Cannot realize direct super-cluase of a join because of how ExpandJoin does $a$b.
+  // Cannot realize direct super-clause of a join because of how ExpandJoin does $a$b.
   // This is tested in JoinComplexSpec which verifies that ExpandJoin behaves correctly.
   object CanRealias {
     def unapply(q: Ast): Boolean =
