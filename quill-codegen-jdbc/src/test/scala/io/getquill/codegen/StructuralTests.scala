@@ -165,7 +165,7 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
 
     "with snake schema" - {
 
-      "prefix collision - different columns without datatype perculation" - {
+      "prefix collision - different columns without datatype percolation" - {
 
         val personData =
           fdgConv("id" -> "Int", "firstName" -> "Option[String]", "lastName" -> "Option[String]", "age" -> "Int")(
@@ -203,7 +203,7 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
           )
         }
 
-        "prefix collision - different columns with datatype perculation" in {
+        "prefix collision - different columns with datatype percolation" in {
           val gens = standardCodegen(
             `schema_snakecase_twotable_differentcolumns`,
             entityNamingStrategy = SnakeCaseCustomTable(_.tableName.toLowerCase.replaceFirst("(alpha_)|(bravo_)", ""))
@@ -232,7 +232,7 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
         }
       }
 
-      "prefix collision - different columns with datatype perculation" - {
+      "prefix collision - different columns with datatype percolation" - {
 
         val personData = fdgConv(
           "id"          -> "Int",
@@ -276,7 +276,7 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
         }
       }
 
-      "namespace collision - different columns with datatype perculation" - {
+      "namespace collision - different columns with datatype percolation" - {
 
         val personData = fdgConv(
           "id"          -> "Int",
