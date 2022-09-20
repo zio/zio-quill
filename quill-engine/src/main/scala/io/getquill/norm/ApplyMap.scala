@@ -190,7 +190,7 @@ class ApplyMap(traceConfig: TraceConfig) {
       // Instead of combining gin and tonic, pour spirit and water into a cup and transform both
       // the spirit into gin, and the water into tonic inside of the cup.
       //
-      // spirits.map(spirit => ginifySpririt).join(waters.map(water => tonicfyWater)).on((gin, tonic) => on)
+      // spirits.map(spirit => ginifySpirit).join(waters.map(water => tonicfyWater)).on((gin, tonic) => on)
       //    spirits.join(waters).on((spirit, water) => on[gin := ginifySpirit, tonic := tonicfyWater]).map(t:Tuple[(Gin, Tonic)] => (ginifySpirit[spirit := t._1], tonicfyWater[water := t._2]))
 
       // a.map(b => c).*join(d.map(e => f)).on((iA, iB) => on)
@@ -225,7 +225,7 @@ class ApplyMap(traceConfig: TraceConfig) {
       // inside of the tup into tonic.
       //
       // spirits.map(spirit => ginifySpirit).join(tonics).on((gin, tonic) => on)
-      //    spirits.join(tonics).on((spirit, tonic) => on[gin := ginifySpirit]).map(t:Tuple[(Spririt, Tonic)] => (ginifySpirit[spirit := t._1], t._2)) :Tuple[(Gin, Tonic)]
+      //    spirits.join(tonics).on((spirit, tonic) => on[gin := ginifySpirit]).map(t:Tuple[(Spirit, Tonic)] => (ginifySpirit[spirit := t._1], t._2)) :Tuple[(Gin, Tonic)]
 
       // a.map(b => c).*join(d).on((iA, iB) => on)
       //    a.*join(d).on((b, iB) => on[iA := c]).map(t => (c[b := t._1], t._2))
