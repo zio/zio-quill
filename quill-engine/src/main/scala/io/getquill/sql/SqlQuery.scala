@@ -468,7 +468,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
             // selects from an alias of an outer clause. For example, query[Person].map(p => Name(p.firstName, p.lastName)).distinctOn(_.name)
             // (Let's say Person(firstName, lastName, age), Name(first, last)) will turn into
             // SELECT DISTINCT ON (p.name), p.firstName AS first, p.lastName AS last, p.age FROM Person
-            // This doesn't work beause `name` in `p.name` doesn't exist yet. Therefore we have to nest this in a subquery:
+            // This doesn't work because `name` in `p.name` doesn't exist yet. Therefore we have to nest this in a subquery:
             // SELECT DISTINCT ON (p.name) FROM (SELECT p.firstName AS first, p.lastName AS last, p.age FROM Person p) AS p
             // The only exception to this is if we are directly selecting from an entity:
             // query[Person].distinctOn(_.firstName) which should be fine: SELECT (x.firstName), x.firstName, x.lastName, a.age FROM Person x
