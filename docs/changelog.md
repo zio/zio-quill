@@ -885,7 +885,7 @@ idiomatic way i.e. `None == None := false`. See the 'equals' section of the docu
 # 3.2.0
 
 - [Allow == for Option[T] and/or T columns](https://github.com/getquill/quill/pull/1437)
-- [Introducing Code Genereator](https://github.com/getquill/quill/pull/1396)
+- [Introducing Code Generator](https://github.com/getquill/quill/pull/1396)
 - [Fix variable shadowing issue in action metas](https://github.com/getquill/quill/pull/1412)
 - [Change effect to protected](https://github.com/getquill/quill/pull/1413)
 - [Update spark-sql to 2.4.1](https://github.com/getquill/quill/pull/1398)
