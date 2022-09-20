@@ -173,7 +173,7 @@ case class ConcatMap(query: Ast, alias: Ident, body: Ast) extends Query {
   def bestQuat: Quat = body.bestQuat
 }
 
-case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ast) extends Query {
+case class SortBy(query: Ast, alias: Ident, criteria: Ast, ordering: Ast) extends Query {
   def quat           = query.quat
   def bestQuat: Quat = query.bestQuat
 }

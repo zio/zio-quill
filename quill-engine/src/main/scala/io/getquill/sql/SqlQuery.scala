@@ -380,20 +380,20 @@ class SqlQueryApply(traceConfig: TraceConfig) {
               )(quat)
 
         case SortBy(q, Ident(alias, _), p, o) =>
-          val b         = base(q, alias, false)
-          val criterias = orderByCriterias(p, o, b.from)
+          val b        = base(q, alias, false)
+          val criteria = orderByCriteria(p, o, b.from)
           // If the sortBy body uses the filter alias, make sure it matches one of the aliases in the fromContexts
           if (
             b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from)
               .contains(alias))
           )
             trace"Flattening| SortBy(Ident) [Simple]" andReturn
-              b.copy(orderBy = criterias)(quat)
+              b.copy(orderBy = criteria)(quat)
           else
             trace"Flattening| SortBy(Ident) [Complex]" andReturn
               FlattenSqlQuery(
                 from = QueryContext(apply(q), alias) :: Nil,
-                orderBy = criterias,
+                orderBy = criteria,
                 select = select(alias, quat)
               )(quat)
 
@@ -508,14 +508,14 @@ class SqlQueryApply(traceConfig: TraceConfig) {
       case other                     => QueryContext(apply(other), alias)
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =
+  private def orderByCriteria(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord, from))
+      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriteria(_, ord, from))
       case (Tuple(properties), TupleOrdering(ord)) =>
-        properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o, from) }
+        properties.zip(ord).flatMap { case (a, o) => orderByCriteria(a, o, from) }
       // if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
       case (id @ Ident(_, _: Quat.Product), ord) =>
-        new ExpandSelection(from).ofSubselect(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
+        new ExpandSelection(from).ofSubselect(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriteria(_, ord, from))
       case (a, o: PropertyOrdering) => List(OrderByCriteria(a, o))
       case other                    => fail(s"Invalid order by criteria $ast")
     }

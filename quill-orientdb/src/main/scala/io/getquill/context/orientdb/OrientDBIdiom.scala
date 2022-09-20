@@ -209,9 +209,9 @@ trait OrientDBIdiom extends Idiom {
   }
 
   protected def tokenOrderBy(
-    criterias: List[OrderByCriteria]
+    criteria: List[OrderByCriteria]
   )(implicit strategy: NamingStrategy, idiomContext: IdiomContext) =
-    stmt"ORDER BY ${criterias.token}"
+    stmt"ORDER BY ${criteria.token}"
 
   implicit def sourceTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[FromContext] =
     Tokenizer[FromContext] {
