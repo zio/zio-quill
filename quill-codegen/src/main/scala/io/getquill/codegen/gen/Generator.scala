@@ -52,8 +52,8 @@ trait Generator {
   }
   def makeGenerators = new MultiGeneratorFactory(generatorMaker).apply
 
-  def writeAllFiles(localtion: String): Future[Seq[Path]] =
-    Future.sequence(writeFiles(localtion))
+  def writeAllFiles(location: String): Future[Seq[Path]] =
+    Future.sequence(writeFiles(location))
 
   def writeFiles(location: String): Seq[Future[Path]] = {
     // can't put Seq[Gen] into here because doing Seq[Gen] <: SingleUnitCodegen makes it covariant
