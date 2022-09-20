@@ -55,7 +55,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
       sql"${lift(ds)}".pure.as[Query[T]]
     }
 
-  // Helper class for the perculateNullArrays method
+  // Helper class for the percolateNullArrays method
   case class StructElement(column: Column, structField: StructField) {
     def children: Array[StructElement] = structField.dataType match {
       case StructType(fields) => fields.map(f => StructElement(column.getField(f.name), f))
