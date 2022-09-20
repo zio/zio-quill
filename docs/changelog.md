@@ -757,7 +757,7 @@ Migration Notes:
  - Much of the content in `QueryDsl` has been moved to the top-level for better portability with the upcoming Dotty
 implementation. This means that things like `Query` are no longer part of `Context` but now are directly in the
 `io.getquill` package. If you are importing `io.getquill._` your code should be unaffected.
- - Custom decoders written for Finalge Postgres no longer require a `ClassTag`.
+ - Custom decoders written for Finagle Postgres no longer require a `ClassTag`.
 
 
 # 3.5.1
@@ -1157,7 +1157,7 @@ historical moments (`java.sql.Timestamp` extents `java.util.Date`).
 # 1.0.1
 
 - [include SQL type info in Encoder/Decoder](https://github.com/getquill/quill/pull/588)
-- [make encoder helpers and wrapper type public for quill-finangle-postgres](https://github.com/getquill/quill/pull/608)
+- [make encoder helpers and wrapper type public for quill-finagle-postgres](https://github.com/getquill/quill/pull/608)
 - [fix property renaming normalization order](https://github.com/getquill/quill/pull/609)
 - [workaround compiler bug involving reflective calls](https://github.com/getquill/quill/pull/612)
 - [fix flat joins support](https://github.com/getquill/quill/pull/613)
