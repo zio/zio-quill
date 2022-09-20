@@ -125,7 +125,7 @@ gen.writeFiles("src/main/scala/com/my/project")
 You can parse column and table names using either the `SnakeCaseNames` or the and the `LiteralNames` parser
 which are used with the respective Quill Naming Strategies. They cannot be customized further with this code generator.
 
-The following case case classes will be generated
+The following case classes will be generated
 ````scala
 // src/main/scala/com/my/project/public/Person.scala
 package com.my.project.public
