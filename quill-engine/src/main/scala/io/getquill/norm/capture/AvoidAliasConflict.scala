@@ -48,7 +48,7 @@ import scala.collection.immutable.Set
  * however remains the same. To make sure that aliases do not conflict.
  *
  * One important side-function of this transformation is to transform temporary
- * variables (e.g. as created by the `AttachToEntity` phase) into permanant ones
+ * variables (e.g. as created by the `AttachToEntity` phase) into permanent ones
  * of the form x[0-9]+. Since `AvoidAliasConflict` typically runs not on the
  * entire Ast but the sub-parts of it used by normalizations, making temporary
  * aliases permanent cannot be done in these sub-parts because the 'state' of
