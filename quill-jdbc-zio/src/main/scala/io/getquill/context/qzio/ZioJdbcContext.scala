@@ -185,7 +185,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
    * }}}
    *
    * The order of operations run in the case that a new connection needs to be
-   * aquired are as follows: <pre> getDS from env, acquire-connection,
+   * acquired are as follows: <pre> getDS from env, acquire-connection,
    * set-no-autocommit(connection), put-into-fiberref(connection), op - the
    * corresponding execute_ method which will execute and pull connection from
    * the fiberref, remove-from-fiberref(connection),
