@@ -127,7 +127,7 @@ then
         if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
     else
         VERSION_FILE=$(cat version.sbt)
-        echo "Github actions branch was: ${BRANCH} and version file is $VERSION_FILE. Not Sure what to do."
+        echo "GitHub actions branch was: ${BRANCH} and version file is $VERSION_FILE. Not Sure what to do."
     fi
 else
   echo "PULL_REQUEST is not 'false' ($PULL_REQUEST). Not doing a release."
