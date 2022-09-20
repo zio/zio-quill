@@ -21,7 +21,7 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => (country.name, citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, cityInCountry) => (country.name, cityInCountry.map(cICn => cICn._1)) }
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q).string mustEqual
@@ -35,7 +35,7 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => (country.name, citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, cityInCountry) => (country.name, cityInCountry.map(cICn => cICn._1)) }
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q).string mustEqual
@@ -81,8 +81,8 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryCode == country.countryCode }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) =>
-            ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1))
+          .map { case (country, cityInCountry) =>
+            ((country.countryCode, country.language), cityInCountry.map(cICn => cICn._1))
           }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
@@ -143,8 +143,8 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryCode == country.countryCode }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) =>
-            ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1))
+          .map { case (country, cityInCountry) =>
+            ((country.countryCode, country.language), cityInCountry.map(cICn => cICn._1))
           }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
