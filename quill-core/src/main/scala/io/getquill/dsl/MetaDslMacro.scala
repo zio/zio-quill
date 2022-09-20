@@ -146,7 +146,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
               //   Some((Person(name:String, age:Int), Address(street:Option[String]))
               // from the row:
               //   Row(null, null, null) which becomes Option((Person(null,0), Address(None)))
-              // and say we are are processing the 'Address' part which can't be null. We still want to
+              // and say we are processing the 'Address' part which can't be null. We still want to
               // return the internal columns of Address since the outer Option can be None.
               // Address.
               allColumnsNotNull
