@@ -1249,7 +1249,7 @@ historical moments (`java.sql.Timestamp` extents `java.util.Date`).
 
 ### Migration notes
 
-This version [introduces `Context`](https://github.com/getquill/quill/pull/417) as a relacement for `Source`. This change makes the quotation creation dependent on the context to open the path for a few refactorings and improvements we're planning to work on before the `1.0-RC1` release.
+This version [introduces `Context`](https://github.com/getquill/quill/pull/417) as a replacement for `Source`. This change makes the quotation creation dependent on the context to open the path for a few refactorings and improvements we're planning to work on before the `1.0-RC1` release.
 
 Migration steps:
 
