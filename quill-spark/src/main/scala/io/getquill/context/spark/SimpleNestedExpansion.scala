@@ -59,7 +59,7 @@ object TopLevelExpansion {
  * This unapplier object is used both here and in the SpartDialect select
  * tokenization.
  *
- *   - unless the Ident has a Concrete Quat.Proudct with a single value, but
+ *   - unless the Ident has a Concrete Quat.Product with a single value, but
  *     that has already been expanded into it's composite elements in
  *     TopLevelExpansion.apply and the Ident shuold no longer exist in the select
  *     values.
