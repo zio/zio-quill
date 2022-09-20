@@ -398,7 +398,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
               )(quat)
 
         // TODO Finish describing
-        // Happens when you either have an aggrgation in the middle of a query
+        // Happens when you either have an aggregation in the middle of a query
         // ...
         // Or as the result of a map
         case Aggregation(op, q: Query) =>

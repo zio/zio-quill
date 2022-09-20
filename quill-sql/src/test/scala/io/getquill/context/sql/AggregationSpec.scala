@@ -44,7 +44,7 @@ class AggregationSpec extends Spec {
       "sum" in { ctx.run(query[Person].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) FROM Person p" }
     }
 
-    "work correctly with a filter cause that is BEFORE the aggreation" in {
+    "work correctly with a filter cause that is BEFORE the aggregation" in {
       val q = quote {
         query[Person].filter(p => p.name == "Joe").map(p => (p.id, max(p.name)))
       }
