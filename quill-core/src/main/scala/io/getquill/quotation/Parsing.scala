@@ -195,15 +195,21 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
     case q"$pack.query[$t]" =>
       // Unused, it's here only to make eclipse's presentation compiler happy
-      Entity("unused", Nil, inferQuat(q"$t".tpe).probit)
+      val quat = inferQuat(q"$t".tpe).probit
+      c.warn(VerifyNoBranches.in(quat))
+      Entity("unused", Nil, quat)
 
     case q"$pack.querySchema[$t](${ name: String }, ..$properties)" =>
       val ttpe = q"$t".tpe
       val inferred = inferQuat(q"$t".tpe)
-      Entity.Opinionated(name, properties.map(propertyAliasParser(_)), inferQuat(q"$t".tpe).probit, Fixed)
+      val quat = inferQuat(q"$t".tpe).probit
+      c.warn(VerifyNoBranches.in(quat))
+      Entity.Opinionated(name, properties.map(propertyAliasParser(_)), quat, Fixed)
 
     case q"$pack.impliedQuerySchema[$t](${ name: String }, ..$properties)" =>
-      Entity(name, properties.map(propertyAliasParser(_)), inferQuat(q"$t".tpe).probit)
+      val quat = inferQuat(q"$t".tpe).probit
+      c.warn(VerifyNoBranches.in(quat))
+      Entity(name, properties.map(propertyAliasParser(_)), quat)
 
     case q"$source.filter(($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
@@ -823,7 +829,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
       val values = v.map(astParser(_))
       val params = firstConstructorParamList(c.WeakTypeTag(ccTerm.tpe.erasure))
-      CaseClass(params.zip(values))
+      CaseClass(ccTerm.symbol.fullName.toString.split('.').last, params.zip(values))
     }
     case q"(($pack.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
     case q"io.getquill.dsl.UnlimitedTuple.apply($v)"               => astParser(v)
@@ -835,7 +841,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     ) => {
       val values = v.map(astParser(_))
       val params = firstParamList(c.WeakTypeTag(ccCompanion.tpe.erasure))
-      CaseClass(params.zip(values))
+      CaseClass(ccCompanion.tpe.resultType.toString.split('.').last, params.zip(values))
     }
   }
 
@@ -927,7 +933,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       // Only .returning(r => r.prop) or .returning(r => OneElementCaseClass(r.prop1..., propN)) or .returning(r => (r.prop1..., propN)) (well actually it's prop22) is allowed.
       case ReturningMultipleFieldSupported =>
         returnBody match {
-          case CaseClass(list) if (list.forall {
+          case CaseClass(_, list) if (list.forall {
             case (_, Property(_, _)) => true
             case _                   => false
           }) =>

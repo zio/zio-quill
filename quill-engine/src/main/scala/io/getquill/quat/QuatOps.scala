@@ -36,7 +36,7 @@ private[getquill] object QuatOps {
           val newFields = quat.fields.map(kv => if (kv._1 == head) (kv._1, newSubQuat) else kv)
           // Re-create the quat with the new fields. Can't use copy since it would not copy the renames
           // along with the object.
-          Quat.Product.WithRenames(quat.tpe, newFields, quat.renames)
+          Quat.Product.WithRenames(quat.name, quat.tpe, newFields, quat.renames)
       }
 
     renameQuatAtPathRecurse(path, List(), rootQuat)

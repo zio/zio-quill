@@ -500,7 +500,7 @@ trait SqlIdiom extends Idiom {
     case Constant(v, _)         => stmt"${v.toString.token}"
     case NullValue              => stmt"null"
     case Tuple(values)          => stmt"${values.token}"
-    case CaseClass(values)      => stmt"${values.map(_._2).token}"
+    case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
   }
 
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {

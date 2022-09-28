@@ -13,7 +13,7 @@ class ExpandReturningSpec extends Spec {
 
   case class Person(name: String, age: Int)
   case class Foo(bar: String, baz: Int)
-  val quat = Quat.Product("name" -> QV, "age" -> QV)
+  val quat = Quat.Product("TestQuat", "name" -> QV, "age" -> QV)
 
   "inner apply" - {
     val mi = MirrorIdiom

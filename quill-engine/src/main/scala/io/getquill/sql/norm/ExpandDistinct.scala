@@ -38,11 +38,11 @@ class ExpandDistinct(traceConfig: TraceConfig) {
           //      query[SomeTable].map(st => AdHocCaseClass(st.id, st.name)).distinct
           //    }
           // ... need some special treatment. Otherwise their values will not be correctly expanded.
-          case Distinct(Map(q, x, cc @ CaseClass(values))) =>
+          case Distinct(Map(q, x, cc @ CaseClass(n, values))) =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
             trace"ExpandDistinct Distinct(Map(q, _, CaseClass))" andReturn
               Map(Distinct(Map(q, x, cc)), newIdent,
-                CaseClass(values.map {
+                CaseClass(n, values.map {
                   case (name, _) => (name, Property(newIdent, name))
                 }))
 
