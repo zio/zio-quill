@@ -69,7 +69,7 @@ class ExpandSelection(from: List[FromContext]) {
             // Quat doesn't count anymore. If level=Inner then it's the same.
             apply(SelectValue(ast, concatOr(alias, label)(Some(label)), concat), level.withoutTopQuat)
         }
-      case SelectValue(CaseClass(fields), alias, concat) =>
+      case SelectValue(CaseClass(_, fields), alias, concat) =>
         fields.flatMap {
           case (name, ast) =>
             // Go into the select values, if the level is Top we need to go TopUnwrapped since the top-level

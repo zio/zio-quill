@@ -122,9 +122,9 @@ trait StatelessTransformer {
       case e: Constant   => e
       case NullValue     => NullValue
       case Tuple(values) => Tuple(values.map(apply))
-      case CaseClass(tuples) => {
+      case CaseClass(n, tuples) => {
         val (keys, values) = tuples.unzip
-        CaseClass(keys.zip(values.map(apply)))
+        CaseClass(n, keys.zip(values.map(apply)))
       }
     }
 

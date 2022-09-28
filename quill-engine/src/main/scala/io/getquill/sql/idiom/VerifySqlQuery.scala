@@ -77,9 +77,9 @@ object VerifySqlQuery {
     // be skipped during verification.
     def expandSelect(sv: SelectValue): List[SelectValue] =
       sv.ast match {
-        case Tuple(values)     => values.map(v => SelectValue(v)).flatMap(expandSelect(_))
-        case CaseClass(values) => values.map(v => SelectValue(v._2)).flatMap(expandSelect(_))
-        case _                 => List(sv)
+        case Tuple(values)        => values.map(v => SelectValue(v)).flatMap(expandSelect(_))
+        case CaseClass(_, values) => values.map(v => SelectValue(v._2)).flatMap(expandSelect(_))
+        case _                    => List(sv)
       }
 
     val freeVariableErrors: List[Error] =

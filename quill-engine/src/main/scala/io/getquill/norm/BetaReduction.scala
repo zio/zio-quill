@@ -70,7 +70,7 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
       case Property(Tuple(values), name) =>
         apply(values(name.drop(1).toInt - 1))
 
-      case Property(CaseClass(tuples), name) =>
+      case Property(CaseClass(_, tuples), name) =>
         apply(tuples.toMap.apply(name))
 
       case FunctionApply(Function(params, body), values) =>

@@ -1,7 +1,9 @@
 package io.getquill.context.spark
 
 import io.getquill.base.Spec
+import io.getquill.util.Messages.QuatTrace
 import org.apache.spark.sql.Dataset
+
 import scala.language.reflectiveCalls
 
 case class Parent(name: String, childId: Int)
@@ -81,24 +83,24 @@ class TypeMemberJoinSpec extends Spec {
       q.ast match {
         case FlatMap(
           AnyInfix(),
-          Id("p", QStr("CC(name:V,childId:V)")),
+          Id("p", QStr("Parent(name:V,childId:V)")),
           Map(
             Map(
               FlatJoin(
                 InnerJoin,
                 AnyInfix(),
-                Id("c", QStr("CCA(id:V)")), // This is important, since macro gets inferred from SomeChild, it only knows about the 'id' property
-                (Property(Id("c", QStr("CCA(id:V)")), "id") +==+ Property(Id("p", QStr("CC(name:V,childId:V)")), "childId"))
+                Id("c", QStr("~<refinement>(id:V)")), // This is important, since macro gets inferred from SomeChild, it only knows about the 'id' property
+                (Property(Id("c", QStr("~<refinement>(id:V)")), "id") +==+ Property(Id("p", QStr("Parent(name:V,childId:V)")), "childId"))
                 ),
-              Id("c", QStr("CCA(id:V)")),
-              Id("c", QStr("CCA(id:V)"))
+              Id("c", QStr("~<refinement>(id:V)")),
+              Id("c", QStr("~<refinement>(id:V)"))
               ),
-            Id("c", QStr("CCA(name:V,id:V)")),
-            Tuple(List(Id("p", QStr("CC(name:V,childId:V)")), Id("c", QStr("CCA(name:V,id:V)"))))
+            Id("c", QStr("~Child(name:V,id:V)")),
+            Tuple(List(Id("p", QStr("Parent(name:V,childId:V)")), Id("c", QStr("~Child(name:V,id:V)"))))
             )
           ) =>
         case _ =>
-          fail(s"Tree did not match:\n${io.getquill.util.Messages.qprint(q.ast).plainText}")
+          fail(s"Tree did not match:\n${io.getquill.util.Messages.qprintCustom(traceQuats = QuatTrace.Full)(q.ast).plainText}")
       }
       testContext.run(q).collect().toList mustEqual List((Data.parent, Data.child))
     }
@@ -213,40 +215,40 @@ class TypeMemberJoinSpec extends Spec {
       q.ast match {
         case FlatMap(
           AnyInfix(),
-          Id("p", QStr("CC(name:V,childId:V)")),
+          Id("p", QStr("Parent(name:V,childId:V)")),
           Map(
             FlatMap(
               FlatJoin(
                 InnerJoin,
                 AnyInfix(),
-                Id("c", QStr("CCA(id:V)")),
-                (Property(Id("c", QStr("CCA(id:V)")), "id") +==+ Property(Id("p", QStr("CC(name:V,childId:V)")), "childId"))
+                Id("c", QStr("~<refinement>(id:V)")),
+                (Property(Id("c", QStr("~<refinement>(id:V)")), "id") +==+ Property(Id("p", QStr("Parent(name:V,childId:V)")), "childId"))
                 ),
-              Id("c", QStr("CCA(id:V)")),
+              Id("c", QStr("~<refinement>(id:V)")),
               Map(
                 FlatJoin(
                   InnerJoin,
                   AnyInfix(),
-                  Id("g", QStr("CCA(parentId:V)")),
-                  (Property(Id("g", QStr("CCA(parentId:V)")), "parentId") +==+ Property(Id("c", QStr("CCA(id:V)")), "id"))
+                  Id("g", QStr("~<refinement>(parentId:V)")),
+                  (Property(Id("g", QStr("~<refinement>(parentId:V)")), "parentId") +==+ Property(Id("c", QStr("~<refinement>(id:V)")), "id"))
                   ),
-                Id("g", QStr("CCA(parentId:V)")),
-                Tuple(List(Id("c", QStr("CCA(id:V)")), Id("g", QStr("CCA(parentId:V)"))))
+                Id("g", QStr("~<refinement>(parentId:V)")),
+                Tuple(List(Id("c", QStr("~<refinement>(id:V)")), Id("g", QStr("~<refinement>(parentId:V)"))))
                 )
               ),
-            Id("x2", QStr("CC(_1:CCA(name:V,id:V),_2:CCA(name:V,parentId:V))")),
+            Id("x2", QStr("Tuple2(_1:~Child(name:V,id:V),_2:~GrandChild(name:V,parentId:V))")),
             Tuple(List(
-              Id("p", QStr("CC(name:V,childId:V)")),
+              Id("p", QStr("Parent(name:V,childId:V)")),
               // Note how here in the Quat of the inner ident, the _1 property representing 'child' has a 'name' and 'id' property
               // while Child of the _1 property in the 'c' tuple (in the inner Map) only has an 'id' property. This is because
               // when the quat of the _1 property above was synthesized, it was actually only the abstract property SomeChild
               // (i.e. while only has a 'id' property and no others)
-              Property(Property(Id("x2", QStr("CC(_1:CCA(name:V,id:V),_2:CCA(name:V,parentId:V))")), "_1"), "name")
+              Property(Property(Id("x2", QStr("Tuple2(_1:~Child(name:V,id:V),_2:~GrandChild(name:V,parentId:V))")), "_1"), "name")
               ))
             )
           ) =>
         case _ =>
-          fail(s"Tree did not match:\n${io.getquill.util.Messages.qprint(q.ast).plainText}")
+          fail(s"Tree did not match:\n${io.getquill.util.Messages.qprintCustom(traceQuats = QuatTrace.All)(q.ast).plainText}")
       }
       testContext.run(q).collect().toList mustEqual List((Data.parent, Data.child.name))
     }
