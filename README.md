@@ -514,10 +514,11 @@ val returnedIds = ctx.run(q) //: List[(Int, String)]
 
 ### Embedded case classes
 
-Quill supports nested `Embedded` case classes:
+Quill supports nested embedded case classes.
+> In previous iterations of Quill would need to extend the `Embedded` trait but this is no longer necessary. 
 
 ```scala
-case class Contact(phone: String, address: String) extends Embedded
+case class Contact(phone: String, address: String) /* The embedded class */
 case class Person(id: Int, name: String, contact: Contact)
 
 ctx.run(query[Person])
@@ -2680,15 +2681,45 @@ ctx.run(q)
 
 ### Comparison operators
 
-You can implement comparison operators by defining implicit conversion and using infix.
+The easiest way to use comparison operators with dates is to import them from the `extras` module.
+```scala
+case class Person(name: String, bornOn: java.util.Date)
+
+val ctx = new SqlMirrorContext(PostgresDialect, Literal)
+import ctx._
+import extras._ /* importing the > operator among other things */
+
+run(query[Person].filter(p => p.bornOn > lift(myDate)))
+```
+> Note that in ProtoQuill you should import `io.getquill.extras._` since they are now global.
+
+#### Using Ordered
+
+You can also define an implicit-class that converts your Date/Numeric type to a `Ordered[YourType]`
+which will also give it `>`, `<` etc... comparison operators.
 
 ```scala
-import java.util.Date
+implicit class LocalDateTimeOps(val value: MyCustomNumber) extends Ordered[MyCustomNumber] {
+  def compare(that: MyCustomNumber): Int = value.compareTo(that)
+}
+```
+Note that Quill will not actually use this `compare` method, that is strictly for your own
+data needs. You can technically define it as `def compare(that: MyCustomNumber): Int = ???`
+because Quill will never actually invoke this function. It uses the `LocalDateTimeOps`
+merely as a sort of marker to know that the `>`, `<` operators etc... can be transpiled to SQL.
 
-implicit class DateQuotes(left: Date) {
-  def >(right: Date) = quote(sql"$left > $right".as[Boolean])
+> Note that although in ProtoQuill implicit-class based approaches are generally not supported,
+> this particular pattern will work as well.
 
-  def <(right: Date) = quote(sql"$left < $right".as[Boolean])
+#### Using Implicit Classes
+
+Finally, can implement comparison operators (or any other kinds of operators) by defining 
+implicit conversion and using infix.
+
+```scala
+implicit class DateQuotes(left: MyCustomDate) {
+  def >(right: MyCustomDate) = quote(sql"$left > $right".as[Boolean])
+  def <(right: MyCustomDate) = quote(sql"$left < $right".as[Boolean])
 }
 ```
 
