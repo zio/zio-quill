@@ -3443,18 +3443,16 @@ val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns
 
 #### json
 
-The Zio Quill Postgres supports JSON encoding/decoding via the zio-json library. Just import `context.json` (or `context.json`) and then
-define encoders/decoders via zio-json's `JsonEncoder`/`JsonDecoder` modules.
+The Zio Quill Postgres supports JSON encoding/decoding via the zio-json library. Just wrap your object in a `JsonValue` instance
+and then define encoders/decoders via zio-json's `JsonEncoder`/`JsonDecoder` modules.
 
 ```scala
 import context._
-import context.json._ // or jsonb._
-
 case class Person(name: String, age: Int)
-case class MyTable(name: String, value: Person)
+case class MyTable(name: String, value: JsonValue[Person])
 
 val joe = Person("Joe", 123)
-val joeRow = MyTable("SomeJoe", joe)
+val joeRow = MyTable("SomeJoe", JsonValue(joe))
 
 // Declare an encoder/decoder for `Person` via zio-json
 implicit val personEncoder: JsonEncoder[Person] = DeriveJsonEncoder.gen[Person]
@@ -3469,15 +3467,14 @@ val myApp: ZIO[Any, SQLException, List[MyTable]] =
   } yield (value)
 ```
 
-You can also encode/decoder objects that have the type `zio.json.ast.Json` directly.
+You can also encode/decode objects that have the type `zio.json.ast.Json` directly.
 ```scala
 import context._
-import context.json._ // or jsonb._
-case class MyTable(name: String, value: Json)
+case class MyTable(name: String, value: JsonValue[Json])
 
 // i.e. {name:"Joe", age:123}
 val jsonJoe = Json.Obj(Chunk("name" -> Json.Str("Joe"), "age" -> Json.Num(123)))
-val joeRow = MyTable("SomeJoe", jsonJoe)
+val joeRow = MyTable("SomeJoe", JsonValue(jsonJoe))
 
 testContext.run(jsonAstQuery.insertValue(lift(joeRow)))
 ```
