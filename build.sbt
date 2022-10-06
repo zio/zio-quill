@@ -489,6 +489,14 @@ lazy val `quill-jdbc-zio` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(
+      libraryDependencies ++= Seq(
+        // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
+        "org.postgresql" % "postgresql" % "42.3.6" %  "provided"
+      ) ++ (
+        // zio-json does not exist for Scala 2.11
+        if (!isScala211) Seq("dev.zio" %% "zio-json" % "0.3.0")
+        else Seq()
+      ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
           if (test.name endsWith "IntegrationSpec")
@@ -505,19 +513,12 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-
-
-
-
-
 lazy val `quill-ndbc-monix` =
   (project in file("quill-ndbc-monix"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-      )
+      Test / fork := true
     )
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")

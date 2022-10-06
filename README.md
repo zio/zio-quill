@@ -3441,7 +3441,46 @@ val trans =
 val result = Runtime.default.unsafeRun(trans.onDataSource.provide(ds)) //returns: List[Person]
 ```
 
+#### json
 
+The Zio Quill Postgres supports JSON encoding/decoding via the zio-json library. Just import `context.json` (or `context.json`) and then
+define encoders/decoders via zio-json's `JsonEncoder`/`JsonDecoder` modules.
+
+```scala
+import context._
+import context.json._ // or jsonb._
+
+case class Person(name: String, age: Int)
+case class MyTable(name: String, value: Person)
+
+val joe = Person("Joe", 123)
+val joeRow = MyTable("SomeJoe", joe)
+
+// Declare an encoder/decoder for `Person` via zio-json
+implicit val personEncoder: JsonEncoder[Person] = DeriveJsonEncoder.gen[Person]
+implicit val personDecoder: JsonDecoder[Person] = DeriveJsonDecoder.gen[Person]
+
+val myApp: ZIO[Any, SQLException, List[MyTable]] =
+  for {
+    // You can then insert the value:
+    _ <- context.run(query[MyTable].insertValue(lift(joeRow)))
+    // As well read it:
+    value <- context.run(query[MyTable])
+  } yield (value)
+```
+
+You can also encode/decoder objects that have the type `zio.json.ast.Json` directly.
+```scala
+import context._
+import context.json._ // or jsonb._
+case class MyTable(name: String, value: Json)
+
+// i.e. {name:"Joe", age:123}
+val jsonJoe = Json.Obj(Chunk("name" -> Json.Str("Joe"), "age" -> Json.Num(123)))
+val joeRow = MyTable("SomeJoe", jsonJoe)
+
+testContext.run(jsonAstQuery.insertValue(lift(joeRow)))
+```
 
 ### MySQL (quill-jdbc-zio)
 
