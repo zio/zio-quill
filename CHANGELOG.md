@@ -1,3 +1,7 @@
+# 4.6.0
+
+- [Implementing Postgres json/jsonb encoding via zio-json](https://github.com/zio/zio-quill/pull/2615)
+
 # 4.5.0
 
 - [Remove the need to make things embedded, happens automatically](https://github.com/zio/zio-quill/pull/2607)
