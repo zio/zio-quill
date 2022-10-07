@@ -2,7 +2,7 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import io.getquill.ast._
-import io.getquill.Embedded
+import io.getquill.{ JsonValue, JsonbValue, Quoted, Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate }
 import io.getquill.context._
 import io.getquill.norm.{ BetaReduction, TypeBehavior }
 import io.getquill.util.MacroContextExt.RichContext
@@ -14,11 +14,10 @@ import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 import io.getquill.ast.Implicits._
 import io.getquill.ast.Renameable.Fixed
-import io.getquill.ast.Visibility.{ Hidden, Visible }
+import io.getquill.ast.Visibility.Visible
 import io.getquill.quat._
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.{ Interleave, Interpolator, Messages }
-import io.getquill.{ Quoted, Delete => DslDelete, Insert => DslInsert, Query => DslQuery, Update => DslUpdate }
 
 trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   this: Quotation =>
@@ -192,7 +191,6 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   val queryParser: Parser[Ast] = Parser[Ast] {
-
     case q"$pack.query[$t]" =>
       // Unused, it's here only to make eclipse's presentation compiler happy
       val quat = inferQuat(q"$t".tpe).probit
@@ -581,8 +579,12 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   val propertyParser: Parser[Property] = Parser[Property] {
-    case q"$e.get" if is[Option[Any]](e) =>
-      c.fail("Option.get is not supported since it's an unsafe operation. Use `forall` or `exists` instead.")
+    case stmt @ q"$e.value" if is[JsonValue[Any]](e) =>
+      c.fail(s"Cannot unwrap a JsonValue (i.e. call `.value` on it) inside of a query. The error is in the following statement: `${show(stmt)}` (translated approximately).")
+    case stmt @ q"$e.value" if is[JsonbValue[Any]](e) =>
+      c.fail(s"Cannot unwrap a JsonbValue (i.e. call `.value` on it) inside of a query. The error is in the following statement: `${show(stmt)}` (translated approximately).")
+    case stmt @ q"$e.get" if is[Option[Any]](e) =>
+      c.fail(s"Option.get is not supported since it's an unsafe operation. Use `forall` or `exists` instead. The error is in the following statement: `${show(stmt)}` (translated approximately).")
     case q"$e.$property" =>
 
       val caseAccessors =
