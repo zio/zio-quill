@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import io.getquill.context.jdbc.{ JdbcContext, PostgresJdbcContextBase }
 import io.getquill.util.LoadConfig
 
-class PostgresJdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
+class PostgresJdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource)
   extends JdbcContext[PostgresDialect, N]
   with PostgresJdbcContextBase[PostgresDialect, N] {
   override val idiom: PostgresDialect = PostgresDialect
