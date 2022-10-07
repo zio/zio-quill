@@ -5,17 +5,20 @@ import java.sql.{ Connection, PreparedStatement }
 import javax.sql.DataSource
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.{ NamingStrategy, ReturnAction }
-import io.getquill.context.{ ExecutionInfo, ProtoContext, ContextVerbTranslate }
+import io.getquill.context.{ ContextVerbTranslate, ExecutionInfo, ProtoContext }
 
 import scala.util.{ DynamicVariable, Try }
 import scala.util.control.NonFatal
 import io.getquill.monad.SyncIOMonad
+import io.getquill.util.ContextLogger
 
 abstract class JdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   extends JdbcContextBase[Dialect, Naming]
   with ProtoContext[Dialect, Naming]
   with ContextVerbTranslate
   with SyncIOMonad {
+
+  private val logger = ContextLogger(classOf[JdbcContext[_, _]])
 
   // Need to override these with same values as JdbcRunContext because SyncIOMonad imports them. The imported values need to be overridden
   override type Result[T] = T
@@ -26,7 +29,7 @@ abstract class JdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   override type RunBatchActionResult = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
-  val dataSource: DataSource with Closeable
+  val dataSource: DataSource
   override def wrap[T](t: => T): T = t
   override def push[A, B](result: A)(f: A => B): B = f(result)
   override def seq[A](list: List[A]): List[A] = list
@@ -63,7 +66,13 @@ abstract class JdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       finally conn.close()
     }
 
-  def close() = dataSource.close()
+  override def close() =
+    dataSource match {
+      case closeable: java.io.Closeable =>
+        closeable.close()
+      case _ =>
+        logger.underlying.warn(s"Could not close the DataSource `$dataSource`. It is not an instance of java.io.Closeable.")
+    }
 
   def probe(sql: String) =
     Try {

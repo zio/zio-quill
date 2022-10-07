@@ -19,7 +19,7 @@ trait JdbcContextVerbPrepare[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   def constructPrepareAction(f: Connection => Result[PreparedStatement]): PrepareActionResult
   def constructPrepareBatchAction(f: Connection => Result[List[PreparedStatement]]): PrepareBatchActionResult
 
-  private[getquill] val logger = ContextLogger(classOf[JdbcContext[_, _]])
+  private val logger = ContextLogger(classOf[JdbcContext[_, _]])
 
   def wrap[T](t: => T): Result[T]
   def push[A, B](result: Result[A])(f: A => B): Result[B]
