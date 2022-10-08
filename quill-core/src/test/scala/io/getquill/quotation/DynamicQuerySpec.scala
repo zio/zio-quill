@@ -65,7 +65,7 @@ class DynamicQuerySpec extends Spec {
   }
 
   // Need to put here so an summon TypeTag for these
-  case class S(v: String) extends Embedded
+  case class S(v: String)
   case class E(s: S)
   case class Person2(firstName: String, lastName: String)
 

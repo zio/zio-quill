@@ -136,7 +136,7 @@ trait CqlIdiom extends Idiom {
     case Constant((), _)        => stmt"1"
     case Constant(v, _)         => stmt"${v.toString.token}"
     case Tuple(values)          => stmt"${values.token}"
-    case CaseClass(values)      => stmt"${values.map(_._2).token}"
+    case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
     case NullValue              => fail("Cql doesn't support null values.")
   }
 

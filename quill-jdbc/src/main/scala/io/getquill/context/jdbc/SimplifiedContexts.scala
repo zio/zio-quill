@@ -5,13 +5,18 @@ import io.getquill._
 import io.getquill.context.ExecutionInfo
 import io.getquill.util.ContextLogger
 
-trait PostgresJdbcTypes[+N <: NamingStrategy] extends JdbcContextTypes[PostgresDialect, N]
+trait PostgresJdbcTypes[+D <: PostgresDialect, +N <: NamingStrategy] extends JdbcContextTypes[D, N]
+  with ObjectGenericTimeEncoders
+  with ObjectGenericTimeDecoders
   with BooleanObjectEncoding
   with UUIDObjectEncoding
   with ArrayDecoders
   with ArrayEncoders {
 
-  val idiom = PostgresDialect
+  val idiom: D
+
+  // Postgres does not support Types.TIME_WITH_TIMEZONE as a JDBC type but does have a `TIME WITH TIMEZONE` datatype this is puzzling.
+  protected override def jdbcTypeOfOffsetTime = Types.TIME
 
   override def parseJdbcType(intType: Int): String = intType match {
     case Types.TINYINT => super.parseJdbcType(Types.SMALLINT)
@@ -21,30 +26,41 @@ trait PostgresJdbcTypes[+N <: NamingStrategy] extends JdbcContextTypes[PostgresD
   }
 }
 
-trait H2JdbcTypes[+N <: NamingStrategy] extends JdbcContextTypes[H2Dialect, N]
+trait H2JdbcTypes[+D <: H2Dialect, +N <: NamingStrategy] extends JdbcContextTypes[D, N]
+  with ObjectGenericTimeEncoders
+  with ObjectGenericTimeDecoders
   with BooleanObjectEncoding
   with UUIDObjectEncoding {
 
-  val idiom = H2Dialect
+  val idiom: D
 }
 
-trait MysqlJdbcTypes[+N <: NamingStrategy] extends JdbcContextTypes[MySQLDialect, N]
+trait MysqlJdbcTypes[+D <: MySQLDialect, +N <: NamingStrategy] extends JdbcContextTypes[D, N]
+  with ObjectGenericTimeEncoders
+  with ObjectGenericTimeDecoders
   with BooleanObjectEncoding
   with UUIDStringEncoding {
 
-  val idiom = MySQLDialect
+  protected override def jdbcTypeOfZonedDateTime = Types.TIMESTAMP
+  protected override def jdbcTypeOfInstant = Types.TIMESTAMP
+  protected override def jdbcTypeOfOffsetTime = Types.TIME
+  protected override def jdbcTypeOfOffsetDateTime = Types.TIMESTAMP
+
+  val idiom: D
 }
 
-trait SqliteJdbcTypes[+N <: NamingStrategy] extends JdbcContextTypes[SqliteDialect, N]
+trait SqliteJdbcTypes[+D <: SqliteDialect, +N <: NamingStrategy] extends JdbcContextTypes[D, N]
+  with BasicTimeEncoders
+  with BasicTimeDecoders
   with BooleanObjectEncoding
   with UUIDObjectEncoding {
 
-  val idiom = SqliteDialect
+  val idiom: D
 }
 
-trait SqliteExecuteOverride[+N <: NamingStrategy] extends JdbcContextVerbExecute[SqliteDialect, N] {
+trait SqliteExecuteOverride[+D <: SqliteDialect, +N <: NamingStrategy] extends JdbcContextVerbExecute[D, N] {
 
-  private val logger = ContextLogger(classOf[SqliteExecuteOverride[_]])
+  private val logger = ContextLogger(classOf[SqliteExecuteOverride[_, _]])
 
   private def runInTransaction[T](conn: Connection)(op: => T): T = {
     val wasAutoCommit = conn.getAutoCommit
@@ -128,16 +144,24 @@ trait SqlServerExecuteOverride[+N <: NamingStrategy] extends JdbcContextVerbExec
     }
 }
 
-trait SqlServerJdbcTypes[+N <: NamingStrategy] extends JdbcContextTypes[SQLServerDialect, N]
+trait SqlServerJdbcTypes[+D <: SQLServerDialect, +N <: NamingStrategy] extends JdbcContextTypes[D, N]
+  with ObjectGenericTimeEncoders
+  with ObjectGenericTimeDecoders
   with BooleanObjectEncoding
   with UUIDStringEncoding {
 
-  val idiom = SQLServerDialect
+  val idiom: D
 }
 
-trait OracleJdbcTypes[+N <: NamingStrategy] extends JdbcContextTypes[OracleDialect, N]
+trait OracleJdbcTypes[+D <: OracleDialect, +N <: NamingStrategy] extends JdbcContextTypes[D, N]
+  with ObjectGenericTimeEncoders
+  with ObjectGenericTimeDecoders
   with BooleanIntEncoding
   with UUIDStringEncoding {
 
-  val idiom = OracleDialect
+  // Normally it is Types.TIME by in that case Oracle truncates the milliseconds
+  protected override def jdbcTypeOfLocalTime = Types.TIMESTAMP
+  protected override def jdbcTypeOfOffsetTime = Types.TIME
+
+  val idiom: D
 }

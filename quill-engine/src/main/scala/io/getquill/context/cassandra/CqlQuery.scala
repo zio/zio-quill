@@ -79,13 +79,13 @@ object CqlQuery {
 
   private def select(ast: Ast): List[Ast] =
     ast match {
-      case Tuple(values)     => values.flatMap(select)
-      case CaseClass(values) => values.flatMap(v => select(v._2))
-      case p: Property       => List(p)
-      case i: Ident          => List()
-      case l: Lift           => List(l)
-      case l: ScalarTag      => List(l)
-      case other             => fail(s"Cql supports only properties as select elements. Found: $other")
+      case Tuple(values)        => values.flatMap(select)
+      case CaseClass(_, values) => values.flatMap(v => select(v._2))
+      case p: Property          => List(p)
+      case i: Ident             => List()
+      case l: Lift              => List(l)
+      case l: ScalarTag         => List(l)
+      case other                => fail(s"Cql supports only properties as select elements. Found: $other")
     }
 
   private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =

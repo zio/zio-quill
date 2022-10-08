@@ -9,8 +9,8 @@ import io.getquill.util.LoadConfig
 
 class H2JdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
   extends JdbcContext[H2Dialect, N]
-  with H2JdbcContextBase[N] {
-
+  with H2JdbcContextBase[H2Dialect, N] {
+  override val idiom: H2Dialect = H2Dialect
   def this(naming: N, config: JdbcContextConfig) = this(naming, config.dataSource)
   def this(naming: N, config: Config) = this(naming, JdbcContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
