@@ -5,9 +5,9 @@ import io.getquill.ast.{ Ast, Ident, Property }
 object QuatNestingHelper {
   def valueQuat(quat: Quat): Quat =
     quat match {
-      case Quat.BooleanExpression => Quat.BooleanValue
-      case Quat.Product(fields)   => Quat.Product(fields.toList.map { case (k, v) => (k, valueQuat(v)) })
-      case other                  => other
+      case Quat.BooleanExpression   => Quat.BooleanValue
+      case p @ Quat.Product(fields) => Quat.Product(p.name, fields.toList.map { case (k, v) => (k, valueQuat(v)) })
+      case other                    => other
     }
 
   def valuefyQuatInProperty(ast: Ast): Ast =

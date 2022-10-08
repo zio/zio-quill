@@ -393,7 +393,11 @@ lazy val `quill-codegen-tests` =
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
 val excludeTests =
-  sys.props.getOrElse("excludeTests", "false").toBoolean
+  sys.props.getOrElse("excludeTests", "false") match {
+    case "false" => ExcludeTests.Include
+    case "true" => ExcludeTests.Exclude
+    case regex => ExcludeTests.KeepSome(regex)
+  }
 
 val skipPush =
   sys.props.getOrElse("skipPush", "false").toBoolean
@@ -485,6 +489,14 @@ lazy val `quill-jdbc-zio` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(
+      libraryDependencies ++= Seq(
+        // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
+        "org.postgresql" % "postgresql" % "42.3.6" %  "provided"
+      ) ++ (
+        // zio-json does not exist for Scala 2.11
+        if (!isScala211) Seq("dev.zio" %% "zio-json" % "0.3.0")
+        else Seq()
+      ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
           if (test.name endsWith "IntegrationSpec")
@@ -501,19 +513,12 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-
-
-
-
-
 lazy val `quill-ndbc-monix` =
   (project in file("quill-ndbc-monix"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-      )
+      Test / fork := true
     )
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -812,35 +817,67 @@ lazy val jdbcTestingLibraries = Seq(
     "mysql"                   %  "mysql-connector-java"    % "8.0.29"             % Test,
     "com.h2database"          %  "h2"                      % "2.1.212"            % Test,
     "org.postgresql"          %  "postgresql"              % "42.3.6"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.36.0.3"             % Test,
-    "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.1.1.jre8-preview" % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.39.3.0"             % Test,
+    "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.2.2.jre8"        % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
     "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"              % Test
   )
 )
 
-lazy val jdbcTestingSettings = jdbcTestingLibraries ++ Seq(
-  Test / fork := true,
+
+
+lazy val excludeFilterSettings = Seq(
   unmanagedSources / excludeFilter := {
+    lazy val paths =
+      (Test / unmanagedSourceDirectories)
+        .value
+        .map(dir => dir.getCanonicalPath)
+
     excludeTests match {
-      case true =>
-        excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
-      case false =>
+      case ExcludeTests.Include =>
         excludePaths(List())
-    }
+      case _ =>
+        excludePaths(paths)    }
   }
 )
 
+lazy val jdbcTestingSettings = excludeFilterSettings ++ jdbcTestingLibraries ++ Seq(
+  Test / fork := true
+)
+
 def excludePaths(paths:Seq[String]) = {
-  val excludeThisPath =
-    (path: String) =>
-      paths.exists { srcDir =>
-        (path contains srcDir)
-      }
+  def isBasePathExcluded(path: String) =
+    paths.exists { srcDir =>
+      (path contains srcDir)
+    }
+  def isKeptOverride(path: String): Boolean =
+    excludeTests match {
+      case ExcludeTests.KeepSome(regex) =>
+        def keepFilter(path: String) = {
+          val keep =
+            path.matches(regex) ||
+              path.contains("io/getquill/context/sql/base") ||
+              path.contains("io/getquill/context/sql/ProductSpec") ||
+              path.contains("TestContext") ||
+              path.contains("package.scala") ||
+              path.contains("oracle.scala") ||
+              path.contains("io/getquill/UpperCaseNonDefault") ||
+              path.contains("io/getquill/base") ||
+              path.contains("io/getquill/TestEntities") ||
+              path.contains("io/getquill/context/sql/TestEncoders") ||
+              path.contains("io/getquill/context/sql/TestDecoders") ||
+              path.contains("io/getquill/context/sql/encoding/ArrayEncodingBaseSpec") ||
+              path.contains("EncodingSpec")
+          if (keep) println(s"KEEPING: ${path}")
+          keep
+        }
+        keepFilter(path)
+      case _ => false
+    }
   new SimpleFileFilter(file => {
-    if (excludeThisPath(file.getCanonicalPath))
-      println(s"Excluding: ${file.getCanonicalPath}")
-    excludeThisPath(file.getCanonicalPath)
+    val exclude = isBasePathExcluded(file.getCanonicalPath) && !isKeptOverride(file.getCanonicalPath)
+    if (exclude) println(s"Excluding: ${file.getCanonicalPath}")
+    exclude
   })
 }
 
@@ -855,14 +892,8 @@ lazy val loggingSettings = Seq(
   )
 )
 
-lazy val basicSettings = Seq(
+lazy val basicSettings = excludeFilterSettings ++ Seq(
   Test / testOptions += Tests.Argument("-oI"),
-  unmanagedSources / excludeFilter := {
-    excludeTests match {
-      case true  => excludePaths((Test / unmanagedSourceDirectories).value.map(dir => dir.getCanonicalPath))
-      case false => new SimpleFileFilter(file => false)
-    }
-  },
   organization := "io.getquill",
   scalaVersion := scala_v_12,
   crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13, scala_v_30),

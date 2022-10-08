@@ -48,7 +48,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
           Product.Type.Concrete
       // Note, some extra renames from properties that don't exist could make it here.
       // Need to make sure to ignore extra ones when they are actually applied.
-      Quat.Product(newFields).withRenames(other.renames).withType(newTpe)
+      Quat.Product(q.name, newFields).withRenames(other.renames).withType(newTpe)
     }
   }
 

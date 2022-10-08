@@ -275,10 +275,10 @@ trait StatefulTransformerWithStack[T] {
       case Tuple(a) =>
         val (at, att) = apply(a)(s => (u => s.apply(u)(History(e))))
         (Tuple(at), att)
-      case CaseClass(a) =>
+      case CaseClass(n, a) =>
         val (keys, values) = a.unzip
         val (at, att) = apply(values)(s => (u => s.apply(u)(History(e))))
-        (CaseClass(keys.zip(at)), att)
+        (CaseClass(n, keys.zip(at)), att)
     }
 
   def apply(e: Action)(implicit parent: History): (Action, StatefulTransformerWithStack[T]) =

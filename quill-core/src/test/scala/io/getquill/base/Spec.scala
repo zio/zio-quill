@@ -14,8 +14,8 @@ import scala.concurrent.{ Await, Future }
 
 abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
   val QV = Quat.Value
-  val QEP = Quat.Product.empty
-  def QP(fields: String*) = Quat.LeafProduct(fields: _*)
+  val QEP = Quat.Product.empty("Product")
+  def QP(name: String, fields: String*) = Quat.LeafProduct(name, fields: _*)
 
   // Used by various tests to replace temporary idents created by AttachToEntity with 'x'
   val replaceTempIdent = new StatelessTransformer {

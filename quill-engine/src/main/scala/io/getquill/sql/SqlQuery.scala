@@ -85,11 +85,11 @@ object TakeDropFlatten {
 object CaseClassMake {
   def fromQuat(quat: Quat)(idName: String) =
     quat match {
-      case Quat.Product(fields) =>
-        CaseClass(fields.toList.map { case (name, _) => (name, Property(Ident(idName, quat), name)) })
+      case p @ Quat.Product(fields) =>
+        CaseClass(p.name, fields.toList.map { case (name, _) => (name, Property(Ident(idName, quat), name)) })
       // Figure out a way to test this case?
       case _ =>
-        CaseClass(List((idName, Ident(idName, quat))))
+        CaseClass(CaseClass.GeneratedName, List((idName, Ident(idName, quat))))
     }
 }
 
