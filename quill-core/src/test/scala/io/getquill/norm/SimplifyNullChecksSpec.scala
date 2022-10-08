@@ -4,8 +4,8 @@ import io.getquill.ast._
 import io.getquill.ast.Implicits._
 import io.getquill.base.Spec
 import io.getquill.norm.EqualityBehavior.{ AnsiEquality, NonAnsiEquality }
-import io.getquill.testContext.{ quote, unquote }
-import io.getquill.testContext.extras._
+import io.getquill.MirrorContexts.testContext.{ quote, unquote }
+import io.getquill.MirrorContexts.testContext.extras._
 
 class SimplifyNullChecksSpec extends Spec {
 

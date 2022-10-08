@@ -184,10 +184,10 @@ class StatefulTransformerSpec extends Spec {
         }
       }
       "caseclass" in {
-        val ast: Ast = CaseClass(List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
+        val ast: Ast = CaseClass("CC", List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {
           case (at, att) =>
-            at mustEqual CaseClass(List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
+            at mustEqual CaseClass("CC", List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
             att.state mustEqual List(Ident("a"), Ident("b"), Ident("c"))
         }
       }
@@ -331,7 +331,7 @@ class StatefulTransformerSpec extends Spec {
       }
     }
 
-    "infix" in {
+    "sql" in {
       val ast: Ast = Infix(List("test"), List(Ident("a")), false, false, QV)
       Subject(Nil, Ident("a") -> Ident("a'"))(ast) match {
         case (at, att) =>

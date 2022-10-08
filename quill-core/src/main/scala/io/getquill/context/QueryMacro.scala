@@ -126,7 +126,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
       q"""
         ..${EnableReflectiveCalls(c)}
         val staticTopLevelQuat = ${if (Messages.attachTopLevelQuats) liftQuat(topLevelQuat) else q"io.getquill.quat.Quat.Unknown"}
-        val expanded = ${expand(ast, topLevelQuat)}
+        val (idiomContext, expanded) = ${expand(ast, topLevelQuat)}
         ${invocation}
       """
     }
@@ -205,7 +205,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
       q"""
         ..${EnableReflectiveCalls(c)}
         val staticTopLevelQuat = ${if (Messages.attachTopLevelQuats) liftQuat(topLevelQuat) else q"io.getquill.quat.Quat.Unknown"}
-        val expanded = ${expand(ast, topLevelQuat)}
+        val (idiomContext, expanded) = ${expand(ast, topLevelQuat)}
         ${invocation}
       """
     }

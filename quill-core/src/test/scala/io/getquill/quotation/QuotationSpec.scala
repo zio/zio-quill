@@ -5,7 +5,7 @@ import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.context.ValueClass
 import io.getquill.norm.NormalizeStringConcat
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.util.Messages
 import io.getquill.Ord
 import io.getquill.Query
@@ -16,7 +16,7 @@ import io.getquill.base.Spec
 import scala.math.BigDecimal.{ double2bigDecimal, int2bigDecimal, javaBigDecimal2bigDecimal, long2bigDecimal }
 
 case class CustomAnyValue(i: Int) extends AnyVal
-case class EmbeddedValue(s: String, i: Int) extends Embedded
+case class EmbeddedValue(s: String, i: Int)
 
 class QuotationSpec extends Spec {
 
@@ -107,20 +107,20 @@ class QuotationSpec extends Spec {
 
         "with implicit property and generic" in {
           implicit class LimitQuery[T](q: Query[T]) {
-            def limitQuery = quote(infix"$q LIMIT 1".as[Query[T]])
+            def limitQuery = quote(sql"$q LIMIT 1".as[Query[T]])
           }
           val q = quote { query[TableData].limitQuery }
           q.ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, false, Quat.Generic)
           quote(unquote(q)).ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, false, Quat.LeafProduct("id"))
         }
         "with method and generic" in {
-          def limitQuery[T] = quote { (q: Query[T]) => infix"$q LIMIT 1".as[Query[T]] }
+          def limitQuery[T] = quote { (q: Query[T]) => sql"$q LIMIT 1".as[Query[T]] }
           val q = quote { limitQuery(query[TableData]) }
           q.ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, false, Quat.Generic)
           quote(unquote(q)).ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, false, Quat.LeafProduct("id"))
         }
         "with method and generic - typed" in {
-          def limitQuery[T] = quote { (q: Query[T]) => infix"$q LIMIT 1".as[Query[T]] }
+          def limitQuery[T] = quote { (q: Query[T]) => sql"$q LIMIT 1".as[Query[T]] }
           val q = quote { limitQuery[TableData](query[TableData]) }
           q.ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, false, Quat.Generic)
           quote(unquote(q)).ast mustEqual Infix(List("", " LIMIT 1"), List(Entity("TableData", List(), Quat.LeafProduct("id"))), false, false, Quat.LeafProduct("id"))
@@ -1169,17 +1169,17 @@ class QuotationSpec extends Spec {
         quote(unquote(q)).ast mustEqual Map(Entity("TestEntity", Nil, TestEntityQuat), Ident("t"), UnaryOperation(StringOperator.`toInt`, Property(Ident("t"), "s")))
       }
     }
-    "infix" - {
+    "sql" - {
       "with `as`" in {
         val q = quote {
-          infix"true".as[Boolean]
+          sql"true".as[Boolean]
         }
         quote(unquote(q)).ast mustEqual Infix(List("true"), Nil, false, false, Quat.BooleanValue)
       }
       "with params" in {
         val q = quote {
           (a: String, b: String) =>
-            infix"$a || $b".as[String]
+            sql"$a || $b".as[String]
         }
         quote(unquote(q)).ast.body mustEqual Infix(List("", " || ", ""), List(Ident("a"), Ident("b")), false, false, QV)
       }
@@ -1188,7 +1188,7 @@ class QuotationSpec extends Spec {
           val b = "dyn"
           val q = quote {
             (a: String) =>
-              infix"$a || #$b".pure.as[String]
+              sql"$a || #$b".pure.as[String]
           }
           quote(unquote(q)).ast must matchPattern {
             case Function(_, Infix(List("", " || dyn"), List(Ident("a", Quat.Value)), true, false, QV)) =>
@@ -1198,7 +1198,7 @@ class QuotationSpec extends Spec {
           val b = "dyn"
           val q = quote {
             (a: String) =>
-              infix"$a || #$b".as[String]
+              sql"$a || #$b".as[String]
           }
           quote(unquote(q)).ast must matchPattern {
             case Function(_, Infix(List("", " || dyn"), List(Ident("a", Quat.Value)), false, false, QV)) =>
@@ -1208,7 +1208,7 @@ class QuotationSpec extends Spec {
           val a = "dyn"
           val q = quote {
             (b: String) =>
-              infix"#$a || $b".pure.as[String]
+              sql"#$a || $b".pure.as[String]
           }
           quote(unquote(q)).ast must matchPattern {
             case Function(_, Infix(List("dyn || ", ""), List(Ident("b", Quat.Value)), true, false, QV)) =>
@@ -1218,7 +1218,7 @@ class QuotationSpec extends Spec {
           val a = "dyn"
           val q = quote {
             (b: String) =>
-              infix"#$a || $b".as[String]
+              sql"#$a || $b".as[String]
           }
           quote(unquote(q)).ast must matchPattern {
             case Function(_, Infix(List("dyn || ", ""), List(Ident("b", Quat.Value)), false, false, QV)) =>
@@ -1227,7 +1227,7 @@ class QuotationSpec extends Spec {
         "only" in {
           val a = "dyn1"
           val q = quote {
-            infix"#$a".as[String]
+            sql"#$a".as[String]
           }
           quote(unquote(q)).ast mustEqual Infix(List("dyn1"), List(), false, false, QV)
         }
@@ -1235,7 +1235,7 @@ class QuotationSpec extends Spec {
           val a = "dyn1"
           val b = "dyn2"
           val q = quote {
-            infix"#$a#$b".pure.as[String]
+            sql"#$a#$b".pure.as[String]
           }
           quote(unquote(q)).ast mustEqual Infix(List("dyn1dyn2"), List(), true, false, QV)
         }
@@ -1243,7 +1243,7 @@ class QuotationSpec extends Spec {
           val a = "dyn1"
           val b = "dyn2"
           val q = quote {
-            infix"#$a#$b".as[String]
+            sql"#$a#$b".as[String]
           }
           quote(unquote(q)).ast mustEqual Infix(List("dyn1dyn2"), List(), false, false, QV)
         }
@@ -1251,7 +1251,7 @@ class QuotationSpec extends Spec {
           case class Value(a: String)
           val a = Value("dyn")
           val q = quote {
-            infix"#$a".as[String]
+            sql"#$a".as[String]
           }
           quote(unquote(q)).ast mustEqual Infix(List("Value(dyn)"), List(), false, false, QV)
         }
@@ -1348,7 +1348,7 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast.body mustEqual OptionForall(Ident("o"), Ident("v"), Ident("v"))
         }
         "embedded" in {
-          case class EmbeddedEntity(id: Int) extends Embedded
+          case class EmbeddedEntity(id: Int)
           "quote((o: Option[EmbeddedEntity]) => o.forall(v => v.id == 1))" mustNot compile
         }
       }
@@ -1360,7 +1360,7 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast.body mustEqual FilterIfDefined(Ident("o"), Ident("v"), Ident("v"))
         }
         "embedded" in {
-          case class EmbeddedEntity(id: Int) extends Embedded
+          case class EmbeddedEntity(id: Int)
           "quote((o: Option[EmbeddedEntity]) => o.filterIfDefined(v => v.id == 1))" mustNot compile
         }
       }
@@ -1379,7 +1379,7 @@ class QuotationSpec extends Spec {
             Property(Ident("v"), "id") +==+ Constant.auto(4))
         }
         "embedded" in {
-          case class EmbeddedEntity(id: Int) extends Embedded
+          case class EmbeddedEntity(id: Int)
           val q = quote {
             (o: Option[EmbeddedEntity]) => o.exists(v => v.id == 1)
           }
@@ -1666,13 +1666,13 @@ class QuotationSpec extends Spec {
           object implicits extends Implicits
           import implicits._
           val q = quote(query[TestEntity].toRandom)
-          val l = q.liftings.`implicits.ToRadom(null.asInstanceOf[io.getquill.EntityQuery[io.getquill.testContext.TestEntity]]).toRandom.Implicits.this.random`
+          val l = q.liftings.`implicits.ToRadom(null.asInstanceOf[io.getquill.EntityQuery[io.getquill.MirrorContexts.testContext.TestEntity]]).toRandom.Implicits.this.random`
           l.value mustEqual 999
           l.encoder mustEqual intEncoder
         }
       }
       "embedded" in {
-        case class EmbeddedTestEntity(id: String) extends Embedded
+        case class EmbeddedTestEntity(id: String)
         case class TestEntity(embedded: EmbeddedTestEntity)
         val t = TestEntity(EmbeddedTestEntity("test"))
         val q = quote {
@@ -1816,14 +1816,14 @@ class QuotationSpec extends Spec {
   "supports implicit quotations" - {
     "implicit class" in {
       implicit class ForUpdate[T](q: Query[T]) {
-        def forUpdate = quote(infix"$q FOR UPDATE")
+        def forUpdate = quote(sql"$q FOR UPDATE")
       }
 
       val q = quote {
         query[TestEntity].forUpdate
       }
       val n = quote {
-        infix"${query[TestEntity]} FOR UPDATE"
+        sql"${query[TestEntity]} FOR UPDATE"
       }
       quote(unquote(q)).ast mustEqual n.ast
     }

@@ -31,7 +31,7 @@ class ExpandDistinctSpec extends Spec {
         qr1.map(e => Rec(e.i, e.l)).distinct.nested
       }
       ExpandDistinct(q.ast).toString mustEqual
-        """querySchema("TestEntity").map(e => CaseClass(one: e.i, two: e.l)).distinct.map(e => CaseClass(one: e.one, two: e.two)).nested"""
+        """querySchema("TestEntity").map(e => Rec(one: e.i, two: e.l)).distinct.map(e => Rec(one: e.one, two: e.two)).nested"""
     }
     "with tuple" in {
       val q = quote {

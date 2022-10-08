@@ -98,7 +98,7 @@ object DbHelper {
         import ctx._
         val tables =
           ctx.run(
-            infix"""
+            sql"""
             (select table_catalog as _1, table_schema as _2, table_name as _3, table_type as _4 from codegen_test.information_schema.tables) UNION
             (select table_catalog as _1, table_schema as _2, table_name as _3, table_type as _4 from alpha.information_schema.tables) UNION
             (select table_catalog as _1, table_schema as _2, table_name as _3, table_type as _4 from bravo.information_schema.tables)

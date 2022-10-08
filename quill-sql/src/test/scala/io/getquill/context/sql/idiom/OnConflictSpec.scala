@@ -25,7 +25,7 @@ trait OnConflictSpec extends Spec {
   def `cols target - update` = quote {
     ins.onConflictUpdate(_.i, _.s)((t, e) => t.l -> (t.l + e.l) / 2, _.s -> _.s)
   }
-  def insBatch = quote(liftQuery(Seq(e, TestEntity("s2", 1, 2L, Some(1), true))))
+  def insBatch = quote(liftQuery(List(e, TestEntity("s2", 1, 2L, Some(1), true))))
 
   def `no target - ignore batch` = quote {
     insBatch.foreach(query[TestEntity].insertValue(_).onConflictIgnore)

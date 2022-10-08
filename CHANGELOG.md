@@ -1,3 +1,48 @@
+# 4.6.0
+
+- [Implementing Postgres json/jsonb encoding via zio-json](https://github.com/zio/zio-quill/pull/2615)
+
+# 4.5.0
+
+- [Remove the need to make things embedded, happens automatically](https://github.com/zio/zio-quill/pull/2607)
+- [Date encoders for major date types. Extensible context.](https://github.com/zio/zio-quill/pull/2598)
+- [Warning about embedding fields that should have encoders](https://github.com/zio/zio-quill/pull/2610)
+- [jasync zio current schema configuration, jasync version  update](https://github.com/zio/zio-quill/pull/2588)
+
+#### Migration Notes:
+- It is no longer necessary to do extend `Embedded` for case classes that should be embedded within an entity. 
+  In the case that the embedded case class "looks" like it should be encoded/decoded (i.e. it has only one field),
+  an additional warning has been introduced to notify the user of this potential issue. 
+
+# 4.4.1
+
+- [Fixing VALUES-clause update query naming](https://github.com/zio/zio-quill/pull/2595)
+
+# 4.4.0
+
+- [UPDATE with VALUES optimization for Postgres. Various macro refactoring.](https://github.com/zio/zio-quill/pull/2571)
+
+# 4.3.0
+
+- [Values clause batch insert](https://github.com/zio/zio-quill/pull/2565)
+- [Slightly better batch logging](https://github.com/zio/zio-quill/pull/2562)
+- ["transaction" supports ZIO effects with mixed environments](https://github.com/zio/zio-quill/pull/2515)
+
+# 4.2.0
+
+- [Implement ZIO-Idiomatic JDBC Context](https://github.com/zio/zio-quill/pull/2537)
+- [Update idiomatic pattern based on discussions](https://github.com/zio/zio-quill/pull/2546)
+- [Implement ZIO idiomatic pattern for cassandra](https://github.com/zio/zio-quill/pull/2549)
+- [Add switch to manually disable returning/output-clauses](https://github.com/zio/zio-quill/pull/2550)
+- [cassandra - update if exists](https://github.com/zio/zio-quill/pull/2359)
+- [Change infix”$content” to sql”$content”](https://github.com/zio/zio-quill/pull/2547)
+- [Remove mysql as](https://github.com/zio/zio-quill/pull/2540)
+
+#### Migration Notes:
+- The `infix` interpolator is now deprecated because in Scala 2, infix is a keyword. Instead of
+  `infix"MyUdf(${person.name})"` use `sql"MyUdf(${person.name})"`. For contexts such as Doobie that already
+  have an `sql` interpolator. Import `context.compat._` and use the `qsql` interpolator instead. 
+
 # 4.1.0
 
 - [Implement groupByMap and EnableTrace/DisablePhase functionality](https://github.com/zio/zio-quill/pull/2517)
@@ -501,7 +546,7 @@ Migration Notes:
 
    For example:
    ```
-   query[Person].filter(p => infix"isJoe(p.name)".as[Boolean])
+   query[Person].filter(p => sql"isJoe(p.name)".as[Boolean])
    // SELECT ... FROM Person p WHERE isJoe(p.name)
    // Becomes> SELECT ... FROM Person p WHERE 1 = isJoe(p.name)
    ```
@@ -511,16 +556,16 @@ Migration Notes:
    In some cases however, it is desirable for the above behavior not to happen and for the whole infix statement to be treated
    as an expression. For example
    ```
-   query[Person].filter(p => infix"${p.age} > 21".as[Boolean])
+   query[Person].filter(p => sql"${p.age} > 21".as[Boolean])
    // We Need This> SELECT ... FROM Person p WHERE p.age > 21
    // Not This> SELECT ... FROM Person p WHERE 1 = p.age > 21
    ```
-   In order to have this behavior, instead of `infix"...".as[Boolean]`, use `infix"...".asCondition`.
+   In order to have this behavior, instead of `sql"...".as[Boolean]`, use `sql"...".asCondition`.
    ```
-   query[Person].filter(p => infix"${p.age} > 21".asCondition)
+   query[Person].filter(p => sql"${p.age} > 21".asCondition)
    // We Need This> SELECT ... FROM Person p WHERE p.age > 21
    ```
-   If the condition represents a pure function, be sure to use `infix"...".pure.asCondition`.
+   If the condition represents a pure function, be sure to use `sql"...".pure.asCondition`.
 
 
 # 3.6.0-RC3
@@ -541,7 +586,7 @@ Migration Notes:
 
    For example:
    ```
-   query[Person].filter(p => infix"isJoe(p.name)".as[Boolean])
+   query[Person].filter(p => sql"isJoe(p.name)".as[Boolean])
    // SELECT ... FROM Person p WHERE isJoe(p.name)
    // Becomes> SELECT ... FROM Person p WHERE 1 = isJoe(p.name)
    ```
@@ -551,16 +596,16 @@ Migration Notes:
    In some cases however, it is desirable for the above behavior not to happen and for the whole infix statement to be treated
    as an expression. For example
    ```
-   query[Person].filter(p => infix"${p.age} > 21".as[Boolean])
+   query[Person].filter(p => sql"${p.age} > 21".as[Boolean])
    // We Need This> SELECT ... FROM Person p WHERE p.age > 21
    // Not This> SELECT ... FROM Person p WHERE 1 = p.age > 21
    ```
-   In order to have this behavior, instead of `infix"...".as[Boolean]`, use `infix"...".asCondition`.
+   In order to have this behavior, instead of `sql"...".as[Boolean]`, use `sql"...".asCondition`.
    ```
-   query[Person].filter(p => infix"${p.age} > 21".asCondition)
+   query[Person].filter(p => sql"${p.age} > 21".asCondition)
    // We Need This> SELECT ... FROM Person p WHERE p.age > 21
    ```
-   If the condition represents a pure function, be sure to use `infix"...".pure.asCondition`.
+   If the condition represents a pure function, be sure to use `sql"...".pure.asCondition`.
  - This realease is not binary compatible with any Quill version before 3.5.3.
  - Any code generated by the Quill Code Generator with `quote { ... }` blocks will have to be regenerated with this
    Quill version if generated before 3.5.3.
@@ -776,7 +821,7 @@ they are in the correct position.
 
 Migration Notes:
 - Infixes are now not treated as pure functions by default. This means wherever they are used, nested queries may be created.
-You can use `.pure` (e.g. `infix"MY_PURE_UDF".pure.as[T]`) to revert to the previous behavior. See the
+You can use `.pure` (e.g. `sql"MY_PURE_UDF".pure.as[T]`) to revert to the previous behavior. See the
 [Infix](https://github.com/getquill/quill/tree/36842c4801c95a7609ba94c450645f3c022b3e2e#infix)
 section of the documentation for more detail.
 
