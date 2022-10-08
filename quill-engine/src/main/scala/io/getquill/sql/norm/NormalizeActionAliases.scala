@@ -21,6 +21,22 @@ object NormalizeFilteredActionAliases {
   }
 }
 
+/** In actions inner properties typically result from embedded classes, hide them */
+object HideInnerProperties extends StatelessTransformer {
+  override def apply(e: Property): Property =
+    e.copyAll(ast = recurseHide(e.ast))
+
+  // Note should also transformation for properties where queries are in the Returning(...) slot of actions.
+  // Their inner properties should be hidden by select expansion anyway.
+  private def recurseHide(ast: Ast): Ast =
+    ast match {
+      case p @ Property(inner, _) =>
+        val innerNew = recurseHide(inner)
+        p.copyAll(ast = innerNew, visibility = Visibility.Hidden)
+      case _ => ast
+    }
+}
+
 case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends StatelessTransformer {
 
   override def apply(e: Action): Action =

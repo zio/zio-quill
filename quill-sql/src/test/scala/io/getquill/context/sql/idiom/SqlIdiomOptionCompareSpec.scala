@@ -139,7 +139,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
     }
     "embedded" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(value: Int) extends Embedded
+      case class EmbeddedEntity(value: Int)
 
       "exists" in {
         val q = quote {
@@ -158,7 +158,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
     }
     "nested" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(optionalValue: Option[Int]) extends Embedded
+      case class EmbeddedEntity(optionalValue: Option[Int])
 
       "contains" in {
         val q = quote {
@@ -349,7 +349,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
     }
     "embedded" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(value: Int) extends Embedded
+      case class EmbeddedEntity(value: Int)
 
       "exists" in {
         val q = quote {
@@ -368,7 +368,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
     }
     "nested" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(optionalValue: Option[Int]) extends Embedded
+      case class EmbeddedEntity(optionalValue: Option[Int])
 
       "contains" in {
         val q = quote {

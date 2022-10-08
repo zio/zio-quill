@@ -57,7 +57,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect], traceConfig: TraceConf
                 case (ast, index) =>
                   findMissingInfixes(ast, parentOrder :+ index)
               }
-          case CaseClass(values) =>
+          case CaseClass(_, values) =>
             values.zipWithIndex
               .filter(v => containsInfix(v._1._2))
               .flatMap {

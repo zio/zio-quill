@@ -14,7 +14,8 @@ class SqliteMonixJdbcContext[+N <: NamingStrategy](
   val dataSource: DataSource with Closeable,
   runner:         EffectWrapper
 ) extends MonixJdbcContext[SqliteDialect, N](dataSource, runner)
-  with SqliteJdbcContextBase[N] {
+  with SqliteJdbcContextBase[SqliteDialect, N] {
+  val idiom: SqliteDialect = SqliteDialect
 
   def this(naming: N, config: JdbcContextConfig, runner: EffectWrapper) = this(naming, config.dataSource, runner)
   def this(naming: N, config: Config, runner: EffectWrapper) = this(naming, JdbcContextConfig(config), runner)

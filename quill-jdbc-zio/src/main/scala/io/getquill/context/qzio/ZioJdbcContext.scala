@@ -5,6 +5,7 @@ import io.getquill.context.jdbc.JdbcContextTypes
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context._
 import io.getquill.jdbczio.Quill
+import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream

@@ -22,7 +22,7 @@ object TopLevelExpansion {
           case (ast, i) =>
             SelectValue(ast, Some(s"_${i + 1}"), concat)
         }
-      case SelectValue(CaseClass(fields), alias, concat) =>
+      case SelectValue(CaseClass(_, fields), alias, concat) =>
         fields.map {
           case (name, ast) =>
             SelectValue(ast, Some(name), concat)
