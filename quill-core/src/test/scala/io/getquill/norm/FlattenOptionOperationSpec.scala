@@ -12,6 +12,7 @@ class FlattenOptionOperationSpec extends Spec { //hello
 
   def o = Ident("o")
   def c1 = Constant.auto(1)
+  def c2 = Constant.auto(2)
   def cFoo = Constant.auto("foo")
   def cBar = Constant.auto("bar")
   def cValue = Constant.auto("value")
@@ -24,7 +25,31 @@ class FlattenOptionOperationSpec extends Spec { //hello
         (o: Option[Int]) => o.getOrElse(1)
       }
       new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-        If(BinaryOperation(Ident("o"), EqualityOperator.`_!=`, NullValue), Ident("o"), Constant.auto(1))
+        IfExist(o, o, c1)
+    }
+    "orElse" - {
+      "regular operation" in {
+        val q = quote {
+          (o: Option[Int]) => o.orElse(Option(1))
+        }
+        new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+          IfExist(o, o, c1)
+      }
+      "with forall" in {
+        val q = quote {
+          (o: Option[Int]) => o.orElse(Option(1)).forall(_ == 2)
+        }
+        new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+          ((o +==+ c2) +||+ (IsNullCheck(o) +&&+ (c1 +==+ c2))
+            +||+ (IsNullCheck(o) +&&+ IsNullCheck(c1)))
+      }
+      "with exists" in {
+        val q = quote {
+          (o: Option[Int]) => o.orElse(Option(1)).contains(2)
+        }
+        new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+          ((o +==+ c2 +&&+ IsNotNullCheck(o)) +||+ (c1 +==+ c2 +&&+ IsNotNullCheck(c1)))
+      }
     }
     "flatten" - {
       "regular operation" in {
@@ -105,7 +130,7 @@ class FlattenOptionOperationSpec extends Spec { //hello
           (o: Option[String]) => o.map(s => s + "foo")
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          o +++ Constant.auto("foo")
+          o +++ cFoo
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
           IfExistElseNull(o, o +++ cFoo)
       }
@@ -114,9 +139,9 @@ class FlattenOptionOperationSpec extends Spec { //hello
           (o: Option[String]) => o.map(s => if (s == "value") "foo" else "bar")
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          IfExist(o, If(o +==+ cValue, cFoo, cBar), NullValue)
+          IfExistElseNull(o, If(o +==+ cValue, cFoo, cBar))
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          IfExist(o, If(o +==+ cValue, cFoo, cBar), NullValue)
+          IfExistElseNull(o, If(o +==+ cValue, cFoo, cBar))
       }
     }
     "map row" in {
@@ -224,7 +249,7 @@ class FlattenOptionOperationSpec extends Spec { //hello
         (o: Option[Int]) => o.contains(1)
       }
       new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-        BinaryOperation(Ident("o"), EqualityOperator.`_==`, Constant.auto(1))
+        (o +==+ c1)
     }
   }
 }

@@ -94,6 +94,10 @@ trait StatefulTransformerWithStack[T] {
         val (at, att) = apply(a)(History(o))
         val (ct, ctt) = att.apply(c)(History(o))
         (OptionGetOrElse(at, ct), ctt)
+      case OptionOrElse(a, c) =>
+        val (at, att) = apply(a)(History(o))
+        val (ct, ctt) = att.apply(c)(History(o))
+        (OptionOrElse(at, ct), ctt)
       case OptionFlatMap(a, b, c) =>
         val (at, att) = apply(a)(History(o))
         val (ct, ctt) = att.apply(c)(History(o))

@@ -78,6 +78,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (OptionGetOrElse(at, ct), ctt)
+      case OptionOrElse(a, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionOrElse(at, ct), ctt)
       case OptionFlatMap(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)

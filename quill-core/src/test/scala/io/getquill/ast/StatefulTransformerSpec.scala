@@ -415,6 +415,14 @@ class StatefulTransformerSpec extends Spec {
             att.state mustEqual List(Ident("a"), Ident("b"))
         }
       }
+      "orElse" in {
+        val ast: Ast = OptionOrElse(Ident("a"), Ident("b"))
+        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) match {
+          case (at, att) =>
+            at mustEqual OptionOrElse(Ident("a'"), Ident("b'"))
+            att.state mustEqual List(Ident("a"), Ident("b"))
+        }
+      }
       "flatMap - Unchecked" in {
         val ast: Ast = OptionTableFlatMap(Ident("a"), Ident("b"), Ident("c"))
         Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) match {

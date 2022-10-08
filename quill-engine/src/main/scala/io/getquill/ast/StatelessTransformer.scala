@@ -48,6 +48,7 @@ trait StatelessTransformer {
       case OptionTableForall(a, b, c)  => OptionTableForall(apply(a), applyIdent(b), apply(c))
       case OptionFlatten(a)            => OptionFlatten(apply(a))
       case OptionGetOrElse(a, b)       => OptionGetOrElse(apply(a), apply(b))
+      case OptionOrElse(a, b)          => OptionOrElse(apply(a), apply(b))
       case OptionFlatMap(a, b, c)      => OptionFlatMap(apply(a), applyIdent(b), apply(c))
       case OptionMap(a, b, c)          => OptionMap(apply(a), applyIdent(b), apply(c))
       case OptionForall(a, b, c)       => OptionForall(apply(a), applyIdent(b), apply(c))

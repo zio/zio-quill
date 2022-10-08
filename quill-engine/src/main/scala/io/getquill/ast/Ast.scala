@@ -488,6 +488,7 @@ object Property {
 sealed trait OptionOperation extends Ast
 case class OptionFlatten(ast: Ast) extends OptionOperation { def quat = ast.quat; def bestQuat = ast.bestQuat }
 case class OptionGetOrElse(ast: Ast, body: Ast) extends OptionOperation { def quat = body.quat; def bestQuat = body.bestQuat }
+case class OptionOrElse(ast: Ast, body: Ast) extends OptionOperation { def quat = body.quat; def bestQuat = body.bestQuat }
 case class OptionFlatMap(ast: Ast, alias: Ident, body: Ast)
   extends OptionOperation { def quat = body.quat; def bestQuat = body.bestQuat }
 case class OptionMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation { def quat = body.quat; def bestQuat = body.bestQuat }

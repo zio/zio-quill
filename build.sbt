@@ -942,8 +942,8 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     "-unchecked",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
-    "-Ywarn-value-discard"
-
+    "-Ywarn-value-discard",
+    "-Ypatmat-exhaust-depth", "40"
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
