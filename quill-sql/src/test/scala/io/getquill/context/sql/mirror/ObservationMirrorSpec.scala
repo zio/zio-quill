@@ -8,8 +8,8 @@ class ObservationMirrorSpec extends Spec {
   val ctx = io.getquill.context.sql.testContext
   import ctx._
 
-  case class LatLon(lat: Int, lon: Int) extends Embedded
-  case class ScalarData(value: Long, position: Option[LatLon]) extends Embedded
+  case class LatLon(lat: Int, lon: Int)
+  case class ScalarData(value: Long, position: Option[LatLon])
   case class Observation(data: Option[ScalarData], foo: Option[String], bar: Option[String])
 
   val obs = quote {

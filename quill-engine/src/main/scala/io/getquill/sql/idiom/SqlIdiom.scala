@@ -1,7 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import com.github.takayahilton.sqlformatter._
-import io.getquill.{ NamingStrategy, IdiomContext }
+import io.getquill.{ IdiomContext, NamingStrategy }
 import io.getquill.ast.BooleanOperator._
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Hidden
@@ -18,8 +18,8 @@ import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken }
 import io.getquill.quat.Quat
 import io.getquill.sql.norm.{ HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects }
-import io.getquill.util.{ Interleave, Messages, TraceConfig }
-import io.getquill.util.Messages.{ fail, trace }
+import io.getquill.util.{ Interleave, Interpolator, Messages, TraceConfig }
+import io.getquill.util.Messages.{ TraceType, fail, trace }
 
 trait SqlIdiom extends Idiom {
 
@@ -43,10 +43,11 @@ trait SqlIdiom extends Idiom {
 
   // See HideTopLevelFilterAlias for more detail on how this works
   def querifyAction(ast: Action, batchAlias: Option[String]) = {
-    val norm = new NormalizeFilteredActionAliases(batchAlias)(ast)
+    val norm1 = new NormalizeFilteredActionAliases(batchAlias)(ast)
+    val norm2 = io.getquill.sql.norm.HideInnerProperties(norm1)
     useActionTableAliasAs match {
-      case ActionTableAliasBehavior.Hide => HideTopLevelFilterAlias(norm)
-      case _                             => norm
+      case ActionTableAliasBehavior.Hide => HideTopLevelFilterAlias(norm2)
+      case _                             => norm2
     }
   }
 
@@ -62,26 +63,28 @@ trait SqlIdiom extends Idiom {
 
     implicit val transpileContextImplicit: IdiomContext = idiomContext
     implicit val tokernizer: Tokenizer[Ast] = defaultTokenizer
+    val interp = new Interpolator(TraceType.SqlNormalizations, idiomContext.traceConfig, 1)
+    import interp._
 
     val token =
       normalizedAst match {
         case q: Query =>
           val sql = querifyAst(q, idiomContext.traceConfig)
-          trace("sql")(sql)
+          trace"SQL: ${sql}".andLog()
           VerifySqlQuery(sql).map(fail)
           val expanded = ExpandNestedQueries(sql, topLevelQuat)
-          trace("expanded sql")(expanded)
+          trace"Expanded SQL: ${expanded}".andLog()
           val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
-          trace("filtered sql (only used selects)")(refined)
+          trace"Filtered SQL (only used selects): ${refined}".andLog()
           val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined, topLevelQuat) else refined
-          trace("cleaned sql")(cleaned)
+          trace"Cleaned SQL: ${cleaned}".andLog()
           val tokenized = cleaned.token
-          trace("tokenized sql")(tokenized)
+          trace"Tokenized SQL: ${cleaned}".andLog()
           tokenized
         case a: Action =>
           // Mostly we don't use the alias in SQL set-queries but if we do, make sure they are right
           val sql = querifyAction(a, idiomContext.queryType.batchAlias)
-          trace("action sql")(sql)
+          trace"Action SQL: ${sql}".andLog()
           // Run the tokenization, make sure that we're running tokenization from the top-level (i.e. from the Ast-tokenizer, don't go directly to the action tokenizer)
           (sql: Ast).token
         case other =>
@@ -497,7 +500,7 @@ trait SqlIdiom extends Idiom {
     case Constant(v, _)         => stmt"${v.toString.token}"
     case NullValue              => stmt"null"
     case Tuple(values)          => stmt"${values.token}"
-    case CaseClass(values)      => stmt"${values.map(_._2).token}"
+    case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
   }
 
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {

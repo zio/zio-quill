@@ -17,7 +17,7 @@ trait QuatUnliftable {
   implicit val quatProductUnliftable: Unliftable[Quat.Product] = Unliftable[Quat.Product] {
     // On JVM, a Quat must be serialized and then lifted from the serialized state i.e. as a FromSerialized using JVM (due to 64KB method limit)
     case q"$pack.Quat.Product.fromSerialized(${ str: String })" => Quat.Product.fromSerialized(str)
-    case q"$pack.Quat.Product.WithRenamesCompact.apply(${ tpe: Quat.Product.Type })(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)" => Quat.Product.WithRenamesCompact(tpe)(unliftStrings(fields): _*)(unliftQuats(values): _*)(unliftStrings(renamesFrom): _*)(unliftStrings(renamesTo): _*)
+    case q"$pack.Quat.Product.WithRenamesCompact.apply(${ name: String }, ${ tpe: Quat.Product.Type })(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)" => Quat.Product.WithRenamesCompact(name, tpe)(unliftStrings(fields): _*)(unliftQuats(values): _*)(unliftStrings(renamesFrom): _*)(unliftStrings(renamesTo): _*)
   }
 
   implicit val quatProductTypeUnliftable: Unliftable[Quat.Product.Type] = Unliftable[Quat.Product.Type] {
@@ -28,8 +28,8 @@ trait QuatUnliftable {
   implicit val quatUnliftable: Unliftable[Quat] = Unliftable[Quat] {
     // On JVM, a Quat must be serialized and then lifted from the serialized state i.e. as a FromSerialized using JVM (due to 64KB method limit)
     case q"$pack.Quat.fromSerialized(${ str: String })" => Quat.fromSerialized(str)
-    case q"$pack.Quat.Product.WithRenamesCompact.apply(${ tpe: Quat.Product.Type })(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)" => Quat.Product.WithRenamesCompact(tpe)(unliftStrings(fields): _*)(unliftQuats(values): _*)(unliftStrings(renamesFrom): _*)(unliftStrings(renamesTo): _*)
-    case q"$pack.Quat.Product.apply(${ fields: List[(String, Quat)] })" => Quat.Product(fields)
+    case q"$pack.Quat.Product.WithRenamesCompact.apply(${ name: String }, ${ tpe: Quat.Product.Type })(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)" => Quat.Product.WithRenamesCompact(name, tpe)(unliftStrings(fields): _*)(unliftQuats(values): _*)(unliftStrings(renamesFrom): _*)(unliftStrings(renamesTo): _*)
+    case q"$pack.Quat.Product.apply(${ name: String }, ${ fields: List[(String, Quat)] })" => Quat.Product(name, fields)
     case q"$pack.Quat.Value" => Quat.Value
     case q"$pack.Quat.Null" => Quat.Null
     case q"$pack.Quat.Generic" => Quat.Generic

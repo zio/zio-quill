@@ -2,28 +2,28 @@ package io.getquill.context.jdbc
 
 import io.getquill._
 
-trait PostgresJdbcContextBase[+N <: NamingStrategy]
-  extends PostgresJdbcTypes[N]
-  with JdbcContextBase[PostgresDialect, N]
+trait PostgresJdbcContextBase[+D <: PostgresDialect, +N <: NamingStrategy]
+  extends PostgresJdbcTypes[D, N]
+  with JdbcContextBase[D, N]
 
-trait H2JdbcContextBase[+N <: NamingStrategy]
-  extends H2JdbcTypes[N]
-  with JdbcContextBase[H2Dialect, N]
+trait H2JdbcContextBase[+D <: H2Dialect, +N <: NamingStrategy]
+  extends H2JdbcTypes[D, N]
+  with JdbcContextBase[D, N]
 
-trait MysqlJdbcContextBase[+N <: NamingStrategy]
-  extends MysqlJdbcTypes[N]
-  with JdbcContextBase[MySQLDialect, N]
+trait MysqlJdbcContextBase[+D <: MySQLDialect, +N <: NamingStrategy]
+  extends MysqlJdbcTypes[D, N]
+  with JdbcContextBase[D, N]
 
-trait SqliteJdbcContextBase[+N <: NamingStrategy]
-  extends SqliteJdbcTypes[N]
-  with SqliteExecuteOverride[N]
-  with JdbcContextBase[SqliteDialect, N]
+trait SqliteJdbcContextBase[+D <: SqliteDialect, +N <: NamingStrategy]
+  extends SqliteJdbcTypes[D, N]
+  with SqliteExecuteOverride[D, N]
+  with JdbcContextBase[D, N]
 
-trait SqlServerJdbcContextBase[+N <: NamingStrategy]
-  extends SqlServerJdbcTypes[N]
+trait SqlServerJdbcContextBase[+D <: SQLServerDialect, +N <: NamingStrategy]
+  extends SqlServerJdbcTypes[D, N]
   with SqlServerExecuteOverride[N]
-  with JdbcContextBase[SQLServerDialect, N]
+  with JdbcContextBase[D, N]
 
-trait OracleJdbcContextBase[+N <: NamingStrategy]
-  extends OracleJdbcTypes[N]
-  with JdbcContextBase[OracleDialect, N]
+trait OracleJdbcContextBase[+D <: OracleDialect, +N <: NamingStrategy]
+  extends OracleJdbcTypes[D, N]
+  with JdbcContextBase[D, N]

@@ -201,7 +201,7 @@ trait Liftables extends QuatLiftable {
     case NullValue         => q"$pack.NullValue"
     case Constant(a, quat) => q"$pack.Constant(${Literal(mctx.universe.Constant(a))}, $quat)"
     case Tuple(a)          => q"$pack.Tuple($a)"
-    case CaseClass(a)      => q"$pack.CaseClass($a)"
+    case CaseClass(n, a)   => q"$pack.CaseClass($n, $a)"
   }
 
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {

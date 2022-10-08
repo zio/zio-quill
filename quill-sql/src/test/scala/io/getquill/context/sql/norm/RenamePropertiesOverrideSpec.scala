@@ -349,13 +349,13 @@ class RenamePropertiesOverrideSpec extends Spec {
   "respects the schema definition for embeddeds" - {
     "query" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         testContextUpper.run(query[A]).string mustEqual
           "SELECT x.C AS c FROM A x"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC")
@@ -366,13 +366,13 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "query for Option embeddeds" - {
       "without schema" in {
-        case class B(c1: Int, c2: Int) extends Embedded
+        case class B(c1: Int, c2: Int)
         case class A(b: Option[B])
         testContextUpper.run(query[A]).string mustEqual
           "SELECT x.C1 AS c1, x.C2 AS c2 FROM A x"
       }
       "with schema" in {
-        case class B(c1: Int, c2: Int) extends Embedded
+        case class B(c1: Int, c2: Int)
         case class A(b: Option[B])
         val q = quote {
           querySchema[A]("A", _.b.map(_.c1) -> "bC1", _.b.map(_.c2) -> "bC2")
@@ -383,7 +383,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "update" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           query[A].update(_.b.c -> 1)
@@ -392,7 +392,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "UPDATE A SET C = 1"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").update(_.b.c -> 1)
@@ -403,7 +403,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "insert" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           query[A].insert(_.b.c -> 1)
@@ -412,7 +412,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "INSERT INTO A (C) VALUES (1)"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").insert(_.b.c -> 1)
@@ -423,7 +423,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
 
     "sql" - {
-      case class B(b: Int) extends Embedded
+      case class B(b: Int)
       case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
         val q = quote {

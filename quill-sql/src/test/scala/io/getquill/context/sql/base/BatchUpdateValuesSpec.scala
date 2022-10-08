@@ -110,7 +110,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
   }
 
   object `Ex 2 - Optional Embedded with Renames` extends Adaptable {
-    case class Name(first: String, last: String) extends Embedded
+    case class Name(first: String, last: String)
     case class ContactTable(name: Option[Name], age: Int)
     type Row = ContactTable
     override def makeData(c: ContactBase): ContactTable = ContactTable(Some(Name(c.firstName, c.lastName)), c.age)
@@ -132,9 +132,9 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
   }
 
   object `Ex 3 - Deep Embedded Optional` extends Adaptable {
-    case class FirstName(firstName: Option[String]) extends Embedded
-    case class LastName(lastName: Option[String]) extends Embedded
-    case class Name(first: FirstName, last: LastName) extends Embedded
+    case class FirstName(firstName: Option[String])
+    case class LastName(lastName: Option[String])
+    case class Name(first: FirstName, last: LastName)
     case class Contact(name: Option[Name], age: Int)
     type Row = Contact
     override def makeData(c: ContactBase): Contact = Contact(Some(Name(FirstName(Option(c.firstName)), LastName(Option(c.lastName)))), c.age)
