@@ -13,7 +13,7 @@ class NestedDistinctSpec extends Spec {
     import ctx._
 
     "first operation" - {
-      case class MyEmb(name: String) extends Embedded
+      case class MyEmb(name: String)
       case class MyParent(myEmb: MyEmb)
 
       "first operation nesting with filter" in {
@@ -49,7 +49,7 @@ class NestedDistinctSpec extends Spec {
       }
 
       "first operation nesting with filter before and after - groupBy" in { //hello
-        case class MyEmb(name: Int) extends Embedded
+        case class MyEmb(name: Int)
         case class MyParent(myEmb: MyEmb)
 
         val q = quote {
@@ -176,7 +176,7 @@ class NestedDistinctSpec extends Spec {
     }
 
     "embedded entity from parent" - {
-      case class Emb(id: Int, name: String) extends Embedded
+      case class Emb(id: Int, name: String)
       case class Parent(idP: Int, emb: Emb)
       implicit val parentMeta = schemaMeta[Parent]("Parent", _.emb.name -> "theName")
 
@@ -216,7 +216,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct.map(tup => (tup._1, tup._2)).distinct
         }
-        ctx.run(q).string mustEqual "SELECT DISTINCT e.theName AS _1, e.id AS _2 FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx.run(q).string mustEqual "SELECT DISTINCT p._1theName AS _1, p._1id AS _2 FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
       "can be propogated across query with naming intact and then used further - nested" in {
@@ -230,7 +230,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name))
         }
-        ctx.run(q).string mustEqual "SELECT e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx.run(q).string mustEqual "SELECT p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
       "can be propogated across query with naming intact - and the immediately returned" in {
@@ -251,7 +251,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => Parent(1, e))
         }
-        ctx.run(q).string mustEqual "SELECT 1 AS idP, e.id, e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx.run(q).string mustEqual "SELECT 1 AS idP, p._1id AS id, p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
       "can be propogated across query with naming intact and then re-wrapped in tuple" in {
@@ -263,8 +263,8 @@ class NestedDistinctSpec extends Spec {
     }
 
     "double embedded entity from parent" - {
-      case class Emb(id: Int, name: String) extends Embedded
-      case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+      case class Emb(id: Int, name: String)
+      case class Parent(id: Int, name: String, emb: Emb)
       case class GrandParent(id: Int, par: Parent)
       implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
 
@@ -274,7 +274,7 @@ class NestedDistinctSpec extends Spec {
             .map(g => g.par).distinct
             .map(p => p.emb).map(p => p.name).distinct
         }
-        ctx.run(q).string mustEqual "SELECT DISTINCT p.embtheName AS theName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
+        ctx.run(q).string mustEqual "SELECT DISTINCT g._1embtheName AS theName FROM (SELECT DISTINCT g.id AS _1id, g.theParentName AS _1theParentName, g.id AS _1embid, g.theName AS _1embtheName FROM GrandParent g) AS g"
       }
 
       "fully unwrapped name propagates with side property" in {
@@ -285,7 +285,7 @@ class NestedDistinctSpec extends Spec {
             .map(tup => (tup._1, tup._2)).distinct
         }
         ctx.run(q).string mustEqual
-          "SELECT DISTINCT p.theParentName AS _1, p.embid AS id, p.embtheName AS theName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
+          "SELECT DISTINCT g._1theParentName AS _1, g._1embid AS id, g._1embtheName AS theName FROM (SELECT DISTINCT g.id AS _1id, g.theParentName AS _1theParentName, g.id AS _1embid, g.theName AS _1embtheName FROM GrandParent g) AS g"
       }
 
       "fully unwrapped name propagates with side property - nested" in {
@@ -335,24 +335,24 @@ class NestedDistinctSpec extends Spec {
             .map(p => (p.name, p.emb, p.id, p.emb.id)).distinct
             .map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct
         }
-        ctx.run(q).string(true).collapseSpace mustEqual
+        ctx.run(q).string(true).collapseSpace mustEqual //
           """
             |SELECT
-            |  DISTINCT p.theParentName AS _1,
-            |  p.embid AS id,
-            |  p.embtheName AS theName,
-            |  p.id AS _3,
-            |  p.embid AS _4
+            |  DISTINCT g._1theParentName AS _1,
+            |  g._1embid AS id,
+            |  g._1embtheName AS theName,
+            |  g._1id AS _3,
+            |  g._1embid AS _4
             |FROM
             |  (
             |    SELECT
-            |      DISTINCT g.id,
-            |      g.theParentName,
-            |      g.id AS embid,
-            |      g.theName AS embtheName
+            |      DISTINCT g.id AS _1id,
+            |      g.theParentName AS _1theParentName,
+            |      g.id AS _1embid,
+            |      g.theName AS _1embtheName
             |    FROM
             |      GrandParent g
-            |  ) AS p
+            |  ) AS g
             |""".collapseSpace
       }
 
@@ -367,21 +367,21 @@ class NestedDistinctSpec extends Spec {
         ctx.run(q).string(true).collapseSpace mustEqual
           """
             |SELECT
-            |  DISTINCT p.theParentName AS _1,
-            |  p.embid AS id,
-            |  p.embtheName AS theName,
-            |  p.id AS _3,
-            |  p.embid AS _4
+            |  DISTINCT g._1theParentName AS _1,
+            |  g._1embid AS id,
+            |  g._1embtheName AS theName,
+            |  g._1id AS _3,
+            |  g._1embid AS _4
             |FROM
             |  (
             |    SELECT
-            |      DISTINCT g.id,
-            |      g.theParentName,
-            |      g.id AS embid,
-            |      g.theName AS embtheName
+            |      DISTINCT g.id AS _1id,
+            |      g.theParentName AS _1theParentName,
+            |      g.id AS _1embid,
+            |      g.theName AS _1embtheName
             |    FROM
             |      GrandParent g
-            |  ) AS p
+            |  ) AS g
             |""".collapseSpace
       }
 
@@ -619,7 +619,7 @@ class NestedDistinctSpec extends Spec {
 
     "adversarial tests" - {
       "should correctly rename the right property when multiple nesting layers have the same one" in {
-        case class Emb(name: String, id: Int) extends Embedded
+        case class Emb(name: String, id: Int)
         case class Parent(name: String, emb1: Emb, emb2: Emb)
         case class GrandParent(name: String, par: Parent)
 
@@ -745,7 +745,7 @@ class NestedDistinctSpec extends Spec {
     }
 
     "query with single embedded element" - {
-      case class Emb(a: Int, b: Int) extends Embedded
+      case class Emb(a: Int, b: Int)
       case class Parent(id: Int, emb1: Emb)
       case class Parent2(emb1: Emb, id: Int)
 
@@ -801,12 +801,12 @@ class NestedDistinctSpec extends Spec {
     }
 
     "query with multiple embedded elements with same names" - {
-      case class Emb(name: String, id: Int) extends Embedded
+      case class Emb(name: String, id: Int)
       case class Parent(name: String, emb1: Emb, emb2: Emb)
       case class GrandParent(name: String, par: Parent)
 
-      case class One(name: String, id: Int) extends Embedded
-      case class Two(name: String, id: Int) extends Embedded
+      case class One(name: String, id: Int)
+      case class Two(name: String, id: Int)
       case class Dual(one: One, two: Two)
 
       // Try parent and embedded children with same name, schema on parent

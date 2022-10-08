@@ -1,7 +1,7 @@
 package io.getquill.postgres
 
 import io.getquill.jdbczio.Quill
-import io.getquill.{ testContext => _, _ }
+import io.getquill._
 import zio.{ Unsafe, ZIO, ZLayer }
 
 import java.sql.SQLException
@@ -56,7 +56,7 @@ class MultiLevelServiceSpec extends PeopleZioSpec with ZioSpec {
   "All Composition variations must work" in {
 
     val dataSourceLive = ZLayer.succeed(io.getquill.postgres.pool)
-    val postgresLive = ZLayer.fromFunction(Quill.Postgres(Literal, _: DataSource))
+    val postgresLive = ZLayer.fromFunction((ds: DataSource) => Quill.Postgres(Literal, ds))
 
     val (a, b, c, d, e) =
       Unsafe.unsafe { implicit u =>

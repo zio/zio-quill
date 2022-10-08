@@ -831,7 +831,7 @@ class SqlIdiomSpec extends Spec {
           "SELECT t.s FROM TestEntity t"
       }
       "nested" in {
-        case class A(s: String) extends Embedded
+        case class A(s: String)
         case class B(a: A)
         testContext.run(query[B]).string mustEqual
           "SELECT x.s FROM B x"

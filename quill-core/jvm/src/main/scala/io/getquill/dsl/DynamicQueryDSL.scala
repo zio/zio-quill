@@ -90,12 +90,14 @@ trait DynamicQueryDsl {
     q.q
   implicit def toQuoted[T <: DslAction[_]](q: DynamicAction[T]): Quoted[T] = q.q
 
-  def dynamicQuery[T](implicit t: ClassTag[T]): DynamicEntityQuery[T] =
+  def dynamicQuery[T](implicit t: u.TypeTag[T]): DynamicEntityQuery[T] = {
+    val quat = quatMaking.inferQuat(t.tpe).probit
     DynamicEntityQuery(
       splice[EntityQuery[T]](
-        Entity(t.runtimeClass.getSimpleName, Nil, RuntimeEntityQuat[T].probit)
+        Entity(quat.name, Nil, quat)
       )
     )
+  }
 
   case class DynamicAlias[T](property: Quoted[T] => Quoted[Any], name: String)
 
@@ -185,7 +187,7 @@ trait DynamicQueryDsl {
     }
 
   protected def spliceLift[O](o: O)(implicit enc: Encoder[O]) =
-    splice[O](ScalarValueLift("o", o, enc, Quat.Value))
+    splice[O](ScalarValueLift("o", External.Source.Parser, o, enc, Quat.Value))
 
   object DynamicQuery {
     def apply[T](p: Quoted[Query[T]]) =

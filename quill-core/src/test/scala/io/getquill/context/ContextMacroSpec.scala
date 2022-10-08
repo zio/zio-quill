@@ -1,7 +1,7 @@
 package io.getquill.context
 
-import io.getquill.testContext
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext
+import io.getquill.MirrorContexts.testContext._
 import mirror.Row
 import io.getquill.MirrorContext
 import io.getquill.NamingStrategy

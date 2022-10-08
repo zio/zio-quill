@@ -1,7 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.ReturnAction.ReturnColumns
-import io.getquill.MirrorSqlDialectWithReturnMulti
+import io.getquill.{ Literal, MirrorSqlDialectWithReturnMulti, MySQLDialect, SqlMirrorContext }
 import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
@@ -112,6 +112,40 @@ class SqlActionSpec extends Spec {
         }
       }
       "update" - {
+        "reuse field name - with no filter" in {
+          case class Timeslot(id: Int, booked: Int)
+          val timeslotId = 123
+          val q = quote {
+            query[Timeslot]
+              .update(ts => ts.booked -> (ts.booked + lift(1)))
+          }
+          testContext.run(q).string mustEqual
+            "UPDATE Timeslot SET booked = (booked + ?)"
+        }
+        "reuse field name - with filter" in {
+          case class Timeslot(id: Int, booked: Int)
+          val timeslotId = 123
+          val q = quote {
+            query[Timeslot]
+              .filter(tsl => tsl.id == lift(timeslotId))
+              .update(ts => ts.booked -> (ts.booked + lift(1)))
+          }
+          testContext.run(q).string mustEqual
+            "UPDATE Timeslot AS tsl SET booked = (tsl.booked + ?) WHERE tsl.id = ?"
+        }
+        "reuse field name - with filter (mysql)" in {
+          val ctx = new SqlMirrorContext(MySQLDialect, Literal)
+          import ctx._
+          case class Timeslot(id: Int, booked: Int)
+          val timeslotId = 123
+          val q = quote {
+            query[Timeslot]
+              .filter(tsl => tsl.id == lift(timeslotId))
+              .update(ts => ts.booked -> (ts.booked + lift(1)))
+          }
+          ctx.run(q).string mustEqual
+            "UPDATE Timeslot tsl SET booked = (tsl.booked + ?) WHERE tsl.id = ?"
+        }
         "with filter" in {
           val q = quote {
             qr1.filter(t => t.s == null).update(_.s -> "s")

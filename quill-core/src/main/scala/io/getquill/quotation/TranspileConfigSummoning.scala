@@ -1,5 +1,9 @@
 package io.getquill.quotation
 
+import io.getquill.IdiomContext
+import io.getquill.IdiomContext.QueryType
+import io.getquill.IdiomContext.QueryType.{ Batch, Regular }
+import io.getquill.context.ExecutionType
 import io.getquill.norm.{ OptionalPhase, TranspileConfig }
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.TraceConfig
@@ -99,6 +103,7 @@ trait TranspileConfigSummoning {
       case TraceType.Elaboration            => q"io.getquill.util.Messages.TraceType.Elaboration"
       case TraceType.SqlQueryConstruct      => q"io.getquill.util.Messages.TraceType.SqlQueryConstruct"
       case TraceType.FlattenOptionOperation => q"io.getquill.util.Messages.TraceType.FlattenOptionOperation"
+      case TraceType.Particularization      => q"io.getquill.util.Messages.TraceType.Particularization"
     }
 
     implicit val traceConfigLiftable: Liftable[TraceConfig] = Liftable[TraceConfig] {
@@ -107,6 +112,33 @@ trait TranspileConfigSummoning {
 
     implicit val transpileConfigLiftable: Liftable[TranspileConfig] = Liftable[TranspileConfig] {
       case TranspileConfig(disablePhases, traceConfig) => q"io.getquill.norm.TranspileConfig(${disablePhases}, ${traceConfig})"
+    }
+
+    implicit val queryTypeRegularLiftable: Liftable[Regular] = Liftable[Regular] {
+      case QueryType.Select => q"io.getquill.IdiomContext.QueryType.Select"
+      case QueryType.Insert => q"io.getquill.IdiomContext.QueryType.Insert"
+      case QueryType.Update => q"io.getquill.IdiomContext.QueryType.Update"
+      case QueryType.Delete => q"io.getquill.IdiomContext.QueryType.Delete"
+    }
+
+    implicit val queryTypeBatchLiftable: Liftable[Batch] = Liftable[Batch] {
+      case QueryType.BatchInsert(foreachAlias) => q"io.getquill.IdiomContext.QueryType.BatchInsert($foreachAlias)"
+      case QueryType.BatchUpdate(foreachAlias) => q"io.getquill.IdiomContext.QueryType.BatchUpdate($foreachAlias)"
+    }
+
+    implicit val queryTypeLiftable: Liftable[QueryType] = Liftable[QueryType] {
+      case v: Regular => queryTypeRegularLiftable(v)
+      case v: Batch   => queryTypeBatchLiftable(v)
+    }
+
+    implicit val transpileContextLiftable: Liftable[IdiomContext] = Liftable[IdiomContext] {
+      case IdiomContext(transpileConfig, queryType) => q"io.getquill.IdiomContext(${transpileConfig}, ${queryType})"
+    }
+
+    implicit val executionTypeLiftable: Liftable[ExecutionType] = Liftable[ExecutionType] {
+      case ExecutionType.Dynamic => q"io.getquill.context.ExecutionType.Dynamic"
+      case ExecutionType.Static  => q"io.getquill.context.ExecutionType.Static"
+      case ExecutionType.Unknown => q"io.getquill.context.ExecutionType.Unknown"
     }
   }
 }

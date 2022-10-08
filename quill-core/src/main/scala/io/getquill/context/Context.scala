@@ -38,7 +38,9 @@ trait Context[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy] exte
   def run[T](quoted: Quoted[ActionReturning[_, List[T]]]): Result[RunActionReturningResult[List[T]]] = macro ActionMacro.runActionReturningMany[T]
   def run[T](quoted: Quoted[ActionReturning[_, T]]): Result[RunActionReturningResult[T]] = macro ActionMacro.runActionReturning[T]
   def run(quoted: Quoted[BatchAction[Action[_]]]): Result[RunBatchActionResult] = macro ActionMacro.runBatchAction
+  def run(quoted: Quoted[BatchAction[Action[_]]], numRows: Int): Result[RunBatchActionResult] = macro ActionMacro.runBatchActionRows
   def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturning[T]
+  def run[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]], numRows: Int): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturningRows[T]
 
   protected def handleSingleResult[T](sql: String, list: List[T]) =
     list match {

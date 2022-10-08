@@ -1,3 +1,48 @@
+# 4.6.0
+
+- [Implementing Postgres json/jsonb encoding via zio-json](https://github.com/zio/zio-quill/pull/2615)
+
+# 4.5.0
+
+- [Remove the need to make things embedded, happens automatically](https://github.com/zio/zio-quill/pull/2607)
+- [Date encoders for major date types. Extensible context.](https://github.com/zio/zio-quill/pull/2598)
+- [Warning about embedding fields that should have encoders](https://github.com/zio/zio-quill/pull/2610)
+- [jasync zio current schema configuration, jasync version  update](https://github.com/zio/zio-quill/pull/2588)
+
+#### Migration Notes:
+- It is no longer necessary to do extend `Embedded` for case classes that should be embedded within an entity. 
+  In the case that the embedded case class "looks" like it should be encoded/decoded (i.e. it has only one field),
+  an additional warning has been introduced to notify the user of this potential issue. 
+
+# 4.4.1
+
+- [Fixing VALUES-clause update query naming](https://github.com/zio/zio-quill/pull/2595)
+
+# 4.4.0
+
+- [UPDATE with VALUES optimization for Postgres. Various macro refactoring.](https://github.com/zio/zio-quill/pull/2571)
+
+# 4.3.0
+
+- [Values clause batch insert](https://github.com/zio/zio-quill/pull/2565)
+- [Slightly better batch logging](https://github.com/zio/zio-quill/pull/2562)
+- ["transaction" supports ZIO effects with mixed environments](https://github.com/zio/zio-quill/pull/2515)
+
+# 4.2.0
+
+- [Implement ZIO-Idiomatic JDBC Context](https://github.com/zio/zio-quill/pull/2537)
+- [Update idiomatic pattern based on discussions](https://github.com/zio/zio-quill/pull/2546)
+- [Implement ZIO idiomatic pattern for cassandra](https://github.com/zio/zio-quill/pull/2549)
+- [Add switch to manually disable returning/output-clauses](https://github.com/zio/zio-quill/pull/2550)
+- [cassandra - update if exists](https://github.com/zio/zio-quill/pull/2359)
+- [Change infix”$content” to sql”$content”](https://github.com/zio/zio-quill/pull/2547)
+- [Remove mysql as](https://github.com/zio/zio-quill/pull/2540)
+
+#### Migration Notes:
+- The `infix` interpolator is now deprecated because in Scala 2, infix is a keyword. Instead of
+  `infix"MyUdf(${person.name})"` use `sql"MyUdf(${person.name})"`. For contexts such as Doobie that already
+  have an `sql` interpolator. Import `context.compat._` and use the `qsql` interpolator instead. 
+
 # 4.1.0
 
 - [Implement groupByMap and EnableTrace/DisablePhase functionality](https://github.com/zio/zio-quill/pull/2517)
