@@ -4,13 +4,15 @@ import com.typesafe.config.Config
 import io.getquill.context.jdbc.{ H2JdbcTypes, MysqlJdbcTypes, OracleJdbcTypes, PostgresJdbcTypes, SqlServerExecuteOverride, SqlServerJdbcTypes, SqliteJdbcTypes }
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.qzio.{ ZioJdbcContext, ZioJdbcUnderlyingContext }
+import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.util.LoadConfig
 
 import javax.sql.DataSource
 
 class PostgresZioJdbcContext[+N <: NamingStrategy](val naming: N)
   extends ZioJdbcContext[PostgresDialect, N]
-  with PostgresJdbcTypes[PostgresDialect, N] {
+  with PostgresJdbcTypes[PostgresDialect, N]
+  with PostgresJsonExtensions {
   val idiom: PostgresDialect = PostgresDialect
 
   val connDelegate: ZioJdbcUnderlyingContext[PostgresDialect, N] = new PostgresZioJdbcContext.Underlying[N](naming)
@@ -18,7 +20,8 @@ class PostgresZioJdbcContext[+N <: NamingStrategy](val naming: N)
 object PostgresZioJdbcContext {
   class Underlying[+N <: NamingStrategy](val naming: N)
     extends ZioJdbcUnderlyingContext[PostgresDialect, N]
-    with PostgresJdbcTypes[PostgresDialect, N] {
+    with PostgresJdbcTypes[PostgresDialect, N]
+    with PostgresJsonExtensions {
     val idiom: PostgresDialect = PostgresDialect
   }
 }

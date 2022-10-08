@@ -109,7 +109,7 @@ object RuntimeEntityQuat {
     cls match {
       case AnyVal() => Quat.Value
       case Embedded(methods) =>
-        Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
+        Quat.Product(cls.getName.split('.').last, methods.map(m => (m.getName, forClass(m.getReturnType))))
       // If we are here we are already inside of a product which means if we are not a embedded, we have to be value-level
       case _ => Quat.Value
     }
@@ -119,11 +119,11 @@ object RuntimeEntityQuat {
       case AnyVal() => Quat.Value
       // Embedded object can be a top-level entity
       case Embedded(methods) =>
-        Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
+        Quat.Product(cls.getName.split('.').last, methods.map(m => (m.getName, forClass(m.getReturnType))))
       case Tuple() =>
         throw new IllegalArgumentException("Tuple are not supported with Dynamic Query Schemas.")
       case CaseClass(methods) =>
-        Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
+        Quat.Product(cls.getName.split('.').last, methods.map(m => (m.getName, forClass(m.getReturnType))))
       case _ =>
         Quat.Value
     }
@@ -326,11 +326,11 @@ trait QuatMakingBase extends MacroUtilUniverse {
         // For other types of case classes (and if there does not exist an encoder for it)
         // the exception to that is a cassandra UDT that we treat like an encodeable entity even if it has a parsed type
         case CaseClassBaseType(name, fields) if !existsEncoderFor(tpe) || tpe <:< typeOf[Udt] =>
-          Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
+          Quat.Product(name.split('.').last, fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
 
         // If we are already inside a bounded type, treat an arbitrary type as a interface list
         case ArbitraryBaseType(name, fields) if (boundedInterfaceType) =>
-          Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
+          Quat.Product(name.split('.').last, fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
 
         // Is it a generic or does it have any generic parameters that have not been filled (e.g. is T not filled in Option[T] ?)
         case Param(tpe) =>

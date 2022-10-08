@@ -147,7 +147,7 @@ object Messages {
 
   val qprint = new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)
   def qprintCustom(traceOpinions: Boolean = false, traceAstSimple: Boolean = false, traceQuats: QuatTrace = QuatTrace.None) =
-    new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)
+    new AstPrinter(traceOpinions, traceAstSimple, traceQuats)
 
   def fail(msg: String) =
     throw new IllegalStateException(msg)

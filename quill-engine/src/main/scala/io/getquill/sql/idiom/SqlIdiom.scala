@@ -43,10 +43,11 @@ trait SqlIdiom extends Idiom {
 
   // See HideTopLevelFilterAlias for more detail on how this works
   def querifyAction(ast: Action, batchAlias: Option[String]) = {
-    val norm = new NormalizeFilteredActionAliases(batchAlias)(ast)
+    val norm1 = new NormalizeFilteredActionAliases(batchAlias)(ast)
+    val norm2 = io.getquill.sql.norm.HideInnerProperties(norm1)
     useActionTableAliasAs match {
-      case ActionTableAliasBehavior.Hide => HideTopLevelFilterAlias(norm)
-      case _                             => norm
+      case ActionTableAliasBehavior.Hide => HideTopLevelFilterAlias(norm2)
+      case _                             => norm2
     }
   }
 
@@ -499,7 +500,7 @@ trait SqlIdiom extends Idiom {
     case Constant(v, _)         => stmt"${v.toString.token}"
     case NullValue              => stmt"null"
     case Tuple(values)          => stmt"${values.token}"
-    case CaseClass(values)      => stmt"${values.map(_._2).token}"
+    case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
   }
 
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {

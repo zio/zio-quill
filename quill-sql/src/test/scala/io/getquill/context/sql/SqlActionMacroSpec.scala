@@ -173,7 +173,7 @@ class SqlActionMacroSpec extends Spec {
       "returning clause - embedded" - {
         case class Dummy(i: Int)
 
-        "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx => //
           import ctx._
           val q = quote {
             qr1Emb.insertValue(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returningGenerated(_.emb.i)

@@ -122,9 +122,9 @@ class StatelessTransformerSpec extends Spec {
           Tuple(List(Ident("a'"), Ident("b'"), Ident("c'")))
       }
       "caseclass" in {
-        val ast: Ast = CaseClass(List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
+        val ast: Ast = CaseClass("CC", List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-          CaseClass(List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
+          CaseClass("CC", List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
       }
     }
 

@@ -489,6 +489,14 @@ lazy val `quill-jdbc-zio` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(
+      libraryDependencies ++= Seq(
+        // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
+        "org.postgresql" % "postgresql" % "42.3.6" %  "provided"
+      ) ++ (
+        // zio-json does not exist for Scala 2.11
+        if (!isScala211) Seq("dev.zio" %% "zio-json" % "0.3.0")
+        else Seq()
+      ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
           if (test.name endsWith "IntegrationSpec")
@@ -505,19 +513,12 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-
-
-
-
-
 lazy val `quill-ndbc-monix` =
   (project in file("quill-ndbc-monix"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-      )
+      Test / fork := true
     )
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -751,7 +752,7 @@ lazy val `quill-orientdb` =
         Test / fork := true,
         libraryDependencies ++= Seq(
           // For some reason OrientDB 3.0.42 does not stay up once started during local testing so need to bump to 3.2.6
-          "com.orientechnologies" % "orientdb-graphdb" % "3.2.6"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.2.10"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -908,7 +909,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1")
   },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
