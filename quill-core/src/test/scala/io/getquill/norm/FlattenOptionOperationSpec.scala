@@ -8,7 +8,7 @@ import io.getquill.MoreAstOps._
 import io.getquill.base.Spec
 import io.getquill.util.TraceConfig
 
-class FlattenOptionOperationSpec extends Spec { //hello
+class FlattenOptionOperationSpec extends Spec {
 
   def o = Ident("o")
   def c1 = Constant.auto(1)
@@ -32,22 +32,22 @@ class FlattenOptionOperationSpec extends Spec { //hello
         val q = quote {
           (o: Option[Int]) => o.orElse(Option(1))
         }
-        new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+        new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
           IfExist(o, o, c1)
       }
       "with forall" in {
         val q = quote {
           (o: Option[Int]) => o.orElse(Option(1)).forall(_ == 2)
         }
-        new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+        new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
           ((o +==+ c2) +||+ (IsNullCheck(o) +&&+ (c1 +==+ c2))
             +||+ (IsNullCheck(o) +&&+ IsNullCheck(c1)))
       }
       "with exists" in {
         val q = quote {
-          (o: Option[Int]) => o.orElse(Option(1)).contains(2)
+          (o: Option[Int]) => o.orElse(Option(1)).exists(_ == 2)
         }
-        new FlattenOptionOperation(AnsiConcat)(q.ast.body: Ast) mustEqual
+        new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
           ((o +==+ c2 +&&+ IsNotNullCheck(o)) +||+ (c1 +==+ c2 +&&+ IsNotNullCheck(c1)))
       }
     }
