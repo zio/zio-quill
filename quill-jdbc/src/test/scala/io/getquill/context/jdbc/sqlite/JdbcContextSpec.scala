@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.sqlite
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class JdbcContextSpec extends Spec {
 

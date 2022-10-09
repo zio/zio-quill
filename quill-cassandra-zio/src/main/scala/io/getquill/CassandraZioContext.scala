@@ -2,6 +2,7 @@ package io.getquill
 
 import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, BoundStatement, Row }
 import io.getquill.CassandraZioContext._
+import io.getquill.cassandrazio.Probing
 import io.getquill.context.{ Context, ExecutionInfo }
 import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
 import io.getquill.context.qzio.ZioContext
@@ -42,7 +43,8 @@ object CassandraZioContext {
 class CassandraZioContext[+N <: NamingStrategy](val naming: N)
   extends CassandraRowContext[N]
   with ZioContext[CqlIdiom, N]
-  with Context[CqlIdiom, N] {
+  with Context[CqlIdiom, N]
+  with Probing {
 
   private val logger = ContextLogger(classOf[CassandraZioContext[_]])
 
@@ -166,9 +168,9 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
       }
     } yield boundStatement
 
-  def probingSession: Option[CassandraZioSession] = None
+  override def probingSession: Option[CassandraZioSession] = None
 
-  def probe(statement: String): scala.util.Try[_] = {
+  override def probe(statement: String): scala.util.Try[_] = {
     probingSession match {
       case Some(csession) =>
         Try(csession.prepare(statement))

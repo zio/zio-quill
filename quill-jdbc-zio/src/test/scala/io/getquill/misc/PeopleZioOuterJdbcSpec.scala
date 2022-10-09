@@ -1,6 +1,7 @@
 package io.getquill.misc
 
-import io.getquill.{ Literal, PostgresZioJdbcContext, Spec }
+import io.getquill.base.Spec
+import io.getquill.{ Literal, PostgresZioJdbcContext }
 import zio.{ Runtime, Unsafe, ZEnvironment }
 
 class PeopleZioOuterJdbcSpec extends Spec {

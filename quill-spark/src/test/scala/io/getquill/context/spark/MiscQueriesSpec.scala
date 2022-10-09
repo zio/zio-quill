@@ -1,6 +1,6 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 case class Inner(i: Int)
 case class Outer(inner: Inner)

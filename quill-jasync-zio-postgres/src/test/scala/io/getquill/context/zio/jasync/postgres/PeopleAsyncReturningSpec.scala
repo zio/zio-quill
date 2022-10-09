@@ -1,6 +1,6 @@
 package io.getquill.context.zio.jasync.postgres
 
-import io.getquill.context.sql.PeopleReturningSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleAsyncReturningSpec extends PeopleReturningSpec with ZioSpec {
 

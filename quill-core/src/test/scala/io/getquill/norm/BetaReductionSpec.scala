@@ -1,9 +1,9 @@
 package io.getquill.norm
 
-import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
+import io.getquill.base.Spec
 import io.getquill.quat.Quat
 
 class BetaReductionSpec extends Spec {
@@ -18,11 +18,11 @@ class BetaReductionSpec extends Spec {
       BetaReduction(ast) mustEqual Ident("a")
     }
     "caseclass field" in {
-      val ast: Ast = Property(CaseClass(List(("foo", Ident("a")))), "foo")
+      val ast: Ast = Property(CaseClass("CC", List(("foo", Ident("a")))), "foo")
       BetaReduction(ast) mustEqual Ident("a")
     }
     "caseclass field - fixed property" in {
-      val ast: Ast = Property.Opinionated(CaseClass(List(("foo", Ident("a")))), "foo", Fixed, Visible)
+      val ast: Ast = Property.Opinionated(CaseClass("CC", List(("foo", Ident("a")))), "foo", Fixed, Visible)
       BetaReduction(ast) mustEqual Ident("a")
     }
     "function apply" in {
@@ -84,7 +84,7 @@ class BetaReductionSpec extends Spec {
           Val(aE, entity),
           Val(b, c2),
           Val(c, c3),
-          CaseClass(List(("foo", aE), ("bar", bE), ("baz", cE)))
+          CaseClass("CC", List(("foo", aE), ("bar", bE), ("baz", cE)))
         ))
         val outer = Block(List(
           Val(aE, inner),
@@ -92,7 +92,7 @@ class BetaReductionSpec extends Spec {
           Val(cE, bE),
           cE
         ))
-        BetaReduction.AllowEmpty(outer) mustEqual CaseClass(List(("foo", entity), ("bar", c2), ("baz", c3)))
+        BetaReduction.AllowEmpty(outer) mustEqual CaseClass("CC", List(("foo", entity), ("bar", c2), ("baz", c3)))
       }
     }
     "avoids replacing idents of an outer scope" - {
@@ -190,7 +190,7 @@ class BetaReductionSpec extends Spec {
   "reapplies the beta reduction if the structure changes caseclass" in {
     val quat = Quat.LeafProduct("foo")
     val ast: Ast = Property(Ident("a", quat), "foo")
-    BetaReduction(ast, Ident("a", quat) -> CaseClass(List(("foo", Ident("a'"))))) mustEqual
+    BetaReduction(ast, Ident("a", quat) -> CaseClass("CC", List(("foo", Ident("a'"))))) mustEqual
       Ident("a'")
   }
 

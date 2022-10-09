@@ -1,7 +1,7 @@
 package io.getquill.context.monix
 
+import io.getquill.base.Spec
 import scala.concurrent.duration.Duration
-import io.getquill.Spec
 import io.trane.future.scala.{ Await, Future }
 import io.getquill.ndbc.TraneFutureConverters._
 import monix.eval.Task

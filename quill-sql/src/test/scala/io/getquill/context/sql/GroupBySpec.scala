@@ -1,8 +1,8 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.Literal
+import io.getquill.base.Spec
 import io.getquill.context.sql.util.StringOps._
 
 class GroupBySpec extends Spec {
@@ -71,7 +71,7 @@ class GroupBySpec extends Spec {
   }
 
   "Embedded entity expansion" - {
-    case class Language(name: String, dialect: String) extends Embedded
+    case class Language(name: String, dialect: String)
     case class Country(countryCode: String, language: Language)
     case class City(countryCode: String, name: String)
 

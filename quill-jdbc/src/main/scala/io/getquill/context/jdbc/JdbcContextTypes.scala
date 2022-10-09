@@ -28,7 +28,7 @@ trait JdbcContextTypes[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] extends 
   }
   implicit val nullChecker: JdbcNullChecker = new JdbcNullChecker()
 
-  protected val dateTimeZone = TimeZone.getDefault
+  val dateTimeZone = TimeZone.getDefault
 
   /**
    * Parses instances of java.sql.Types to string form so it can be used in creation of sql arrays.

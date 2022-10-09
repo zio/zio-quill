@@ -31,6 +31,9 @@ object Messages {
   def querySubexpand = cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
   def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
   def errorDetail = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
+  def disableReturning = cache("quill.query.disableReturning", variable("quill.query.disableReturning", "quill_query_disableReturning", "false").toBoolean)
+  def logBinds = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
+  def queryTooLongForLogs = cache("quill.query.tooLong", variable("quill.query.tooLong", "quill_query_tooLong", "200").toInt)
 
   sealed trait LogToFile
   object LogToFile {
@@ -54,7 +57,7 @@ object Messages {
       values.find(_.value == str).getOrElse(throw new IllegalArgumentException(s"The value ${str} is an invalid quat trace setting. Value values are: ${values.map(_.value).mkString(",")}"))
   }
 
-  private[util] def traces: List[TraceType] = {
+  private[getquill] def traces: List[TraceType] = {
     val argValue = variable("quill.trace.types", "quill_trace_types", "standard")
     cache("quill.trace.types", {
       if (argValue == "all")
@@ -110,6 +113,7 @@ object Messages {
     sealed trait Elaboration extends TraceType { val value = "elab" }
     sealed trait SqlQueryConstruct extends TraceType { val value = "sqlquery" }
     sealed trait FlattenOptionOperation extends TraceType { val value = "option" }
+    sealed trait Particularization extends TraceType { val value = "parti" }
 
     object Warning extends Warning
     object SqlNormalizations extends SqlNormalizations
@@ -132,17 +136,18 @@ object Messages {
     object Elaboration extends Elaboration
     object SqlQueryConstruct extends SqlQueryConstruct
     object FlattenOptionOperation extends FlattenOptionOperation
+    object Particularization extends Particularization
 
     def values: List[TraceType] = List(
       Standard, SqlNormalizations, Normalizations, NestedQueryExpansion, AvoidAliasConflict, ReifyLiftings, PatMatch, Quotation,
       RepropagateQuats, RenameProperties, Warning, ShealthLeaf, ApplyMap, ExpandDistinct, ExprModel, Meta, Execution, DynamicExecution,
-      Elaboration, SqlQueryConstruct, FlattenOptionOperation
+      Elaboration, SqlQueryConstruct, FlattenOptionOperation, Particularization
     )
   }
 
   val qprint = new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)
   def qprintCustom(traceOpinions: Boolean = false, traceAstSimple: Boolean = false, traceQuats: QuatTrace = QuatTrace.None) =
-    new AstPrinter(traceOpinions, traceAstSimple, Messages.traceQuats)
+    new AstPrinter(traceOpinions, traceAstSimple, traceQuats)
 
   def fail(msg: String) =
     throw new IllegalStateException(msg)

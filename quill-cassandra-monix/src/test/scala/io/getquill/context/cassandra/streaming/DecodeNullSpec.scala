@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.streaming
 
 import io.getquill._
+import io.getquill.base.Spec
 import monix.reactive.Observable
 
 class DecodeNullSpec extends Spec {

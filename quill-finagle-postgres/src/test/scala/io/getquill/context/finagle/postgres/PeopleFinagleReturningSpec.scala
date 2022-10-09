@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.postgres
 
 import com.twitter.util.{ Await, Future }
-import io.getquill.context.sql.PeopleReturningSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleFinagleReturningSpec extends PeopleReturningSpec {
 

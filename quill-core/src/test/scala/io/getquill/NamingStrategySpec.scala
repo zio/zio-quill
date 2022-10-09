@@ -1,5 +1,7 @@
 package io.getquill
 
+import io.getquill.base.Spec
+
 class NamingStrategySpec extends Spec {
 
   "uses the default impl" in {

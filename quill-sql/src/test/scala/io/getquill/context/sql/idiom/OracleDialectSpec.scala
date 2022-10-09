@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class OracleDialectSpec extends Spec {
 
@@ -104,7 +105,7 @@ class OracleDialectSpec extends Spec {
     }
 
     "Multi Scalar Select with Infix" in {
-      ctx.run("foo" + infix"""'bar'""".as[String]).string mustEqual "SELECT 'foo' || 'bar' FROM DUAL"
+      ctx.run("foo" + sql"""'bar'""".as[String]).string mustEqual "SELECT 'foo' || 'bar' FROM DUAL"
     }
   }
 
@@ -183,7 +184,7 @@ class OracleDialectSpec extends Spec {
 
   case class Person(name: String, age: Int)
   "No 'AS' aliases" in {
-    ctx.run(infix"SELECT name, age FROM Person p".as[Query[Person]]).string mustEqual
+    ctx.run(sql"SELECT name, age FROM Person p".as[Query[Person]]).string mustEqual
       "SELECT x.name, x.age FROM (SELECT name, age FROM Person p) x"
   }
 

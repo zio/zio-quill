@@ -4,7 +4,8 @@ import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcContextTypes
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context._
-import io.getquill.ziojdbc.Quill
+import io.getquill.jdbczio.Quill
+import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
 import zio.stream.ZStream
@@ -186,7 +187,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] e
       case Some(connection) =>
         blocking(qlio.provideEnvironment(ZEnvironment(connection)))
       case None =>
-        blocking(qlio.provideLayer(Quill.DataSource.live))
+        blocking(qlio.provideLayer(Quill.Connection.acquireScoped))
     }
 
   private def onConnectionStream[T](qstream: ZStream[Connection, SQLException, T]): ZStream[DataSource, SQLException, T] =
@@ -195,7 +196,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] e
         qstream.provideEnvironment(ZEnvironment(connection))
       case None =>
         (for {
-          env <- ZStream.scoped(Quill.DataSource.live.build)
+          env <- ZStream.scoped(Quill.Connection.acquireScoped.build)
           r <- qstream.provideEnvironment(env)
         } yield (r)).refineToOrDie[SQLException]
     }

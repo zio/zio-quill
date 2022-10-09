@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class CaseClassQueryCassandraSpec extends Spec {
 

@@ -5,7 +5,7 @@ import scala.concurrent.ExecutionContext
 
 class ScalaFutureIOMonadSpec extends IOMonadSpec {
 
-  override val ctx = io.getquill.testAsyncContext
+  override val ctx = io.getquill.MirrorContexts.testAsyncContext
   import ctx._
 
   override def eval[T](io: IO[T, _]) = {

@@ -1,8 +1,7 @@
 package io.getquill.util
 
+import io.getquill.base.Spec
 import java.io.{ ByteArrayOutputStream, PrintStream }
-
-import io.getquill.Spec
 import io.getquill.util.Messages.TraceType.Standard
 
 class InterpolatorSpec extends Spec {

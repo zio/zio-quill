@@ -2,9 +2,10 @@ package io.getquill.context.jasync.postgres
 
 import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
 import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.base.Spec
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import io.getquill.{ Literal, PostgresJAsyncContext, ReturnAction, Spec }
+import io.getquill.{ Literal, PostgresJAsyncContext, ReturnAction }
 
 class PostgresJAsyncContextSpec extends Spec {
 
