@@ -6,7 +6,7 @@ import io.getquill.norm.EqualityBehavior
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
 import io.getquill._
 
-class TestContextTemplate[Dialect <: SqlIdiom, Naming <: NamingStrategy](dialect: Dialect, naming: Naming)
+class TestContextTemplate[+Dialect <: SqlIdiom, +Naming <: NamingStrategy](dialect: Dialect, naming: Naming)
   extends SqlMirrorContext(dialect, naming)
   with TestEntities
   with TestEncoders
@@ -47,7 +47,7 @@ object NonAnsiMirrorSqlDialect extends NonAnsiMirrorSqlDialect {
   override def prepareForProbing(string: String) = string
 }
 
-class NonAnsiTestContextTemplate[Naming <: NamingStrategy](naming: Naming)
+class NonAnsiTestContextTemplate[+Naming <: NamingStrategy](naming: Naming)
   extends SqlMirrorContext(NonAnsiMirrorSqlDialect, naming)
   with TestEntities
   with TestEncoders

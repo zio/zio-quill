@@ -1,6 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.ast.{ Filter, FlatMap, Query, Union, UnionAll }
+import io.getquill.util.TraceConfig
 
 /**
  * This stage represents Normalization Stage1: Symbolic Reduction in Philip Wadler's Paper
@@ -11,7 +12,7 @@ import io.getquill.ast.{ Filter, FlatMap, Query, Union, UnionAll }
  * In Wadler's paper, he characterizes them as `for x in P ...`` whereas in Quill they are
  * characterized as list comprehensions i.e. `P.flatMap(x => ...)`.
  */
-object SymbolicReduction {
+class SymbolicReduction(traceConfig: TraceConfig) {
 
   def unapply(q: Query) =
     q match {

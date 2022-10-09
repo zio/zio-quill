@@ -22,7 +22,7 @@ class ZioJdbcContextSpec extends ZioSpec {
         seq <- testContext.transaction {
           for {
             _ <- testContext.run(qr1.insert(_.i -> 33))
-            s <- accumulateDS(testContext.stream(qr1))
+            s <- accumulate(testContext.stream(qr1))
           } yield s
         }
         r <- testContext.run(qr1)

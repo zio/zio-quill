@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 
 class CassandraContextMacroSpec extends Spec {

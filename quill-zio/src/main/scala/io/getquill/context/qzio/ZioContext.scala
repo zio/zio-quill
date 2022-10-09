@@ -5,7 +5,7 @@ import io.getquill.context.{ Context, ExecutionInfo, ContextVerbStream }
 import zio.ZIO
 import zio.stream.ZStream
 
-trait ZioContext[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] extends Context[Idiom, Naming]
+trait ZioContext[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy] extends Context[Idiom, Naming]
   with ContextVerbStream[Idiom, Naming] {
 
   type Error

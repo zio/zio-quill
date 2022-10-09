@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.idiom.StringToken
 
 class SQLServerDialectSpec extends Spec {

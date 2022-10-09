@@ -15,7 +15,7 @@ import scala.compat.java8.FutureConverters._
 import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
-class CassandraStreamContext[N <: NamingStrategy](
+class CassandraStreamContext[+N <: NamingStrategy](
   naming:                     N,
   session:                    CqlSession,
   preparedStatementCacheSize: Long

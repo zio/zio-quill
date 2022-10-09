@@ -1,11 +1,11 @@
 package io.getquill.context.orientdb
 
-import io.getquill.norm.NormalizeCaching
+import io.getquill.norm.{ NormalizeCaching, TranspileConfig }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
 import io.getquill.ast.{ AggregationOperator, External, _ }
 import io.getquill.context.sql._
-import io.getquill.NamingStrategy
+import io.getquill.{ IdiomContext, NamingStrategy }
 import io.getquill.context.{ CannotReturn, ExecutionType }
 import io.getquill.util.Messages.{ fail, trace }
 import io.getquill.idiom._
@@ -25,24 +25,25 @@ trait OrientDBIdiom extends Idiom {
 
   override def prepareForProbing(string: String): String = string
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    doTranslate(ast, false, executionType)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, false, executionType, idiomContext)
   }
 
-  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    doTranslate(ast, true, executionType)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    doTranslate(ast, true, executionType, idiomContext)
   }
 
-  private def doTranslate(ast: Ast, cached: Boolean, executionType: ExecutionType)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+  private def doTranslate(ast: Ast, cached: Boolean, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
+    implicit val implcitIdiomContext: IdiomContext = idiomContext
     val normalizedAst = {
       if (cached)
-        NormalizeCaching { ast: Ast => SqlNormalize(ast) }(ast)
-      else SqlNormalize(ast)
+        NormalizeCaching { ast: Ast => SqlNormalize(ast, idiomContext.config) }(ast)
+      else SqlNormalize(ast, TranspileConfig.Empty)
     }
     val token =
       normalizedAst match {
         case q: Query =>
-          val sql = SqlQuery(q)
+          val sql = new SqlQueryApply(idiomContext.traceConfig)(q)
           VerifySqlQuery(sql).map(fail)
           val expanded = ExpandNestedQueries(sql)
           trace("expanded sql")(expanded)
@@ -60,10 +61,10 @@ trait OrientDBIdiom extends Idiom {
     (normalizedAst, stmt"$token", executionType)
   }
 
-  implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query]): Tokenizer[Ast] = {
+  implicit def astTokenizer(implicit strategy: NamingStrategy, queryTokenizer: Tokenizer[Query], idiomContext: IdiomContext): Tokenizer[Ast] = {
     Tokenizer[Ast] {
       case a: Query =>
-        SqlQuery(a).token
+        new SqlQueryApply(idiomContext.traceConfig)(a).token
       case a: Operation =>
         a.token
       case a: Infix =>
@@ -94,7 +95,7 @@ trait OrientDBIdiom extends Idiom {
     }
   }
 
-  implicit def ifTokenizer(implicit strategy: NamingStrategy): Tokenizer[If] = Tokenizer[If] {
+  implicit def ifTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[If] = Tokenizer[If] {
     case ast: If =>
       def flatten(ast: Ast): (List[(Ast, Ast)], Ast) =
         ast match {
@@ -113,11 +114,11 @@ trait OrientDBIdiom extends Idiom {
       conditions.head
   }
 
-  implicit def queryTokenizer(implicit strategy: NamingStrategy): Tokenizer[Query] = Tokenizer[Query] {
-    case q => SqlQuery(q).token
+  implicit def queryTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Query] = Tokenizer[Query] {
+    case q => new SqlQueryApply(idiomContext.traceConfig)(q).token
   }
 
-  implicit def orientDBQueryTokenizer(implicit strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  implicit def orientDBQueryTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
 
       val distinctTokenizer = (if (distinct == DistinctKind.Distinct) "DISTINCT" else "").token
@@ -175,7 +176,7 @@ trait OrientDBIdiom extends Idiom {
       fail("Other operators are not supported yet. Please raise a ticket to support more operations")
   }
 
-  implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
+  implicit def operationTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Operation] = Tokenizer[Operation] {
     case UnaryOperation(op, ast)                               => stmt"${op.token} (${ast.token})"
     case BinaryOperation(a, EqualityOperator.`_==`, NullValue) => stmt"${scopedTokenizer(a)} IS NULL"
     case BinaryOperation(NullValue, EqualityOperator.`_==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
@@ -192,17 +193,17 @@ trait OrientDBIdiom extends Idiom {
     case UnionAllOperation => stmt"UNION ALL"
   }
 
-  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit strategy: NamingStrategy) =
+  protected def tokenOrderBy(criterias: List[OrderByCriteria])(implicit strategy: NamingStrategy, idiomContext: IdiomContext) =
     stmt"ORDER BY ${criterias.token}"
 
-  implicit def sourceTokenizer(implicit strategy: NamingStrategy): Tokenizer[FromContext] = Tokenizer[FromContext] {
+  implicit def sourceTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[FromContext] = Tokenizer[FromContext] {
     case TableContext(name, alias)  => stmt"${name.token}"
     case QueryContext(query, alias) => stmt"(${query.token})"
     case InfixContext(infix, alias) => stmt"(${(infix: Ast).token})"
     case _                          => fail("OrientDB sql doesn't support joins")
   }
 
-  implicit def orderByCriteriaTokenizer(implicit strategy: NamingStrategy): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
+  implicit def orderByCriteriaTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[OrderByCriteria] = Tokenizer[OrderByCriteria] {
     case OrderByCriteria(ast, Asc | AscNullsFirst | AscNullsLast)    => stmt"${scopedTokenizer(ast)} ASC"
     case OrderByCriteria(ast, Desc | DescNullsFirst | DescNullsLast) => stmt"${scopedTokenizer(ast)} DESC"
   }
@@ -237,7 +238,7 @@ trait OrientDBIdiom extends Idiom {
     case other                  => fail(s"OrientDB QL doesn't support the '$other' operator.")
   }
 
-  implicit def selectValueTokenizer(implicit strategy: NamingStrategy): Tokenizer[SelectValue] = {
+  implicit def selectValueTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SelectValue] = {
     def tokenValue(ast: Ast) =
       ast match {
         case Aggregation(op, Ident(_, _)) => stmt"${op.token}(*)"
@@ -254,7 +255,7 @@ trait OrientDBIdiom extends Idiom {
     }
   }
 
-  implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy): Tokenizer[Property] = {
+  implicit def propertyTokenizer(implicit valueTokenizer: Tokenizer[Value], identTokenizer: Tokenizer[Ident], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Property] = {
     Tokenizer[Property] {
       case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
       case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
@@ -264,16 +265,16 @@ trait OrientDBIdiom extends Idiom {
     }
   }
 
-  implicit def valueTokenizer(implicit strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
+  implicit def valueTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String, _) => stmt"'${v.token}'"
     case Constant((), _)        => stmt"1"
     case Constant(v, _)         => stmt"${v.toString.token}"
     case NullValue              => stmt"null"
     case Tuple(values)          => stmt"${values.token}"
-    case CaseClass(values)      => stmt"${values.map(_._2).token}"
+    case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
   }
 
-  implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Infix] = Tokenizer[Infix] {
+  implicit def infixTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Infix] = Tokenizer[Infix] {
     case Infix(parts, params, _, _, _) =>
       val pt = parts.map(_.token)
       val pr = params.map(_.token)
@@ -286,17 +287,17 @@ trait OrientDBIdiom extends Idiom {
   implicit def externalIdentTokenizer(implicit strategy: NamingStrategy): Tokenizer[ExternalIdent] =
     Tokenizer[ExternalIdent](e => strategy.default(e.name).token)
 
-  implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[Assignment] = Tokenizer[Assignment] {
+  implicit def assignmentTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Assignment] = Tokenizer[Assignment] {
     case Assignment(alias, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
-  implicit def assignmentDualTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
+  implicit def assignmentDualTokenizer(implicit propertyTokenizer: Tokenizer[Property], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
     case AssignmentDual(alias1, alias2, prop, value) =>
       stmt"${prop.token} = ${scopedTokenizer(value)}"
   }
 
-  implicit def actionTokenizer(implicit strategy: NamingStrategy): Tokenizer[Action] = {
+  implicit def actionTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Action] = {
 
     implicit def propertyTokenizer: Tokenizer[Property] = Tokenizer[Property] {
       case Property(Property.Opinionated(_, name, renameable, _), "isEmpty")   => stmt"${renameable.fixedOr(name.token)(strategy.column(name).token)} IS NULL"

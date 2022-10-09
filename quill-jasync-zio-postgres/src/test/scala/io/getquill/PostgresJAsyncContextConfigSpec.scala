@@ -4,6 +4,7 @@ import java.io.File
 import com.github.jasync.sql.db.SSLConfiguration
 import com.github.jasync.sql.db.SSLConfiguration.Mode
 import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
+import io.getquill.base.Spec
 import io.getquill.context.zio.PostgresJAsyncContextConfig
 
 class PostgresJAsyncContextConfigSpec extends Spec {

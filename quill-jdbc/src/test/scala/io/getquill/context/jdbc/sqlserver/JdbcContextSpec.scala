@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc.sqlserver
 
-import io.getquill.{ Literal, Spec, SqlServerJdbcContext }
+import io.getquill.base.Spec
+import io.getquill.{ Literal, SqlServerJdbcContext }
 
 class JdbcContextSpec extends Spec {
 

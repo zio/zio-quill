@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.postgres
 
 import com.twitter.util.{ Await, Future }
-import io.getquill.context.sql.OnConflictSpec
+import io.getquill.context.sql.base.OnConflictSpec
 
 class OnConflictFinagleSpec extends OnConflictSpec {
   val ctx = testContext

@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.context.sql.CaseClassQuerySpec
+import io.getquill.context.sql.base.CaseClassQuerySpec
 
 class CaseClassQueryNdbcPostgresSpec extends CaseClassQuerySpec {
 

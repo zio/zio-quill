@@ -16,7 +16,7 @@ import io.getquill.norm.Normalize
  * yet use Quat fields for expansion. Once this is changed, using that implementation here
  * should be reconsidered.
  */
-object ExpandJoin {
+class ExpandJoin(normalize: Normalize) {
 
   def apply(q: Ast) = expand(q, None)
 
@@ -51,7 +51,7 @@ object ExpandJoin {
     }
 
   private def nestedExpand(q: Ast, id: Ident) =
-    Normalize(expand(q, Some(id))) match {
+    normalize(expand(q, Some(id))) match {
       case Map(q, _, _) => q
       case q            => q
     }

@@ -38,32 +38,75 @@ sealed trait ReturningClauseSupported extends ReturningCapability
  */
 sealed trait OutputClauseSupported extends ReturningCapability
 
+/**
+ * Whether values-clause in `INSERT INTO Someplaces (...) VALUES (values-clause)` can be repeated i.e:
+ * `INSERT INTO Someplaces (...) VALUES (values1), (values2), (values3), etc...`
+ */
+sealed trait InsertValuesCapability
+/** The DB supports multiple values-clauses per insert-query */
+sealed trait InsertValueMulti extends InsertValuesCapability
+object InsertValueMulti extends InsertValueMulti
+/** The DB supports only one single values-clauses per insert-query */
+sealed trait InsertValueSingle extends InsertValuesCapability
+object InsertValueSingle extends InsertValueSingle
+trait IdiomInsertValueCapability {
+  def idiomInsertValuesCapability: InsertValuesCapability
+}
+trait CanInsertWithMultiValues extends IdiomInsertValueCapability {
+  def idiomInsertValuesCapability: InsertValueMulti = InsertValueMulti
+}
+trait CanInsertWithSingleValue extends IdiomInsertValueCapability {
+  def idiomInsertValuesCapability: InsertValueSingle = InsertValueSingle
+}
+
+/**
+ * While many databases allow multiple VALUES clauses, they do not support
+ * doing getGeneratedKeys or allow `returning` clauses for those situations
+ * (or actually do not fail but just have wrong behavior e.g. Sqlite.)
+ * This context controls which DBs can do batch-insert and actually return the generated IDs
+ * from the batch inserts (currently only Postgres and SQL Server can do this).
+ */
+sealed trait InsertReturningValuesCapability
+sealed trait InsertReturningValueMulti extends InsertReturningValuesCapability
+object InsertReturningValueMulti extends InsertReturningValueMulti
+sealed trait InsertReturningValueSingle extends InsertReturningValuesCapability
+object InsertReturningValueSingle extends InsertReturningValueSingle
+trait IdiomInsertReturningValueCapability {
+  def idiomInsertReturningValuesCapability: InsertReturningValuesCapability
+}
+trait CanInsertReturningWithMultiValues extends IdiomInsertReturningValueCapability {
+  def idiomInsertReturningValuesCapability: InsertReturningValueMulti = InsertReturningValueMulti
+}
+trait CanInsertReturningWithSingleValue extends IdiomInsertReturningValueCapability {
+  def idiomInsertReturningValuesCapability: InsertReturningValueSingle = InsertReturningValueSingle
+}
+
 object ReturningNotSupported extends ReturningNotSupported
 object ReturningSingleFieldSupported extends ReturningSingleFieldSupported
 object ReturningMultipleFieldSupported extends ReturningMultipleFieldSupported
 object ReturningClauseSupported extends ReturningClauseSupported
 object OutputClauseSupported extends OutputClauseSupported
 
-trait Capabilities {
+trait IdiomReturningCapability {
   def idiomReturningCapability: ReturningCapability
 }
 
-trait CanReturnClause extends Capabilities {
+trait CanReturnClause extends IdiomReturningCapability {
   override def idiomReturningCapability: ReturningClauseSupported = ReturningClauseSupported
 }
 
-trait CanOutputClause extends Capabilities {
+trait CanOutputClause extends IdiomReturningCapability {
   override def idiomReturningCapability: OutputClauseSupported = OutputClauseSupported
 }
 
-trait CanReturnField extends Capabilities {
+trait CanReturnField extends IdiomReturningCapability {
   override def idiomReturningCapability: ReturningSingleFieldSupported = ReturningSingleFieldSupported
 }
 
-trait CanReturnMultiField extends Capabilities {
+trait CanReturnMultiField extends IdiomReturningCapability {
   override def idiomReturningCapability: ReturningMultipleFieldSupported = ReturningMultipleFieldSupported
 }
 
-trait CannotReturn extends Capabilities {
+trait CannotReturn extends IdiomReturningCapability {
   override def idiomReturningCapability: ReturningNotSupported = ReturningNotSupported
 }

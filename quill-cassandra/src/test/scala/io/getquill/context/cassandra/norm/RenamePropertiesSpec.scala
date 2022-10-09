@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.norm
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.cassandra.mirrorContext
 
 class RenamePropertiesSpec extends Spec {

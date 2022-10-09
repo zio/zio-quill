@@ -10,7 +10,7 @@ import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
 import scala.jdk.CollectionConverters._
 
-class PostgresJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection])
+class PostgresJAsyncContext[+N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection])
   extends JAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming, pool)
   with ArrayEncoders
   with ArrayDecoders

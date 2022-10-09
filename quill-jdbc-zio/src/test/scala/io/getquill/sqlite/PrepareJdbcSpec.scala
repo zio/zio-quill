@@ -2,13 +2,14 @@ package io.getquill.sqlite
 
 import java.sql.{ Connection, ResultSet }
 import io.getquill.PrepareZioJdbcSpecBase
-
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import org.scalatest.BeforeAndAfter
 
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
-  val context = testContext
+  val context = testContext.underlying
   import context._
+  implicit val implicitPool = Implicit(pool)
 
   before {
     testContext.run(query[Product].delete).runSyncUnsafe()

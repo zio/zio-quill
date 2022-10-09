@@ -2,17 +2,19 @@ package io.getquill
 
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Entity, PropertyAlias }
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.quat._
+import io.getquill.MirrorContexts.testContext
 
 class UnlimitedOptionalEmbeddedSpec extends Spec {
-  val ctx = testContext
+  val ctx = MirrorContexts.testContext
 
   import ctx._
 
-  case class Emb3(value: String) extends Embedded
-  case class Emb2(e1: Emb3, e2: Option[Emb3]) extends Embedded
-  case class Emb1(e1: Emb2, e2: Option[Emb2]) extends Embedded
+  case class Emb3(value: String)
+  case class Emb2(e1: Emb3, e2: Option[Emb3])
+  case class Emb1(e1: Emb2, e2: Option[Emb2])
   case class OptEmd(e1: Emb1, e2: Option[Emb1])
 
   lazy val optEmdEnt = OptEmd(

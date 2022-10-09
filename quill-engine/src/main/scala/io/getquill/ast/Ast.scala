@@ -195,6 +195,11 @@ case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query {
   def bestQuat: Quat = Quat.Tuple(body.bestQuat, query.bestQuat)
 }
 
+case class GroupByMap(query: Ast, byAlias: Ident, byBody: Ast, mapAlias: Ident, mapBody: Ast) extends Query {
+  def quat = mapBody.quat
+  def bestQuat: Quat = mapBody.bestQuat
+}
+
 case class Aggregation(operator: AggregationOperator, ast: Ast) extends Query {
   def quat =
     operator match {
@@ -329,8 +334,8 @@ final class Ident private (val name: String)(theQuat: => Quat)(val visibility: V
  * Invisible identities are a rare case where a user returns an embedded table from a map clause:
  *
  * <pre><code>
- *     case class Emb(id: Int, name: String) extends Embedded
- *     case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+ *     case class Emb(id: Int, name: String)
+ *     case class Parent(id: Int, name: String, emb: Emb)
  *     case class GrandParent(id: Int, par: Parent)
  *
  *     query[GrandParent]
@@ -446,6 +451,9 @@ final class Property(val ast: Ast, val name: String)(val renameable: Renameable,
 
   def copy(ast: Ast = this.ast, name: String = this.name): Property =
     Property.Opinionated(ast, name, this.renameable, this.visibility)
+
+  def copyAll(ast: Ast = this.ast, name: String = this.name, renameable: Renameable = this.renameable, visibility: Visibility = this.visibility): Property =
+    Property.Opinionated(ast, name, renameable, visibility)
 
   override def equals(that: Any) =
     that match {
@@ -602,16 +610,27 @@ case class Tuple(values: List[Ast]) extends Value {
   def bestQuat = bestComputedQuat
 }
 
-case class CaseClass(values: List[(String, Ast)]) extends Value {
-  private lazy val computedQuat = Quat.Product(values.map { case (k, v) => (k, v.quat) })
+case class CaseClass(name: String, values: List[(String, Ast)]) extends Value {
+  private lazy val computedQuat = Quat.Product(name, values.map { case (k, v) => (k, v.quat) })
   def quat = computedQuat
-  private lazy val bestComputedQuat = Quat.Product(values.map { case (k, v) => (k, v.bestQuat) })
+  private lazy val bestComputedQuat = Quat.Product(name, values.map { case (k, v) => (k, v.bestQuat) })
   def bestQuat = bestComputedQuat
+  private lazy val id = CaseClass.Id(values)
+
+  // Even thought name is not an "opinion" it still does not make sense to use it to compare CaseClass Asts
+  override def hashCode(): Int = CaseClass.Id(values).hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case cc: CaseClass => this.id.equals(cc.id)
+      case _             => false
+    }
 }
 
 object CaseClass {
+  case class Id(values: List[(String, Ast)])
+  val GeneratedName = "<Generated>"
   object Single {
-    def apply(tup: (String, Ast)) = new CaseClass(List(tup))
+    def apply(tup: (String, Ast)) = new CaseClass(GeneratedName, List(tup))
     def unapply(cc: CaseClass): Option[(String, Ast)] =
       cc.values match {
         case (name, property) :: Nil => Some((name, property))
@@ -713,6 +732,13 @@ object Dynamic {
 case class QuotedReference(tree: Any, ast: Ast) extends Ast { def quat = ast.quat; def bestQuat = ast.bestQuat; }
 
 sealed trait External extends Ast
+object External {
+  sealed trait Source
+  object Source {
+    case class UnparsedProperty(name: String) extends Source
+    case object Parser extends Source
+  }
+}
 
 /***********************************************************************/
 /*                      Only Quill 2                                   */
@@ -727,26 +753,26 @@ sealed trait ScalarLift extends Lift with Terminal {
   val encoder: Any
 }
 
-final class ScalarValueLift(val name: String, val value: Any, val encoder: Any)(theQuat: => Quat)
+final class ScalarValueLift(val name: String, val source: External.Source, val value: Any, val encoder: Any)(theQuat: => Quat)
   extends ScalarLift {
   def quat: Quat = theQuat
   def bestQuat = quat
   override def withQuat(quat: => Quat) = this.copy(quat = quat)
 
-  private val id = ScalarValueLift.Id(name, value, encoder)
+  private val id = ScalarValueLift.Id(name, source, value, encoder)
   override def hashCode(): Int = id.hashCode()
   override def equals(obj: Any): Boolean =
     obj match {
       case e: ScalarValueLift => e.id == this.id
       case _                  => false
     }
-  def copy(name: String = this.name, value: Any = this.value, encoder: Any = this.encoder, quat: => Quat = this.quat) =
-    ScalarValueLift(name, value, encoder, quat)
+  def copy(name: String = this.name, source: External.Source = this.source, value: Any = this.value, encoder: Any = this.encoder, quat: => Quat = this.quat) =
+    ScalarValueLift(name, source, value, encoder, quat)
 }
 object ScalarValueLift {
-  private case class Id(name: String, value: Any, encoder: Any)
-  def apply(name: String, value: Any, encoder: Any, quat: => Quat): ScalarValueLift = new ScalarValueLift(name, value, encoder)(quat)
-  def unapply(svl: ScalarValueLift) = Some((svl.name, svl.value, svl.encoder, svl.quat))
+  private case class Id(name: String, source: External.Source, value: Any, encoder: Any)
+  def apply(name: String, source: External.Source, value: Any, encoder: Any, quat: => Quat): ScalarValueLift = new ScalarValueLift(name, source, value, encoder)(quat)
+  def unapply(svl: ScalarValueLift) = Some((svl.name, svl.source, svl.value, svl.encoder, svl.quat))
 }
 
 final class ScalarQueryLift(val name: String, val value: Any, val encoder: Any)(theQuat: => Quat)
@@ -774,25 +800,25 @@ object ScalarQueryLift {
 
 sealed trait CaseClassLift extends Lift
 
-final class CaseClassValueLift(val name: String, val value: Any)(theQuat: => Quat) extends CaseClassLift {
+final class CaseClassValueLift(val name: String, val simpleName: String, val value: Any)(theQuat: => Quat) extends CaseClassLift {
   def quat: Quat = theQuat
   def bestQuat = quat
   override def withQuat(quat: => Quat) = this.copy(quat = quat)
 
-  private val id = CaseClassValueLift.Id(name, value)
+  private val id = CaseClassValueLift.Id(name, simpleName, value)
   override def hashCode(): Int = id.hashCode()
   override def equals(obj: Any): Boolean =
     obj match {
       case e: CaseClassValueLift => e.id == this.id
       case _                     => false
     }
-  def copy(name: String = this.name, value: Any = this.value, quat: => Quat = this.quat) =
-    CaseClassValueLift(name, value, quat)
+  def copy(name: String = this.name, simpleName: String = this.simpleName, value: Any = this.value, quat: => Quat = this.quat) =
+    CaseClassValueLift(name, simpleName, value, quat)
 }
 object CaseClassValueLift {
-  private case class Id(name: String, value: Any)
-  def apply(name: String, value: Any, quat: => Quat): CaseClassValueLift = new CaseClassValueLift(name, value)(quat)
-  def unapply(l: CaseClassValueLift) = Some((l.name, l.value, l.quat))
+  private case class Id(name: String, simpleName: String, value: Any)
+  def apply(name: String, simpleName: String, value: Any, quat: => Quat): CaseClassValueLift = new CaseClassValueLift(name, simpleName, value)(quat)
+  def unapply(l: CaseClassValueLift) = Some((l.name, l.simpleName, l.value, l.quat))
 }
 
 final class CaseClassQueryLift(val name: String, val value: Any)(theQuat: => Quat) extends CaseClassLift {
@@ -827,7 +853,7 @@ sealed trait Tag extends External {
 }
 
 case class ScalarTagId(uid: String)
-case class ScalarTag(uid: String) extends Tag {
+case class ScalarTag(uid: String, source: External.Source) extends Tag {
   def quat = Quat.Value
   def bestQuat = quat
 

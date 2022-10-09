@@ -1,9 +1,9 @@
 package io.getquill.context.spark
 
-import io.getquill.NamingStrategy
+import io.getquill.{ IdiomContext, NamingStrategy }
 import io.getquill.ast.{ Ast, BinaryOperation, CaseClass, Constant, ExternalIdent, Ident, Operation, Property, Query, StringOperator, Tuple, Value }
 import io.getquill.context.spark.norm.EscapeQuestionMarks
-import io.getquill.context.sql.{ FlattenSqlQuery, SelectValue, SetOperationSqlQuery, SqlQuery, UnaryOperationSqlQuery }
+import io.getquill.context.sql.{ FlattenSqlQuery, SelectValue, SetOperationSqlQuery, SqlQuery, SqlQueryApply, UnaryOperationSqlQuery }
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.idiom.StatementInterpolator._
@@ -16,7 +16,7 @@ class SparkDialect extends SparkIdiom
 
 trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
-  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) = super.sqlQueryTokenizer
+  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) = super.sqlQueryTokenizer
 
   def liftingPlaceholder(index: Int): String = "?"
 
@@ -24,15 +24,16 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   override implicit def externalIdentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ExternalIdent] = super.externalIdentTokenizer
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
-    val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast))
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy) = {
+    val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, idiomContext.config))
 
+    implicit val implicitIdiomContext: IdiomContext = idiomContext
     implicit val tokernizer = defaultTokenizer
 
     val token =
       normalizedAst match {
         case q: Query =>
-          val sql = SqlQuery(q)
+          val sql = new SqlQueryApply(idiomContext.config.traceConfig)(q)
           trace("sql")(sql)
           val expanded = SimpleNestedExpansion(sql)
           trace("expanded sql")(expanded)
@@ -61,8 +62,8 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
       stmt"${name.token}"
   }
 
-  class SparkFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
-    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
+  class SparkFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext)
+    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
 
     override def selectTokenizer: Token = {
       // Note that by the time we have reached this point, all Idents representing case classes/tuples in selection have
@@ -106,7 +107,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case q: FlattenSqlQuery =>
       new SparkFlattenSqlQueryTokenizerHelper(q).apply
     case SetOperationSqlQuery(a, op, b) =>
@@ -137,7 +138,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
   override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String, _) => stmt"'${v.replaceAll("""[\\']""", """\\$0""").token}'"
     case Tuple(values)          => stmt"struct(${values.zipWithIndex.map { case (value, index) => stmt"${value.token} AS _${(index + 1).toString.token}" }.token})"
-    case CaseClass(values)      => stmt"struct(${values.map { case (name, value) => stmt"${value.token} AS ${name.token}" }.token})"
+    case CaseClass(_, values)   => stmt"struct(${values.map { case (name, value) => stmt"${value.token} AS ${name.token}" }.token})"
     case other                  => super.valueTokenizer.token(other)
   }
 

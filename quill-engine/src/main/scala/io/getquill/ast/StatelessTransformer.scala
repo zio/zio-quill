@@ -73,18 +73,19 @@ trait StatelessTransformer {
 
   def apply(e: Query): Query =
     e match {
-      case e: Entity          => e
-      case Filter(a, b, c)    => Filter(apply(a), applyIdent(b), apply(c))
-      case Map(a, b, c)       => Map(apply(a), applyIdent(b), apply(c))
-      case FlatMap(a, b, c)   => FlatMap(apply(a), applyIdent(b), apply(c))
-      case ConcatMap(a, b, c) => ConcatMap(apply(a), applyIdent(b), apply(c))
-      case SortBy(a, b, c, d) => SortBy(apply(a), applyIdent(b), apply(c), d)
-      case GroupBy(a, b, c)   => GroupBy(apply(a), applyIdent(b), apply(c))
-      case Aggregation(o, a)  => Aggregation(o, apply(a))
-      case Take(a, b)         => Take(apply(a), apply(b))
-      case Drop(a, b)         => Drop(apply(a), apply(b))
-      case Union(a, b)        => Union(apply(a), apply(b))
-      case UnionAll(a, b)     => UnionAll(apply(a), apply(b))
+      case e: Entity                 => e
+      case Filter(a, b, c)           => Filter(apply(a), applyIdent(b), apply(c))
+      case Map(a, b, c)              => Map(apply(a), applyIdent(b), apply(c))
+      case FlatMap(a, b, c)          => FlatMap(apply(a), applyIdent(b), apply(c))
+      case ConcatMap(a, b, c)        => ConcatMap(apply(a), applyIdent(b), apply(c))
+      case SortBy(a, b, c, d)        => SortBy(apply(a), applyIdent(b), apply(c), d)
+      case GroupBy(a, b, c)          => GroupBy(apply(a), applyIdent(b), apply(c))
+      case GroupByMap(a, b, c, d, e) => GroupByMap(apply(a), applyIdent(b), apply(c), applyIdent(d), apply(e))
+      case Aggregation(o, a)         => Aggregation(o, apply(a))
+      case Take(a, b)                => Take(apply(a), apply(b))
+      case Drop(a, b)                => Drop(apply(a), apply(b))
+      case Union(a, b)               => Union(apply(a), apply(b))
+      case UnionAll(a, b)            => UnionAll(apply(a), apply(b))
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), applyIdent(iA), applyIdent(iB), apply(on))
       case FlatJoin(t, a, iA, on) =>
@@ -121,9 +122,9 @@ trait StatelessTransformer {
       case e: Constant   => e
       case NullValue     => NullValue
       case Tuple(values) => Tuple(values.map(apply))
-      case CaseClass(tuples) => {
+      case CaseClass(n, tuples) => {
         val (keys, values) = tuples.unzip
-        CaseClass(keys.zip(values.map(apply)))
+        CaseClass(n, keys.zip(values.map(apply)))
       }
     }
 

@@ -9,7 +9,7 @@ import zio.ZIO
 
 import java.sql.{ Connection, PreparedStatement, ResultSet, SQLException }
 
-trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
+trait ZioPrepareContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with ContextVerbPrepare {
 
   private[getquill] val logger = ContextLogger(classOf[ZioPrepareContext[_, _]])
