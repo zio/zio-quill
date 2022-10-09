@@ -7,13 +7,13 @@ trait TestEntities {
   this: Context[_, _] =>
 
   case class TestEntity(s: String, i: Int, l: Long, o: Option[Int], b: Boolean)
-  case class Emb(s: String, i: Int) extends Embedded
+  case class Emb(s: String, i: Int)
   case class TestEntityEmb(emb: Emb, l: Long, o: Option[Int])
   case class TestEntity2(s: String, i: Int, l: Long, o: Option[Int])
   case class TestEntity3(s: String, i: Int, l: Long, o: Option[Int])
   case class TestEntity4(i: Long)
   case class TestEntity5(i: Long, s: String)
-  case class EmbSingle(i: Long) extends Embedded
+  case class EmbSingle(i: Long)
   case class TestEntity4Emb(emb: EmbSingle)
   case class TestEntityRegular(s: String, i: Long)
 

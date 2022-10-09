@@ -23,6 +23,16 @@ CREATE TABLE Task(
     tsk VARCHAR(255)
 );
 
+CREATE TABLE JsonbEntity(
+     name VARCHAR(255),
+     value JSONB
+);
+
+CREATE TABLE JsonEntity(
+    name VARCHAR(255),
+    value JSON
+);
+
 CREATE TABLE TimeEntity(
     sqlDate        DATE,                     -- java.sql.Date
     sqlTime        TIME,                     -- java.sql.Time
