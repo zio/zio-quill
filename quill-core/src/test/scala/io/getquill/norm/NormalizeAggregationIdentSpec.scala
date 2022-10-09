@@ -1,7 +1,7 @@
 package io.getquill.norm
 
 import io.getquill.base.Spec
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 
 class NormalizeAggregationIdentSpec extends Spec {
   "multiple select" in {

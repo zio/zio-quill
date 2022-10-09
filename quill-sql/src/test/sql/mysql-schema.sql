@@ -23,6 +23,23 @@ CREATE TABLE Task(
     tsk VARCHAR(255)
 );
 
+CREATE TABLE TimeEntity(
+    sqlDate        DATE,          -- java.sql.Date
+    sqlTime        TIME,          -- java.sql.Time
+    sqlTimestamp   TIMESTAMP,     -- java.sql.Timestamp
+    timeLocalDate      DATE,      -- java.time.LocalDate
+    timeLocalTime      TIME,      -- java.time.LocalTime
+    timeLocalDateTime  TIMESTAMP, -- java.time.LocalDateTime
+    -- MySQL has no understanding of Date+Timezone or Time+Timezone
+    -- The only thing you can do is use DATETIME which at least tries
+    -- not to convert to/from UTC whenever it is written.
+    -- More info here: https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+    timeZonedDateTime  DATETIME,  -- java.time.ZonedDateTime
+    timeInstant        DATETIME,  -- java.time.Instant
+    timeOffsetTime     TIME,      -- java.time.OffsetTime
+    timeOffsetDateTime DATETIME   -- java.time.OffsetDateTime
+);
+
 CREATE TABLE EncodingTestEntity(
     v1 VARCHAR(255),
     v2 DECIMAL(5,2),

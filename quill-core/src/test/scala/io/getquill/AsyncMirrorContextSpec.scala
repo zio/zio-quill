@@ -1,6 +1,7 @@
 package io.getquill
 
 import io.getquill.base.Spec
+import io.getquill.MirrorContexts._
 
 class AsyncMirrorContextSpec extends Spec {
   val ctx = testAsyncContext

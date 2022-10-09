@@ -175,7 +175,7 @@ case class ProtractQuat(refersToEntity: Boolean) {
             /* If the property represents a property of a Entity (i.e. we're selecting from an actual table,
              * then the entire projection of the Quat should be visible (since subsequent aliases will
              * be using the entire path.
-             * Take: Bim(bid:Int, mam:Mam), Mam(mid:Int, mood:Int) extends Embedded
+             * Take: Bim(bid:Int, mam:Mam), Mam(mid:Int, mood:Int)
              * Here is an example:
              * SELECT g.mam FROM
              *    SELECT gim.bim: CC(bid:Int,mam:CC(mid:Int,mood:Int)) FROM g

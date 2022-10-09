@@ -10,7 +10,7 @@ class QuatRunSpec extends Spec {
 
   "should refine quats from generic infixes and express during execution" - {
     case class MyPerson(name: String, age: Int)
-    val MyPersonQuat = Quat.Product("name" -> Quat.Value, "age" -> Quat.Value)
+    val MyPersonQuat = Quat.Product("MyPersonQuat", "name" -> Quat.Value, "age" -> Quat.Value)
 
     "from extension methods" in {
       implicit class QueryOps[Q <: Query[_]](q: Q) {

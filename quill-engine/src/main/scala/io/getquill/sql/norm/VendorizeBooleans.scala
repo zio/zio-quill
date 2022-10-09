@@ -12,8 +12,8 @@ object VendorizeBooleans extends StatelessTransformer {
       // Map clauses need values e.g. map(n=>n.status==true) => map(n=>if(n.status==true) 1 else 0)
       case Map(q, alias, body) =>
         Map(apply(q), alias, valuefyExpression(apply(body)))
-      case CaseClass(values) =>
-        CaseClass(values.map { case (name, value) => (name, valuefyExpression(apply(value))) })
+      case CaseClass(n, values) =>
+        CaseClass(n, values.map { case (name, value) => (name, valuefyExpression(apply(value))) })
       case Tuple(values) =>
         Tuple(values.map(value => valuefyExpression(apply(value))))
 

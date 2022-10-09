@@ -5,22 +5,23 @@ import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator.Tokenizer
 import io.getquill.idiom.{ StringToken, Token }
 import io.getquill.ast._
-import io.getquill.context.CanReturnField
+import io.getquill.context.{ CanInsertReturningWithSingleValue, CanInsertWithMultiValues, CanReturnField }
 import io.getquill.context.sql.OrderByCriteria
-import io.getquill.norm.TranspileConfig
 
 trait SqliteDialect
   extends SqlIdiom
   with QuestionMarkBindVariables
   with NoConcatSupport
   with OnConflictSupport
-  with CanReturnField {
+  with CanReturnField
+  with CanInsertWithMultiValues
+  with CanInsertReturningWithSingleValue {
 
   override def emptySetContainsToken(field: Token) = StringToken("0")
 
   override def prepareForProbing(string: String) = s"sqlite3_prepare_v2($string)"
 
-  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, transpileConfig: TranspileConfig): Tokenizer[Ast] =
+  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case c: OnConflict => conflictTokenizer.token(c)
       case ast           => super.astTokenizer.token(ast)

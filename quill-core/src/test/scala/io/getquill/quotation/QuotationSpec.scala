@@ -5,7 +5,7 @@ import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.{ Query => _, _ }
 import io.getquill.context.ValueClass
 import io.getquill.norm.NormalizeStringConcat
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.util.Messages
 import io.getquill.Ord
 import io.getquill.Query
@@ -16,7 +16,7 @@ import io.getquill.base.Spec
 import scala.math.BigDecimal.{ double2bigDecimal, int2bigDecimal, javaBigDecimal2bigDecimal, long2bigDecimal }
 
 case class CustomAnyValue(i: Int) extends AnyVal
-case class EmbeddedValue(s: String, i: Int) extends Embedded
+case class EmbeddedValue(s: String, i: Int)
 
 class QuotationSpec extends Spec {
 
@@ -1348,7 +1348,7 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast.body mustEqual OptionForall(Ident("o"), Ident("v"), Ident("v"))
         }
         "embedded" in {
-          case class EmbeddedEntity(id: Int) extends Embedded
+          case class EmbeddedEntity(id: Int)
           "quote((o: Option[EmbeddedEntity]) => o.forall(v => v.id == 1))" mustNot compile
         }
       }
@@ -1360,7 +1360,7 @@ class QuotationSpec extends Spec {
           quote(unquote(q)).ast.body mustEqual FilterIfDefined(Ident("o"), Ident("v"), Ident("v"))
         }
         "embedded" in {
-          case class EmbeddedEntity(id: Int) extends Embedded
+          case class EmbeddedEntity(id: Int)
           "quote((o: Option[EmbeddedEntity]) => o.filterIfDefined(v => v.id == 1))" mustNot compile
         }
       }
@@ -1379,7 +1379,7 @@ class QuotationSpec extends Spec {
             Property(Ident("v"), "id") +==+ Constant.auto(4))
         }
         "embedded" in {
-          case class EmbeddedEntity(id: Int) extends Embedded
+          case class EmbeddedEntity(id: Int)
           val q = quote {
             (o: Option[EmbeddedEntity]) => o.exists(v => v.id == 1)
           }
@@ -1666,13 +1666,13 @@ class QuotationSpec extends Spec {
           object implicits extends Implicits
           import implicits._
           val q = quote(query[TestEntity].toRandom)
-          val l = q.liftings.`implicits.ToRadom(null.asInstanceOf[io.getquill.EntityQuery[io.getquill.testContext.TestEntity]]).toRandom.Implicits.this.random`
+          val l = q.liftings.`implicits.ToRadom(null.asInstanceOf[io.getquill.EntityQuery[io.getquill.MirrorContexts.testContext.TestEntity]]).toRandom.Implicits.this.random`
           l.value mustEqual 999
           l.encoder mustEqual intEncoder
         }
       }
       "embedded" in {
-        case class EmbeddedTestEntity(id: String) extends Embedded
+        case class EmbeddedTestEntity(id: String)
         case class TestEntity(embedded: EmbeddedTestEntity)
         val t = TestEntity(EmbeddedTestEntity("test"))
         val q = quote {

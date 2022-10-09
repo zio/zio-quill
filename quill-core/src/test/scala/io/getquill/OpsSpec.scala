@@ -1,17 +1,9 @@
 package io.getquill
 
-import io.getquill.ast._
-import io.getquill.EntityQuery
-import io.getquill.testContext.InfixInterpolator
-import io.getquill.Query
-import io.getquill.quat._
-import io.getquill.testContext._
-import io.getquill.testContext.qr1
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
-import io.getquill.Quoted
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.ast.{ Query => _, _ }
 import io.getquill.base.Spec
+import io.getquill.quat._
 
 class OpsSpec extends Spec {
 

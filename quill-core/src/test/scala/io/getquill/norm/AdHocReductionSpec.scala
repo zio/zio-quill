@@ -1,10 +1,10 @@
 package io.getquill.norm
 
 import io.getquill.base.Spec
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qr2
+import io.getquill.MirrorContexts.testContext.quote
+import io.getquill.MirrorContexts.testContext.unquote
 import io.getquill.util.TraceConfig
 
 class AdHocReductionSpec extends Spec {

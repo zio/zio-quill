@@ -9,9 +9,9 @@ import scala.jdk.CollectionConverters._
 trait ZioJAsyncConnection {
   protected def takeConnection: ZIO[Scope, Throwable, ConcreteConnection]
 
-  private[zio] final def transaction[A](action: RIO[ZioJAsyncConnection, A]): ZIO[ZioJAsyncConnection, Throwable, A] = {
+  private[zio] final def transaction[R <: ZioJAsyncConnection, A](action: RIO[R, A]): ZIO[R, Throwable, A] = {
     //Taken from ConcreteConnectionBase.kt to avoid usage of pool.inTransaction
-    ZIO.scoped {
+    ZIO.scoped[R] {
       takeConnection.flatMap(conn =>
         (ZioJAsyncConnection.sendQuery(conn, "BEGIN") *>
           action.updateService[ZioJAsyncConnection](_ => ZioJAsyncConnection.make(conn))).tapBoth(
@@ -19,7 +19,6 @@ trait ZioJAsyncConnection {
             _ => ZioJAsyncConnection.sendQuery(conn, "COMMIT")
           ))
     }
-
   }
 
   private[zio] final def sendQuery(query: String): Task[QueryResult] =
