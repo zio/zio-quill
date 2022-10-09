@@ -1,8 +1,8 @@
 package io.getquill.context.orientdb
 
-import java.util.Date
+import io.getquill.base.Spec
 
-import io.getquill.Spec
+import java.util.Date
 
 class SetsEncodingSpec extends Spec {
 

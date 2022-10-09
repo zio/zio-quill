@@ -12,7 +12,7 @@ import scala.util.Try
 import io.getquill.context.{ Context, ExecutionInfo, ContextVerbTranslate }
 import io.getquill.monad.TwitterFutureIOMonad
 
-class FinaglePostgresContext[N <: NamingStrategy](val naming: N, client: PostgresClient)
+class FinaglePostgresContext[+N <: NamingStrategy](val naming: N, client: PostgresClient)
   extends Context[FinaglePostgresDialect, N]
   with ContextVerbTranslate
   with SqlContext[FinaglePostgresDialect, N]

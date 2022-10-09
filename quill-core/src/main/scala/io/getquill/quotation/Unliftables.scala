@@ -8,8 +8,14 @@ trait Unliftables extends QuatUnliftable {
   val mctx: Context
   import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
 
+  implicit val stringOptionUnliftable: Unliftable[Option[String]] = Unliftable[Option[String]] {
+    case q"scala.None"                             => None
+    case q"scala.Some[String](${ value: String })" => Some(value)
+  }
+
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
     case liftUnliftable(ast) => ast
+    case tagUnliftable(ast) => ast
     case queryUnliftable(ast) => ast
     case actionUnliftable(ast) => ast
     case valueUnliftable(ast) => ast
@@ -107,6 +113,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.ConcatMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => ConcatMap(a, b, c)
     case q"$pack.SortBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ast })" => SortBy(a, b, c, d)
     case q"$pack.GroupBy.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast })" => GroupBy(a, b, c)
+    case q"$pack.GroupByMap.apply(${ a: Ast }, ${ b: Ident }, ${ c: Ast }, ${ d: Ident }, ${ e: Ast })" => GroupByMap(a, b, c, d, e)
     case q"$pack.Take.apply(${ a: Ast }, ${ b: Ast })" => Take(a, b)
     case q"$pack.Drop.apply(${ a: Ast }, ${ b: Ast })" => Drop(a, b)
     case q"$pack.Union.apply(${ a: Ast }, ${ b: Ast })" => Union(a, b)
@@ -193,7 +200,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.NullValue" => NullValue
     case q"$pack.Constant.apply(${ Literal(mctx.universe.Constant(a)) }, ${ quat: Quat })" => Constant(a, quat)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
-    case q"$pack.CaseClass.apply(${ values: List[(String, Ast)] })" => CaseClass(values)
+    case q"$pack.CaseClass.apply(${ n: String }, ${ values: List[(String, Ast)] })" => CaseClass(n, values)
   }
 
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
@@ -204,13 +211,17 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val liftUnliftable: Unliftable[Lift] = Unliftable[Lift] {
-    case q"$pack.ScalarValueLift.apply(${ a: String }, $b, $c, ${ quat: Quat })" => ScalarValueLift(a, b, c, quat)
-    case q"$pack.CaseClassValueLift.apply(${ a: String }, $b, ${ quat: Quat })"  => CaseClassValueLift(a, b, quat)
-    case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c, ${ quat: Quat })" => ScalarQueryLift(a, b, c, quat)
-    case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b, ${ quat: Quat })"  => CaseClassQueryLift(a, b, quat)
+    case q"$pack.ScalarValueLift.apply(${ a: String }, ${ a1: External.Source }, $b, $c, ${ quat: Quat })" => ScalarValueLift(a, a1, b, c, quat)
+    case q"$pack.CaseClassValueLift.apply(${ a: String }, ${ a1: String }, $b, ${ quat: Quat })"           => CaseClassValueLift(a, a1, b, quat)
+    case q"$pack.ScalarQueryLift.apply(${ a: String }, $b, $c, ${ quat: Quat })"                           => ScalarQueryLift(a, b, c, quat)
+    case q"$pack.CaseClassQueryLift.apply(${ a: String }, $b, ${ quat: Quat })"                            => CaseClassQueryLift(a, b, quat)
+  }
+  implicit val sourceUnliftable: Unliftable[External.Source] = Unliftable[External.Source] {
+    case q"$pack.External.Source.Parser"                                    => External.Source.Parser
+    case q"$pack.External.Source.UnparsedProperty.apply(${ prop: String })" => External.Source.UnparsedProperty(prop)
   }
   implicit val tagUnliftable: Unliftable[Tag] = Unliftable[Tag] {
-    case q"$pack.ScalarTag.apply(${ uid: String })"    => ScalarTag(uid)
-    case q"$pack.QuotationTag.apply(${ uid: String })" => QuotationTag(uid)
+    case q"$pack.ScalarTag.apply(${ uid: String }, ${ source: External.Source })" => ScalarTag(uid, source)
+    case q"$pack.QuotationTag.apply(${ uid: String })"                            => QuotationTag(uid)
   }
 }

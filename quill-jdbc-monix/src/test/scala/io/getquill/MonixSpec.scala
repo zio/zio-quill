@@ -1,4 +1,5 @@
 package io.getquill
+import io.getquill.base.Spec
 import io.getquill.context.monix.MonixJdbcContext
 import monix.execution.Scheduler
 import monix.reactive.Observable

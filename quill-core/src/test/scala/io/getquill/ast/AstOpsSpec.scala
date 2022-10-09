@@ -1,8 +1,8 @@
 package io.getquill.ast
 
-import io.getquill.Spec
 import io.getquill.ast.Implicits._
 import io.getquill.VIdent
+import io.getquill.base.Spec
 import io.getquill.quat.Quat
 
 class AstOpsSpec extends Spec {

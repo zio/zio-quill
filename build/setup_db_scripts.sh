@@ -151,6 +151,13 @@ function setup_oracle() {
       -f "$ORACLE_SCRIPT" \
       --showWarnings=false
 
+    echo "Extending Oracle Expirations"
+    java -cp '/sqlline/sqlline.jar:/sqlline/ojdbc.jar' 'sqlline.SqlLine' \
+      -u 'jdbc:oracle:thin:@oracle:1521:xe' \
+      -n quill_test -p 'QuillRocks!' \
+      -e "alter profile DEFAULT limit PASSWORD_REUSE_TIME unlimited; alter profile DEFAULT limit PASSWORD_LIFE_TIME  unlimited; alter profile DEFAULT limit PASSWORD_GRACE_TIME unlimited;" \
+      --showWarnings=false
+
     echo "Connected to Oracle"
     sleep 2
 }

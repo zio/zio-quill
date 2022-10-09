@@ -12,6 +12,7 @@ import io.getquill.idiom.Token
 import io.getquill.norm.NormalizeCaching
 import io.getquill.quat.Quat
 import io.getquill.util.Interleave
+import io.getquill.IdiomContext
 
 object CqlIdiom extends CqlIdiom with CannotReturn
 
@@ -23,13 +24,15 @@ trait CqlIdiom extends Idiom {
 
   override def prepareForProbing(string: String) = string
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
-    val normalizedAst = CqlNormalize(ast)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy) = {
+    val cqlNormalize = new CqlNormalize(idiomContext.config)
+    val normalizedAst = cqlNormalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType)(implicit naming: NamingStrategy) = {
-    val normalizedAst = NormalizeCaching(CqlNormalize.apply)(ast)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy) = {
+    val cqlNormalize = new CqlNormalize(idiomContext.config)
+    val normalizedAst = NormalizeCaching(cqlNormalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
@@ -133,7 +136,7 @@ trait CqlIdiom extends Idiom {
     case Constant((), _)        => stmt"1"
     case Constant(v, _)         => stmt"${v.toString.token}"
     case Tuple(values)          => stmt"${values.token}"
-    case CaseClass(values)      => stmt"${values.map(_._2).token}"
+    case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
     case NullValue              => fail("Cql doesn't support null values.")
   }
 

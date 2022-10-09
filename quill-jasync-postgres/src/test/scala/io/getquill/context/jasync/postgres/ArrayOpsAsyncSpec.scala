@@ -1,7 +1,6 @@
 package io.getquill.context.jasync.postgres
 
-import io.getquill.context.sql.ArrayOpsSpec
-
+import io.getquill.context.sql.base.ArrayOpsSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ArrayOpsAsyncSpec extends ArrayOpsSpec {

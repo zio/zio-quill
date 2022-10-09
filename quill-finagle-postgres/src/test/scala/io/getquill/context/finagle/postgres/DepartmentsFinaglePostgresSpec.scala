@@ -2,8 +2,7 @@ package io.getquill.context.finagle.postgres
 
 import com.twitter.util.Await
 import com.twitter.util.Future
-
-import io.getquill.context.sql.DepartmentsSpec
+import io.getquill.context.sql.base.DepartmentsSpec
 
 class DepartmentsPostgresMysqlSpec extends DepartmentsSpec {
 

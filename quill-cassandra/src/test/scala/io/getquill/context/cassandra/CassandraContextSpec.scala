@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.ExecutionInfo
 
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }

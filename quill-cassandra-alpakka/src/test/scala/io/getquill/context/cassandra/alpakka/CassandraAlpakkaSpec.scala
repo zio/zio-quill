@@ -5,8 +5,9 @@ import akka.stream.Materializer
 import akka.stream.alpakka.cassandra.CassandraSessionSettings
 import akka.stream.alpakka.cassandra.scaladsl.{ CassandraSessionRegistry, CassandraSession => CassandraAlpakkaSession }
 import akka.testkit.TestKit
+import io.getquill.base.Spec
 import io.getquill.context.cassandra.CassandraTestEntities
-import io.getquill.{ CassandraAlpakkaContext, Literal, Spec }
+import io.getquill.{ CassandraAlpakkaContext, Literal }
 
 import scala.concurrent.ExecutionContext
 

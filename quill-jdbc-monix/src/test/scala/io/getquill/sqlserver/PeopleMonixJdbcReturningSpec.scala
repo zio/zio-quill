@@ -1,7 +1,7 @@
 package io.getquill.sqlserver
 
 import io.getquill.MonixSpec
-import io.getquill.context.sql.PeopleReturningSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleMonixJdbcReturningSpec extends PeopleReturningSpec with MonixSpec {
 

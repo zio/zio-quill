@@ -1,10 +1,10 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
 import io.getquill.Literal
 import io.getquill.SqlMirrorContext
 import io.getquill.TestEntities
 import io.getquill.MySQLDialect
+import io.getquill.base.Spec
 import scala.util.Try
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {

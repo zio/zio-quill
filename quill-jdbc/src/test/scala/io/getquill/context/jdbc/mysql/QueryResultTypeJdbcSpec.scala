@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.mysql
 
-import io.getquill.context.sql.QueryResultTypeSpec
+import io.getquill.context.sql.base.QueryResultTypeSpec
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 

@@ -9,7 +9,7 @@ import io.getquill.{ NamingStrategy, PostgresDialect, ReturnAction }
 
 import scala.jdk.CollectionConverters._
 
-class PostgresZioJAsyncContext[N <: NamingStrategy](naming: N)
+class PostgresZioJAsyncContext[+N <: NamingStrategy](naming: N)
   extends ZioJAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming)
   with ArrayEncoders
   with ArrayDecoders

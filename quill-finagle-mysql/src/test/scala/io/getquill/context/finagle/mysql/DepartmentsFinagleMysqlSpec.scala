@@ -2,8 +2,7 @@ package io.getquill.context.finagle.mysql
 
 import com.twitter.util.Await
 import com.twitter.util.Future
-
-import io.getquill.context.sql.DepartmentsSpec
+import io.getquill.context.sql.base.DepartmentsSpec
 
 class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
 

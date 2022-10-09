@@ -8,7 +8,7 @@ import io.getquill.norm.capture.AvoidAliasConflict
  * When actions are used with a `.returning` clause, remove the columns used in the returning clause from the action.
  * E.g. for `insert(Person(id, name)).returning(_.id)` remove the `id` column from the original insert.
  */
-object NormalizeReturning {
+class NormalizeReturning(normalize: Normalize) {
 
   def apply(e: Action): Action = {
     e match {
@@ -46,7 +46,7 @@ object NormalizeReturning {
    */
   private def dealiasBody(body: Ast, alias: Ident): Ast =
     Transform(body) {
-      case q: Query => AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName))
+      case q: Query => AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName), normalize)
     }
 
   private def apply(e: Action, body: Ast, returningIdent: Ident): Action = e match {

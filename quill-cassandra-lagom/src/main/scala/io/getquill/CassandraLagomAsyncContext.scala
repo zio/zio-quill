@@ -8,7 +8,7 @@ import io.getquill.util.ContextLogger
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class CassandraLagomAsyncContext[N <: NamingStrategy](
+class CassandraLagomAsyncContext[+N <: NamingStrategy](
   naming:  N,
   session: CassandraSession
 )

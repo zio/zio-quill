@@ -1,7 +1,10 @@
 package io.getquill.context.cassandra
-import io.getquill.{ CassandraZioContext, Literal }
+import io.getquill.Literal
+import io.getquill.cassandrazio.Quill
+import io.getquill.context.cassandra.zio.ZioCassandraSpec.runLayerUnsafe
 
 package object zio {
-  lazy val testZioDB = new CassandraZioContext(Literal) with CassandraTestEntities
+  val pool = runLayerUnsafe(Quill.CassandraZioSession.fromPrefix("testStreamDB"))
+  lazy val testZioDB = new Quill.Cassandra(Literal, pool) with CassandraTestEntities
 }
 

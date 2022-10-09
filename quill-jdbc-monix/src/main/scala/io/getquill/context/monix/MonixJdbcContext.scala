@@ -22,7 +22,7 @@ import scala.util.Try
  * Quill context that wraps all JDBC calls in `monix.eval.Task`.
  *
  */
-abstract class MonixJdbcContext[Dialect <: SqlIdiom, Naming <: NamingStrategy](
+abstract class MonixJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy](
   dataSource: DataSource with Closeable,
   wrapper:    EffectWrapper
 ) extends MonixContext[Dialect, Naming]
