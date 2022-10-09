@@ -2,13 +2,12 @@ package io.getquill.monad
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import io.getquill.Spec
-
 import scala.util.Success
 import scala.util.Try
 import scala.util.Failure
 import io.getquill.monad.Effect.Write
 import io.getquill.TestEntities
+import io.getquill.base.Spec
 import io.getquill.context.Context
 
 trait IOMonadSpec extends Spec {

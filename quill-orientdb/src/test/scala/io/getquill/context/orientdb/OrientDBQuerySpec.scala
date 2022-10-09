@@ -4,18 +4,18 @@ import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
 import io.getquill.context.sql._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.StringToken
-import io.getquill.{ Literal, Spec }
-import io.getquill.Ord
-import io.getquill.norm.TranspileConfig
+import io.getquill.{ IdiomContext, Literal, Ord }
+import io.getquill.base.Spec
 import io.getquill.quat.Quat
 import io.getquill.util.TraceConfig
+import io.getquill.IdiomContext
 
 class OrientDBQuerySpec extends Spec {
 
   val mirrorContext = orientdb.mirrorContext
   import mirrorContext._
 
-  implicit val transpileConfig = TranspileConfig.Empty
+  implicit val idicomContext = IdiomContext.Empty
 
   "map" - {
     "property" in {

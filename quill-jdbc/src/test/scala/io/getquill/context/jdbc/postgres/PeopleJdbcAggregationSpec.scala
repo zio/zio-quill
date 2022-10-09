@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.context.sql.PeopleAggregationSpec
+import io.getquill.context.sql.base.PeopleAggregationSpec
 
 class PeopleJdbcAggregationSpec extends PeopleAggregationSpec {
 

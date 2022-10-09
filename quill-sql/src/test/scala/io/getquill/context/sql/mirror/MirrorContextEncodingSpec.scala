@@ -36,7 +36,7 @@ class MirrorContextEncodingSpec extends EncodingSpec {
         v.o1, v.o2, v.o3, v.o4, v.o5, v.o6, v.o7, v.o8, v.o9, v.o10, v.o11, v.o12.map(_.value), v.o13, v.o14, v.o15.map(_.value)))
       .toList
 
-    context.run(liftQuery(insertValues).foreach(p => insert(p))).groups.flatMap(_._2) mustEqual resultRows
+    context.run(liftQuery(insertValues.toList).foreach(p => insert(p))).groups.flatMap(_._2) mustEqual resultRows
 
     val mirror = context.run(query[EncodingTestEntity])
     verify(prepareRows.map(row => mirror.extractor(row, MirrorSession.default)))

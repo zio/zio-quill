@@ -1,7 +1,7 @@
 package io.getquill.context.spark.norm
 
-import io.getquill.Spec
 import QuestionMarkEscaper._
+import io.getquill.base.Spec
 
 class QuestionMarkEscaperSpec extends Spec {
 

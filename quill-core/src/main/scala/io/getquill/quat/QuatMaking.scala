@@ -1,9 +1,10 @@
 package io.getquill.quat
 
+import io.getquill.quotation.{ MacroUtilUniverse, MacroUtilBase }
+
 import java.lang.reflect.Method
-import io.getquill.Quoted
-import io.getquill.util.{ Messages, OptionalTypecheck }
 import io.getquill.{ Embedded, Udt }
+import io.getquill.util.{ Messages, OptionalTypecheck }
 
 import scala.annotation.tailrec
 import scala.reflect.ClassTag
@@ -15,11 +16,11 @@ object QuatMaking {
   case object IgnoreDecoders extends IgnoreDecoders
 }
 
-trait QuatMaking extends QuatMakingBase {
+trait QuatMaking extends QuatMakingBase with MacroUtilBase {
   val c: Context
-  type Uni = c.universe.type
+  override type Uni = c.universe.type
   // NOTE: u needs to be lazy otherwise sets value from c before c can be initialized by higher level classes
-  lazy val u: Uni = c.universe
+  override lazy val u: Uni = c.universe
 
   import u.{ Block => _, Constant => _, Function => _, Ident => _, If => _, _ }
   import collection.mutable.HashMap;
@@ -108,7 +109,7 @@ object RuntimeEntityQuat {
     cls match {
       case AnyVal() => Quat.Value
       case Embedded(methods) =>
-        Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
+        Quat.Product(cls.getName.split('.').last, methods.map(m => (m.getName, forClass(m.getReturnType))))
       // If we are here we are already inside of a product which means if we are not a embedded, we have to be value-level
       case _ => Quat.Value
     }
@@ -118,11 +119,11 @@ object RuntimeEntityQuat {
       case AnyVal() => Quat.Value
       // Embedded object can be a top-level entity
       case Embedded(methods) =>
-        Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
+        Quat.Product(cls.getName.split('.').last, methods.map(m => (m.getName, forClass(m.getReturnType))))
       case Tuple() =>
         throw new IllegalArgumentException("Tuple are not supported with Dynamic Query Schemas.")
       case CaseClass(methods) =>
-        Quat.Product(methods.map(m => (m.getName, forClass(m.getReturnType))))
+        Quat.Product(cls.getName.split('.').last, methods.map(m => (m.getName, forClass(m.getReturnType))))
       case _ =>
         Quat.Value
     }
@@ -139,7 +140,7 @@ abstract class TypeTaggedQuatMaking extends QuatMakingBase {
   def quatValueTypes: List[universe.Type]
 }
 
-trait QuatMakingBase {
+trait QuatMakingBase extends MacroUtilUniverse {
   type Uni <: Universe
   val u: Uni
   import u.{ Block => _, Constant => _, Function => _, Ident => _, If => _, _ }
@@ -325,11 +326,11 @@ trait QuatMakingBase {
         // For other types of case classes (and if there does not exist an encoder for it)
         // the exception to that is a cassandra UDT that we treat like an encodeable entity even if it has a parsed type
         case CaseClassBaseType(name, fields) if !existsEncoderFor(tpe) || tpe <:< typeOf[Udt] =>
-          Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
+          Quat.Product(name.split('.').last, fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
 
         // If we are already inside a bounded type, treat an arbitrary type as a interface list
         case ArbitraryBaseType(name, fields) if (boundedInterfaceType) =>
-          Quat.Product(fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
+          Quat.Product(name.split('.').last, fields.map { case (fieldName, fieldType) => (fieldName, parseType(fieldType)) })
 
         // Is it a generic or does it have any generic parameters that have not been filled (e.g. is T not filled in Option[T] ?)
         case Param(tpe) =>
@@ -342,48 +343,6 @@ trait QuatMakingBase {
       }
 
     parseTopLevelType(tpe)
-  }
-
-  object QuotedType {
-    def unapply(tpe: Type) =
-      paramOf(tpe, typeOf[Quoted[Any]])
-  }
-
-  object QueryType {
-    def unapply(tpe: Type) =
-      paramOf(tpe, typeOf[io.getquill.Query[Any]])
-  }
-
-  object TypeSigParam {
-    def unapply(tpe: Type): Option[Type] =
-      tpe.typeSymbol.typeSignature.typeParams match {
-        case head :: tail => Some(head.typeSignature)
-        case Nil          => None
-      }
-  }
-
-  def paramOf(tpe: Type, of: Type, maxDepth: Int = 10): Option[Type] = {
-    //println(s"### Attempting to check paramOf ${tpe} assuming it is a ${of}")
-    tpe match {
-      case _ if (maxDepth == 0) =>
-        throw new IllegalArgumentException(s"Max Depth reached with type: ${tpe}")
-      case _ if (!(tpe <:< of)) =>
-        //println(s"### ${tpe} is not a ${of}")
-        None
-      case _ if (tpe =:= typeOf[Nothing] || tpe =:= typeOf[Any]) =>
-        //println(s"### ${tpe} is Nothing or Any")
-        None
-      case TypeRef(_, cls, List(arg)) =>
-        //println(s"### ${tpe} is a TypeRef whose arg is ${arg}")
-        Some(arg)
-      case TypeSigParam(param) =>
-        //println(s"### ${tpe} is a type signature whose type is ${param}")
-        Some(param)
-      case _ =>
-        val base = tpe.baseType(of.typeSymbol)
-        //println(s"### Going to base type for ${tpe} for expected base type ${of}")
-        paramOf(base, of, maxDepth - 1)
-    }
   }
 
   @tailrec

@@ -1,9 +1,9 @@
 package io.getquill.context.cassandra
 
-import io.getquill.Spec
 import io.getquill.context.cassandra.encoding.Encoders
 import io.getquill.context.cassandra.encoding.Decoders
 import io.getquill.Ord
+import io.getquill.base.Spec
 
 trait QueryResultTypeCassandraSpec extends Spec {
 

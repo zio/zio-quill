@@ -1,8 +1,7 @@
 package io.getquill.context
 
-import io.getquill.Spec
-import io.getquill.testContext
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext
+import io.getquill.MirrorContexts.testContext._
 import mirror.Row
 import io.getquill.MirrorContext
 import io.getquill.NamingStrategy
@@ -15,6 +14,7 @@ import io.getquill.UpperCase
 import io.getquill.SnakeCase
 import io.getquill.Action
 import io.getquill.Query
+import io.getquill.base.Spec
 
 class ContextMacroSpec extends Spec {
 
@@ -27,12 +27,12 @@ class ContextMacroSpec extends Spec {
         testContext.run(q).string mustEqual
           """querySchema("TestEntity").delete"""
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"STRING".as[Action[TestEntity]]
+          sql"STRING".as[Action[TestEntity]]
         }
         testContext.run(q).string mustEqual
-          """infix"STRING""""
+          """sql"STRING""""
       }
       "dynamic" in {
         val q = quote {
@@ -56,20 +56,20 @@ class ContextMacroSpec extends Spec {
         r.string mustEqual """querySchema("TestEntity").filter(t => t.s == ?).delete"""
         r.prepareRow mustEqual Row("a")
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"t = ${lift("a")}".as[Action[TestEntity]]
+          sql"t = ${lift("a")}".as[Action[TestEntity]]
         }
         val r = testContext.run(q)
-        r.string mustEqual s"""infix"t = $${?}""""
+        r.string mustEqual s"""sql"t = $${?}""""
         r.prepareRow mustEqual Row("a")
       }
       "dynamic" in {
         val q = quote {
-          infix"t = ${lift("a")}".as[Action[TestEntity]]
+          sql"t = ${lift("a")}".as[Action[TestEntity]]
         }
         val r = testContext.run(q.dynamic)
-        r.string mustEqual s"""infix"t = $${?}""""
+        r.string mustEqual s"""sql"t = $${?}""""
         r.prepareRow mustEqual Row("a")
       }
       "dynamic type param" in {
@@ -93,12 +93,12 @@ class ContextMacroSpec extends Spec {
         testContext.translate(q) mustEqual
           """querySchema("TestEntity").delete"""
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"STRING".as[Action[TestEntity]]
+          sql"STRING".as[Action[TestEntity]]
         }
         testContext.translate(q) mustEqual
-          """infix"STRING""""
+          """sql"STRING""""
       }
       "dynamic" in {
         val q = quote {
@@ -121,17 +121,17 @@ class ContextMacroSpec extends Spec {
         testContext.translate(q) mustEqual
           """querySchema("TestEntity").filter(t => t.s == 'a').delete"""
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"t = ${lift("a")}".as[Action[TestEntity]]
+          sql"t = ${lift("a")}".as[Action[TestEntity]]
         }
-        testContext.translate(q) mustEqual s"""infix"t = $${'a'}""""
+        testContext.translate(q) mustEqual s"""sql"t = $${'a'}""""
       }
       "dynamic" in {
         val q = quote {
-          infix"t = ${lift("a")}".as[Action[TestEntity]]
+          sql"t = ${lift("a")}".as[Action[TestEntity]]
         }
-        testContext.translate(q.dynamic) mustEqual s"""infix"t = $${'a'}""""
+        testContext.translate(q.dynamic) mustEqual s"""sql"t = $${'a'}""""
       }
       "dynamic type param" in {
         import language.reflectiveCalls
@@ -153,12 +153,12 @@ class ContextMacroSpec extends Spec {
         testContext.run(q).string mustEqual
           """querySchema("TestEntity").map(t => t.s)"""
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"STRING".as[Query[TestEntity]].map(t => t.s)
+          sql"STRING".as[Query[TestEntity]].map(t => t.s)
         }
         testContext.run(q).string mustEqual
-          """infix"STRING".map(t => t.s)"""
+          """sql"STRING".map(t => t.s)"""
       }
       "dynamic" in {
         val q = quote {
@@ -201,12 +201,12 @@ class ContextMacroSpec extends Spec {
         r.string mustEqual """querySchema("Entity").filter(t => t.x == ?)"""
         r.prepareRow mustEqual Row(1)
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"SELECT ${lift("a")}".as[Query[String]]
+          sql"SELECT ${lift("a")}".as[Query[String]]
         }
         val r = testContext.run(q)
-        r.string mustEqual s"""infix"SELECT $${?}".map(x => x)"""
+        r.string mustEqual s"""sql"SELECT $${?}".map(x => x)"""
         r.prepareRow mustEqual Row("a")
       }
       "dynamic" in {
@@ -244,12 +244,12 @@ class ContextMacroSpec extends Spec {
         testContext.translate(q) mustEqual
           """querySchema("TestEntity").map(t => t.s)"""
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"STRING".as[Query[TestEntity]].map(t => t.s)
+          sql"STRING".as[Query[TestEntity]].map(t => t.s)
         }
         testContext.translate(q) mustEqual
-          """infix"STRING".map(t => t.s)"""
+          """sql"STRING".map(t => t.s)"""
       }
       "dynamic" in {
         val q = quote {
@@ -289,11 +289,11 @@ class ContextMacroSpec extends Spec {
         testContext.translate(q) mustEqual
           """querySchema("Entity").filter(t => t.x == 1)"""
       }
-      "infix" in {
+      "sql" in {
         val q = quote {
-          infix"SELECT ${lift("a")}".as[Query[String]]
+          sql"SELECT ${lift("a")}".as[Query[String]]
         }
-        testContext.translate(q) mustEqual s"""infix"SELECT $${'a'}".map(x => x)"""
+        testContext.translate(q) mustEqual s"""sql"SELECT $${'a'}".map(x => x)"""
       }
       "dynamic" in {
         val q = quote {

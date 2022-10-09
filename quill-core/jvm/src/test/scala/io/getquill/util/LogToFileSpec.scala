@@ -1,7 +1,7 @@
 package io.getquill.util
 
+import io.getquill.base.Spec
 import io.getquill.util.Messages.LogToFile
-import io.getquill.Spec
 import scala.io.Source
 
 class LogToFileSpec extends Spec {

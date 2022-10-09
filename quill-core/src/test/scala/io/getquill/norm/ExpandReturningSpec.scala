@@ -5,6 +5,7 @@ import io.getquill._
 import io.getquill.ast.Renameable.ByStrategy
 import io.getquill.ast.Visibility.Visible
 import io.getquill.ast._
+import io.getquill.base.Spec
 import io.getquill.context.{ ExecutionType, Expand }
 import io.getquill.quat._
 
@@ -12,7 +13,7 @@ class ExpandReturningSpec extends Spec {
 
   case class Person(name: String, age: Int)
   case class Foo(bar: String, baz: Int)
-  val quat = Quat.Product("name" -> QV, "age" -> QV)
+  val quat = Quat.Product("TestQuat", "name" -> QV, "age" -> QV)
 
   "inner apply" - {
     val mi = MirrorIdiom
@@ -24,7 +25,7 @@ class ExpandReturningSpec extends Spec {
         query[Person].insertValue(lift(Person("Joe", 123))).returning(p => (p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal, TranspileConfig.Empty)
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal, IdiomContext.Empty)
       list must matchPattern {
         case List((Property(ExternalIdent("p", `quat`), "name"), _), (Property(ExternalIdent("p", `quat`), "age"), _)) =>
       }
@@ -35,7 +36,7 @@ class ExpandReturningSpec extends Spec {
         query[Person].insertValue(lift(Person("Joe", 123))).returning(p => Foo(p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal, TranspileConfig.Empty)
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning])(MirrorIdiom, Literal, IdiomContext.Empty)
       list must matchPattern {
         case List((Property(ExternalIdent("p", `quat`), "name"), _), (Property(ExternalIdent("p", `quat`), "age"), _)) =>
       }
@@ -51,7 +52,7 @@ class ExpandReturningSpec extends Spec {
         query[Person].insertValue(lift(Person("Joe", 123))).returning(p => (p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase, TranspileConfig.Empty)
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase, IdiomContext.Empty)
       list must matchPattern {
         case List((Property(ExternalIdent("OTHER", `quat`), "name"), _), (Property(ExternalIdent("OTHER", `quat`), "age"), _)) =>
       }
@@ -62,7 +63,7 @@ class ExpandReturningSpec extends Spec {
         query[Person].insertValue(lift(Person("Joe", 123))).returning(p => Foo(p.name, p.age))
       }
       val list =
-        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase, TranspileConfig.Empty)
+        ExpandReturning.apply(q.ast.asInstanceOf[Returning], Some("OTHER"))(MirrorIdiom, SnakeCase, IdiomContext.Empty)
       list must matchPattern {
         case List((Property(ExternalIdent("OTHER", `quat`), "name"), _), (Property(ExternalIdent("OTHER", `quat`), "age"), _)) =>
       }
@@ -80,7 +81,7 @@ class ExpandReturningSpec extends Spec {
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
           case (ast, stmt) => fail("Should not use this method for the returning clause")
-        }(mi, Literal, TranspileConfig.Empty)
+        }(mi, Literal, IdiomContext.Empty)
 
       ret mustBe ReturnRecord
     }
@@ -89,7 +90,7 @@ class ExpandReturningSpec extends Spec {
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
           case (ast, stmt) => fail("Should not use this method for the returning clause")
-        }(mi, Literal, TranspileConfig.Empty)
+        }(mi, Literal, IdiomContext.Empty)
 
       ret mustBe ReturnRecord
     }
@@ -98,7 +99,7 @@ class ExpandReturningSpec extends Spec {
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
           case (ast, stmt) => fail("Should not use this method for the returning clause")
-        }(mi, Literal, TranspileConfig.Empty)
+        }(mi, Literal, IdiomContext.Empty)
 
       ret mustBe ReturnRecord
     }
@@ -115,7 +116,7 @@ class ExpandReturningSpec extends Spec {
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
           case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
-        }(mi, Literal, TranspileConfig.Empty)
+        }(mi, Literal, IdiomContext.Empty)
       ret mustBe ReturnColumns(List("name", "age"))
     }
     "should expand case classes" in {
@@ -123,7 +124,7 @@ class ExpandReturningSpec extends Spec {
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
           case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
-        }(mi, Literal, TranspileConfig.Empty)
+        }(mi, Literal, IdiomContext.Empty)
       ret mustBe ReturnColumns(List("name", "age"))
     }
     "should expand case classes (converted to tuple in parser)" in {
@@ -131,7 +132,7 @@ class ExpandReturningSpec extends Spec {
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) {
           case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
-        }(mi, Literal, TranspileConfig.Empty)
+        }(mi, Literal, IdiomContext.Empty)
       ret mustBe ReturnColumns(List("name", "age"))
     }
   }
@@ -161,14 +162,14 @@ class ExpandReturningSpec extends Spec {
         assertThrows[IllegalArgumentException] {
           ExpandReturning.applyMap(retMulti) {
             case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
-          }(mi, Literal, TranspileConfig.Empty)
+          }(mi, Literal, IdiomContext.Empty)
         }
       }
       "should succeed if single field encountered" in {
         val ret =
           ExpandReturning.applyMap(retSingle) {
             case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
-          }(mi, Literal, TranspileConfig.Empty)
+          }(mi, Literal, IdiomContext.Empty)
         ret mustBe ReturnColumns(List("name"))
       }
     }
@@ -180,14 +181,14 @@ class ExpandReturningSpec extends Spec {
         assertThrows[IllegalArgumentException] {
           ExpandReturning.applyMap(retMulti) {
             case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
-          }(mi, Literal, TranspileConfig.Empty)
+          }(mi, Literal, IdiomContext.Empty)
         }
       }
       "should fail if single field encountered" in {
         assertThrows[IllegalArgumentException] {
           ExpandReturning.applyMap(retSingle) {
             case (ast, stmt) => Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
-          }(mi, Literal, TranspileConfig.Empty)
+          }(mi, Literal, IdiomContext.Empty)
         }
       }
     }

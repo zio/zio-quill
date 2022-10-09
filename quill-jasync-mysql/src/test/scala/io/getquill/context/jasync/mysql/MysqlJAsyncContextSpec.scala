@@ -2,9 +2,10 @@ package io.getquill.context.jasync.mysql
 
 import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
 import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.base.Spec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.getquill.{ Literal, MysqlJAsyncContext, ReturnAction, Spec }
+import io.getquill.{ Literal, MysqlJAsyncContext, ReturnAction }
 
 class MysqlJAsyncContextSpec extends Spec {
 

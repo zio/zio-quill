@@ -1,11 +1,11 @@
 package io.getquill.norm
 
-import io.getquill.Spec
 import io.getquill.ast._
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.{ AnsiConcat, NonAnsiConcat }
 import io.getquill.MoreAstOps._
+import io.getquill.base.Spec
 import io.getquill.util.TraceConfig
 
 class FlattenOptionOperationSpec extends Spec { //hello

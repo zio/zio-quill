@@ -1,9 +1,9 @@
 package io.getquill.norm
 
 import io.getquill.ast._
+import io.getquill.base.Spec
 import io.getquill.quat._
-import io.getquill.Spec
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import scala.collection.immutable.{ Map => IMap }
 
 class StablizeLiftsSpec extends Spec {
@@ -17,7 +17,7 @@ class StablizeLiftsSpec extends Spec {
       val astQuat = quatOf[Int]
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
-        case ScalarValueLift("scalarValue", StablizeLifts.Token(0), _, `astQuat`) =>
+        case ScalarValueLift("scalarValue", External.Source.Parser, StablizeLifts.Token(0), _, `astQuat`) =>
       }
       state.replaceTable mustEqual (IMap(StablizeLifts.Token(0) -> scalarValue))
       StablizeLifts.revert(stablized, state) mustEqual (ast)
@@ -39,7 +39,7 @@ class StablizeLiftsSpec extends Spec {
       val astQuat = quatOf[Foo]
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
-        case CaseClassValueLift("caseClass", StablizeLifts.Token(0), `astQuat`) =>
+        case CaseClassValueLift("caseClass", "caseClass", StablizeLifts.Token(0), `astQuat`) =>
       }
       state.replaceTable mustEqual (IMap(StablizeLifts.Token(0) -> caseClass))
       StablizeLifts.revert(stablized, state) mustEqual (ast)
@@ -66,8 +66,8 @@ class StablizeLiftsSpec extends Spec {
       val (stablized, state) = StablizeLifts.stablize(ast)
       stablized must matchPattern {
         case BinaryOperation(
-          ScalarValueLift("a", StablizeLifts.Token(0), _, `quatA`),
-          StringOperator.`+`, ScalarValueLift("b", StablizeLifts.Token(1), _, `quatB`)) =>
+          ScalarValueLift("a", External.Source.Parser, StablizeLifts.Token(0), _, `quatA`),
+          StringOperator.`+`, ScalarValueLift("b", External.Source.Parser, StablizeLifts.Token(1), _, `quatB`)) =>
       }
       val expectedTable = IMap(StablizeLifts.Token(0) -> a, StablizeLifts.Token(1) -> b)
       state.replaceTable must contain theSameElementsAs (expectedTable)

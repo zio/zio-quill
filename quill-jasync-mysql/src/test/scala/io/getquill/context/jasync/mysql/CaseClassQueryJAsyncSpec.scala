@@ -1,7 +1,7 @@
 package io.getquill.context.jasync.mysql
 
+import io.getquill.context.sql.base.CaseClassQuerySpec
 import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-import io.getquill.context.sql.CaseClassQuerySpec
 import org.scalatest.matchers.should.Matchers._
 
 class CaseClassQueryJAsyncSpec extends CaseClassQuerySpec {

@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.monix
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class DecodeNullSpec extends Spec {
 

@@ -9,12 +9,13 @@ import io.getquill.context.monix.MonixJdbcContext
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
-class OracleMonixJdbcContext[N <: NamingStrategy](
+class OracleMonixJdbcContext[+N <: NamingStrategy](
   val naming:     N,
   val dataSource: DataSource with Closeable,
   runner:         EffectWrapper
 ) extends MonixJdbcContext[OracleDialect, N](dataSource, runner)
-  with OracleJdbcContextBase[N] {
+  with OracleJdbcContextBase[OracleDialect, N] {
+  val idiom: OracleDialect = OracleDialect
 
   def this(naming: N, config: JdbcContextConfig, runner: EffectWrapper) = this(naming, config.dataSource, runner)
   def this(naming: N, config: Config, runner: EffectWrapper) = this(naming, JdbcContextConfig(config), runner)

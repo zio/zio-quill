@@ -10,7 +10,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 case class CassandraLagomSession(cs: CassandraSession) extends UdtValueLookup
 
-abstract class CassandraLagomSessionContext[N <: NamingStrategy](
+abstract class CassandraLagomSessionContext[+N <: NamingStrategy](
   val naming:  N,
   val session: CassandraSession
 )

@@ -9,7 +9,7 @@ import io.getquill.context.Context
 import io.getquill.context.sql.dsl.SqlDsl
 import io.getquill.NamingStrategy
 
-trait SqlContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
+trait SqlContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy]
   extends Context[Idiom, Naming]
   with SqlDsl {
 

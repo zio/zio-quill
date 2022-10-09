@@ -1,8 +1,8 @@
 package io.getquill.context.jasync.mysql
 
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
+import io.getquill.context.sql.base.PeopleSpec
 
-import io.getquill.context.sql.PeopleSpec
+import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
 
 class PeopleMysqlJAsyncSpec extends PeopleSpec {
 

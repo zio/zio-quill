@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
 import io.getquill.Query
+import io.getquill.base.Spec
 
 case class Id(value: Long) extends AnyVal
 

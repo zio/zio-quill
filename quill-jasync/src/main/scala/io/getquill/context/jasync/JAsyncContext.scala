@@ -23,7 +23,7 @@ import java.util.TimeZone
 import scala.compat.java8.FutureConverters
 import scala.jdk.CollectionConverters._
 
-abstract class JAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
+abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N, pool: ConnectionPool[C])
   extends Context[D, N]
   with ContextVerbTranslate
   with SqlContext[D, N]

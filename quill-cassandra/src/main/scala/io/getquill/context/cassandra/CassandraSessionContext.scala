@@ -11,7 +11,7 @@ import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.util.Try
 
-abstract class CassandraSessionContext[N <: NamingStrategy]
+abstract class CassandraSessionContext[+N <: NamingStrategy]
   extends CassandraPrepareContext[N]
   with CassandraBaseContext[N]
 
@@ -19,10 +19,10 @@ abstract class CassandraSessionContext[N <: NamingStrategy]
  * When using this context, we cannot encode UDTs since does not have a proper CassandraSession trait mixed in with udtValueOf.
  * Certain contexts e.g. the CassandraLagomContext does not currently have this ability.
  */
-abstract class CassandraSessionlessContext[N <: NamingStrategy]
+abstract class CassandraSessionlessContext[+N <: NamingStrategy]
   extends CassandraPrepareContext[N]
 
-trait CassandraPrepareContext[N <: NamingStrategy] extends CassandraRowContext[N] with CassandraContext[N] {
+trait CassandraPrepareContext[+N <: NamingStrategy] extends CassandraRowContext[N] with CassandraContext[N] {
   protected def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement]
 
   def probe(cql: String): Try[_] = {
@@ -49,11 +49,11 @@ trait CassandraPrepareContext[N <: NamingStrategy] extends CassandraRowContext[N
     fail("Cassandra doesn't support `returning`.")
 }
 
-trait CassandraBaseContext[N <: NamingStrategy] extends CassandraRowContext[N] {
+trait CassandraBaseContext[+N <: NamingStrategy] extends CassandraRowContext[N] {
   override type Session = CassandraSession
 }
 
-trait CassandraRowContext[N <: NamingStrategy]
+trait CassandraRowContext[+N <: NamingStrategy]
   extends CassandraContext[N]
   with Context[CqlIdiom, N]
   with Encoders

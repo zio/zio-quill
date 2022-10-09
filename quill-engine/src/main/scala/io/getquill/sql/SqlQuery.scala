@@ -2,11 +2,11 @@ package io.getquill.context.sql
 
 import io.getquill.ast._
 import io.getquill.context.sql.norm.{ ExpandSelection, FlattenGroupByAggregation }
-import io.getquill.norm.{ BetaReduction, TranspileConfig }
+import io.getquill.norm.BetaReduction
 import io.getquill.quat.Quat
 import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.{ TraceType, fail }
-import io.getquill.{ Literal, PseudoAst }
+import io.getquill.{ Literal, PseudoAst, IdiomContext }
 import io.getquill.sql.Common.ContainsImpurities
 
 case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
@@ -24,7 +24,7 @@ sealed trait SqlQuery {
   override def toString = {
     import io.getquill.MirrorSqlDialect._
     import io.getquill.idiom.StatementInterpolator._
-    implicit val transpileConfig = TranspileConfig.Empty
+    implicit val idiomContext = IdiomContext.Empty
     implicit val naming: Literal = Literal
     implicit val tokenizer: Tokenizer[Ast] = defaultTokenizer
     this.token.toString
@@ -85,11 +85,11 @@ object TakeDropFlatten {
 object CaseClassMake {
   def fromQuat(quat: Quat)(idName: String) =
     quat match {
-      case Quat.Product(fields) =>
-        CaseClass(fields.toList.map { case (name, _) => (name, Property(Ident(idName, quat), name)) })
+      case p @ Quat.Product(fields) =>
+        CaseClass(p.name, fields.toList.map { case (name, _) => (name, Property(Ident(idName, quat), name)) })
       // Figure out a way to test this case?
       case _ =>
-        CaseClass(List((idName, Ident(idName, quat))))
+        CaseClass(CaseClass.GeneratedName, List((idName, Ident(idName, quat))))
     }
 }
 
@@ -271,7 +271,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           //   SELECT c.firstName AS _1, MAX(c.age) AS _2 FROM Contact c GROUP BY c.firstName
           //
           // However... there are some situations in which this kind of reduction is not possible, for example:
-          //   query[Contact].map(c => NameAge(c.firstName, infix"someFunction(${c.age})".as[Int])).groupBy(p => p.name).map { case (f, q) => (f, q.map(_.age).max.getOrNull) }
+          //   query[Contact].map(c => NameAge(c.firstName, sql"someFunction(${c.age})".as[Int])).groupBy(p => p.name).map { case (f, q) => (f, q.map(_.age).max.getOrNull) }
           // This query has a impure-infix and therefore the apply-map cannot paper-over the issue and the following query
           // is created as a result of not being able to do the reduction (i.e. the same wrong-column-name issue as before).
           //   SELECT c.name AS _1, MAX(c.age) AS _2 FROM (SELECT c.firstName AS name, someFunction(c.age) AS age FROM Contact c) AS c GROUP BY c.name
