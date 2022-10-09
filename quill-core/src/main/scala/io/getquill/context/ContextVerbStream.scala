@@ -5,7 +5,7 @@ import io.getquill.{ NamingStrategy, Query, Quoted }
 import scala.language.higherKinds
 import scala.language.experimental.macros
 
-trait ContextVerbStream[Idiom <: io.getquill.idiom.Idiom, Naming <: NamingStrategy] {
+trait ContextVerbStream[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy] {
   this: Context[Idiom, Naming] =>
 
   type StreamResult[T]

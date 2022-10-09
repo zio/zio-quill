@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra
 
+import io.getquill.base.Spec
 import java.util.{ Date, UUID }
-import io.getquill.Spec
 
 import java.time.{ Instant, LocalDate }
 

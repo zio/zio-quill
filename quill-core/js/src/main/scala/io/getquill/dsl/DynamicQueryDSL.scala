@@ -4,7 +4,7 @@ import io.getquill.ast.Renameable.Fixed
 
 import scala.language.implicitConversions
 import scala.language.experimental.macros
-import io.getquill.ast._
+import io.getquill.ast.{ External, _ }
 import io.getquill.quat._
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
@@ -12,7 +12,7 @@ import io.getquill.util.Messages._
 
 import scala.util.DynamicVariable
 import scala.reflect.ClassTag
-import io.getquill.{ ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Update, Action => DslAction, Quoted }
+import io.getquill.{ ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Quoted, Update, Action => DslAction }
 
 import scala.annotation.tailrec
 
@@ -164,7 +164,7 @@ trait DynamicQueryDsl {
     }
 
   protected def spliceLift[O](o: O)(implicit enc: Encoder[O]) =
-    splice[O](ScalarValueLift("o", o, enc, Quat.Value))
+    splice[O](ScalarValueLift("o", External.Source.Parser, o, enc, Quat.Value))
 
   object DynamicQuery {
     def apply[T](p: Quoted[Query[T]]) =

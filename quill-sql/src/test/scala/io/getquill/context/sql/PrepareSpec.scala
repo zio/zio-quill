@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContext._
 
 class PrepareSpec extends Spec {

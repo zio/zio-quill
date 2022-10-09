@@ -1,6 +1,7 @@
 package io.getquill.context.sql.dsl
 
-import io.getquill.{ Insert, Query, Quoted, Spec }
+import io.getquill.base.Spec
+import io.getquill.{ Insert, Query, Quoted }
 import io.getquill.context.sql.testContext
 import io.getquill.context.sql.testContext._
 
@@ -48,7 +49,7 @@ class SqlDslSpec extends Spec {
     }
 
     val q2 = quote {
-      infix"INSERT into names $q1".as[Insert[Person]]
+      sql"INSERT into names $q1".as[Insert[Person]]
     }
 
     "should show all field aliases" in {

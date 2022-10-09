@@ -2,7 +2,8 @@ package io.getquill.context.sql.norm
 
 import io.getquill.ast._
 import io.getquill.context.sql.testContext._
-import io.getquill.{ Query, Spec }
+import io.getquill.Query
+import io.getquill.base.Spec
 
 class FlattenGroupByAggregationSpec extends Spec {
 
@@ -15,14 +16,14 @@ class FlattenGroupByAggregationSpec extends Spec {
       FlattenGroupByAggregation(Ident("e", TestEntityQuat))(q.ast.body) mustEqual
         Aggregation(AggregationOperator.max, Property(Ident("e"), "i"))
     }
-    "nested infix" in {
+    "nested sql" in {
       val q = quote {
         (e: Query[TestEntity]) =>
-          infix"GROUP_CONCAT(${e.map(_.i)})".as[String]
+          sql"GROUP_CONCAT(${e.map(_.i)})".as[String]
       }
       val n = quote {
         (e: TestEntity) =>
-          infix"GROUP_CONCAT(${e.i})".as[String]
+          sql"GROUP_CONCAT(${e.i})".as[String]
       }
       FlattenGroupByAggregation(Ident("e", TestEntityQuat))(q.ast.body) mustEqual n.ast.body
     }

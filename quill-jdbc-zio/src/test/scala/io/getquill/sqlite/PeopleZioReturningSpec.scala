@@ -1,7 +1,7 @@
 package io.getquill.sqlite
 
-import io.getquill.context.sql.PeopleReturningSpec
 import io.getquill.ZioSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleZioReturningSpec extends PeopleReturningSpec with ZioSpec {
 

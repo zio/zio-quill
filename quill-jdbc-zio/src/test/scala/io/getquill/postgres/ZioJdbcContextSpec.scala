@@ -3,8 +3,6 @@ package io.getquill.postgres
 import io.getquill.ZioSpec
 import zio.{ ZIO, ZLayer }
 
-import javax.sql.DataSource
-
 class ZioJdbcContextSpec extends ZioSpec {
 
   val context = testContext
@@ -28,7 +26,7 @@ class ZioJdbcContextSpec extends ZioSpec {
           } yield qry
         }
         r <- testContext.run(qr1)
-      } yield r).provideSomeLayer(ZLayer.service[DataSource] >>> ZLayer.succeed(33)).runSyncUnsafe().map(_.i) mustEqual List(33)
+      } yield r).provideSomeLayer(ZLayer.succeed(33)).runSyncUnsafe().map(_.i) mustEqual List(33)
     }
     "success - stream" in {
       (for {
@@ -36,7 +34,7 @@ class ZioJdbcContextSpec extends ZioSpec {
         seq <- testContext.transaction {
           for {
             _ <- testContext.run(qr1.insert(_.i -> 33))
-            s <- accumulateDS(testContext.stream(qr1))
+            s <- accumulate(testContext.stream(qr1))
           } yield s
         }
         r <- testContext.run(qr1)

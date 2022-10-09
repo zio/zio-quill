@@ -1,16 +1,18 @@
 package io.getquill
 
-import io.getquill.ast.{ Action => AstAction, _ }
-import io.getquill.context.CanOutputClause
+import io.getquill.ast._
+import io.getquill.context.{ CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanOutputClause }
+import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom._
 import io.getquill.context.sql.norm.AddDropToNestedOrderBy
-import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery }
+import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery, SqlQueryApply }
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
-import io.getquill.norm.EqualityBehavior
 import io.getquill.norm.EqualityBehavior.NonAnsiEquality
-import io.getquill.sql.idiom.{ BooleanLiteralSupport, NoActionAliases }
+import io.getquill.norm.EqualityBehavior
+import io.getquill.sql.idiom.BooleanLiteralSupport
 import io.getquill.util.Messages.fail
+import io.getquill.util.TraceConfig
 
 trait SQLServerDialect
   extends SqlIdiom
@@ -18,11 +20,12 @@ trait SQLServerDialect
   with ConcatSupport
   with CanOutputClause
   with BooleanLiteralSupport
-  with NoActionAliases {
+  with CanInsertWithMultiValues
+  with CanInsertReturningWithMultiValues {
 
-  override def querifyAst(ast: Ast) = AddDropToNestedOrderBy(SqlQuery(ast))
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
-  override def querifyAction(ast: AstAction) = HideTopLevelFilterAlias(super.querifyAction(ast))
+  override def querifyAst(ast: Ast, idiomContext: TraceConfig) = AddDropToNestedOrderBy(new SqlQueryApply(idiomContext)(ast))
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 
@@ -40,7 +43,7 @@ trait SQLServerDialect
       case other                       => super.limitOffsetToken(query).token(other)
     }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] =
+  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] =
     Tokenizer[SqlQuery] {
       case flatten: FlattenSqlQuery if flatten.orderBy.isEmpty && flatten.offset.nonEmpty =>
         fail(s"SQLServer does not support OFFSET without ORDER BY")
@@ -53,7 +56,7 @@ trait SQLServerDialect
       case other                                     => super.operationTokenizer.token(other)
     }
 
-  override protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ast.Action] =
+  override protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[ast.Action] =
     Tokenizer[ast.Action] {
       // Update(Filter(...)) and Delete(Filter(...)) usually cause a table alias i.e. `UPDATE People <alias> SET ... WHERE ...` or `DELETE FROM People <alias> WHERE ...`
       // since the alias is used in the WHERE clause. This functionality removes that because SQLServer doesn't support aliasing in actions.

@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.trane.future.scala.Future
 
 class PostgresNdbcContextSpec extends Spec {

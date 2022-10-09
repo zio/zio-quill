@@ -13,7 +13,7 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 
-class AsyncMirrorContext[Idiom <: BaseIdiom, Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
+class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](val idiom: Idiom, val naming: Naming, session: MirrorSession = MirrorSession("DefaultMirrorContextSession"))
   extends Context[Idiom, Naming]
   with RowContext
   with ContextVerbTranslate

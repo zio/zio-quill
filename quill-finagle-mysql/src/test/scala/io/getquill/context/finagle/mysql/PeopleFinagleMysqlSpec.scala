@@ -2,8 +2,7 @@ package io.getquill.context.finagle.mysql
 
 import com.twitter.util.Await
 import com.twitter.util.Future
-
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleFinagleMysqlSpec extends PeopleSpec {
 

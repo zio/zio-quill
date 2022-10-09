@@ -1,13 +1,15 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.testContext.implicitOrd
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts.testContext.implicitOrd
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qr2
+import io.getquill.MirrorContexts.testContext.quote
+import io.getquill.MirrorContexts.testContext.unquote
 
 class NormalizeSpec extends Spec {
+
+  val normalize = new Normalize(TranspileConfig.Empty)
 
   "normalizes random-generated queries" - {
     val gen = new QueryGenerator(1)
@@ -16,7 +18,7 @@ class NormalizeSpec extends Spec {
         val query = gen(i)
         s"$i levels ($j) - $query" in {
           //println("=================== Normalizing Query ==================\n" + query + "\n" + "=== Full ===" + "\n" + Messages.qprint(query).render)
-          Normalize(query)
+          normalize(query)
           ()
         }
       }
@@ -30,6 +32,6 @@ class NormalizeSpec extends Spec {
     val n = quote {
       qr1.sortBy(t => t.i).flatMap(t => qr2.map(t1 => 1))
     }
-    Normalize(q.ast) mustEqual n.ast
+    normalize(q.ast) mustEqual n.ast
   }
 }

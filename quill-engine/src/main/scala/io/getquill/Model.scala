@@ -33,6 +33,7 @@ sealed trait Query[+T] extends QAC[Nothing, T] {
   def union[U >: T](q: Query[U]): Query[U] = NonQuotedException()
 
   def groupBy[R](f: T => R): Query[(R, Query[T])] = NonQuotedException()
+  def groupByMap[G, R](by: T => G)(mapTo: T => R): Query[R] = NonQuotedException()
 
   def value[U >: T]: Option[T] = NonQuotedException()
   def min[U >: T]: Option[T] = NonQuotedException()

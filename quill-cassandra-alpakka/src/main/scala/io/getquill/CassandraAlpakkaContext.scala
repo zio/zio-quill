@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.util.Failure
 
-class CassandraAlpakkaContext[N <: NamingStrategy](
+class CassandraAlpakkaContext[+N <: NamingStrategy](
   val naming:                     N,
   val alpakkaSession:             CassandraAlpakkaSession,
   val preparedStatementCacheSize: Long

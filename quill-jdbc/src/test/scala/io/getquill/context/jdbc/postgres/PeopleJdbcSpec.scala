@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleJdbcSpec extends PeopleSpec {
 

@@ -1,6 +1,6 @@
 package io.getquill.context.zio.jasync.postgres
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.zio.ZioJAsyncConnection
 import org.scalatest.BeforeAndAfterAll
 import zio.stream.{ ZSink, ZStream }

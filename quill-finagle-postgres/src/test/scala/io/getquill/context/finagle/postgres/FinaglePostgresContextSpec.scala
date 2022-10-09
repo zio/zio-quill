@@ -2,6 +2,7 @@ package io.getquill.context.finagle.postgres
 
 import com.twitter.util._
 import io.getquill._
+import io.getquill.base.Spec
 import org.scalatest.BeforeAndAfter
 
 class FinaglePostgresContextSpec extends Spec with BeforeAndAfter {

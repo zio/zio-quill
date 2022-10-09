@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleNdbcPostgresSpec extends PeopleSpec {
 

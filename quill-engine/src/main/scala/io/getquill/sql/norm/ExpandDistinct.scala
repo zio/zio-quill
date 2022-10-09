@@ -4,12 +4,12 @@ import io.getquill.ast.Visibility.Hidden
 import io.getquill.ast._
 import io.getquill.quat.Quat
 import io.getquill.quat.QuatNestingHelper._
-import io.getquill.util.Interpolator
+import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.TraceType
 
-object ExpandDistinct {
+class ExpandDistinct(traceConfig: TraceConfig) {
 
-  val interp = new Interpolator(TraceType.ExpandDistinct, 3)
+  val interp = new Interpolator(TraceType.ExpandDistinct, traceConfig, 3)
   import interp._
 
   def apply(q: Ast): Ast =
@@ -38,11 +38,11 @@ object ExpandDistinct {
           //      query[SomeTable].map(st => AdHocCaseClass(st.id, st.name)).distinct
           //    }
           // ... need some special treatment. Otherwise their values will not be correctly expanded.
-          case Distinct(Map(q, x, cc @ CaseClass(values))) =>
+          case Distinct(Map(q, x, cc @ CaseClass(n, values))) =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
             trace"ExpandDistinct Distinct(Map(q, _, CaseClass))" andReturn
               Map(Distinct(Map(q, x, cc)), newIdent,
-                CaseClass(values.map {
+                CaseClass(n, values.map {
                   case (name, _) => (name, Property(newIdent, name))
                 }))
 

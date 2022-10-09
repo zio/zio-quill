@@ -1,14 +1,15 @@
 package io.getquill
 
-import io.getquill.ast.{ Action => AstAction, _ }
-import io.getquill.context.CanReturnMultiField
+import io.getquill.ast._
+import io.getquill.context.{ CanInsertReturningWithSingleValue, CanInsertWithSingleValue, CanReturnMultiField }
 import io.getquill.context.sql._
+import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{ Statement, StringToken, Token }
-import io.getquill.norm.ConcatBehavior
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
-import io.getquill.sql.idiom.{ BooleanLiteralSupport, NoActionAliases }
+import io.getquill.norm.ConcatBehavior
+import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait OracleDialect
   extends SqlIdiom
@@ -16,12 +17,13 @@ trait OracleDialect
   with ConcatSupport
   with CanReturnMultiField
   with BooleanLiteralSupport
-  with NoActionAliases {
+  with CanInsertWithSingleValue
+  with CanInsertReturningWithSingleValue {
 
-  override def querifyAction(ast: AstAction) = HideTopLevelFilterAlias(super.querifyAction(ast))
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
-  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy)
-    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy) {
+  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext)
+    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
     import q._
 
     override def withFrom: Statement = from match {
@@ -32,7 +34,7 @@ trait OracleDialect
     }
   }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case q: FlattenSqlQuery =>
       new OracleFlattenSqlQueryTokenizerHelper(q).apply
     case other =>

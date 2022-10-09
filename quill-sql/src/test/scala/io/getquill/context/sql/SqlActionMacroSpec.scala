@@ -2,6 +2,7 @@ package io.getquill.context.sql
 
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 
 class SqlActionMacroSpec extends Spec {
@@ -172,7 +173,7 @@ class SqlActionMacroSpec extends Spec {
       "returning clause - embedded" - {
         case class Dummy(i: Int)
 
-        "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
+        "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx => //
           import ctx._
           val q = quote {
             qr1Emb.insertValue(lift(TestEntityEmb(Emb("s", 0), 1L, None))).returningGenerated(_.emb.i)

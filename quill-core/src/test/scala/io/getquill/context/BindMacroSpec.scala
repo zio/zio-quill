@@ -1,8 +1,9 @@
 package io.getquill.context
 
+import io.getquill.base.Spec
 import io.getquill.context.mirror.{ MirrorSession, Row }
-import io.getquill.testContext._
-import io.getquill.{ Spec, testContext }
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.MirrorContexts.testContext
 
 class BindMacroSpec extends Spec {
 

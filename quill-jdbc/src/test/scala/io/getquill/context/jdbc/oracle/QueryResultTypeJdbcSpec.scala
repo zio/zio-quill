@@ -1,7 +1,8 @@
 package io.getquill.context.jdbc.oracle
 
-import java.util.concurrent.ConcurrentLinkedQueue
+import io.getquill.context.sql.base.QueryResultTypeSpec
 
+import java.util.concurrent.ConcurrentLinkedQueue
 import io.getquill.context.sql.{ testContext => _, _ }
 
 import scala.jdk.CollectionConverters._

@@ -1,9 +1,9 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Aggregation, Ast, CaseClass, ConcatMap, Distinct, Filter, FlatMap, GroupBy, Ident, Join, Map, Property, Query, StatefulTransformerWithStack, Union, UnionAll }
+import io.getquill.ast.{ Aggregation, Ast, CaseClass, ConcatMap, Distinct, Filter, FlatMap, GroupBy, GroupByMap, Ident, Join, Map, Property, Query, StatefulTransformerWithStack, Union, UnionAll }
 import io.getquill.ast.Ast.LeafQuat
 import io.getquill.ast.StatefulTransformerWithStack.History
-import io.getquill.util.Interpolator
+import io.getquill.util.{ Interpolator, TraceConfig }
 import io.getquill.util.Messages.TraceType
 
 /**
@@ -18,11 +18,11 @@ import io.getquill.util.Messages.TraceType
  * e.v - this dot-shorthand means Property(e, v) where e is an Ast Ident. This is essentially a scalar-projection
  *       from the entity e.
  * leaf - Typically this is a query-ast clause that results in a scalar type. It could be M(ent,e,e.v) or
- *        an `infix"stuff".as[Query[Int/String/Boolean/etc...] ]`
+ *        an `sql"stuff".as[Query[Int/String/Boolean/etc...] ]`
  */
-case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerWithStack[Option[String]] {
+case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig) extends StatefulTransformerWithStack[Option[String]] {
 
-  val interp = new Interpolator(TraceType.ShealthLeaf, 3)
+  val interp = new Interpolator(TraceType.ShealthLeaf, traceConfig, 3)
   import interp._
 
   def sheathLeaf(ast: Ast) =
@@ -137,7 +137,69 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
             case None       => ast1
           }
         trace"Sheath Agg(query) with $stateInfo in $qq becomes" andReturn {
-          (Aggregation(op, ast2), SheathLeafClauses(None))
+          (Aggregation(op, ast2), SheathLeafClauses(None, traceConfig))
+        }
+
+      /* GroupByMap is much easier to reason about that GroupBy(Map) in terms of sheathing. This why certain kinds of queries that
+       * work with sheathing with GroupByMap will not work with groupBy. For example:
+       * ```
+       * case class Person(name: String, age: Int, lastModified: Long)
+       *
+       *  // Works Right!
+       *  run { query[Person].groupByMap(p => p.name)(p => max(p.age)).filter(a => a > 1000) }
+       *  // SELECT p.x FROM (SELECT MAX(p.age) AS x FROM Person p GROUP BY p.name) AS p WHERE p.x > 1000
+       *
+       *  // Works Right! (Although the query itself is not very useful!)
+       *  run { query[Person].map(p => sql"someFunc(${p.age})".as[Int]).groupByMap(p => p)(p => max(p)).filter(a => a > 1000) }
+       *  // SELECT p.x FROM (SELECT MAX(p._1) AS x FROM (SELECT someFunc(p.age) AS _1 FROM Person p) AS p GROUP BY p._1) AS p WHERE p.x > 1000
+       *
+       *  // Does not work!
+       *  run { query[Person].groupBy(p => p.name).map { case (name, q) => q.map(_.age).max /*problematic clause*/ }.filter(a => a.getOrNull > 1000) }
+       *  // SELECT p.* FROM (SELECT MAX(p.age) FROM Person p GROUP BY p.name) AS p WHERE p > 1000
+       * ```
+       * Sheathing the leaf-value p to a object like `class p(x:Int)` is difficult in the 3rd case because it is difficult to
+       * ascertain how to re-write the `q.map(_.age).max` part in a way that can be transformed later (e.g. `Wrapper(x:q.map(_.age).max)`)
+       * in a way that covers all the possible cases. This should theoretically be possible but requires more investigation.
+       * The GroupByMap case however is much simpler. It's first-clause acts like a groupBy, it's second-clause acts like a Map.
+       */
+      case GroupByMap(query, eg, by, e, LeafQuat(body)) =>
+        val innerState = query match {
+          // If it's an infix inside e.g. Grp(i:Infix,..)(e,by) the higher-level apply should have changed it approporately
+          // by adding an extra Map step inside which has a CaseClass that holds a new attribute that we will pass around
+          // e.g. from GrpTo(leaf,e,e)(e,Agg(e)) should have changed to GrpTo(M(leaf,e,CC(i->e)),e,e.i)(e,Agg(M(e->e.i)))
+          case infix: io.getquill.ast.Infix =>
+            val newId = Ident("i", infix.quat)
+            Some((Map(infix, newId, CaseClass.Single("i" -> newId)), Some("i")))
+          // If it's a query inside e.g. Grp(qry:Query,..)(e,by) the higher-level apply should have changed it approporately
+          // e.g. from GrpTo(ent,e,e.v)(e,Agg(e)) should have changed to GrpTo(ent,e,CC(v->e.v))(e,Agg(M(e->e.v))
+          case _: Query =>
+            val (q, s) = apply(query)
+            Some((q, s.state))
+          // Not sure if this is possible but in this case don't do anything
+          case _ => None
+        }
+        innerState match {
+          case Some((query1, s)) =>
+            val eg1 = Ident(e.name, query1.quat)
+            val by1 = elaborateSheath(by)(s, eg, eg1)
+            // GrpTo signature is GrpTo(query,eg=>by)(e=>body) so both eg and e have the quat of query for example:
+            //   GrpTo(query:Person,eg:Person,by:eg.name)(e:Person=>body)
+            // so when query1 was originally a scalar:
+            //   GrpTo(query:Int,eg:Int,by:eg)(e:Int=>body)
+            // and changes to a value with a column:
+            //   GrpTo(query:Value(i:Int),eg:Value(i:Int),by:eg)(e:Value(i:Int)=>body)
+            // then eg and e also become this new value i.e. Value(i: Int)
+            val e1 = Ident(e.name, query1.quat)
+            val body1 = elaborateSheath(body)(s, e, e1)
+            val (body2, s1) = sheathLeaf(body1)
+            trace"Sheath GroupByMap(Grp,Agg) with $stateInfo in $qq becomes" andReturn {
+              (GroupByMap(query1, eg1, by1, e1, body2), SheathLeafClauses(s1, traceConfig))
+            }
+          // If we ran into some kind of constructs inside the group-by don't do anything, just return the whole clause as-is
+          case None =>
+            trace"Could not understand Map(Grp,Agg) with $stateInfo clauses in $qq so returning same" andReturn {
+              (qq, SheathLeafClauses(None, traceConfig))
+            }
         }
 
       // This is the entry-point for all groupBy nodes which all must be followed by a .map clause
@@ -167,14 +229,14 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
             val body1 = elaborateGroupSheath(body)(s, e, e1)
             // Typically this is an aggregation that we apply it to which goes Agg(e._2) to A(M(e._2,x,x.i)) or A(M(e._2,x,x.v))
             // the state returned from here is almost most cases should be None
-            val (body2, s1) = SheathLeafClauses(None).apply(body1)
+            val (body2, s1) = SheathLeafClauses(None, traceConfig).apply(body1)
             trace"Sheath Map(Grp,Agg) with $stateInfo in $qq becomes" andReturn {
               (Map(grpBy1, e1, body2), s1)
             }
           // If we ran into some kind of constructs inside the group-by don't do anything, just return the whole clause as-is
           case None =>
             trace"Could not understand Map(Grp,Agg) with $stateInfo clauses in $qq so returning same" andReturn {
-              (qq, SheathLeafClauses(None))
+              (qq, SheathLeafClauses(None, traceConfig))
             }
         }
 
@@ -203,7 +265,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
         }
         val (bodyC, _) = apply(bodyB)
         trace"Sheath Map(qry) with $stateInfo in $qq becomes" andReturn {
-          (remake(ent1, e1, bodyC), SheathLeafClauses(s1))
+          (remake(ent1, e1, bodyC), SheathLeafClauses(s1, traceConfig))
         }
 
       case FlatMap(ent, e, body) =>
@@ -220,7 +282,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
       // we immediately map back to the leaf node before the join happens.
       // For example, say we have J(M(ent,e,e.v+123),M(ent,e,e.v+456)) that the sheathing changes to J(M(ent,e,CC(x->e.v+123)),M(ent,e,CC(x->e.v+456))).
       // We would then like to add an extra layer of mapping J(M(M(ent,e,CC(v->e.v+123)),e,e.x)),M(M(ent,e,CC(v->e.v+456)),e,e.x).
-      // This might seem to do undo the original intent however, this if the parts e.g. v+123 are not actually reducible e.g. infix"AVG($v) OVER (PARTITION BY...)"
+      // This might seem to do undo the original intent however, this if the parts e.g. v+123 are not actually reducible e.g. sql"AVG($v) OVER (PARTITION BY...)"
       // this additional information will not be removed via the applyMap normalization and actually help SqlQuery understand that the variable `x` should
       // be used to identify this column.
       // Also note that the alternative could be to produce an outer join e.g.
@@ -236,7 +298,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
         val b1m = sb.state.map(a => Map(b1, iB1, Property(iB1, a))).getOrElse(b1)
 
         trace"Sheath Join with $stateInfo in $qq becomes" andReturn {
-          (Join(t, a1m, b1m, iA, iB, on), SheathLeafClauses(None))
+          (Join(t, a1m, b1m, iA, iB, on), SheathLeafClauses(None, traceConfig))
         }
 
       case Filter(ent, e, LeafQuat(body)) =>
@@ -284,7 +346,7 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
               (left1, right1, None)
           }
         trace"Sheath Union(qry) with $stateInfo in $qq becomes" andReturn {
-          (remake(left2, right2), SheathLeafClauses(s))
+          (remake(left2, right2), SheathLeafClauses(s, traceConfig))
         }
 
       case _ => super.apply(qq)
@@ -293,6 +355,6 @@ case class SheathLeafClauses(state: Option[String]) extends StatefulTransformerW
 
 }
 
-private[getquill] object SheathLeafClauses {
-  def from(q: Ast) = new SheathLeafClauses(None).apply(q)(History.Root)._1
+private[getquill] class SheathLeafClausesApply(traceConfig: TraceConfig) {
+  def apply(q: Ast) = new SheathLeafClauses(None, traceConfig).apply(q)(History.Root)._1
 }

@@ -1,7 +1,6 @@
 package io.getquill.context.jasync.postgres
 
-import io.getquill.context.sql.OnConflictSpec
-
+import io.getquill.context.sql.base.OnConflictSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class OnConflictAsyncSpec extends OnConflictSpec {

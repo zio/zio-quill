@@ -24,6 +24,20 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
     ast match {
       case q: Query if (isGroupByAggregation(q)) =>
         q match {
+          // In a groupBy typically there's a query mapped to an aggregator
+          // e.g. people.groupBy(p=>p.name).map((name,people)=>people.map(p=>p.age).max))
+          // This part takes the:
+          //   people.map(p=>p.age).max
+          // which is:
+          //   Max(Map(agg:people,p,p.age))
+          // which is:
+          //   Agg(Max,Map(agg:people,p,p.age))
+          // now we:
+          //   Reduce(p in p.age)(as: p -> people) which yields people.age
+          // and we return:
+          //   Agg(Max(people.age))
+          // Ultimately this goes into the SQL Select clause (in the SqlQuery class):
+          // SELECT Agg(Max(people.age))
           case Aggregation(op, Map(`agg`, ident, body)) =>
             Aggregation(op, BetaReduction(body, ident -> agg))
           case Map(`agg`, ident, body) =>

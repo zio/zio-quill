@@ -1,8 +1,8 @@
 package io.getquill.ast
 
-import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Visible
+import io.getquill.base.Spec
 
 class StatelessTransformerSpec extends Spec {
 
@@ -122,9 +122,9 @@ class StatelessTransformerSpec extends Spec {
           Tuple(List(Ident("a'"), Ident("b'"), Ident("c'")))
       }
       "caseclass" in {
-        val ast: Ast = CaseClass(List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
+        val ast: Ast = CaseClass("CC", List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-          CaseClass(List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
+          CaseClass("CC", List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
       }
     }
 
@@ -220,7 +220,7 @@ class StatelessTransformerSpec extends Spec {
         Property.Opinionated(Ident("a'"), "b", Fixed, Visible)
     }
 
-    "infix" in {
+    "sql" in {
       val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false, false, QV)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
         Infix(List("test"), List(Ident("a'"), Ident("b'")), false, false, QV)

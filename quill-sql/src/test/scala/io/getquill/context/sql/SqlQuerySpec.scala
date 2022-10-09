@@ -1,15 +1,18 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.Literal
 import io.getquill.Query
 import io.getquill.Ord
+import io.getquill.base.Spec
 import io.getquill.context.sql.util.StringOps._
+import io.getquill.util.TraceConfig
 
 class SqlQuerySpec extends Spec {
 
   implicit val naming = new Literal {}
+
+  val SqlQuery = new SqlQueryApply(TraceConfig.Empty)
 
   "transforms the ast into a flatten sql-like structure" - {
 
@@ -344,17 +347,17 @@ class SqlQuerySpec extends Spec {
       }
     }
 
-    "raw queries with infix" - {
+    "raw queries with sql" - {
       "using tuples" in {
         val q = quote {
-          infix"""SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t""".as[Query[(String, Int)]]
+          sql"""SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t""".as[Query[(String, Int)]]
         }
         testContext.run(q).string mustEqual
           """SELECT x._1, x._2 FROM (SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t) AS x"""
       }
       "using single value" in {
         val q = quote {
-          infix"""SELECT t.i FROM TestEntity t""".as[Query[Int]]
+          sql"""SELECT t.i FROM TestEntity t""".as[Query[Int]]
         }
         testContext.run(q).string mustEqual
           """SELECT x.* FROM (SELECT t.i FROM TestEntity t) AS x"""
@@ -364,14 +367,14 @@ class SqlQuerySpec extends Spec {
     "nested infix query" - {
       "as source" in {
         val q = quote {
-          infix"SELECT * FROM TestEntity".as[Query[TestEntity]].filter(t => t.i == 1)
+          sql"SELECT * FROM TestEntity".as[Query[TestEntity]].filter(t => t.i == 1)
         }
         testContext.run(q).string mustEqual
           "SELECT t.s, t.i, t.l, t.o, t.b FROM (SELECT * FROM TestEntity) AS t WHERE t.i = 1"
       }
       "fails if used as the flatMap body" in {
         val q = quote {
-          qr1.flatMap(a => infix"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Query[TestEntity2]])
+          qr1.flatMap(a => sql"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Query[TestEntity2]])
         }
         val e = intercept[IllegalStateException] {
           SqlQuery(q.ast)

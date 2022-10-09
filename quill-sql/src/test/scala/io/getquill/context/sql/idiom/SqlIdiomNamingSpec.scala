@@ -1,12 +1,12 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
 import io.getquill.Escape
 import io.getquill.SnakeCase
 import io.getquill.UpperCase
 import io.getquill.MirrorSqlDialect
 import io.getquill.SqlMirrorContext
 import io.getquill.NamingStrategy
+import io.getquill.base.Spec
 
 trait CustomTableStrategy extends SnakeCase {
   override def table(s: String): String = s"t_$s".toLowerCase

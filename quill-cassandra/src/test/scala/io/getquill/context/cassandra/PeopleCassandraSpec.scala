@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class PeopleCassandraSpec extends Spec {
 

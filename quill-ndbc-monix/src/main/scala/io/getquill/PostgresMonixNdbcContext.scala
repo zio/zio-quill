@@ -7,7 +7,7 @@ import io.getquill.context.ndbc.{ NdbcContextConfig, PostgresNdbcContextBase }
 import io.getquill.util.LoadConfig
 import io.trane.ndbc.{ DataSource, PostgresDataSource, PostgresPreparedStatement, PostgresRow }
 
-class PostgresMonixNdbcContext[N <: NamingStrategy](
+class PostgresMonixNdbcContext[+N <: NamingStrategy](
   val naming:     N,
   val dataSource: DataSource[PostgresPreparedStatement, PostgresRow],
   runner:         Runner

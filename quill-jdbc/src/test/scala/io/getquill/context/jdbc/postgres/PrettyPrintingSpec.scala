@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class PrettyPrintingSpec extends Spec {
 

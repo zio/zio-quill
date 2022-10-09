@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.context.sql.CaseClassQuerySpec
+import io.getquill.context.sql.base.CaseClassQuerySpec
 import org.scalatest.matchers.should.Matchers._
 
 class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {

@@ -11,6 +11,11 @@ trait Liftables extends QuatLiftable {
 
   private val pack = q"io.getquill.ast"
 
+  implicit val stringOptionLiftable: Liftable[Option[String]] = Liftable[Option[String]] {
+    case None        => q"scala.None"
+    case Some(value) => q"scala.Some[String]($value)"
+  }
+
   implicit val astLiftable: Liftable[Ast] = Liftable[Ast] {
     case ast: Query => queryLiftable(ast)
     case ast: Action => actionLiftable(ast)
@@ -19,6 +24,7 @@ trait Liftables extends QuatLiftable {
     case ast: ExternalIdent => externalIdentLiftable(ast)
     case ast: Ordering => orderingLiftable(ast)
     case ast: Lift => liftLiftable(ast)
+    case ast: Tag => tagLiftable(ast)
     case ast: Assignment => assignmentLiftable(ast)
     case ast: AssignmentDual => assignmentDualLiftable(ast)
     case ast: OptionOperation => optionOperationLiftable(ast)
@@ -125,6 +131,7 @@ trait Liftables extends QuatLiftable {
     case ConcatMap(a, b, c)                         => q"$pack.ConcatMap($a, $b, $c)"
     case SortBy(a, b, c, d)                         => q"$pack.SortBy($a, $b, $c, $d)"
     case GroupBy(a, b, c)                           => q"$pack.GroupBy($a, $b, $c)"
+    case GroupByMap(a, b, c, d, e)                  => q"$pack.GroupByMap($a, $b, $c, $d, $e)"
     case Aggregation(a, b)                          => q"$pack.Aggregation($a, $b)"
     case Take(a, b)                                 => q"$pack.Take($a, $b)"
     case Drop(a, b)                                 => q"$pack.Drop($a, $b)"
@@ -194,7 +201,7 @@ trait Liftables extends QuatLiftable {
     case NullValue         => q"$pack.NullValue"
     case Constant(a, quat) => q"$pack.Constant(${Literal(mctx.universe.Constant(a))}, $quat)"
     case Tuple(a)          => q"$pack.Tuple($a)"
-    case CaseClass(a)      => q"$pack.CaseClass($a)"
+    case CaseClass(n, a)   => q"$pack.CaseClass($n, $a)"
   }
 
   implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
@@ -205,13 +212,17 @@ trait Liftables extends QuatLiftable {
   }
 
   implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {
-    case ScalarValueLift(a, b: Tree, c: Tree, quat: Quat) => q"$pack.ScalarValueLift($a, $b, $c, $quat)"
-    case CaseClassValueLift(a, b: Tree, quat: Quat)       => q"$pack.CaseClassValueLift($a, $b, $quat)"
-    case ScalarQueryLift(a, b: Tree, c: Tree, quat: Quat) => q"$pack.ScalarQueryLift($a, $b, $c, $quat)"
-    case CaseClassQueryLift(a, b: Tree, quat: Quat)       => q"$pack.CaseClassQueryLift($a, $b, $quat)"
+    case ScalarValueLift(a, a1, b: Tree, c: Tree, quat: Quat) => q"$pack.ScalarValueLift($a, $a1, $b, $c, $quat)"
+    case CaseClassValueLift(a, a1, b: Tree, quat: Quat)       => q"$pack.CaseClassValueLift($a, $a1, $b, $quat)"
+    case ScalarQueryLift(a, b: Tree, c: Tree, quat: Quat)     => q"$pack.ScalarQueryLift($a, $b, $c, $quat)"
+    case CaseClassQueryLift(a, b: Tree, quat: Quat)           => q"$pack.CaseClassQueryLift($a, $b, $quat)"
   }
   implicit val tagLiftable: Liftable[Tag] = Liftable[Tag] {
-    case ScalarTag(uid)    => q"$pack.ScalarTag($uid)"
-    case QuotationTag(uid) => q"$pack.QuotationTag($uid)"
+    case ScalarTag(uid, originalName) => q"$pack.ScalarTag($uid, $originalName)"
+    case QuotationTag(uid)            => q"$pack.QuotationTag($uid)"
+  }
+  implicit val sourceLiftable: Liftable[External.Source] = Liftable[External.Source] {
+    case External.Source.Parser                 => q"$pack.External.Source.Parser"
+    case External.Source.UnparsedProperty(prop) => q"$pack.External.Source.UnparsedProperty($prop)"
   }
 }

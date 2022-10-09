@@ -1,13 +1,16 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.norm.SheathLeafClauses
-import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, Spec, SqlMirrorContext }
+import io.getquill.base.Spec
+import io.getquill.norm.SheathLeafClausesApply
+import io.getquill.util.TraceConfig
+import io.getquill.{ MirrorSqlDialect, Query, Quoted, SnakeCase, SqlMirrorContext }
 
 class SheathLeafClausesSpec extends Spec {
 
   val ctx = new SqlMirrorContext(MirrorSqlDialect, SnakeCase)
   import ctx._
   case class Person(firstName: String, lastName: String, age: Int)
+  val SheathLeafClauses = new SheathLeafClausesApply(TraceConfig.Empty)
 
   object Wrap {
     case class Age(age: Int)
@@ -32,7 +35,7 @@ class SheathLeafClausesSpec extends Spec {
         // Note that the intermediate wrap.age is not needed but added during a Wrap-Sheaths phase. Should possibly remove it as an optimization.
         query[Person].map(p => Wrap.Age(p.age)).groupBy(p => p.age).map(p => p._2.map(p => p.age).max)
       }
-      SheathLeafClauses.from(q.ast) mustEqual c.ast
+      SheathLeafClauses.apply(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string
     }
 
@@ -40,36 +43,36 @@ class SheathLeafClausesSpec extends Spec {
       // this works even without SheathLeafClauses but is good test of the SheathLeafClauses
       val q = quote {
         // also this works even without SheathLeafClauses but is good test of the SheathLeafClauses transformation
-        query[Person].map(p => p.age + infix"foo".as[Int]).groupBy(p => p).map(p => p._2.max)
+        query[Person].map(p => p.age + sql"foo".as[Int]).groupBy(p => p).map(p => p._2.max)
       }
       val c = quote {
-        query[Person].map(p => Wrap.Int.X(p.age + infix"foo".as[Int])).groupBy(p => p.x).map(p => p._2.map(p => p.x).max)
+        query[Person].map(p => Wrap.Int.X(p.age + sql"foo".as[Int])).groupBy(p => p.x).map(p => p._2.map(p => p.x).max)
       }
-      SheathLeafClauses.from(q.ast) mustEqual c.ast
+      SheathLeafClauses.apply(q.ast) mustEqual c.ast
       // TODO Replace all p.x with p._1 in c then can use this
       // printIfNotSameString(run(q).string, run(c).string)
     }
 
     "infix.as[Query[leaf]].groupBy.map" in {
       val q = quote {
-        infix"leaf".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
+        sql"leaf".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
       }
       val c = quote {
-        infix"leaf".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
+        sql"leaf".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
       }
-      SheathLeafClauses.from(q.ast) mustEqual c.ast
+      SheathLeafClauses.apply(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string
     }
 
     // TODO This should actually live the quill-jdbc module and be executed since it should be a working example
     "(example) infix.as[Query[leaf]].groupBy.map" in {
       val q = quote {
-        infix"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
+        sql"unnest(array['foo','bar'])".as[Query[Int]].groupBy(p => p).map(p => p._2.max)
       }
       val c = quote {
-        infix"unnest(array['foo','bar'])".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
+        sql"unnest(array['foo','bar'])".as[Query[Int]].map(i => Wrap.Int.I(i)).groupBy(p => p.i).map(p => p._2.map(p => p.i).max)
       }
-      SheathLeafClauses.from(q.ast) mustEqual c.ast
+      SheathLeafClauses.apply(q.ast) mustEqual c.ast
       ctx.run(q).string mustEqual ctx.run(c).string
     }
 
@@ -83,7 +86,7 @@ class SheathLeafClausesSpec extends Spec {
           (query[Person].map(p => Wrap.Age(p.age)) ++ query[Person].map(p => Wrap.Age(p.age))).map(e => e.age).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
-        SheathLeafClauses.from(q.ast) mustEqual c.ast
+        SheathLeafClauses.apply(q.ast) mustEqual c.ast
       }
 
       // Same as before but union
@@ -96,7 +99,7 @@ class SheathLeafClausesSpec extends Spec {
           (query[Person].map(p => Wrap.Age(p.age)) union query[Person].map(p => Wrap.Age(p.age))).map(e => e.age).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
-        SheathLeafClauses.from(q.ast) mustEqual c.ast
+        SheathLeafClauses.apply(q.ast) mustEqual c.ast
       }
 
       // Technically this worked before SheathLeafClauses was introduced but this kind of query is impacted so test it here
@@ -120,7 +123,7 @@ class SheathLeafClausesSpec extends Spec {
           (query[Person].map(p => Wrap.Age(p.age)).map(e => Wrap.Int.U(e.age)) union query[Person].map(p => Wrap.Int.X(p.age + 123)).map(e => Wrap.Int.U(e.x))).map(e => e.u).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
-        SheathLeafClauses.from(q.ast) mustEqual c.ast
+        SheathLeafClauses.apply(q.ast) mustEqual c.ast
       }
 
       "(map(computed-leaf) unionAll map(computed-leaf)).agg" in {
@@ -132,7 +135,7 @@ class SheathLeafClausesSpec extends Spec {
           (query[Person].map(p => Wrap.Int.X(p.age + 123)) ++ query[Person].map(p => Wrap.Int.X(p.age + 456))).map(e => e.x).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
-        SheathLeafClauses.from(q.ast) mustEqual c.ast
+        SheathLeafClauses.apply(q.ast) mustEqual c.ast
       }
 
       // new test
@@ -168,7 +171,7 @@ class SheathLeafClausesSpec extends Spec {
         val c = quote {
           (query[Person].concatMap(p => Wrap.Arr.X(p.firstName.split("a"))) ++ query[Person].concatMap(p => Wrap.Arr.X(p.firstName.split("b")))).map(e => e.x).max
         }
-        SheathLeafClauses.from(q.ast) mustEqual c.ast
+        SheathLeafClauses.apply(q.ast) mustEqual c.ast
       }
     }
 
@@ -179,7 +182,7 @@ class SheathLeafClausesSpec extends Spec {
       val c = quote {
         query[Person].map(p => Wrap.Int.X(p.age + 123)).filter(a => a.x > 123)
       }
-      SheathLeafClauses.from(q.ast) mustEqual c.ast
+      SheathLeafClauses.apply(q.ast) mustEqual c.ast
     }
 
     "map(leaf).filter" in {
@@ -189,7 +192,7 @@ class SheathLeafClausesSpec extends Spec {
       val c = quote {
         query[Person].map(p => Wrap.Age(p.age)).filter(a => a.age > 123)
       }
-      SheathLeafClauses.from(q.ast) mustEqual c.ast
+      SheathLeafClauses.apply(q.ast) mustEqual c.ast
     }
   }
 }
