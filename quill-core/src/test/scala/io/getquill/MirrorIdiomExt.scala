@@ -2,7 +2,7 @@ package io.getquill
 
 import io.getquill.context.{ CanReturnField, CanReturnMultiField, CannotReturn }
 
-class TestMirrorContextTemplate[Dialect <: MirrorIdiomBase, Naming <: NamingStrategy](dialect: Dialect, naming: Naming)
+class TestMirrorContextTemplate[Dialect <: MirrorIdiomBase, +Naming <: NamingStrategy](dialect: Dialect, naming: Naming)
   extends MirrorContext[Dialect, Naming](dialect, naming) with TestEntities {
 
   def withDialect[I <: MirrorIdiomBase](dialect: I)(f: TestMirrorContextTemplate[I, Naming] => Any): Unit = {

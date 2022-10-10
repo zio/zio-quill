@@ -1,6 +1,6 @@
 package io.getquill.postgres
 
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 import monix.execution.Scheduler
 import monix.reactive.Observable
 import org.scalatest.matchers.should.Matchers._

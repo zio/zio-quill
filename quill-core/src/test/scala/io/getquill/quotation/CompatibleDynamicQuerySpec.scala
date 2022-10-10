@@ -1,6 +1,7 @@
 package io.getquill.quotation
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.dsl.DynamicQueryDsl
 
 class CompatibleDynamicQuerySpec extends Spec {
@@ -62,7 +63,7 @@ class CompatibleDynamicQuerySpec extends Spec {
   }
 
   // Need to put here so an summon TypeTag for these
-  case class S(v: String) extends Embedded
+  case class S(v: String)
   case class E(s: S)
 
   "query" - {

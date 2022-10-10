@@ -4,22 +4,23 @@ import io.getquill.ast._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token
 import io.getquill.NamingStrategy
+import io.getquill.IdiomContext
 import io.getquill.util.Messages.fail
 
 trait OnConflictSupport {
   self: SqlIdiom =>
 
-  implicit def conflictTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[OnConflict] = {
+  implicit def conflictTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[OnConflict] = {
 
     val customEntityTokenizer = Tokenizer[Entity] {
       case Entity.Opinionated(name, _, _, renameable) => stmt"INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)} AS t"
     }
 
     val customAstTokenizer =
-      Tokenizer.withFallback[Ast](self.astTokenizer(_, strategy)) {
+      Tokenizer.withFallback[Ast](self.astTokenizer(_, strategy, idiomContext)) {
         case _: OnConflict.Excluded => stmt"EXCLUDED"
         case OnConflict.Existing(a) => stmt"${a.token}"
-        case a: Action              => self.actionTokenizer(customEntityTokenizer)(actionAstTokenizer, strategy).token(a)
+        case a: Action              => self.actionTokenizer(customEntityTokenizer)(actionAstTokenizer, strategy, idiomContext).token(a)
       }
 
     import OnConflict._

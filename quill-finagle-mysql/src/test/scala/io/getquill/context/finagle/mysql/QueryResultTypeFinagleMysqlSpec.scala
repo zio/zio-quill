@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.mysql
 
-import io.getquill.context.sql.QueryResultTypeSpec
 import com.twitter.util.{ Await, Future }
+import io.getquill.context.sql.base.QueryResultTypeSpec
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 

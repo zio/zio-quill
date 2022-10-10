@@ -4,6 +4,7 @@ import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcContextVerbExecute
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.{ ContextVerbStream, ExecutionInfo }
+import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.util.ContextLogger
 import io.getquill.{ NamingStrategy, ReturnAction }
 import zio.Exit.{ Failure, Success }
@@ -16,7 +17,7 @@ import javax.sql.DataSource
 import scala.reflect.ClassTag
 import scala.util.Try
 
-abstract class ZioJdbcUnderlyingContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
+abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
   with JdbcContextVerbExecute[Dialect, Naming]
   with ContextVerbStream[Dialect, Naming]
   with ZioPrepareContext[Dialect, Naming]

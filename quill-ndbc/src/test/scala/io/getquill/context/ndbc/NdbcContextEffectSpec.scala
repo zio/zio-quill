@@ -1,7 +1,7 @@
 package io.getquill.context.ndbc
 
+import io.getquill.base.Spec
 import scala.concurrent.duration.Duration
-import io.getquill.Spec
 import io.trane.future.scala.{ Await, Future, Promise }
 
 import scala.util.Try

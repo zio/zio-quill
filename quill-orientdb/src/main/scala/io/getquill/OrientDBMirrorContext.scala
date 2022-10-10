@@ -2,7 +2,7 @@ package io.getquill
 
 import io.getquill.context.orientdb.{ OrientDBContext, OrientDBIdiom }
 
-class OrientDBMirrorContext[Naming <: NamingStrategy](naming: Naming)
+class OrientDBMirrorContext[+Naming <: NamingStrategy](naming: Naming)
   extends MirrorContext[OrientDBIdiom, Naming](OrientDBIdiom, naming) with OrientDBContext[Naming] {
 
   implicit def listDecoder[T]: Decoder[List[T]] = decoderUnsafe[List[T]]

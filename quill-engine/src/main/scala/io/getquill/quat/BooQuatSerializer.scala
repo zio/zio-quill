@@ -12,6 +12,7 @@ object BooQuatSerializer {
 
   implicit object productPickler extends Pickler[Quat.Product] {
     override def pickle(value: Quat.Product)(implicit state: PickleState): Unit = {
+      state.pickle(value.name)
       state.pickle(value.tpe)
       state.pickle(value.fields)
       state.pickle(value.renames)
@@ -19,6 +20,7 @@ object BooQuatSerializer {
     }
     override def unpickle(implicit state: UnpickleState): Quat.Product = {
       Quat.Product.WithRenames(
+        state.unpickle[String],
         state.unpickle[Quat.Product.Type],
         state.unpickle[LinkedHashMap[String, Quat]],
         state.unpickle[LinkedHashMap[String, String]]

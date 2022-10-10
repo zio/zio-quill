@@ -10,7 +10,7 @@ import io.getquill.util.{ ContextLogger, LoadConfig }
 import scala.jdk.CollectionConverters._
 import io.getquill.monad.SyncIOMonad
 
-class OrientDBSyncContext[N <: NamingStrategy](
+class OrientDBSyncContext[+N <: NamingStrategy](
   naming:   N,
   dbUrl:    String,
   username: String,

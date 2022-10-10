@@ -6,7 +6,7 @@ import io.getquill.NamingStrategy
 import io.getquill.context.Context
 import io.getquill.context.orientdb.dsl.OrientDBDsl
 
-trait OrientDBContext[Naming <: NamingStrategy]
+trait OrientDBContext[+Naming <: NamingStrategy]
   extends Context[OrientDBIdiom, Naming]
   with OrientDBDsl {
 

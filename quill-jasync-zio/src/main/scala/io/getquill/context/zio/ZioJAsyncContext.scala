@@ -14,7 +14,7 @@ import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 import scala.util.Try
 
-abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N)
+abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteConnection](val idiom: D, val naming: N)
   extends Context[D, N]
   with ContextVerbTranslate
   with SqlContext[D, N]
@@ -63,7 +63,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, N <: NamingStrategy, C <: Concret
   def probe(sql: String): Try[_] =
     Try(()) //need to address that
 
-  def transaction[T](action: Result[T]): RIO[ZioJAsyncConnection, T] = {
+  def transaction[R <: ZioJAsyncConnection, T](action: RIO[R, T]): RIO[R, T] = {
     ZIO.environmentWithZIO[ZioJAsyncConnection](_.get.transaction(action))
   }
 

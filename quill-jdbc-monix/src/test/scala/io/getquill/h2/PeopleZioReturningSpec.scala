@@ -1,7 +1,7 @@
 package io.getquill.h2
 
-import io.getquill.context.sql.PeopleReturningSpec
 import io.getquill.MonixSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleZioReturningSpec extends PeopleReturningSpec with MonixSpec {
 

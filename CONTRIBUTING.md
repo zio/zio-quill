@@ -291,6 +291,19 @@ val output = run(q.dynamically)
 Since the query is now dynamic, you can set a breakpoint in the ExpandDistinct
 class and it will be hit during the runtime of your application.
 
-> NOTE: In situations where the .dynamically keyword is not available, e.g. when the 
-> quoted construct is not a query, add a type annotation to the variable holding the
-> quotation and this will effectively cause the same behavior.
+#### Alternate Method
+
+In situations where the .dynamically keyword is not available, e.g. when the 
+quoted construct is not a query, add a type annotation to the variable holding the
+quotation and this will effectively cause the same behavior.
+
+```scala
+val q = quote { query[Person].distinct.map(p => p.name) }
+val output = run(q)
+```
+Add a type annotation which will cause it to be dynamic
+```scala
+val q: Quoted[Query[String]] = quote { query[Person].distinct.map(p => p.name) }
+```
+Same as before, since the query is now dynamic, you can set a breakpoint in the ExpandDistinct
+class and it will be hit during the runtime of your application.

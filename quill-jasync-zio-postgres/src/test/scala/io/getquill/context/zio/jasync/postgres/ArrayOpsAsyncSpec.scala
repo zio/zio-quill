@@ -1,6 +1,6 @@
 package io.getquill.context.zio.jasync.postgres
 
-import io.getquill.context.sql.ArrayOpsSpec
+import io.getquill.context.sql.base.ArrayOpsSpec
 
 class ArrayOpsAsyncSpec extends ArrayOpsSpec with ZioSpec {
   import context._

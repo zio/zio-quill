@@ -13,7 +13,7 @@ import io.getquill.util.Messages.fail
 import com.github.jasync.sql.db.general.ArrayRowData
 import scala.jdk.CollectionConverters._
 
-class MysqlJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool[MySQLConnection])
+class MysqlJAsyncContext[+N <: NamingStrategy](naming: N, pool: ConnectionPool[MySQLConnection])
   extends JAsyncContext[MySQLDialect, N, MySQLConnection](MySQLDialect, naming, pool) with UUIDStringEncoding {
 
   def this(naming: N, config: MysqlJAsyncContextConfig) = this(naming, config.pool)

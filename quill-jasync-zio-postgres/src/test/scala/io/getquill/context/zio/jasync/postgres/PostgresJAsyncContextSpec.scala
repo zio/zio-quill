@@ -2,9 +2,10 @@ package io.getquill.context.zio.jasync.postgres
 
 import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
 import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.base.Spec
 import io.getquill.context.zio.PostgresZioJAsyncContext
 
-import io.getquill.{ Literal, ReturnAction, Spec }
+import io.getquill.{ Literal, ReturnAction }
 
 class PostgresJAsyncContextSpec extends Spec with ZioSpec {
 

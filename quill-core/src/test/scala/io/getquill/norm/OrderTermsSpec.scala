@@ -1,13 +1,16 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.testContext.implicitOrd
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts.testContext.implicitOrd
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qr2
+import io.getquill.MirrorContexts.testContext.quote
+import io.getquill.MirrorContexts.testContext.unquote
+import io.getquill.util.TraceConfig
 
 class OrderTermsSpec extends Spec {
+
+  val OrderTerms = new OrderTerms(TraceConfig.Empty)
 
   "doesn't reorder groupBy.map" in {
     val q = quote {

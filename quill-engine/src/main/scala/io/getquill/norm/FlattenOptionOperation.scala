@@ -4,8 +4,13 @@ import io.getquill.ast._
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
 import io.getquill.quat.QuatOps.HasBooleanQuat
+import io.getquill.util.Messages.TraceType
+import io.getquill.util.{ Interpolator, TraceConfig }
 
-class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTransformer {
+class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceConfig) extends StatelessTransformer {
+
+  val interp = new Interpolator(TraceType.FlattenOptionOperation, traceConfig, 2)
+  import interp._
 
   private def emptyOrNot(b: Boolean, ast: Ast) =
     if (b) OptionIsEmpty(ast) else OptionNonEmpty(ast)
@@ -45,7 +50,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case BinaryOperation(_, StringOperator.`+`, _) if (concatBehavior == NonAnsiConcat) => true
     }.nonEmpty
 
-  override def apply(ast: Ast): Ast =
+  override def apply(ast: Ast): Ast = trace"Flattening option clause $ast ".andReturnIf {
     ast match {
 
       case OptionTableFlatMap(ast, alias, body) =>
@@ -111,4 +116,5 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior) extends StatelessTr
       case other =>
         super.apply(other)
     }
+  }(_ != ast)
 }

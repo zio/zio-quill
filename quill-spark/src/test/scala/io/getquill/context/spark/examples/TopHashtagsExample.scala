@@ -3,7 +3,7 @@ package io.getquill.context.spark
 import language.postfixOps
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.{ count => fcount, _ }
 
 import io.getquill.QuillSparkContext._
 import org.apache.spark.rdd.RDD
@@ -42,7 +42,7 @@ object TopHashtagsExample extends App {
         .select(lower($"col") as "word") // normalize hashtags
         .filter("word like '#%'") // filter hashtag words
         .groupBy($"word") // group by each hashtag
-        .agg(count("*") as "count") // aggregate the count
+        .agg(fcount("*") as "count") // aggregate the count
         .orderBy($"count" desc) // order
         .limit(n) // limit to top results
   }
@@ -55,7 +55,7 @@ object TopHashtagsExample extends App {
         .filter(_.startsWith("#")) // filter hashtag words   (Dataset)
         .map(_.toLowerCase) // normalize hashtags     (Dataset)
         .groupBy($"value") // group by each hashtag  (Dataframe)
-        .agg(count("*") as "count") // aggregate the count    (Dataframe)
+        .agg(fcount("*") as "count") // aggregate the count    (Dataframe)
         .orderBy($"count" desc) // order                  (Datafeame)
         .limit(n) // limit to top results   (Dataframe)
         .as[(String, BigInt)] // set the type again     (Dataset)

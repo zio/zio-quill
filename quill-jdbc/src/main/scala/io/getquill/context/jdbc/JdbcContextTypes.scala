@@ -10,7 +10,7 @@ import io.getquill.util.ContextLogger
 import java.sql.{ Connection, JDBCType, PreparedStatement, ResultSet, Statement }
 import java.util.TimeZone
 
-trait JdbcContextTypes[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Context[Dialect, Naming]
+trait JdbcContextTypes[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] extends Context[Dialect, Naming]
   with SqlContext[Dialect, Naming]
   with Encoders
   with Decoders {
@@ -28,7 +28,7 @@ trait JdbcContextTypes[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends Co
   }
   implicit val nullChecker: JdbcNullChecker = new JdbcNullChecker()
 
-  protected val dateTimeZone = TimeZone.getDefault
+  val dateTimeZone = TimeZone.getDefault
 
   /**
    * Parses instances of java.sql.Types to string form so it can be used in creation of sql arrays.

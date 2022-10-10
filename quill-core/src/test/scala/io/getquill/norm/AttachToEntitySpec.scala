@@ -1,9 +1,9 @@
 package io.getquill.norm
 
-import io.getquill.Spec
 import io.getquill.ast.{ AscNullsFirst, Constant, Ident, Map, SortBy }
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.Query
+import io.getquill.base.Spec
 
 class AttachToEntitySpec extends Spec {
 
@@ -93,7 +93,7 @@ class AttachToEntitySpec extends Spec {
   }
 
   val iqr1 = quote {
-    infix"$qr1".as[Query[TestEntity]]
+    sql"$qr1".as[Query[TestEntity]]
   }
 
   "attaches clause to the root of the query (infix)" - {
