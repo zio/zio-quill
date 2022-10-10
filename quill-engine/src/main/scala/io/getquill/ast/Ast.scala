@@ -334,8 +334,8 @@ final class Ident private (val name: String)(theQuat: => Quat)(val visibility: V
  * Invisible identities are a rare case where a user returns an embedded table from a map clause:
  *
  * <pre><code>
- *     case class Emb(id: Int, name: String) extends Embedded
- *     case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+ *     case class Emb(id: Int, name: String)
+ *     case class Parent(id: Int, name: String, emb: Emb)
  *     case class GrandParent(id: Int, par: Parent)
  *
  *     query[GrandParent]
@@ -610,16 +610,27 @@ case class Tuple(values: List[Ast]) extends Value {
   def bestQuat = bestComputedQuat
 }
 
-case class CaseClass(values: List[(String, Ast)]) extends Value {
-  private lazy val computedQuat = Quat.Product(values.map { case (k, v) => (k, v.quat) })
+case class CaseClass(name: String, values: List[(String, Ast)]) extends Value {
+  private lazy val computedQuat = Quat.Product(name, values.map { case (k, v) => (k, v.quat) })
   def quat = computedQuat
-  private lazy val bestComputedQuat = Quat.Product(values.map { case (k, v) => (k, v.bestQuat) })
+  private lazy val bestComputedQuat = Quat.Product(name, values.map { case (k, v) => (k, v.bestQuat) })
   def bestQuat = bestComputedQuat
+  private lazy val id = CaseClass.Id(values)
+
+  // Even thought name is not an "opinion" it still does not make sense to use it to compare CaseClass Asts
+  override def hashCode(): Int = CaseClass.Id(values).hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case cc: CaseClass => this.id.equals(cc.id)
+      case _             => false
+    }
 }
 
 object CaseClass {
+  case class Id(values: List[(String, Ast)])
+  val GeneratedName = "<Generated>"
   object Single {
-    def apply(tup: (String, Ast)) = new CaseClass(List(tup))
+    def apply(tup: (String, Ast)) = new CaseClass(GeneratedName, List(tup))
     def unapply(cc: CaseClass): Option[(String, Ast)] =
       cc.values match {
         case (name, property) :: Nil => Some((name, property))

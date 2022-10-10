@@ -60,4 +60,43 @@ class JdbcEncodingSpec extends EncodingSpec {
     val actual = context.run(query[TimeEntity]).head
     timeEntity mustEqual actual
   }
+
+  "Encode/Decode Other Time Types ordering" in {
+    context.run(query[TimeEntity].delete)
+
+    val zid = ZoneId.systemDefault()
+    val timeEntityA = TimeEntity.make(zid, TimeEntity.TimeEntityInput(2022, 1, 1, 1, 1, 1, 0))
+    val timeEntityB = TimeEntity.make(zid, TimeEntity.TimeEntityInput(2022, 2, 2, 2, 2, 2, 0))
+
+    // Importing extras messes around with the quto-quote, need to look into why
+    import context.extras._
+    context.run(quote(query[TimeEntity].insertValue(lift(timeEntityA))))
+    context.run(quote(query[TimeEntity].insertValue(lift(timeEntityB))))
+
+    assert(timeEntityB.sqlDate > timeEntityA.sqlDate)
+    assert(timeEntityB.sqlTime > timeEntityA.sqlTime)
+    assert(timeEntityB.sqlTimestamp > timeEntityA.sqlTimestamp)
+    assert(timeEntityB.timeLocalDate > timeEntityA.timeLocalDate)
+    assert(timeEntityB.timeLocalTime > timeEntityA.timeLocalTime)
+    assert(timeEntityB.timeLocalDateTime > timeEntityA.timeLocalDateTime)
+    assert(timeEntityB.timeZonedDateTime > timeEntityA.timeZonedDateTime)
+    assert(timeEntityB.timeInstant > timeEntityA.timeInstant)
+    assert(timeEntityB.timeOffsetTime > timeEntityA.timeOffsetTime)
+    assert(timeEntityB.timeOffsetDateTime > timeEntityA.timeOffsetDateTime)
+
+    val actual =
+      context.run(query[TimeEntity].filter(t =>
+        t.sqlDate > lift(timeEntityA.sqlDate) &&
+          t.sqlTime > lift(timeEntityA.sqlTime) &&
+          t.sqlTimestamp > lift(timeEntityA.sqlTimestamp) &&
+          t.timeLocalDate > lift(timeEntityA.timeLocalDate) &&
+          t.timeLocalTime > lift(timeEntityA.timeLocalTime) &&
+          t.timeLocalDateTime > lift(timeEntityA.timeLocalDateTime) &&
+          t.timeZonedDateTime > lift(timeEntityA.timeZonedDateTime) &&
+          t.timeInstant > lift(timeEntityA.timeInstant) &&
+          t.timeOffsetTime > lift(timeEntityA.timeOffsetTime) &&
+          t.timeOffsetDateTime > lift(timeEntityA.timeOffsetDateTime))).head
+
+    assert(actual == timeEntityB)
+  }
 }

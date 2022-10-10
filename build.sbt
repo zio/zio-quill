@@ -299,7 +299,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.2",
-      "dev.zio"                    %% "zio-logging"   % "2.0.0",
+      "dev.zio"                    %% "zio-logging"   % "2.0.1",
       "dev.zio"                    %% "zio"           % Version.zio,
       "dev.zio"                    %% "zio-streams"   % Version.zio,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
@@ -489,6 +489,14 @@ lazy val `quill-jdbc-zio` =
     .settings(mimaSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(
+      libraryDependencies ++= Seq(
+        // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
+        "org.postgresql" % "postgresql" % "42.3.6" %  "provided"
+      ) ++ (
+        // zio-json does not exist for Scala 2.11
+        if (!isScala211) Seq("dev.zio" %% "zio-json" % "0.3.0")
+        else Seq()
+      ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
           if (test.name endsWith "IntegrationSpec")
@@ -505,19 +513,12 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-
-
-
-
-
 lazy val `quill-ndbc-monix` =
   (project in file("quill-ndbc-monix"))
     .settings(commonSettings: _*)
     .settings(mimaSettings: _*)
     .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-      )
+      Test / fork := true
     )
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -751,7 +752,7 @@ lazy val `quill-orientdb` =
         Test / fork := true,
         libraryDependencies ++= Seq(
           // For some reason OrientDB 3.0.42 does not stay up once started during local testing so need to bump to 3.2.6
-          "com.orientechnologies" % "orientdb-graphdb" % "3.2.6"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.2.10"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -813,13 +814,13 @@ def updateWebsiteTag =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.29"             % Test,
-    "com.h2database"          %  "h2"                      % "2.1.212"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.3.6"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.39.3.0"             % Test,
-    "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.2.2.jre8"        % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.30"             % Test,
+    "com.h2database"          %  "h2"                      % "2.1.214"            % Test,
+    "org.postgresql"          %  "postgresql"              % "42.5.0"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.39.3.0"           % Test,
+    "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.2.2.jre8"         % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"              % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"            % Test
   )
 )
 
@@ -883,7 +884,7 @@ def excludePaths(paths:Seq[String]) = {
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.10"
 val scala_v_13 = "2.13.2"
-val scala_v_30 = "3.1.2"
+val scala_v_30 = "3.1.3"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
@@ -908,7 +909,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1")
   },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
