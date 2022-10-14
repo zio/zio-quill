@@ -397,7 +397,7 @@ Return *all* the records that were updated.
 val desc = "Update Product"
 val sku = 2002L
 val q = quote {
-  query[Product].filter(p => p.id == 42).update(_.description = lift(desc), _.sku = lift(sku)).returning(r => (r.id, r.description))
+  query[Product].filter(p => p.id == 42).update(_.description = lift(desc), _.sku = lift(sku)).returningMany(r => (r.id, r.description))
 }
 val updated = ctx.run(q) //: List[(Int, String)]
 // Postgres
@@ -410,7 +410,7 @@ Return *all* the records that were deleted.
 
 ```scala
 val q = quote {
-  query[Product].filter(p => p.id == 42).delete.returning(r => r)
+  query[Product].filter(p => p.id == 42).delete.returningMany(r => r)
 }
 
 val deleted = ctx.run(q) //: List[Product]
