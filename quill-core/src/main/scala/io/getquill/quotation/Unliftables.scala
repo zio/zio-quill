@@ -200,7 +200,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.NullValue" => NullValue
     case q"$pack.Constant.apply(${ Literal(mctx.universe.Constant(a)) }, ${ quat: Quat })" => Constant(a, quat)
     case q"$pack.Tuple.apply(${ a: List[Ast] })" => Tuple(a)
-    case q"$pack.CaseClass.apply(${ values: List[(String, Ast)] })" => CaseClass(values)
+    case q"$pack.CaseClass.apply(${ n: String }, ${ values: List[(String, Ast)] })" => CaseClass(n, values)
   }
 
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {

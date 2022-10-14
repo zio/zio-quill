@@ -46,9 +46,9 @@ object ExpandReturning {
     // Tuple(List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1))))
     // => List(ExternalIdent("name"), BinaryOperation(ExternalIdent("age"), +, Constant(1)))
     val deTuplified = dePropertized match {
-      case Tuple(values)     => values
-      case CaseClass(values) => values.map(_._2)
-      case other             => List(other)
+      case Tuple(values)        => values
+      case CaseClass(_, values) => values.map(_._2)
+      case other                => List(other)
     }
 
     implicit val namingStrategy: NamingStrategy = naming
