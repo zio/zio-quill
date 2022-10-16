@@ -1,11 +1,12 @@
 package io.getquill.context.jasync.postgres
 
-import com.github.jasync.sql.db.{QueryResult, ResultSetKt}
+import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
 import io.getquill.ReturnAction.ReturnColumns
 import io.getquill.base.Spec
-import scala.concurrent.ExecutionContext.Implicits.global
+import io.getquill.{ Literal, PostgresJAsyncContext, ReturnAction }
 
-import io.getquill.{Literal, PostgresJAsyncContext, ReturnAction}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class PostgresJAsyncContextSpec extends Spec {
 
@@ -64,6 +65,53 @@ class PostgresJAsyncContextSpec extends Spec {
       "",
       (ps, session) => (Nil, ps ++ List("Sarah", 127))
     ) mustEqual List("'Sarah'", "127")
+  }
+
+  "provides transaction support" - {
+    "success" in {
+      await(for {
+        _ <- testContext.run(qr4.delete)
+        _ <- testContext.transaction { implicit ec =>
+          testContext.run(qr4.insert(_.i -> 33))
+        }
+        r <- testContext.run(qr4)
+      } yield r).map(_.i) mustEqual List(33)
+    }
+    "failure" in {
+      await(for {
+        _ <- testContext.run(qr4.delete)
+        e <- testContext.transaction { implicit ec =>
+          Future.sequence(Seq(
+            testContext.run(qr4.insert(_.i -> 18)),
+            Future(throw new IllegalStateException)
+          ))
+        }.recoverWith {
+          case e: Exception => Future(e.getClass.getSimpleName)
+        }
+        r <- testContext.run(qr4)
+      } yield (e, r.isEmpty)) mustEqual (("CompletionException", true))
+    }
+    "nested" in {
+      await(for {
+        _ <- testContext.run(qr4.delete)
+        _ <- testContext.transaction { implicit ec =>
+          testContext.transaction { implicit ec =>
+            testContext.run(qr4.insert(_.i -> 33))
+          }
+        }
+        r <- testContext.run(qr4)
+      } yield r).map(_.i) mustEqual List(33)
+    }
+    "nested transactions use the same connection" in {
+      await(for {
+        e <- testContext.transaction { implicit ec =>
+          val externalConn = ec.conn
+          testContext.transaction { implicit ec =>
+            Future(externalConn == ec.conn)
+          }
+        }
+      } yield e) mustEqual true
+    }
   }
 
   override protected def beforeAll(): Unit = {
