@@ -86,7 +86,7 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
   def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
     ec match {
       case tec: TransactionalExecutionContext => toCompletableFuture(f(tec))
-      case _ => pool.inTransaction { c =>
+      case _ => pool.inTransaction { (c: Connection) =>
         toCompletableFuture(f(TransactionalExecutionContext(ec, c)))
       }
     }
