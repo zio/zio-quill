@@ -299,7 +299,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.2",
-      "dev.zio"                    %% "zio-logging"   % "2.0.1",
+      "dev.zio"                    %% "zio-logging"   % "2.1.2",
       "dev.zio"                    %% "zio"           % Version.zio,
       "dev.zio"                    %% "zio-streams"   % Version.zio,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
@@ -883,8 +883,8 @@ def excludePaths(paths:Seq[String]) = {
 
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.10"
-val scala_v_13 = "2.13.2"
-val scala_v_30 = "3.1.3"
+val scala_v_13 = "2.13.10"
+val scala_v_30 = "3.2.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
