@@ -167,7 +167,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
             case Some(size) =>
               ZStream.fromIterator(iter, size)
             case None =>
-              ZStream.fromIterator(new ResultSetIterator(rs, conn, extractor))
+              ZStream.fromIterator(iter)
           }
       }
 
