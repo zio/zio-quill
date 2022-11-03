@@ -1,8 +1,7 @@
 package io.getquill.context.jdbc
 
-import java.sql.Types
 import java.time.{ Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, OffsetTime, ZoneOffset, ZonedDateTime }
-import java.{ time, util }
+import java.util
 import java.util.{ Calendar, TimeZone }
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 

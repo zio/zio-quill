@@ -1,21 +1,17 @@
 package io.getquill
 
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.ast.{ Action, Query, _ }
-import io.getquill.ast
-import io.getquill.context.sql.idiom
-import io.getquill.context.sql.idiom.SqlIdiom.{ InsertUpdateStmt, copyIdiom }
+import io.getquill.ast._
 import io.getquill.context.{ CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnClause }
 import io.getquill.context.sql.idiom._
-import io.getquill.idiom.{ ScalarTagToken, Statement, Token, ValuesClauseToken }
+import io.getquill.idiom.{ Statement, ValuesClauseToken }
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.{ BetaReduction, ExpandReturning, ProductAggregationToken }
-import io.getquill.quat.Quat
+import io.getquill.norm.{ BetaReduction, ProductAggregationToken }
 import io.getquill.sql.norm.NormalizeFilteredActionAliases
 import io.getquill.util.Messages.fail
 
 import scala.annotation.tailrec
-import scala.collection.immutable.{ ListMap, ListSet, Queue }
+import scala.collection.immutable.ListMap
 
 trait PostgresDialect
   extends SqlIdiom

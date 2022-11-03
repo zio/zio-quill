@@ -4,7 +4,7 @@ import io.getquill.context.cassandra.CassandraRowContext
 
 import java.nio.ByteBuffer
 import java.time.{ Instant, LocalDate, LocalTime }
-import java.util.{ Date, UUID }
+import java.util.UUID
 
 trait Encoders extends CollectionEncoders {
   this: CassandraRowContext[_] =>

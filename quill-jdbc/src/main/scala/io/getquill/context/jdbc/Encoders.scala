@@ -1,7 +1,6 @@
 package io.getquill.context.jdbc
 
-import java.sql.{ Date, Timestamp, Types }
-import java.time.temporal.TemporalField
+import java.sql.{ Timestamp, Types }
 import java.time.{ Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, OffsetTime, ZoneOffset, ZonedDateTime }
 import java.util.Calendar
 import java.{ sql, util }

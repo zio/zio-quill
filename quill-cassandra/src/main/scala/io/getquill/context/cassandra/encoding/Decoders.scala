@@ -1,11 +1,11 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.oss.driver.internal.core.`type`.{ DefaultListType, PrimitiveType }
+import com.datastax.oss.driver.internal.core.`type`.PrimitiveType
 import io.getquill.context.cassandra.CassandraRowContext
 import io.getquill.util.Messages.fail
 
 import java.time.{ Instant, LocalDate, LocalTime }
-import java.util.{ Date, UUID }
+import java.util.UUID
 
 trait Decoders extends CollectionDecoders {
   this: CassandraRowContext[_] =>

@@ -9,7 +9,6 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.norm.{ Normalize, NormalizeCaching }
 import io.getquill.quat.Quat
 import io.getquill.util.Interleave
-import io.getquill.IdiomContext
 
 object MirrorIdiom extends MirrorIdiom
 class MirrorIdiom extends MirrorIdiomBase with CanReturnClause

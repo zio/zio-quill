@@ -4,7 +4,6 @@ import scala.language.experimental.macros
 import io.getquill.quotation.NonQuotedException
 import io.getquill.EntityQuery
 
-import java.time.{ OffsetDateTime, ZonedDateTime }
 import scala.annotation.compileTimeOnly
 
 private[getquill] trait QueryDsl {

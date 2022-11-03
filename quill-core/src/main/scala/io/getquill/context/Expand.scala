@@ -4,7 +4,6 @@ import io.getquill.ast._
 import io.getquill.NamingStrategy
 import io.getquill.idiom._
 import io.getquill.IdiomContext
-import io.getquill.quat.Quat
 
 object CanDoBatchedInsert {
   def apply(ast: Ast, idiom: Idiom, statement: Token, isReturning: Boolean, idiomContext: IdiomContext): Boolean = {

@@ -2,7 +2,6 @@ package io.getquill
 
 import io.getquill.ast.{ Ast, CollectAst }
 import io.getquill.norm.TranspileConfig
-import io.getquill.ast
 
 case class IdiomContext(config: TranspileConfig, queryType: IdiomContext.QueryType) {
   def traceConfig = config.traceConfig

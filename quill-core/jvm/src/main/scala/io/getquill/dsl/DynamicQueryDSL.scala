@@ -11,7 +11,6 @@ import scala.reflect.macros.whitebox.{ Context => MacroContext }
 import io.getquill.util.Messages._
 
 import scala.util.DynamicVariable
-import scala.reflect.ClassTag
 import scala.reflect.runtime.{ universe => u }
 import io.getquill.{ ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Quoted, Update, Action => DslAction }
 

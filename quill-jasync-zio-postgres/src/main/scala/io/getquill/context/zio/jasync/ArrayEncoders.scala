@@ -1,6 +1,5 @@
 package io.getquill.context.zio.jasync
 
-import java.sql.Timestamp
 import java.time.{ LocalDate, LocalDateTime, OffsetDateTime }
 import java.util.Date
 import io.getquill.context.sql.encoding.ArrayEncoding

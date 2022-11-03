@@ -1,7 +1,6 @@
 package io.getquill.dsl
 
 import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.Embedded
 import io.getquill.util.OptionalTypecheck
 import io.getquill.util.MacroContextExt._
 
