@@ -23,7 +23,7 @@ jobs:
 
    strategy:
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2, 3.2.0]
+       scala: [2.11.12, 2.12.10, 2.13.10, 3.2.0]
        module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
@@ -32,7 +32,7 @@ jobs:
          - scala: 2.12.10
            scala_short: 212
            scala_short_dot: 2.12
-         - scala: 2.13.2
+         - scala: 2.13.10
            scala_short: 213
            scala_short_dot: 2.13
          - scala: 3.2.0
@@ -55,7 +55,7 @@ jobs:
            module: base
          - scala: 2.12.10
            module: base
-         - scala: 2.13.2
+         - scala: 2.13.10
            module: base
          # Do not build 2.11 Scala JS anymore since various modules such as scala-collection-compat are missing for it
          - scala: 2.11.12
@@ -92,7 +92,7 @@ jobs:
 
    strategy:
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2, 3.2.0]
+       scala: [2.11.12, 2.12.10, 2.13.10, 3.2.0]
        module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
@@ -101,7 +101,7 @@ jobs:
          - scala: 2.12.10
            scala_short: 212
            scala_short_dot: 2.12
-         - scala: 2.13.2
+         - scala: 2.13.10
            scala_short: 213
            scala_short_dot: 2.13
          - scala: 3.2.0
