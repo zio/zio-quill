@@ -817,7 +817,7 @@ lazy val jdbcTestingLibraries = Seq(
     "mysql"                   %  "mysql-connector-java"    % "8.0.30"             % Test,
     "com.h2database"          %  "h2"                      % "2.1.214"            % Test,
     "org.postgresql"          %  "postgresql"              % "42.5.0"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.39.3.0"           % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.39.4.0"           % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.2.2.jre8"         % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
     "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"            % Test
