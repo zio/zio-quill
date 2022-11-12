@@ -1,6 +1,46 @@
-# Quill Code Generator
+---
+id: code-generation
+title: "Code Generation"
+---
 
-This library gives you a few options as to what kind of 
+Quill now has a highly customizable code generator. Currently, it only supports JDBC but it will soon be extended to other contexts. With a minimal amount of configuration, the code generator takes schemas like this:
+
+```sql
+-- Using schema 'public'
+
+create table public.Person (
+  id int primary key auto_increment,
+  first_name varchar(255),
+  last_name varchar(255),
+  age int not null
+);
+
+create table public.Address (
+  person_fk int not null,
+  street varchar(255),
+  zip int
+);
+```
+
+Producing objects like this:
+
+```scala
+// src/main/scala/com/my/project/public/Person.scala
+package com.my.project.public
+
+case class Person(id: Int, firstName: Option[String], lastName: Option[String], age: Int)
+```
+
+```scala
+// src/main/scala/com/my/project/public/Address.scala
+package com.my.project.public
+
+case class Address(personFk: Int, street: Option[String], zip: Option[Int])
+```
+
+## Quill Code Generator
+
+This library gives you a few options as to what kind of
 schema to generate from JDBC metadata for Quill. You can choose to generate
 simple case classes that are controlled entirely but a Quill Naming Strategy,
 or a combination of case classes and `querySchema`s.
@@ -22,14 +62,13 @@ You can import the Code Generator using maven:
 
 Or using sbt:
 ````scala
-libraryDependencies += "io.getquill" %% "quill-codegen-jdbc" % "3.10.0"
+libraryDependencies += "io.getquill" %% "quill-codegen-jdbc" % "@VERSION@"
 ````
 
-
 ## SimpleJdbcCodegen
- 
+
 This code generator generates simple case classes, each representing a table
-in a database. It does not generate Quill `querySchema` objects. 
+in a database. It does not generate Quill `querySchema` objects.
 Create one or multiple CodeGeneratorConfig objects
 and call the `.writeFiles` or `.writeStrings` methods
 on the code generator to generate the code.
@@ -111,7 +150,7 @@ The `ComposeableTraitsJdbcCodegen` enables more customized code generation.
 It allows you to determine the tables to generate entity classes for,
 their naming stragety, the types for columns in Scala,
 and generates the necessary `querySchema` object in order to map the fields.
-Additionally, it generates a database-independent query schema trait which can be composed 
+Additionally, it generates a database-independent query schema trait which can be composed
 with a `Context` object of your choice.
 
 Given the following schema:
@@ -148,7 +187,7 @@ val gen = new ComposeableTraitsJdbcCodegen(
 }
 gen.writeFiles("src/main/scala/com/my/project")
 ````
- 
+
 The following schema should be generated as a result.
 ````scala
 package com.my.project.public
@@ -256,15 +295,15 @@ create table Bravo.Person (
 );
 ````
 
- * Firstly, note that `Alpha.Person` and `Bravo.Person` have the exact same columns except for `foo` and `bar` respectively.
-   If a common table definition `Person` is desired, these columns must be omitted.
- * Secondly, note that their columns `num_trinkets` and `trinket_type` have different types.
-   If a common table definition `Person` is desired, these columns must be expanded to the widest
-   datatype of the two which is this case `bigint` for `num_trinkets` and `varchar(255)` for `trinket_type`.  
+* Firstly, note that `Alpha.Person` and `Bravo.Person` have the exact same columns except for `foo` and `bar` respectively.
+  If a common table definition `Person` is desired, these columns must be omitted.
+* Secondly, note that their columns `num_trinkets` and `trinket_type` have different types.
+  If a common table definition `Person` is desired, these columns must be expanded to the widest
+  datatype of the two which is this case `bigint` for `num_trinkets` and `varchar(255)` for `trinket_type`.
 
 Both of the above actions are automatically performed by the `ComposeableTraitsJdbcCodegen`
 (and `SimpleJdbcCodegen`) automatically when multiple tables with the same name are detected or if you
-rename them using a custom `namingStrategy` causing this to happen. 
+rename them using a custom `namingStrategy` causing this to happen.
 Here is an example of how that is done:
 
 ````scala
@@ -319,11 +358,11 @@ trait CommonExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.N
         }
     }
 }
- 
 ````
 
 Later when declaring your quill database context you can compose the context with
 the `CommonExtensions` like so:
+
 ````scala
 object MyCustomContext extends SqlMirrorContext[H2Dialect, Literal](H2Dialect, Literal)
   with CommonExtensions[H2Dialect, Literal]

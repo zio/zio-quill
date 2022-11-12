@@ -1,3 +1,8 @@
+---
+id: changelog
+title: "Quill Changelog"
+---
+
 # 4.6.0
 
 - [Implementing Postgres json/jsonb encoding via zio-json](https://github.com/zio/zio-quill/pull/2615)
@@ -81,7 +86,7 @@
 
 
 #### Migration Notes:
-- As a result of [2504](https://github.com/zio/zio-quill/pull/2504), the handling of optional-product rows (technically parts of rows) is now different. Whereas before, if any non-optional column of an optional-product row was null, then entre optional-product would be null. Now however, an optional-product will only be null if every column inside is null. For example, before, if a query returning `Person(name:Option(Name(first:String, last:String)), age: Int)` resulted in the row `ResultRow("Joe", null, 123)` before the entity would be decoded into `Person(None, 123)` (i.e. the optional-product `Option[Name]` would decode to `None`).<br>
+- As a result of [2504](https://github.com/zio/zio-quill/pull/2504), the handling of optional-product rows (technically parts of rows) is now different. Whereas before, if any non-optional column of an optional-product row was null, then entre optional-product would be null. Now however, an optional-product will only be null if every column inside is null. For example, before, if a query returning `Person(name:Option(Name(first:String, last:String)), age: Int)` resulted in the row `ResultRow("Joe", null, 123)` before the entity would be decoded into `Person(None, 123)` (i.e. the optional-product `Option[Name]` would decode to `None`).<br />
   Now however, `Option[Name]` only decodes to `None` if every column inside it is null. This means that the `ResultRow("Joe", null, 123)` decodes to `Person(Name("Joe", 0 /*default-placeholder for null*/), 123)`. Only when the both `first` and `last` columns in Name are null i.e. `ResultRow(null, null, 123)` will the result be: `Person(None, 123)`. Have a look at the PR [2504](https://github.com/zio/zio-quill/pull/2504) as well as it's corresponding issue [2505](https://github.com/zio/zio-quill/issues/2505) for more details on how this works and the rationale for it.
 
 # 3.16.5
