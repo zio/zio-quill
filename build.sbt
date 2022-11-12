@@ -1022,10 +1022,10 @@ lazy val releaseSettings = Seq(
 )
 
 lazy val docs = project
-  .in(file("zio-flow-docs"))
+  .in(file("zio-quill-docs"))
   .settings(
     publish / skip := true,
-    moduleName     := "zio-flow-docs",
+    moduleName     := "zio-quill-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions += "-Xlog-implicits",
