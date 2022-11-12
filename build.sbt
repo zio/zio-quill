@@ -5,9 +5,6 @@ import sbtrelease.ReleasePlugin
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 import java.io.{ File => JFile }
-import ReleaseTransformations._
-import sbtrelease.Version
-import sbtrelease.versionFormatError
 
 import scala.collection.immutable.ListSet
 
@@ -192,6 +189,7 @@ lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
     .aggregate(filteredModules.map(_.project).toSeq: _*)
+    .aggregate(docs)
     .dependsOn(filteredModules.toSeq: _*)
 
 `quill` / publishArtifact := false
@@ -1060,3 +1058,15 @@ lazy val releaseSettings = Seq(
   ),
 
 )
+
+lazy val docs = project
+  .in(file("zio-flow-docs"))
+  .settings(
+    publish / skip := true,
+    moduleName     := "zio-flow-docs",
+    scalacOptions -= "-Yno-imports",
+    scalacOptions -= "-Xfatal-warnings",
+    scalacOptions += "-Xlog-implicits",
+    libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio)
+  )
+  .enablePlugins(WebsitePlugin)
