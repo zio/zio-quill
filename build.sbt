@@ -775,15 +775,6 @@ commands += Command.command("checkUnformattedFiles") { st =>
   st
 }
 
-def updateWebsiteTag =
-  ReleaseStep(action = st => {
-
-    val vcs = Project.extract(st).get(releaseVcs).get
-    vcs.tag("website", "update website", false).!
-
-    st
-  })
-
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
@@ -916,7 +907,6 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard"
-
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
@@ -994,13 +984,10 @@ lazy val releaseSettings = Seq(
         doOnDefault(inquireVersions) ++
         doOnDefault(runClean) ++
         doOnPush   (setReleaseVersion) ++
-        doOnDefault(updateReadmeVersion(_._1)) ++
         doOnPush   (commitReleaseVersion) ++
-        doOnPush   (updateWebsiteTag) ++
         doOnPush   (tagRelease) ++
         doOnDefault(publishArtifacts) ++
         doOnPush   (setNextVersion) ++
-        doOnPush   (updateReadmeVersion(_._2)) ++
         doOnPush   (commitNextVersion) ++
         //doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
         doOnPush   (pushChanges)
@@ -1022,14 +1009,14 @@ lazy val releaseSettings = Seq(
     }
   },
 
-  homepage := Some(url("http://github.com/getquill/quill")),
-  licenses := List(("Apache License 2.0", url("https://raw.githubusercontent.com/getquill/quill/master/LICENSE.txt"))),
+  homepage := Some(url("https://zio.dev/zio-quill/")),
+  licenses := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
   developers := List(
     Developer("fwbrasil", "Flavio W. Brasil", "", url("http://github.com/fwbrasil")),
     Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
   ),
   scmInfo := Some(
-    ScmInfo(url("https://github.com/getquill/quill"), "git:git@github.com:getquill/quill.git")
+    ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
   ),
 
 )
