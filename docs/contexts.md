@@ -112,9 +112,10 @@ val results = run(peopleOlderThan(22, liftQuery(dataset)))
 Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine. It's an alternative to `Dataset`'s weakly-typed API.
 
 ### Importing Quill Spark
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-spark" % "@VERSION@"
 )
 ```
 
@@ -312,10 +313,11 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ### MySQL (quill-jdbc)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -339,10 +341,11 @@ ctx.connectionTimeout=30000
 ### Postgres (quill-jdbc)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -365,10 +368,11 @@ ctx.connectionTimeout=30000
 ### Sqlite (quill-jdbc)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -386,10 +390,11 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ### H2 (quill-jdbc)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -408,14 +413,16 @@ ctx.dataSource.user=sa
 ### SQL Server (quill-jdbc)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
 #### context definition
+
 ```scala
 lazy val ctx = new SqlServerJdbcContext(SnakeCase, "ctx")
 ```
@@ -430,14 +437,16 @@ Unfortunately, this procedure currently does not work for SBT. There are various
 available for this situation [here](https://stackoverflow.com/questions/1074869/find-oracle-jdbc-driver-in-maven-repository?rq=1).
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
 #### context definition
+
 ```scala
 lazy val ctx = new OracleJdbcContext(SnakeCase, "ctx")
 ```
@@ -613,14 +622,16 @@ testContext.run(jsonAstQuery.insertValue(lift(joeRow)))
 ### MySQL (quill-jdbc-zio)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
 #### context definition
+
 ```scala
 val ctx = new MysqlZioJdbcContext(SnakeCase)
 // Also can be static:
@@ -642,14 +653,16 @@ ctx.connectionTimeout=30000
 ### Postgres (quill-jdbc-zio)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
 #### context definition
+
 ```scala
 val ctx = new PostgresZioJdbcContext(SnakeCase)
 // Also can be static:
@@ -670,10 +683,11 @@ ctx.connectionTimeout=30000
 ### Sqlite (quill-jdbc-zio)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -693,14 +707,16 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ### H2 (quill-jdbc-zio)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
 #### context definition
+
 ```scala
 val ctx = new H2ZioJdbcContext(SnakeCase)
 // Also can be static:
@@ -717,10 +733,11 @@ ctx.dataSource.user=sa
 ### SQL Server (quill-jdbc-zio)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -746,10 +763,11 @@ ctx.dataSource.serverName=host
 Quill supports Oracle version 12c and up although due to licensing restrictions, version 18c XE is used for testing.
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -848,10 +866,11 @@ lazy val ctx = new MysqlMonixJdbcContext(SnakeCase, "ctx", Runner.using(Schedule
 ### MySQL (quill-jdbc-monix)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-monix" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "@VERSION@"
 )
 ```
 
@@ -875,10 +894,11 @@ ctx.connectionTimeout=30000
 ### Postgres (quill-jdbc-monix)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-monix" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "@VERSION@"
 )
 ```
 
@@ -901,10 +921,11 @@ ctx.connectionTimeout=30000
 ### Sqlite (quill-jdbc-monix)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-monix" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "@VERSION@"
 )
 ```
 
@@ -922,10 +943,11 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ### H2 (quill-jdbc-monix)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-monix" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "@VERSION@"
 )
 ```
 
@@ -944,10 +966,11 @@ ctx.dataSource.user=sa
 ### SQL Server (quill-jdbc-monix)
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-monix" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "@VERSION@"
 )
 ```
 
@@ -976,10 +999,11 @@ Unfortunately, this procedure currently does not work for SBT. There are various
 available for this situation [here](https://stackoverflow.com/questions/1074869/find-oracle-jdbc-driver-in-maven-repository?rq=1).
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-monix" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jdbc-monix" % "@VERSION@"
 )
 ```
 
@@ -1019,9 +1043,10 @@ ctx.transaction {
 The body of transaction can contain calls to other methods and multiple run calls since the transaction is automatically handled.
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-ndbc-postgres" % "@VERSION@"
 )
 ```
 
@@ -1126,9 +1151,10 @@ ctx.queryTimeout=10m
 ### quill-async-mysql
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-mysql" % "@VERSION@"
 )
 ```
 
@@ -1150,9 +1176,10 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 ### quill-async-postgres
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-async-postgres" % "@VERSION@"
 )
 ```
 
@@ -1240,9 +1267,10 @@ ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca o
 ### quill-jasync-mysql
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-mysql" % "@VERSION@"
 )
 ```
 
@@ -1265,9 +1293,10 @@ ctx.url=mysql://host:3306/database?user=root&password=root
 ### quill-jasync-postgres
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-postgres" % "@VERSION@"
 )
 ```
 
@@ -1320,9 +1349,10 @@ ctx.sslkey=./path/to/key/file # optional, required to only allow connections fro
 
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-zio-postgres" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-jasync-zio-postgres" % "@VERSION@"
 )
 ```
 
@@ -1504,9 +1534,10 @@ ctx.stream(query[Person]) // returns: Future[AsyncStream[Person]]
 The body of `transaction` can contain calls to other methods and multiple `run` calls since the transaction is automatically propagated through the `Local` value.
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-mysql" % "@VERSION@"
 )
 ```
 
@@ -1544,9 +1575,10 @@ ctx.transaction {
 The body of `transaction` can contain calls to other methods and multiple `run` calls since the transaction is automatically propagated through the `Local` value.
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-finagle-postgres" % "@VERSION@"
 )
 ```
 
@@ -1571,9 +1603,10 @@ ctx.binaryParams=false
 ## quill-cassandra
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra" % "@VERSION@"
 )
 ```
 
@@ -1662,7 +1695,7 @@ More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/i
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-zio" % "@VERSION@"
 )
 ```
 
@@ -1671,7 +1704,7 @@ libraryDependencies ++= Seq(
 #### sbt dependencies
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-monix" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-monix" % "@VERSION@"
 )
 ```
 
@@ -1688,9 +1721,10 @@ lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 ## quill-cassandra-alpakka
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-alpakka" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-cassandra-alpakka" % "@VERSION@"
 )
 ```
 
@@ -1730,9 +1764,10 @@ quill-test-datastax-java-driver {
 ## OrientDB Contexts
 
 #### sbt dependencies
+
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "4.6.1-SNAPSHOT"
+  "io.getquill" %% "quill-orientdb" % "@VERSION@"
 )
 ```
 

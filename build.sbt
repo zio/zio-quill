@@ -775,31 +775,6 @@ commands += Command.command("checkUnformattedFiles") { st =>
   st
 }
 
-def updateReadmeVersion(selectVersion: sbtrelease.Versions => String) =
-  ReleaseStep(action = st => {
-
-    val newVersion = selectVersion(st.get(ReleaseKeys.versions).get)
-
-    import scala.io.Source
-    import java.io.PrintWriter
-
-    val pattern = """"io.getquill" %% "quill-.*" % "(.*)"""".r
-
-    val fileName = "README.md"
-    val content = Source.fromFile(fileName).getLines.mkString("\n")
-
-    val newContent =
-      pattern.replaceAllIn(content,
-        m => m.matched.replaceAllLiterally(m.subgroups.head, newVersion))
-
-    new PrintWriter(fileName) { write(newContent); close }
-
-    val vcs = Project.extract(st).get(releaseVcs).get
-    vcs.add(fileName).!
-
-    st
-  })
-
 def updateWebsiteTag =
   ReleaseStep(action = st => {
 

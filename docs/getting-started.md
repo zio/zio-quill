@@ -39,9 +39,10 @@ object Main extends ZIOAppDefault {
 ```
 
 Add the following to build.sbt:
+
 ```scala
 libraryDependencies ++= Seq(
-  "io.getquill"          %% "quill-jdbc-zio" % "4.1.1-SNAPSHOT",
+  "io.getquill"          %% "quill-jdbc-zio" % "@VERSION@",
   "org.postgresql"       %  "postgresql"     % "42.3.1"
 )
 ```
