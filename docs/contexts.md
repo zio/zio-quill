@@ -1301,6 +1301,7 @@ libraryDependencies ++= Seq(
 ```
 
 #### context definition
+
 ```scala
 lazy val ctx = new PostgresJAsyncContext(SnakeCase, "ctx")
 ```
