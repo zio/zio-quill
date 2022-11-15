@@ -7,7 +7,6 @@ import io.getquill.context.ExecutionInfo
 import io.getquill.context.cassandra.CqlIdiom
 import io.getquill.context.monix.MonixContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
-import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable

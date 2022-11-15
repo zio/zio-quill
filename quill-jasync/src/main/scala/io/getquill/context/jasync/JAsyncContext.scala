@@ -19,7 +19,6 @@ import io.getquill.context.{ Context, ContextVerbTranslate, ExecutionInfo }
 import kotlin.jvm.functions.Function1
 
 import java.time.ZoneId
-import java.util.TimeZone
 import scala.compat.java8.FutureConverters
 import scala.jdk.CollectionConverters._
 

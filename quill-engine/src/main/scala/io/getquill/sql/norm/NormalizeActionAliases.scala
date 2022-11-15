@@ -1,7 +1,6 @@
 package io.getquill.sql.norm
 
 import io.getquill.ast._
-import io.getquill.norm.BetaReduction
 
 object NormalizeFilteredActionAliases {
   private[getquill] def chooseAlias(entityName: String, batchAlias: Option[String]) = {

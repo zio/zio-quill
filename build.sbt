@@ -33,6 +33,14 @@ val CodegenTag = Tags.Tag("CodegenTag")
 (Global / concurrentRestrictions) += Tags.exclusive(CodegenTag)
 (Global / concurrentRestrictions) += Tags.limit(ScalaJSTags.Link, 1)
 
+inThisBuild(
+  List(
+    semanticdbEnabled          := true, // enable SemanticDB
+    semanticdbVersion          := scalafixSemanticdb.revision, // only required for Scala 2.x
+ )
+)
+
+
 lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-engine-js`, `quill-core-js`, `quill-sql-js`
 )

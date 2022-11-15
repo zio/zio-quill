@@ -19,7 +19,7 @@ import io.getquill.norm.{ ConcatBehavior, EqualityBehavior, ExpandReturning, Nor
 import io.getquill.quat.Quat
 import io.getquill.sql.norm.{ HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects }
 import io.getquill.util.{ Interleave, Interpolator, Messages, TraceConfig }
-import io.getquill.util.Messages.{ TraceType, fail, trace }
+import io.getquill.util.Messages.{ TraceType, fail }
 
 trait SqlIdiom extends Idiom {
 

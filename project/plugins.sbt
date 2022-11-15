@@ -23,3 +23,5 @@ addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.9.0")
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.2.0")
 
 addSbtPlugin("com.etsy" % "sbt-compile-quick-plugin" % "1.4.0")
+
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.4")

@@ -1,11 +1,8 @@
 package io.getquill.context
 
-import com.typesafe.scalalogging.Logger
-
 import scala.language.higherKinds
 import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
-import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
 
 import java.io.Closeable

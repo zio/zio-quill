@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import com.datastax.oss.driver.api.core.cql.{ BoundStatement, Row }
 import io.getquill.NamingStrategy
-import io.getquill.context.{ CassandraSession, Context, ContextVerbPrepareLambda, ExecutionInfo, UdtValueLookup }
+import io.getquill.context.{ CassandraSession, Context, ExecutionInfo, UdtValueLookup }
 import io.getquill.context.cassandra.encoding.{ CassandraTypes, Decoders, Encoders, UdtEncoding }
 import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail

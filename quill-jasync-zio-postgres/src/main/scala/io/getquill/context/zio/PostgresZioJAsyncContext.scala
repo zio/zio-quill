@@ -4,7 +4,6 @@ import com.github.jasync.sql.db.postgresql.PostgreSQLConnection
 import com.github.jasync.sql.db.{ QueryResult => DBQueryResult }
 import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
 import io.getquill.context.zio.jasync.{ ArrayDecoders, ArrayEncoders }
-import io.getquill.util.Messages.fail
 import io.getquill.{ NamingStrategy, PostgresDialect, ReturnAction }
 
 import scala.jdk.CollectionConverters._

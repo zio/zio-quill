@@ -10,7 +10,6 @@ class AvoidAliasConflictComplexSpec extends Spec {
   val normalize = new Normalize(TranspileConfig.Empty)
 
   "properly aliases explicit join sets" - {
-    import io.getquill.norm.Normalize
     import scala.language.reflectiveCalls
 
     case class Person(id: Int, name: String)

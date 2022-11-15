@@ -2,7 +2,6 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import io.getquill.ast._
-import io.getquill.Embedded
 import io.getquill.context._
 import io.getquill.norm.{ BetaReduction, TypeBehavior }
 import io.getquill.util.MacroContextExt.RichContext
@@ -14,7 +13,7 @@ import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 import io.getquill.ast.Implicits._
 import io.getquill.ast.Renameable.Fixed
-import io.getquill.ast.Visibility.{ Hidden, Visible }
+import io.getquill.ast.Visibility.Visible
 import io.getquill.quat._
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.{ Interleave, Interpolator, Messages }

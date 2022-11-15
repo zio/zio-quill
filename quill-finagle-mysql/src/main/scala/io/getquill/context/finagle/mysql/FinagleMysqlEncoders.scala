@@ -5,7 +5,6 @@ import java.time.{ LocalDate, LocalDateTime }
 import java.util.{ Date, UUID }
 
 import com.twitter.finagle.mysql.CanBeParameter._
-import com.twitter.finagle.mysql.Parameter.wrap
 import com.twitter.finagle.mysql._
 import io.getquill.FinagleMysqlContext
 

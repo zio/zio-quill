@@ -1,6 +1,5 @@
 package io.getquill
 
-import io.getquill.ast.Ast
 import io.getquill.quotation.NonQuotedException
 
 import scala.annotation.compileTimeOnly

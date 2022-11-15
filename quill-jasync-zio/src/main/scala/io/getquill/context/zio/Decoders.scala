@@ -1,7 +1,6 @@
 package io.getquill.context.zio
 
 import com.github.jasync.sql.db.RowData
-import io.getquill.context.Context
 import io.getquill.util.Messages.fail
 
 import java.math.{ BigDecimal => JavaBigDecimal }
