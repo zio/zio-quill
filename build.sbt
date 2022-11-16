@@ -189,7 +189,6 @@ lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
     .aggregate(filteredModules.map(_.project).toSeq: _*)
-    .aggregate(docs)
     .dependsOn(filteredModules.toSeq: _*)
 
 `quill` / publishArtifact := false

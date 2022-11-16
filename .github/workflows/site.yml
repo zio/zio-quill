@@ -23,6 +23,6 @@ jobs:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
       - name: Publishing Docs to NPM Registry
-        run: sbt publishToNpm
+        run: sbt docs/publishToNpm
         env: 
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
