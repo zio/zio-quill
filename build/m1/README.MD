@@ -33,4 +33,4 @@ You can simply set the `quill.scala.version` when you start your build:
 
 `docker-compose -f docker-compose-m1.yml run sbt sbt -Dquill.scala.version=2.13.6 -Dmodules=db test`
 
-Check out the [CONTRIBUTING](../../CONTRIBUTING.md) guide for more details.  Good luck!
+Check out the [CONTRIBUTING](../../docs/CONTRIBUTING.md) guide for more details.  Good luck!
