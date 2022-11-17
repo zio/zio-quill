@@ -296,7 +296,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.2",
-      "dev.zio"                    %% "zio-logging"   % "2.1.3",
+      "dev.zio"                    %% "zio-logging"   % "2.1.4",
       "dev.zio"                    %% "zio"           % Version.zio,
       "dev.zio"                    %% "zio-streams"   % Version.zio,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
@@ -674,7 +674,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.14.1",
+        "com.datastax.oss" % "java-driver-core" % "4.15.0",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -749,7 +749,7 @@ lazy val `quill-orientdb` =
         Test / fork := true,
         libraryDependencies ++= Seq(
           // For some reason OrientDB 3.0.42 does not stay up once started during local testing so need to bump to 3.2.6
-          "com.orientechnologies" % "orientdb-graphdb" % "3.2.11"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.2.12"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
