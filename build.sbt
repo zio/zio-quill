@@ -488,7 +488,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.3.6" %  "provided"
+        "org.postgresql" % "postgresql" % "42.3.8" %  "provided"
       ) ++ (
         // zio-json does not exist for Scala 2.11
         if (!isScala211) Seq("dev.zio" %% "zio-json" % "0.3.0")
@@ -779,7 +779,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
     "mysql"                   %  "mysql-connector-java"    % "8.0.29"             % Test,
     "com.h2database"          %  "h2"                      % "2.1.212"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.3.6"             % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.8"             % Test,
     "org.xerial"              %  "sqlite-jdbc"             % "3.39.3.0"             % Test,
     "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.2.2.jre8"        % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
