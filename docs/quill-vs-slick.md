@@ -1,3 +1,7 @@
+---
+id: quill-vs-slick
+title: "Quill vs. Slick"
+---
 
 This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) library. This is an incomplete comparison, additions and corrections are welcome.
 

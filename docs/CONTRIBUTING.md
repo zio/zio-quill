@@ -1,4 +1,7 @@
-# How to Contribute
+---
+id: how-to-contribute
+title: "How to Contribute?"
+---
 
 Instructions on how to contribute to Quill project.
 
@@ -204,7 +207,7 @@ Firstly, you will need to build Quill with some additional dependencies that inc
 You can do this adding the argument `-DdebugMacro=true` to the sbt launcher. You can do this in the Intellij SBT
 menu:
 
-![Intellij-SBT-Settings.png](quill-doc/etc/Intellij-SBT-Settings.png)
+![Intellij-SBT-Settings.png](etc/Intellij-SBT-Settings.png)
 
 In Intellij, go to `Run -> Edit Configurations...` click on the Plus (i.e. `+`) button (or `Add New Configuration`) 
 and select `Application`. Then enter the following settings:
@@ -219,10 +222,10 @@ Build, no error check (make sure to set this since you will frequently want to d
 ```
 
 It should look like this:
-![Intellij-Run-Debug-Config.png](quill-doc/etc/Intellij-Run-Debug-Config.png)
+![Intellij-Run-Debug-Config.png](etc/Intellij-Run-Debug-Config.png)
 
 > NOTE In this example, our entry-point into Quill-macro-debugging is `MySqlTest.scala`.
-> In our Intellij application configuration this file name is being explicitly specified.<br> 
+> In our Intellij application configuration this file name is being explicitly specified.<br /> 
 > If you wish to easily be able to macro-debug multiple entry-point files, an alternative method would be to
 > use some Intellij variables to automatically pass whatever file is currently selected. You can do this by using
 > the configuration:
@@ -251,7 +254,7 @@ object MySqlTest {
 ```
 
 Set a breakpoint anywhere in the Quill codebase and run this configuration from the top-right menu shortcut:
-![Intellij-Debug-App-Launcher](quill-doc/etc/Intellij-Debug-App-Launcher.png)
+![Intellij-Debug-App-Launcher](etc/Intellij-Debug-App-Launcher.png)
 
 ## Additional Debug Arguments
 
@@ -270,7 +273,7 @@ Some additional arguments you can add to your compiler's VM args provide insight
 ```
 
 In Intellij, add them in the SBT settings if your are compiling using SBT:
-![Intellj-SBT-Settings-Additional.png](quill-doc/etc/Intellj-SBT-Settings-Additional.png)
+![Intellj-SBT-Settings-Additional.png](etc/Intellj-SBT-Settings-Additional.png)
 
 ## 'Trick' Debugging via the Dynamic Query API
 
