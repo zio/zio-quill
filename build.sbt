@@ -296,7 +296,7 @@ lazy val `quill-core` =
     .settings(mimaSettings: _*)
     .settings(libraryDependencies ++= Seq(
       "com.typesafe"               %  "config"        % "1.4.2",
-      "dev.zio"                    %% "zio-logging"   % "2.1.4",
+      "dev.zio"                    %% "zio-logging"   % "2.0.0",
       "dev.zio"                    %% "zio"           % Version.zio,
       "dev.zio"                    %% "zio-streams"   % Version.zio,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
@@ -576,7 +576,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "2.1.7",
+        "com.github.jasync-sql" % "jasync-common" % "2.0.8",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -590,7 +590,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.1.7"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.8"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -603,7 +603,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.1.7"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.0.8"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -616,7 +616,7 @@ lazy val `quill-jasync-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "2.1.7",
+        "com.github.jasync-sql" % "jasync-common" % "2.0.8",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
         "dev.zio" %% "zio" % Version.zio,
         "dev.zio" %% "zio-streams" % Version.zio
@@ -633,7 +633,7 @@ lazy val `quill-jasync-zio-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.1.7"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.8"
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
@@ -674,7 +674,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.15.0",
+        "com.datastax.oss" % "java-driver-core" % "4.14.1",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -749,7 +749,7 @@ lazy val `quill-orientdb` =
         Test / fork := true,
         libraryDependencies ++= Seq(
           // For some reason OrientDB 3.0.42 does not stay up once started during local testing so need to bump to 3.2.6
-          "com.orientechnologies" % "orientdb-graphdb" % "3.2.12"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.2.10"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -777,13 +777,13 @@ commands += Command.command("checkUnformattedFiles") { st =>
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              %  "HikariCP"                % "3.4.5",
-    "mysql"                   %  "mysql-connector-java"    % "8.0.30"             % Test,
-    "com.h2database"          %  "h2"                      % "2.1.214"            % Test,
-    "org.postgresql"          %  "postgresql"              % "42.5.0"             % Test,
-    "org.xerial"              %  "sqlite-jdbc"             % "3.39.4.0"           % Test,
-    "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.2.2.jre8"         % Test,
+    "mysql"                   %  "mysql-connector-java"    % "8.0.29"             % Test,
+    "com.h2database"          %  "h2"                      % "2.1.212"            % Test,
+    "org.postgresql"          %  "postgresql"              % "42.3.6"             % Test,
+    "org.xerial"              %  "sqlite-jdbc"             % "3.39.3.0"             % Test,
+    "com.microsoft.sqlserver" %  "mssql-jdbc"              % "7.2.2.jre8"        % Test,
     "com.oracle.ojdbc"        %  "ojdbc8"                  % "19.3.0.0"           % Test,
-    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"            % Test
+    "org.mockito"             %% "mockito-scala-scalatest" % "1.16.46"              % Test
   )
 )
 
@@ -846,8 +846,8 @@ def excludePaths(paths:Seq[String]) = {
 
 val scala_v_11 = "2.11.12"
 val scala_v_12 = "2.12.10"
-val scala_v_13 = "2.13.10"
-val scala_v_30 = "3.2.1"
+val scala_v_13 = "2.13.2"
+val scala_v_30 = "3.1.2"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
@@ -872,7 +872,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0")
   },
   ScalariformKeys.preferences := ScalariformKeys.preferences.value
     .setPreference(AlignParameters, true)
