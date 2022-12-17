@@ -1,8 +1,9 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
+import io.getquill.context.sql.util.StringOps._
 
 class JoinSpec extends Spec {
 
@@ -13,7 +14,7 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+      "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
   }
 
   "join + filter with null-check" in {
@@ -23,7 +24,7 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(b => if (b == 1) true else false))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
+      "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
   }
 
   "join + map + filter" in {
@@ -34,7 +35,7 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+      "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
   }
 
   "join + map + filter with null-check" in {
@@ -45,7 +46,7 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(b => if (b == 1) true else false))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i, b.i FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
+      "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
   }
 
   "join + filter + leftjoin" in {
@@ -60,8 +61,42 @@ class JoinSpec extends Spec {
           ab._2.map(_.i).contains(ab._1.i) && ab._2.map(_.i).contains(c.i)
       }
     }
-    testContext.run(q).string mustEqual
-      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.l = 3) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
+    testContext.run(q).string(true).collapseSpace mustEqual
+      """SELECT
+        |  ab._1s AS s,
+        |  ab._1i AS i,
+        |  ab._1l AS l,
+        |  ab._1o AS o,
+        |  ab._1b AS b,
+        |  ab._2s AS s,
+        |  ab._2i AS i,
+        |  ab._2l AS l,
+        |  ab._2o AS o,
+        |  c.s,
+        |  c.i,
+        |  c.l,
+        |  c.o
+        |FROM
+        |  (
+        |    SELECT
+        |      a.s AS _1s,
+        |      a.i AS _1i,
+        |      a.l AS _1l,
+        |      a.o AS _1o,
+        |      a.b AS _1b,
+        |      b.s AS _2s,
+        |      b.i AS _2i,
+        |      b.l AS _2l,
+        |      b.o AS _2o
+        |    FROM
+        |      TestEntity a
+        |      LEFT JOIN TestEntity2 b ON a.i = b.i
+        |    WHERE
+        |      b.l = 3
+        |  ) AS ab
+        |  LEFT JOIN TestEntity3 c ON ab._2i = ab._1i
+        |  AND ab._2i = c.i
+        |""".collapseSpace
   }
 
   "join + distinct + leftjoin" in {
@@ -73,8 +108,40 @@ class JoinSpec extends Spec {
           ab._2.map(_.i).contains(ab._1.i) && ab._2.map(_.i).contains(c.i)
       }
     }
-    testContext.run(q).string mustEqual
-      "SELECT ab._1s, ab._1i, ab._1l, ab._1o, ab._2s, ab._2i, ab._2l, ab._2o, c.s, c.i, c.l, c.o FROM (SELECT DISTINCT a.s AS _1s, a.i AS _1i, a.l AS _1l, a.o AS _1o, b.s AS _2s, b.i AS _2i, b.l AS _2l, b.o AS _2o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i) AS ab LEFT JOIN TestEntity3 c ON ab._2i = ab._1i AND ab._2i = c.i"
+    testContext.run(q).string(true).collapseSpace mustEqual
+      """SELECT
+        |  ab._1s AS s,
+        |  ab._1i AS i,
+        |  ab._1l AS l,
+        |  ab._1o AS o,
+        |  ab._1b AS b,
+        |  ab._2s AS s,
+        |  ab._2i AS i,
+        |  ab._2l AS l,
+        |  ab._2o AS o,
+        |  c.s,
+        |  c.i,
+        |  c.l,
+        |  c.o
+        |FROM
+        |  (
+        |    SELECT
+        |      DISTINCT a.s AS _1s,
+        |      a.i AS _1i,
+        |      a.l AS _1l,
+        |      a.o AS _1o,
+        |      a.b AS _1b,
+        |      b.s AS _2s,
+        |      b.i AS _2i,
+        |      b.l AS _2l,
+        |      b.o AS _2o
+        |    FROM
+        |      TestEntity a
+        |      LEFT JOIN TestEntity2 b ON a.i = b.i
+        |  ) AS ab
+        |  LEFT JOIN TestEntity3 c ON ab._2i = ab._1i
+        |  AND ab._2i = c.i
+        |""".collapseSpace
   }
 
   "multiple joins + filter + map + distinct" in {
@@ -91,7 +158,7 @@ class JoinSpec extends Spec {
         .distinct
     }
     testContext.run(q).string mustEqual
-      "SELECT DISTINCT a.s, d.l, n.i FROM TestEntity d INNER JOIN TestEntity2 a ON d.i = a.i INNER JOIN (SELECT rp.l, rp.i FROM TestEntity3 rp WHERE rp.s = ?) AS rp ON d.i = rp.i LEFT JOIN TestEntity4 n ON rp.l = n.i"
+      "SELECT DISTINCT a.s AS _1, d.l AS _2, n.i AS _3 FROM TestEntity d INNER JOIN TestEntity2 a ON d.i = a.i INNER JOIN (SELECT rp.i, rp.l FROM TestEntity3 rp WHERE rp.s = ?) AS rp ON d.i = rp.i LEFT JOIN TestEntity4 n ON rp.l = n.i"
   }
 
   "multiple joins + map" in {
@@ -99,7 +166,7 @@ class JoinSpec extends Spec {
       qr1.leftJoin(qr2).on((a, b) => a.s == b.s).leftJoin(qr2).on((a, b) => a._1.s == b.s).map(_._1._1)
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s LEFT JOIN TestEntity2 b1 ON a.s = b1.s"
+      "SELECT a.s, a.i, a.l, a.o, a.b FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s LEFT JOIN TestEntity2 b1 ON a.s = b1.s"
   }
 
 }

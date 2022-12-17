@@ -1,9 +1,9 @@
 package io.getquill.integration
 
 import java.sql.{ Connection, ResultSet }
-
 import io.getquill._
-import io.getquill.context.monix.Runner
+import io.getquill.base.Spec
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import monix.execution.Scheduler
 import monix.execution.schedulers.CanBlock
 import org.scalatest.matchers.should.Matchers._
@@ -30,7 +30,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
   // that will force jdbc to load the entire ResultSet into memory and crash this test.
   val doBlowUp = false
 
-  val ctx = new PostgresMonixJdbcContext(Literal, "testPostgresDB", Runner.default) {
+  val ctx = new PostgresMonixJdbcContext(Literal, "testPostgresDB", EffectWrapper.default) {
     override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
       val stmt =
         conn.prepareStatement(
@@ -48,12 +48,12 @@ class StreamResultsOrBlowUpSpec extends Spec {
   val numRows = 1000000L
 
   "stream a large result set without blowing up" in {
-    val deletes = runQuill { query[Person].delete }
+    val deletes = runQuill { sql"TRUNCATE TABLE Person".as[Delete[Person]] }
     deletes.runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
 
     val inserts = quote {
       (numRows: Long) =>
-        infix"""insert into person (name, age) select md5(random()::text), random()*10+1 from generate_series(1, ${numRows}) s(i)""".as[Insert[Int]]
+        sql"""insert into person (name, age) select md5(random()::text), random()*10+1 from generate_series(1, ${numRows}) s(i)""".as[Insert[Int]]
     }
 
     runQuill(inserts(lift(numRows))).runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
@@ -63,7 +63,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
       .zipWithIndex
       .foldLeftL(0L)({
         case (totalYears, (person, index)) => {
-          // Need to print something out as we stream or travis will thing the build is stalled and kill it with the following message:
+          // Need to print something out as we stream or github actions will think the build is stalled and kill it with the following message:
           // "No output has been received in the last 10m0s..."
           if (index % 10000 == 0) println(s"Streaming Test Row: ${index}")
           totalYears + person.age
@@ -71,5 +71,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
       })
       .runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
     result should be > numRows
+
+    deletes.runSyncUnsafe(Duration.Inf)(scheduler, CanBlock.permit)
   }
 }

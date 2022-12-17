@@ -2,8 +2,7 @@ package io.getquill.context.finagle.postgres
 
 import com.twitter.util.Await
 import com.twitter.util.Future
-
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleFinaglePostgresSpec extends PeopleSpec {
 
@@ -17,7 +16,7 @@ class PeopleFinaglePostgresSpec extends PeopleSpec {
       testContext.transaction {
         for {
           _ <- testContext.run(query[Couple].delete)
-          _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+          _ <- testContext.run(query[Person].delete)
           _ <- testContext.run(liftQuery(peopleEntries).foreach(e => peopleInsert(e)))
           _ <- testContext.run(liftQuery(couplesEntries).foreach(e => couplesInsert(e)))
         } yield {}

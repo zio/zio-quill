@@ -1,21 +1,18 @@
 package io.getquill.dsl
 
+import io.getquill.Quoted
+import io.getquill.quat.Quat
+
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.reflect.macros.whitebox.Context
-
-import io.getquill.ast.Ast
 import io.getquill.quotation.NonQuotedException
 import io.getquill.quotation.Quotation
+
 import scala.annotation.compileTimeOnly
 
-private[dsl] trait QuotationDsl {
+private[getquill] trait QuotationDsl {
   this: CoreDsl =>
-
-  trait Quoted[+T] {
-    def ast: Ast
-    override def toString = ast.toString
-  }
 
   def quote[T](body: Quoted[T]): Quoted[T] = macro QuotationMacro.doubleQuote[T]
   def quote[T1, R](func: T1 => Quoted[R]): Quoted[T1 => R] = macro QuotationMacro.quotedFunctionBody
@@ -33,6 +30,8 @@ private[dsl] trait QuotationDsl {
 
   @compileTimeOnly(NonQuotedException.message)
   implicit def unquote[T](quoted: Quoted[T]): T = NonQuotedException()
+
+  private[getquill] def makeQuat[T]: Quat = macro QuotationMacro.makeQuat[T]
 }
 
 private[dsl] class QuotationMacro(val c: Context) extends Quotation

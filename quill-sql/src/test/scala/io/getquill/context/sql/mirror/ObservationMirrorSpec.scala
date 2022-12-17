@@ -1,6 +1,6 @@
 package io.getquill.context.sql.mirror
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 
 class ObservationMirrorSpec extends Spec {
@@ -8,8 +8,8 @@ class ObservationMirrorSpec extends Spec {
   val ctx = io.getquill.context.sql.testContext
   import ctx._
 
-  case class LatLon(lat: Int, lon: Int) extends Embedded
-  case class ScalarData(value: Long, position: Option[LatLon]) extends Embedded
+  case class LatLon(lat: Int, lon: Int)
+  case class ScalarData(value: Long, position: Option[LatLon])
   case class Observation(data: Option[ScalarData], foo: Option[String], bar: Option[String])
 
   val obs = quote {
@@ -30,13 +30,13 @@ class ObservationMirrorSpec extends Spec {
   }
 
   "insert query" in {
-    val r = ctx.run(obs.insert(lift(obsEntry)))
+    val r = ctx.run(obs.insertValue(lift(obsEntry)))
     r.string mustEqual "INSERT INTO observation (obs_value,obs_lat,obs_lon,foo,baz) VALUES (?, ?, ?, ?, ?)"
     r.prepareRow mustEqual Row(Some(123), Some(Some(2)), Some(Some(3)), None, Some("abc"))
   }
 
   "update query" in {
-    val r = ctx.run(obs.update(lift(obsEntry)))
+    val r = ctx.run(obs.updateValue(lift(obsEntry)))
     r.string mustEqual "UPDATE observation SET obs_value = ?, obs_lat = ?, obs_lon = ?, foo = ?, baz = ?"
     r.prepareRow mustEqual Row(Some(123), Some(Some(2)), Some(Some(3)), None, Some("abc"))
   }

@@ -9,9 +9,11 @@ import io.getquill.context.Context
 import io.getquill.context.sql.dsl.SqlDsl
 import io.getquill.NamingStrategy
 
-trait SqlContext[Idiom <: BaseIdiom, Naming <: NamingStrategy]
+trait SqlContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy]
   extends Context[Idiom, Naming]
   with SqlDsl {
+
+  implicit val nullChecker: NullChecker
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]]
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]]

@@ -10,23 +10,26 @@ trait Encoders extends CollectionEncoders {
   type Encoder[T] = OrientDBEncoder[T]
 
   case class OrientDBEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow) =
-      encoder(index, value, row)
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+      encoder(index, value, row, session)
   }
 
   def encoder[T](e: BaseEncoder[T]): Encoder[T] = OrientDBEncoder(e)
 
   def encoder[T](f: PrepareRow => (Index, T) => PrepareRow): Encoder[T] =
-    encoder((index, value, row) => f(row)(index, value))
+    encoder((index, value, row, session) => f(row)(index, value))
+
+  def encoder[T](f: (Index, T, PrepareRow) => PrepareRow): Encoder[T] =
+    encoder((index, value, row, session) => f(index, value, row))
 
   private[this] val nullEncoder: Encoder[Null] =
-    encoder((index, value, row) => { row.insert(index, null); row })
+    encoder((index, value, row, session) => { row.insert(index, null); row })
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
-    encoder { (index, value, row) =>
+    encoder { (index, value, row, session) =>
       value match {
-        case None    => nullEncoder(index, null, row)
-        case Some(v) => d(index, v, row)
+        case None    => nullEncoder(index, null, row, session)
+        case Some(v) => d(index, v, row, session)
       }
     }
 

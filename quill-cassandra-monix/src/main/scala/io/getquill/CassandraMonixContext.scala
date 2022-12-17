@@ -1,31 +1,29 @@
 package io.getquill
 
-import com.datastax.driver.core.{ Cluster, ResultSet, Row }
+import com.datastax.oss.driver.api.core.CqlSession
+import com.datastax.oss.driver.api.core.cql.{ AsyncResultSet, Row }
 import com.typesafe.config.Config
+import io.getquill.context.ExecutionInfo
 import io.getquill.context.cassandra.CqlIdiom
-import io.getquill.context.monix.{ MonixContext, Runner }
+import io.getquill.context.monix.MonixContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
-
+import scala.compat.java8.FutureConverters._
 import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success }
 
-class CassandraMonixContext[N <: NamingStrategy](
+class CassandraMonixContext[+N <: NamingStrategy](
   naming:                     N,
-  cluster:                    Cluster,
-  keyspace:                   String,
+  session:                    CqlSession,
   preparedStatementCacheSize: Long
 )
-  extends CassandraClusterSessionContext[N](naming, cluster, keyspace, preparedStatementCacheSize)
+  extends CassandraCqlSessionContext[N](naming, session, preparedStatementCacheSize)
   with MonixContext[CqlIdiom, N] {
 
-  // not using this here
-  override val effect = Runner.default
-
-  def this(naming: N, config: CassandraContextConfig) = this(naming, config.cluster, config.keyspace, config.preparedStatementCacheSize)
+  def this(naming: N, config: CassandraContextConfig) = this(naming, config.session, config.preparedStatementCacheSize)
   def this(naming: N, config: Config) = this(naming, CassandraContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
@@ -39,46 +37,44 @@ class CassandraMonixContext[N <: NamingStrategy](
   override type RunQuerySingleResult[T] = T
   override type RunBatchActionResult = Unit
 
-  protected def page(rs: ResultSet): Task[Iterable[Row]] = Task.defer {
-    val available = rs.getAvailableWithoutFetching
-    val page = rs.asScala.take(available)
+  protected def page(rs: AsyncResultSet): Task[Iterable[Row]] =
+    Task.defer {
+      val page = rs.currentPage().asScala
+      if (rs.hasMorePages)
+        Task.from(rs.fetchNextPage().toCompletableFuture.toScala).map(_ => page)
+      else
+        Task.now(page)
+    }
 
-    if (rs.isFullyFetched)
-      Task.now(page)
-    else
-      Task.fromFuture(rs.fetchMoreResults().asScalaWithDefaultGlobal).map(_ => page)
-  }
-
-  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Observable[T] = {
-
+  def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Observable[T] = {
     Observable
       .fromTask(prepareRowAndLog(cql, prepare))
-      .mapEvalF(p => session.executeAsync(p).asScalaWithDefaultGlobal)
-      .flatMap(Observable.fromAsyncStateAction((rs: ResultSet) => page(rs).map((_, rs)))(_))
+      .mapEvalF(p => session.executeAsync(p).toScala)
+      .flatMap(Observable.fromAsyncStateAction((rs: AsyncResultSet) => page(rs).map((_, rs)))(_))
       .takeWhile(_.nonEmpty)
       .flatMap(Observable.fromIterable)
-      .map(extractor)
+      .map(row => extractor(row, this))
   }
 
-  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[List[T]] = {
-    streamQuery[T](None, cql, prepare, extractor)
+  def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[List[T]] = {
+    streamQuery[T](None, cql, prepare, extractor)(info, dc)
       .foldLeftL(List[T]())({ case (l, r) => r +: l }).map(_.reverse)
   }
 
-  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): Task[T] =
-    executeQuery(cql, prepare, extractor).map(handleSingleResult(_))
+  def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[T] =
+    executeQuery(cql, prepare, extractor)(info, dc).map(handleSingleResult(cql, _))
 
-  def executeAction[T](cql: String, prepare: Prepare = identityPrepare): Task[Unit] = {
+  def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Task[Unit] = {
     prepareRowAndLog(cql, prepare)
-      .flatMap(r => Task.fromFuture(session.executeAsync(r).asScalaWithDefaultGlobal))
+      .flatMap(r => Task.fromFuture(session.executeAsync(r).toScala))
       .map(_ => ())
   }
 
-  def executeBatchAction(groups: List[BatchGroup]): Task[Unit] =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Task[Unit] =
     Observable.fromIterable(groups).flatMap {
       case BatchGroup(cql, prepare) =>
         Observable.fromIterable(prepare)
-          .flatMap(prep => Observable.fromTask(executeAction(cql, prep)))
+          .flatMap(prep => Observable.fromTask(executeAction(cql, prep)(info, dc)))
           .map(_ => ())
     }.completedL
 
@@ -87,7 +83,7 @@ class CassandraMonixContext[N <: NamingStrategy](
       implicit val executor: Scheduler = scheduler
 
       super.prepareAsync(cql)
-        .map(prepare)
+        .map(row => prepare(row, this))
         .onComplete {
           case Success((params, bs)) =>
             logger.logQuery(cql, params)

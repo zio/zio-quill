@@ -8,9 +8,9 @@ import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
 import io.getquill.context.jasync.{ ArrayDecoders, ArrayEncoders, JAsyncContext, UUIDObjectEncoding }
 import io.getquill.util.LoadConfig
 import io.getquill.util.Messages.fail
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
-class PostgresJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection])
+class PostgresJAsyncContext[+N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection])
   extends JAsyncContext[PostgresDialect, N, PostgreSQLConnection](PostgresDialect, naming, pool)
   with ArrayEncoders
   with ArrayDecoders
@@ -20,11 +20,8 @@ class PostgresJAsyncContext[N <: NamingStrategy](naming: N, pool: ConnectionPool
   def this(naming: N, config: Config) = this(naming, PostgresJAsyncContextConfig(config))
   def this(naming: N, configPrefix: String) = this(naming, LoadConfig(configPrefix))
 
-  override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): O =
-    result.getRows.asScala
-      .headOption
-      .map(returningExtractor)
-      .getOrElse(fail("This is a bug. Cannot extract returning value."))
+  override protected def extractActionResult[O](returningAction: ReturnAction, returningExtractor: Extractor[O])(result: DBQueryResult): List[O] =
+    result.getRows.asScala.toList.map(row => returningExtractor(row, ()))
 
   override protected def expandAction(sql: String, returningAction: ReturnAction): String =
     returningAction match {

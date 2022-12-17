@@ -22,21 +22,21 @@ object Default {
 }
 
 trait PostgresDecoders {
-  this: NdbcContext[_, _, _, PostgresRow] with ArrayEncoding =>
+  this: NdbcContextBase[_, _, _, PostgresRow] with ArrayEncoding =>
 
   type Decoder[T] = BaseDecoder[T]
 
   protected val zoneOffset: ZoneOffset
 
   def decoder[T, U](f: PostgresRow => Int => T)(implicit map: T => U): Decoder[U] =
-    (index, row) =>
+    (index, row, session) =>
       row.column(index) match {
         case Value.NULL => Default.value[U]
         case _          => map(f(row)(index))
       }
 
   def arrayDecoder[T, U, Col <: Seq[U]](f: PostgresRow => Int => Array[T])(implicit map: T => U, bf: CBF[U, Col]): Decoder[Col] =
-    (index, row) => {
+    (index, row, session) => {
       f(row)(index).foldLeft(bf.newBuilder) {
         case (b, v) => b += map(v)
       }.result()
@@ -46,10 +46,10 @@ trait PostgresDecoders {
     mappedBaseDecoder(mapped, d)
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
-    (idx, row) =>
+    (idx, row, session) =>
       row.column(idx) match {
         case Value.NULL => None
-        case value      => Option(d(idx, row))
+        case value      => Option(d(idx, row, session))
       }
 
   private implicit def toDate(v: LocalDateTime): Date = Date.from(v.toInstant(zoneOffset))

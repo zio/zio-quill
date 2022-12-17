@@ -3,6 +3,7 @@ package io.getquill
 import com.typesafe.config.Config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+
 import java.util.Properties
 import scala.util.control.NonFatal
 

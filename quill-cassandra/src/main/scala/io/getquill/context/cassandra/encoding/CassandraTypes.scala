@@ -1,11 +1,10 @@
 package io.getquill.context.cassandra.encoding
 
-import java.lang.{ Boolean => JBoolean, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong, Short => JShort, Byte => JByte }
+import java.lang.{ Boolean => JBoolean, Byte => JByte, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong, Short => JShort }
 import java.math.{ BigDecimal => JBigDecimal }
 import java.nio.ByteBuffer
 import java.util.{ Date, UUID }
-
-import com.datastax.driver.core.LocalDate
+import java.time.{ Instant, LocalDate }
 
 /**
  * `CassandraTypes` contains implicit markers for already supported types by Cassandra.
@@ -24,7 +23,7 @@ trait CassandraTypes extends CassandraMappedTypes {
   implicit val stringCassandraType: CassandraType[String] = CassandraType.of[String]
   implicit val byteBufferCassandraType: CassandraType[ByteBuffer] = CassandraType.of[ByteBuffer]
   implicit val uuidCassandraType: CassandraType[UUID] = CassandraType.of[UUID]
-  implicit val dateCassandraType: CassandraType[Date] = CassandraType.of[Date]
+  implicit val dateCassandraType: CassandraType[Instant] = CassandraType.of[Instant]
   implicit val localDateCassandraType: CassandraType[LocalDate] = CassandraType.of[LocalDate]
 }
 
@@ -34,32 +33,32 @@ trait CassandraTypes extends CassandraMappedTypes {
  */
 trait CassandraMappedTypes {
 
-  implicit val encodeByte: CassandraMapper[Byte, JByte] = CassandraMapper(byte2Byte)
-  implicit val decodeByte: CassandraMapper[JByte, Byte] = CassandraMapper(Byte2byte)
+  implicit val encodeByte: CassandraMapper[Byte, JByte] = CassandraMapper.simple(byte2Byte)
+  implicit val decodeByte: CassandraMapper[JByte, Byte] = CassandraMapper.simple(Byte2byte)
 
-  implicit val encodeShort: CassandraMapper[Short, JShort] = CassandraMapper(short2Short)
-  implicit val decodeShort: CassandraMapper[JShort, Short] = CassandraMapper(Short2short)
+  implicit val encodeShort: CassandraMapper[Short, JShort] = CassandraMapper.simple(short2Short)
+  implicit val decodeShort: CassandraMapper[JShort, Short] = CassandraMapper.simple(Short2short)
 
-  implicit val encodeInt: CassandraMapper[Int, JInt] = CassandraMapper(int2Integer)
-  implicit val decodeInt: CassandraMapper[JInt, Int] = CassandraMapper(Integer2int)
+  implicit val encodeInt: CassandraMapper[Int, JInt] = CassandraMapper.simple(int2Integer)
+  implicit val decodeInt: CassandraMapper[JInt, Int] = CassandraMapper.simple(Integer2int)
 
-  implicit val encodeLong: CassandraMapper[Long, JLong] = CassandraMapper(long2Long)
-  implicit val decodeLong: CassandraMapper[JLong, Long] = CassandraMapper(Long2long)
+  implicit val encodeLong: CassandraMapper[Long, JLong] = CassandraMapper.simple(long2Long)
+  implicit val decodeLong: CassandraMapper[JLong, Long] = CassandraMapper.simple(Long2long)
 
-  implicit val encodeFloat: CassandraMapper[Float, JFloat] = CassandraMapper(float2Float)
-  implicit val decodeFloat: CassandraMapper[JFloat, Float] = CassandraMapper(Float2float)
+  implicit val encodeFloat: CassandraMapper[Float, JFloat] = CassandraMapper.simple(float2Float)
+  implicit val decodeFloat: CassandraMapper[JFloat, Float] = CassandraMapper.simple(Float2float)
 
-  implicit val encodeDouble: CassandraMapper[Double, JDouble] = CassandraMapper(double2Double)
-  implicit val decodeDouble: CassandraMapper[JDouble, Double] = CassandraMapper(Double2double)
+  implicit val encodeDouble: CassandraMapper[Double, JDouble] = CassandraMapper.simple(double2Double)
+  implicit val decodeDouble: CassandraMapper[JDouble, Double] = CassandraMapper.simple(Double2double)
 
-  implicit val encodeBoolean: CassandraMapper[Boolean, JBoolean] = CassandraMapper(boolean2Boolean)
-  implicit val decodeBoolean: CassandraMapper[JBoolean, Boolean] = CassandraMapper(Boolean2boolean)
+  implicit val encodeBoolean: CassandraMapper[Boolean, JBoolean] = CassandraMapper.simple(boolean2Boolean)
+  implicit val decodeBoolean: CassandraMapper[JBoolean, Boolean] = CassandraMapper.simple(Boolean2boolean)
 
-  implicit val encodeBigDecimal: CassandraMapper[BigDecimal, JBigDecimal] = CassandraMapper(_.bigDecimal)
-  implicit val decodeBigDecimal: CassandraMapper[JBigDecimal, BigDecimal] = CassandraMapper(BigDecimal.apply)
+  implicit val encodeBigDecimal: CassandraMapper[BigDecimal, JBigDecimal] = CassandraMapper.simple(_.bigDecimal)
+  implicit val decodeBigDecimal: CassandraMapper[JBigDecimal, BigDecimal] = CassandraMapper.simple(BigDecimal.apply)
 
-  implicit val encodeByteArray: CassandraMapper[Array[Byte], ByteBuffer] = CassandraMapper(ByteBuffer.wrap)
-  implicit val decodeByteArray: CassandraMapper[ByteBuffer, Array[Byte]] = CassandraMapper(bb => {
+  implicit val encodeByteArray: CassandraMapper[Array[Byte], ByteBuffer] = CassandraMapper.simple(ByteBuffer.wrap)
+  implicit val decodeByteArray: CassandraMapper[ByteBuffer, Array[Byte]] = CassandraMapper.simple(bb => {
     val b = new Array[Byte](bb.remaining())
     bb.get(b)
     b

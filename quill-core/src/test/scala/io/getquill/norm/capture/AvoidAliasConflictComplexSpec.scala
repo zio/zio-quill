@@ -1,9 +1,13 @@
 package io.getquill.norm.capture
 
-import io.getquill.Spec
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.Query
+import io.getquill.base.Spec
+import io.getquill.norm.{ Normalize, TranspileConfig }
 
 class AvoidAliasConflictComplexSpec extends Spec {
+
+  val normalize = new Normalize(TranspileConfig.Empty)
 
   "properly aliases explicit join sets" - {
     import io.getquill.norm.Normalize
@@ -36,7 +40,7 @@ class AvoidAliasConflictComplexSpec extends Spec {
       val expect = quote {
         funExpect[Person](query[Person].filter(a => a.name == "Joe"))
       }
-      Normalize(q.ast) mustEqual Normalize(expect.ast)
+      normalize(q.ast) mustEqual normalize(expect.ast)
     }
 
     "in middle clause" in {
@@ -64,7 +68,7 @@ class AvoidAliasConflictComplexSpec extends Spec {
       val expect = quote {
         funExpect[Person](query[Person].filter(a => a.name == "Joe"))
       }
-      Normalize(q.ast) mustEqual Normalize(expect.ast)
+      normalize(q.ast) mustEqual normalize(expect.ast)
     }
 
     "in middle and end clause" in {
@@ -92,7 +96,7 @@ class AvoidAliasConflictComplexSpec extends Spec {
       val expect = quote {
         funExpect[Person](query[Person].filter(a => a.name == "Joe"))
       }
-      Normalize(q.ast) mustEqual Normalize(expect.ast)
+      normalize(q.ast) mustEqual normalize(expect.ast)
     }
   }
 }

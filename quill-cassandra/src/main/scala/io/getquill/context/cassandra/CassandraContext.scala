@@ -1,15 +1,14 @@
 package io.getquill.context.cassandra
 
 import java.util.{ Date, UUID }
-
-import com.datastax.driver.core.LocalDate
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
 import io.getquill.context.cassandra.encoding.{ CassandraMapper, Encodings }
 
+import java.time.{ Instant, LocalDate }
 import scala.reflect.ClassTag
 
-trait CassandraContext[N <: NamingStrategy]
+trait CassandraContext[+N <: NamingStrategy]
   extends Context[CqlIdiom, N]
   with Encodings
   with UdtMetaDsl
@@ -29,7 +28,7 @@ trait CassandraContext[N <: NamingStrategy]
   implicit val doubleDecoder: Decoder[Double]
   implicit val byteArrayDecoder: Decoder[Array[Byte]]
   implicit val uuidDecoder: Decoder[UUID]
-  implicit val timestampDecoder: Decoder[Date]
+  implicit val timestampDecoder: Decoder[Instant]
   implicit val cassandraLocalDateDecoder: Decoder[LocalDate]
 
   implicit val stringEncoder: Encoder[String]
@@ -43,7 +42,7 @@ trait CassandraContext[N <: NamingStrategy]
   implicit val doubleEncoder: Encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]]
   implicit val uuidEncoder: Encoder[UUID]
-  implicit val timestampEncoder: Encoder[Date]
+  implicit val timestampEncoder: Encoder[Instant]
   implicit val cassandraLocalDateEncoder: Encoder[LocalDate]
 
   implicit def listDecoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[Cas, T]): Decoder[List[T]]
@@ -54,9 +53,9 @@ trait CassandraContext[N <: NamingStrategy]
     valMapper: CassandraMapper[VCas, V]
   ): Decoder[Map[K, V]]
 
-  implicit def listEncoder[T, Cas](implicit mapper: CassandraMapper[T, Cas]): Encoder[List[T]]
-  implicit def setEncoder[T, Cas](implicit mapper: CassandraMapper[T, Cas]): Encoder[Set[T]]
-  implicit def mapEncoder[K, V, KCas, VCas](
+  implicit def listEncoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[T, Cas]): Encoder[List[T]]
+  implicit def setEncoder[T, Cas: ClassTag](implicit mapper: CassandraMapper[T, Cas]): Encoder[Set[T]]
+  implicit def mapEncoder[K, V, KCas: ClassTag, VCas: ClassTag](
     implicit
     keyMapper: CassandraMapper[K, KCas],
     valMapper: CassandraMapper[V, VCas]

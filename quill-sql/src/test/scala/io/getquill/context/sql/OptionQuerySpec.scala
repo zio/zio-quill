@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 trait OptionQuerySpec extends Spec {
 
@@ -14,7 +14,7 @@ trait OptionQuerySpec extends Spec {
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: Option[String])
 
   val peopleInsert =
-    quote((p: Contact) => query[Contact].insert(p))
+    quote((p: Contact) => query[Contact].insertValue(p))
 
   val peopleEntries = List(
     Contact("Alex", "Jones", 60, Option(1), "foo"),
@@ -23,7 +23,7 @@ trait OptionQuerySpec extends Spec {
   )
 
   val addressInsert =
-    quote((c: Address) => query[Address].insert(c))
+    quote((c: Address) => query[Address].insertValue(c))
 
   val addressEntries = List(
     Address(1, "123 Fake Street", 11234, Some("something")),

@@ -1,16 +1,9 @@
-package test
+package io.getquill
 
-import io.getquill.Spec
-import io.getquill.ast._
-import io.getquill.testContext.EntityQuery
-import io.getquill.testContext.InfixInterpolator
-import io.getquill.testContext.Query
-import io.getquill.testContext.TestEntity
-import io.getquill.testContext.qr1
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
-import io.getquill.testContext.Quoted
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.ast.{ Query => _, _ }
+import io.getquill.base.Spec
+import io.getquill.quat._
 
 class OpsSpec extends Spec {
 
@@ -19,12 +12,12 @@ class OpsSpec extends Spec {
       val q = quote {
         query[TestEntity]
       }
-      q.ast mustEqual Entity("TestEntity", Nil)
+      q.ast mustEqual Entity("TestEntity", Nil, TestEntityQuat)
     }
     "implicitly" in {
       val q: Quoted[Query[TestEntity]] =
         query[TestEntity]
-      q.ast mustEqual Entity("TestEntity", Nil)
+      q.ast mustEqual Entity("TestEntity", Nil, TestEntityQuat)
     }
   }
 
@@ -33,28 +26,40 @@ class OpsSpec extends Spec {
       val q = quote {
         unquote(qr1).map(t => t)
       }
-      q.ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), Ident("t"))
+      val quat = TestEntityQuat
+      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
     }
     "implicitly" in {
       val q = quote {
         qr1.map(t => t)
       }
-      q.ast mustEqual Map(Entity("TestEntity", Nil), Ident("t"), Ident("t"))
+      val quat = TestEntityQuat
+      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
     }
   }
 
   "provides the infix interpolator" - {
-    "with `as`" in {
-      val q = quote {
-        infix"true".as[Boolean]
+    "boolean values" - {
+      "with `as`" in {
+        val q = quote {
+          sql"true".as[Boolean]
+        }
+        q.ast mustEqual Infix(List("true"), Nil, false, false, Quat.BooleanValue)
       }
-      q.ast mustEqual Infix(List("true"), Nil, false)
     }
-    "without `as`" in {
-      val q = quote {
-        infix"true"
+    "other values" - {
+      "with `as`" in {
+        val q = quote {
+          sql"1".as[Int]
+        }
+        q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
       }
-      q.ast mustEqual Infix(List("true"), Nil, false)
+      "without `as`" in {
+        val q = quote {
+          sql"1"
+        }
+        q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
+      }
     }
   }
 
@@ -69,7 +74,7 @@ class OpsSpec extends Spec {
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
-    def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
+    def allowFiltering = quote(sql"$q ALLOW FILTERING".as[Q])
   }
 
   "unquotes quoted function bodies automatically" - {

@@ -1,7 +1,6 @@
 package io.getquill.h2
 
-import java.sql.ResultSet
-
+import java.sql.{ Connection, ResultSet }
 import io.getquill.PrepareMonixJdbcSpecBase
 import monix.execution.Scheduler
 import org.scalatest.BeforeAndAfter
@@ -16,18 +15,18 @@ class PrepareJdbcSpec extends PrepareMonixJdbcSpecBase with BeforeAndAfter {
     testContext.run(query[Product].delete).runSyncUnsafe()
   }
 
-  def productExtractor = (rs: ResultSet) => materializeQueryMeta[Product].extract(rs)
+  def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
   val prepareQuery = prepare(query[Product])
 
   "single" in {
-    val prepareInsert = prepare(query[Product].insert(lift(productEntries.head)))
+    val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))
     singleInsert(dataSource.getConnection)(prepareInsert).runSyncUnsafe() mustEqual false
     extractProducts(dataSource.getConnection)(prepareQuery).runSyncUnsafe() === List(productEntries.head)
   }
 
   "batch" in {
     val prepareBatchInsert = prepare(
-      liftQuery(withOrderedIds(productEntries)).foreach(p => query[Product].insert(p))
+      liftQuery(withOrderedIds(productEntries)).foreach(p => query[Product].insertValue(p))
     )
 
     batchInsert(dataSource.getConnection)(prepareBatchInsert).runSyncUnsafe().distinct mustEqual List(false)

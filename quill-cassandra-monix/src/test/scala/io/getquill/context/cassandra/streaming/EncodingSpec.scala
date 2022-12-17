@@ -2,6 +2,7 @@ package io.getquill.context.cassandra.streaming
 
 import io.getquill.context.cassandra.EncodingSpecHelper
 import monix.reactive.Observable
+import io.getquill.Query
 
 class EncodingSpec extends EncodingSpecHelper {
   "encodes and decodes types" - {
@@ -12,7 +13,7 @@ class EncodingSpec extends EncodingSpecHelper {
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
           inserts = Observable(insertValues: _*)
-          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
+          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e))).countL)
           result <- testStreamDB.run(query[EncodingTestEntity])
         } yield {
           result
@@ -34,7 +35,7 @@ class EncodingSpec extends EncodingSpecHelper {
         for {
           _ <- testStreamDB.run(query[EncodingTestEntity].delete)
           inserts = Observable(insertValues: _*)
-          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
+          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e))).countL)
           result <- testStreamDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result

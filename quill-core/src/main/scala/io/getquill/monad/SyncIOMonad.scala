@@ -4,8 +4,10 @@ import scala.language.higherKinds
 import scala.collection.compat._
 import language.experimental.macros
 import io.getquill.context.Context
+
 import scala.annotation.tailrec
 import scala.util.Try
+import io.getquill.{ Action, ActionReturning, BatchAction, Query, Quoted }
 
 trait SyncIOMonad extends IOMonad {
   this: Context[_, _] =>

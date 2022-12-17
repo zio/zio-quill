@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
 import scala.language.experimental.macros
+import io.getquill.Udt
 
 trait UdtMetaDsl {
   this: CassandraContext[_] =>

@@ -1,6 +1,7 @@
 package io.getquill.dsl
 
 import scala.language.experimental.macros
+import io.getquill.{ EntityQuery, Insert, Query, Quoted, Update }
 
 trait MetaDslLowPriorityImplicits {
   this: MetaDsl =>
@@ -27,7 +28,7 @@ trait MetaDsl extends MetaDslLowPriorityImplicits {
 
   trait QueryMeta[T] {
     def expand: Quoted[Query[T] => Query[_]]
-    def extract: ResultRow => T
+    def extract: (ResultRow, Session) => T
   }
 
   trait UpdateMeta[T] {

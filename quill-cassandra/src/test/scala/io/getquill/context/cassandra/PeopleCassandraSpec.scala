@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class PeopleCassandraSpec extends Spec {
 
@@ -17,7 +18,7 @@ class PeopleCassandraSpec extends Spec {
       Person(5, "Dre", 60)
     )
     testSyncDB.run(query[Person].delete)
-    testSyncDB.run(liftQuery(entries).foreach(e => query[Person].insert(e)))
+    testSyncDB.run(liftQuery(entries).foreach(e => query[Person].insertValue(e)))
     ()
   }
 

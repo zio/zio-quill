@@ -1,16 +1,15 @@
 package io.getquill.context.ndbc.postgres
 
+import io.getquill.context.sql.base.QueryResultTypeSpec
 import java.util.concurrent.ConcurrentLinkedQueue
-
 import scala.BigDecimal
 import scala.jdk.CollectionConverters._
 import scala.math.BigDecimal.int2bigDecimal
-
-import io.getquill.context.sql.QueryResultTypeSpec
+import io.getquill.util.PrintMac
 
 class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
 
-  val context = testContext
+  val context = testContext //
   import context._
 
   val insertedProducts = new ConcurrentLinkedQueue[Product]
@@ -98,6 +97,7 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
       get(context.run(parametrizedSize(lift(10000)))) mustEqual 0
     }
     "nonEmpty" in {
+      PrintMac(context.run(nonEmpty))
       get(context.run(nonEmpty)) mustEqual true
     }
     "isEmpty" in {

@@ -1,8 +1,9 @@
 package io.getquill.context.cassandra
 
-import io.getquill.Spec
 import io.getquill.context.cassandra.encoding.Encoders
 import io.getquill.context.cassandra.encoding.Decoders
+import io.getquill.Ord
+import io.getquill.base.Spec
 
 trait QueryResultTypeCassandraSpec extends Spec {
 
@@ -17,7 +18,7 @@ trait QueryResultTypeCassandraSpec extends Spec {
     OrderTestEntity(3, 3)
   )
 
-  val insert = quote((e: OrderTestEntity) => query[OrderTestEntity].insert(e))
+  val insert = quote((e: OrderTestEntity) => query[OrderTestEntity].insertValue(e))
   val deleteAll = quote(query[OrderTestEntity].delete)
   val selectAll = quote(query[OrderTestEntity])
   val map = quote(query[OrderTestEntity].map(_.id))

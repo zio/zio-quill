@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.monix
 
 import io.getquill.context.cassandra.EncodingSpecHelper
+import io.getquill.Query
 
 class EncodingSpec extends EncodingSpecHelper {
   "encodes and decodes types" - {
@@ -10,7 +11,7 @@ class EncodingSpec extends EncodingSpecHelper {
       val result =
         for {
           _ <- testMonixDB.run(query[EncodingTestEntity].delete)
-          _ <- testMonixDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testMonixDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testMonixDB.run(query[EncodingTestEntity])
         } yield {
           result
@@ -31,7 +32,7 @@ class EncodingSpec extends EncodingSpecHelper {
       val result =
         for {
           _ <- testMonixDB.run(query[EncodingTestEntity].delete)
-          _ <- testMonixDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testMonixDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testMonixDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result

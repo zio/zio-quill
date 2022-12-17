@@ -1,7 +1,8 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.Spec
 import org.scalatest.BeforeAndAfter
+import io.getquill.Ord
+import io.getquill.base.Spec
 
 class ComplexQuerySpec extends Spec with BeforeAndAfter {
 
@@ -18,20 +19,20 @@ class ComplexQuerySpec extends Spec with BeforeAndAfter {
     implicit val testEntity2InsertMeta = insertMeta[TestEntity2](_.o)
 
     val testEntityInsert =
-      quote((p: TestEntity) => query[TestEntity].insert(p))
+      quote((p: TestEntity) => query[TestEntity].insertValue(p))
 
     val testEntity2Insert =
-      quote((p: TestEntity2) => query[TestEntity2].insert(p))
+      quote((p: TestEntity2) => query[TestEntity2].insertValue(p))
 
     "join + nesting + infixes" in {
 
       val testEntities = List(
-        TestEntity("aaa", 11, 1L, None),
-        TestEntity("aaa", 12, 1L, None),
-        TestEntity("aaa", 13, 3L, None),
-        TestEntity("aaa", 14, 3L, None),
-        TestEntity("bbb", 15, 4L, None),
-        TestEntity("bbb", 16, 4L, None)
+        TestEntity("aaa", 11, 1L, None, true),
+        TestEntity("aaa", 12, 1L, None, true),
+        TestEntity("aaa", 13, 3L, None, true),
+        TestEntity("aaa", 14, 3L, None, true),
+        TestEntity("bbb", 15, 4L, None, true),
+        TestEntity("bbb", 16, 4L, None, true)
       )
 
       val testEntities2 = List(
@@ -53,7 +54,7 @@ class ComplexQuerySpec extends Spec with BeforeAndAfter {
           .filter(_._1.s == "aaa")
           .map(_._2)
           .sortBy(t => (t.s, t.i))(Ord.desc)
-          .map(e => (infix"DISTINCT ON (${e.s}) ${e.s}".as[String], e.i))
+          .map(e => (sql"DISTINCT ON (${e.s}) ${e.s}".as[String], e.i))
           .filter(r => r._2 == 3 || r._2 == 4 || r._2 == 5)
       }
 

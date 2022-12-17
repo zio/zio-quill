@@ -1,13 +1,11 @@
 package io.getquill.context.jasync.postgres
 
-import java.util.concurrent.ConcurrentLinkedQueue
+import io.getquill.context.sql.base.QueryResultTypeSpec
 
-import scala.collection.JavaConverters.collectionAsScalaIterableConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
+import java.util.concurrent.ConcurrentLinkedQueue
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.math.BigDecimal.int2bigDecimal
-
-import io.getquill.context.sql.QueryResultTypeSpec
 
 class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
 

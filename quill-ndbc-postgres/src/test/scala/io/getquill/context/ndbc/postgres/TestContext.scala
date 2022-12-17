@@ -2,11 +2,11 @@ package io.getquill.context.ndbc.postgres
 
 import scala.concurrent.duration.Duration
 
-import io.getquill.{ Literal, NdbcPostgresContext, TestEntities }
+import io.getquill.{ Literal, PostgresNdbcContext, TestEntities }
 import io.getquill.context.sql.{ TestDecoders, TestEncoders }
 import io.trane.future.scala.{ Await, Future }
 
-class TestContext extends NdbcPostgresContext(Literal, "testPostgresDB")
+class TestContext extends PostgresNdbcContext(Literal, "testPostgresDB")
   with TestEntities
   with TestEncoders
   with TestDecoders {

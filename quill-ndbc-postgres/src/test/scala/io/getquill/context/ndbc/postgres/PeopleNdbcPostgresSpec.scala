@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleNdbcPostgresSpec extends PeopleSpec {
 
@@ -12,7 +12,7 @@ class PeopleNdbcPostgresSpec extends PeopleSpec {
       context.transaction {
         for {
           _ <- context.run(query[Couple].delete)
-          _ <- context.run(query[Person].filter(_.age > 0).delete)
+          _ <- context.run(query[Person].delete)
           _ <- context.run(liftQuery(peopleEntries).foreach(e => peopleInsert(e)))
           _ <- context.run(liftQuery(couplesEntries).foreach(e => couplesInsert(e)))
         } yield {}

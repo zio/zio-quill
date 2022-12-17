@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill.Query
+import io.getquill.base.Spec
 
 case class Id(value: Long) extends AnyVal
 
@@ -17,7 +18,7 @@ trait ProductSpec extends Spec {
   }
 
   val productInsert = quote {
-    (p: Product) => query[Product].insert(p).returningGenerated(_.id)
+    (p: Product) => query[Product].insertValue(p).returningGenerated(_.id)
   }
 
   val productInsertBatch = quote {

@@ -1,6 +1,6 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import org.apache.spark.sql.Dataset
 import org.scalatest.matchers.should.Matchers._
 
@@ -20,7 +20,7 @@ case class Note(owner: String, content: String)
 
 class CaseClassQuerySpec extends Spec {
 
-  val context = io.getquill.context.sql.testContext
+  val context = io.getquill.context.sql.testContext //hello
 
   val expectedData = Seq(
     ContactSimplifiedRenamed("Alex", "Jones", "Alex".reverse),
@@ -54,7 +54,7 @@ class CaseClassQuerySpec extends Spec {
   val noteEntries = liftQuery(noteList.toDS())
 
   val reverse = quote {
-    (str: String) => infix"reverse(${str})".pure.as[String]
+    (str: String) => sql"reverse(${str})".pure.as[String]
   }
 
   "Simple Join" in {
@@ -422,7 +422,7 @@ class CaseClassQuerySpec extends Spec {
     sparkSession.udf.register("statefulStringsUdf", statefulStrings)
 
     val statefulStringsUdf = quote {
-      infix"statefulStringsUdf()".as[String]
+      sql"statefulStringsUdf()".as[String]
     }
 
     val q = quote {
@@ -532,7 +532,68 @@ class CaseClassQuerySpec extends Spec {
       (ContactSimplifiedWithAddress("Alex", "Jones", 2), Address(2, "456 Old Street", 45678, "something else")),
       (ContactSimplifiedWithAddress("Alex", "Jones", 2), Address(2, "456 Old Street", 45678, "something else")),
       (ContactSimplifiedWithAddress("Bert", "James", 3), Address(3, "789 New Street", 89010, "another thing")),
-      (ContactSimplifiedWithAddress("Cora", "Jasper", 3), Address(3, "789 New Street", 89010, "another thing"))
+      (ContactSimplifiedWithAddress("Cora", "Jasper", 3), Address(3, "789 New Street", 89010, "another thing")) //hello
     )
   }
+
+  "to CaseClass" in {
+
+    val people = Seq(
+      Person1(1L, "John", 60, 2),
+      Person1(1L, "John", 60, 4),
+      Person1(2L, "Sam", 33, 50)
+    ).toDS()
+
+    val q = quote {
+      liftQuery(people)
+        .groupBy(p => (p.id, p.name))
+        .map {
+          case ((id, name), items) =>
+            PersonTotalNumerics(
+              id,
+              name,
+              items.map(_.numeric).sum.getOrElse(0L)
+            )
+        }
+    }
+
+    testContext.run(q.dynamic).collect() should contain theSameElementsAs Seq(
+      PersonTotalNumerics(1L, "John", 6),
+      PersonTotalNumerics(2L, "Sam", 50)
+    )
+    //    testContext.run(q).string mustEqual
+    //      "SELECT p.id AS id, p.name AS name, CASE WHEN (SUM(p.numeric)) IS NOT NULL THEN SUM(p.numeric) ELSE 0 END AS numeric FROM (?) AS p GROUP BY p.id, p.name"
+  }
+
+  "to tuple" in {
+
+    val people = Seq(
+      Person1(1L, "John", 60, 2),
+      Person1(1L, "John", 60, 4),
+      Person1(2L, "Sam", 33, 50)
+    ).toDS()
+
+    val q = quote {
+      liftQuery(people)
+        .groupBy(p => (p.id, p.name))
+        .map {
+          case ((id, name), items) =>
+            (
+              id,
+              name,
+              items.map(_.numeric).sum.getOrElse(0L)
+            )
+        }
+    }
+
+    testContext.run(q.dynamic).collect() should contain theSameElementsAs Seq(
+      (1L, "John", 6),
+      (2L, "Sam", 50)
+    )
+    //    testContext.run(q).string mustEqual
+    //      "SELECT p.id AS id, p.name AS name, CASE WHEN (SUM(p.numeric)) IS NOT NULL THEN SUM(p.numeric) ELSE 0 END AS numeric FROM (?) AS p GROUP BY p.id, p.name"
+  }
+
 }
+case class Person1(id: Long, name: String, age: Long, numeric: Long)
+case class PersonTotalNumerics(id: Long, name: String, numeric: Long)

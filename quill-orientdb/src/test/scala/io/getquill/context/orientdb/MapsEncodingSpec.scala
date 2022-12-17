@@ -1,8 +1,8 @@
 package io.getquill.context.orientdb
 
-import java.util.Date
+import io.getquill.base.Spec
 
-import io.getquill.Spec
+import java.util.Date
 
 class MapsEncodingSpec extends Spec {
 
@@ -26,7 +26,7 @@ class MapsEncodingSpec extends Spec {
     val ctx = orientdb.mirrorContext
     import ctx._
     val q = quote(query[MapsEntity])
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q)
   }
 
@@ -35,7 +35,7 @@ class MapsEncodingSpec extends Spec {
     import ctx._
     val q = quote(query[MapsEntity])
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     verify(e, ctx.run(q.filter(_.id == 1)).head)
   }
 
@@ -51,7 +51,7 @@ class MapsEncodingSpec extends Spec {
     val q = quote(querySchema[Entity]("MapEntity"))
 
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -62,7 +62,7 @@ class MapsEncodingSpec extends Spec {
     val e = MapFrozen(Map(1 -> true))
     val q = quote(query[MapFrozen])
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(p => liftQuery(Set(1))
       .contains(p.id))).head.id.head._2 mustBe e.id.head._2
   }

@@ -1,7 +1,8 @@
 package io.getquill.context.jdbc.oracle
 
-import io.getquill.context.sql.CaseClassQuerySpec
 import org.scalatest.matchers.should.Matchers._
+import io.getquill.Update
+import io.getquill.context.sql.base.CaseClassQuerySpec
 
 class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {
 
@@ -10,7 +11,7 @@ class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {
 
   override def beforeAll = {
     testContext.transaction {
-      testContext.run(infix"alter session set current_schema=quill_test".as[Update[Unit]])
+      testContext.run(sql"alter session set current_schema=quill_test".as[Update[Unit]])
       testContext.run(query[Contact].delete)
       testContext.run(query[Address].delete)
       testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))

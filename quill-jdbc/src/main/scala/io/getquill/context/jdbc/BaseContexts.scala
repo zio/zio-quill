@@ -1,63 +1,29 @@
 package io.getquill.context.jdbc
 
-import java.sql.Types
-
 import io.getquill._
 
-trait PostgresJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[PostgresDialect, N]
-  with BooleanObjectEncoding
-  with UUIDObjectEncoding
-  with ArrayDecoders
-  with ArrayEncoders {
+trait PostgresJdbcContextBase[+D <: PostgresDialect, +N <: NamingStrategy]
+  extends PostgresJdbcTypes[D, N]
+  with JdbcContextBase[D, N]
 
-  val idiom = PostgresDialect
+trait H2JdbcContextBase[+D <: H2Dialect, +N <: NamingStrategy]
+  extends H2JdbcTypes[D, N]
+  with JdbcContextBase[D, N]
 
-  override def parseJdbcType(intType: Int): String = intType match {
-    case Types.TINYINT => super.parseJdbcType(Types.SMALLINT)
-    case Types.VARCHAR => "text"
-    case Types.DOUBLE  => "float8"
-    case _             => super.parseJdbcType(intType)
-  }
-}
+trait MysqlJdbcContextBase[+D <: MySQLDialect, +N <: NamingStrategy]
+  extends MysqlJdbcTypes[D, N]
+  with JdbcContextBase[D, N]
 
-trait H2JdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[H2Dialect, N]
-  with BooleanObjectEncoding
-  with UUIDObjectEncoding {
+trait SqliteJdbcContextBase[+D <: SqliteDialect, +N <: NamingStrategy]
+  extends SqliteJdbcTypes[D, N]
+  with SqliteExecuteOverride[D, N]
+  with JdbcContextBase[D, N]
 
-  val idiom = H2Dialect
-}
+trait SqlServerJdbcContextBase[+D <: SQLServerDialect, +N <: NamingStrategy]
+  extends SqlServerJdbcTypes[D, N]
+  with SqlServerExecuteOverride[N]
+  with JdbcContextBase[D, N]
 
-trait MysqlJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[MySQLDialect, N]
-  with BooleanObjectEncoding
-  with UUIDStringEncoding {
-
-  val idiom = MySQLDialect
-}
-
-trait SqliteJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[SqliteDialect, N]
-  with BooleanObjectEncoding
-  with UUIDObjectEncoding {
-
-  val idiom = SqliteDialect
-}
-
-trait SqlServerJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[SQLServerDialect, N]
-  with BooleanObjectEncoding
-  with UUIDStringEncoding {
-
-  val idiom = SQLServerDialect
-
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction): Result[O] =
-    withConnectionWrapped { conn =>
-      val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior))
-      logger.logQuery(sql, params)
-      handleSingleResult(extractResult(ps.executeQuery, extractor))
-    }
-}
-
-trait OracleJdbcContextBase[N <: NamingStrategy] extends JdbcContextBase[OracleDialect, N]
-  with BooleanIntEncoding
-  with UUIDStringEncoding {
-
-  val idiom = OracleDialect
-}
+trait OracleJdbcContextBase[+D <: OracleDialect, +N <: NamingStrategy]
+  extends OracleJdbcTypes[D, N]
+  with JdbcContextBase[D, N]

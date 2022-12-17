@@ -10,7 +10,7 @@ trait Decoders {
   type ResultRow = Unit
 
   implicit def dummyDecoder[T] =
-    (idx: Int, row: ResultRow) => Messages.fail("quill decoders are not used for spark")
+    (idx: Int, row: ResultRow, session: Session) => Messages.fail("quill decoders are not used for spark")
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
     dummyDecoder[O]

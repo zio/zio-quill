@@ -1,13 +1,16 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContext.qr1
 import io.getquill.context.sql.testContext.qr2
 import io.getquill.context.sql.testContext.qr3
 import io.getquill.context.sql.testContext.quote
 import io.getquill.context.sql.testContext.unquote
+import io.getquill.norm.{ Normalize, TranspileConfig }
 
 class ExpandJoinSpec extends Spec {
+
+  val ExpandJoin = new ExpandJoin(new Normalize(TranspileConfig.Empty))
 
   "expands the outer join by mapping the result" - {
     "simple" in {

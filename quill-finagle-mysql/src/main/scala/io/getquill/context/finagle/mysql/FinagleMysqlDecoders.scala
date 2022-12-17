@@ -15,21 +15,21 @@ trait FinagleMysqlDecoders {
   type Decoder[T] = FinagleMysqlDecoder[T]
 
   case class FinagleMysqlDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow) =
-      decoder(index, row)
+    override def apply(index: Index, row: ResultRow, session: Session) =
+      decoder(index, row, session)
   }
 
   def decoder[T: ClassTag](f: PartialFunction[Value, T]): Decoder[T] =
-    FinagleMysqlDecoder((index, row) => {
+    FinagleMysqlDecoder((index, row, session) => {
       val value = row.values(index)
       f.lift(value).getOrElse(fail(s"Value '$value' can't be decoded to '${classTag[T].runtimeClass}'"))
     })
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
-    FinagleMysqlDecoder((index, row) => {
+    FinagleMysqlDecoder((index, row, session) => {
       row.values(index) match {
         case NullValue => None
-        case _         => Some(d.decoder(index, row))
+        case _         => Some(d.decoder(index, row, session))
       }
     })
 

@@ -1,13 +1,15 @@
 package io.getquill.context.mirror
 
 import io.getquill.MirrorIdiom
-import io.getquill.Spec
-import io.getquill.testContext
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.Literal
 import io.getquill.ast.Ast
 import io.getquill.ast._
+import io.getquill.Ord
+import io.getquill.Query
+import io.getquill.Quoted
+import io.getquill.base.Spec
 
 class MirrorIdiomSpec extends Spec {
 
@@ -168,14 +170,14 @@ class MirrorIdiomSpec extends Spec {
   "shows operations" - {
     "unary" in {
       val q = quote {
-        (xs: testContext.Query[_]) => !xs.nonEmpty
+        (xs: Query[_]) => !xs.nonEmpty
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(xs) => !xs.nonEmpty"""
     }
     "binary" in {
       val q = quote {
-        (xs: testContext.Query[_]) => xs.nonEmpty && xs != null
+        (xs: Query[_]) => xs.nonEmpty && xs != null
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""(xs) => xs.nonEmpty && (xs != null)"""
@@ -249,14 +251,14 @@ class MirrorIdiomSpec extends Spec {
     "prostfix" - {
       "isEmpty" in {
         val q = quote {
-          (xs: testContext.Query[_]) => xs.isEmpty
+          (xs: Query[_]) => xs.isEmpty
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(xs) => xs.isEmpty"""
       }
       "nonEmpty" in {
         val q = quote {
-          (xs: testContext.Query[_]) => xs.nonEmpty
+          (xs: Query[_]) => xs.nonEmpty
         }
         stmt"${(q.ast: Ast).token}" mustEqual
           stmt"""(xs) => xs.nonEmpty"""
@@ -472,30 +474,30 @@ class MirrorIdiomSpec extends Spec {
     }
   }
 
-  "shows infix" - {
+  "shows sql" - {
     "as part of the query" in {
       val q = quote {
-        qr1.filter(t => infix"true".as[Boolean])
+        qr1.filter(t => sql"true".as[Boolean])
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""querySchema("TestEntity").filter(t => infix"true")"""
+        stmt"""querySchema("TestEntity").filter(t => sql"true")"""
     }
     "with params" in {
       val q = quote {
-        qr1.filter(t => infix"${t.s} == 's'".as[Boolean])
+        qr1.filter(t => sql"${t.s} == 's'".as[Boolean])
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""querySchema("TestEntity").filter(t => infix"$${t.s} == 's'")"""
+        stmt"""querySchema("TestEntity").filter(t => sql"$${t.s} == 's'")"""
     }
     "as quoted" in {
-      implicit class RichQuoted[T](q: Quoted[testContext.Query[T]]) {
-        def func = quote(infix"$q.func".as[testContext.Query[T]])
+      implicit class RichQuoted[T](q: Quoted[Query[T]]) {
+        def func = quote(sql"$q.func".as[Query[T]])
       }
       val q = quote {
         qr1.func
       }
       stmt"${(q.ast: Ast).token}" mustEqual
-        stmt"""infix"$${querySchema("TestEntity")}.func""""
+        stmt"""sql"$${querySchema("TestEntity")}.func""""
 
     }
   }
@@ -567,10 +569,10 @@ class MirrorIdiomSpec extends Spec {
       }
       "row" in {
         val q = quote {
-          (o: Option[Row]) => o.forall(v => v.id == 1)
+          (o: Option[Row]) => o.exists(v => v.id == 1)
         }
         stmt"${(q.ast: Ast).token}" mustEqual
-          stmt"(o) => o.forall((v) => v.id == 1)"
+          stmt"(o) => o.exists((v) => v.id == 1)"
       }
     }
     "exists" - {

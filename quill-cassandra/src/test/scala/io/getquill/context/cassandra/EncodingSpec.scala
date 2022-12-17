@@ -1,9 +1,7 @@
 package io.getquill.context.cassandra
 
-import java.time.{ Instant, ZoneId, ZonedDateTime, LocalDate => Java8LocalDate }
-import java.util.Date
-
-import com.datastax.driver.core.LocalDate
+import java.time.{ Instant, LocalDate, ZoneId, ZonedDateTime }
+import io.getquill.Query
 
 class EncodingSpec extends EncodingSpecHelper {
 
@@ -12,7 +10,7 @@ class EncodingSpec extends EncodingSpecHelper {
     "sync" in {
       import testSyncDB._
       testSyncDB.run(query[EncodingTestEntity].delete)
-      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
       verify(testSyncDB.run(query[EncodingTestEntity]))
     }
 
@@ -22,7 +20,7 @@ class EncodingSpec extends EncodingSpecHelper {
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testAsyncDB.run(query[EncodingTestEntity])
         } yield {
           verify(result)
@@ -39,7 +37,7 @@ class EncodingSpec extends EncodingSpecHelper {
           query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       testSyncDB.run(query[EncodingTestEntity])
-      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+      testSyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
       verify(testSyncDB.run(q(liftQuery(insertValues.map(_.id)))))
     }
 
@@ -53,7 +51,7 @@ class EncodingSpec extends EncodingSpecHelper {
       await {
         for {
           _ <- testAsyncDB.run(query[EncodingTestEntity].delete)
-          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _ <- testAsyncDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           r <- testAsyncDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           verify(r)
@@ -66,20 +64,20 @@ class EncodingSpec extends EncodingSpecHelper {
     import testSyncDB._
     case class A()
     case class B()
-    val a1: Encoder[A] = encoder((b, c, d) => d)
-    val a2: Decoder[A] = decoder((b, c) => A())
+    val a1: Encoder[A] = encoder((b, c, d, s) => d)
+    val a2: Decoder[A] = decoder((b, c, s) => A())
     mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[CassandraDecoder[B]] mustBe true
     mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[CassandraEncoder[B]] mustBe true
   }
 
   "date and timestamps" - {
-    case class Java8Types(v9: Java8LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
-    case class CasTypes(v9: LocalDate, v11: Date, o9: Option[Date], id: Int = 1, v1: String = "")
+    case class Java8Types(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
+    case class CasTypes(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
 
     "mirror" in {
       import mirrorContext._
-      implicitly[Encoder[Java8LocalDate]]
-      implicitly[Decoder[Java8LocalDate]]
+      implicitly[Encoder[LocalDate]]
+      implicitly[Decoder[LocalDate]]
       implicitly[Encoder[Instant]]
       implicitly[Decoder[Instant]]
       implicitly[Encoder[ZonedDateTime]]
@@ -96,16 +94,16 @@ class EncodingSpec extends EncodingSpecHelper {
       val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault)
 
       val jq = quote(querySchema[Java8Types]("EncodingTestEntity"))
-      val j = Java8Types(Java8LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
+      val j = Java8Types(LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
       val cq = quote(querySchema[CasTypes]("EncodingTestEntity"))
-      val c = CasTypes(LocalDate.fromMillisSinceEpoch(epoh), new Date(epoh), Some(new Date(epoh)))
+      val c = CasTypes(LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh), Some(zonedDateTime))
 
       ctx.run(jq.delete)
-      ctx.run(jq.insert(lift(j)))
+      ctx.run(jq.insertValue(lift(j)))
       ctx.run(cq).headOption mustBe Some(c)
 
       ctx.run(cq.delete)
-      ctx.run(cq.insert(lift(c)))
+      ctx.run(cq.insertValue(lift(c)))
       ctx.run(jq).headOption mustBe Some(j)
     }
   }

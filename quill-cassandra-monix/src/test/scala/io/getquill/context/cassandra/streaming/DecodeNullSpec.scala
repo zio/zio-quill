@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.streaming
 
 import io.getquill._
+import io.getquill.base.Spec
 import monix.reactive.Observable
 
 class DecodeNullSpec extends Spec {
@@ -14,7 +15,7 @@ class DecodeNullSpec extends Spec {
       val result =
         for {
           _ <- testStreamDB.run(writeEntities.delete)
-          _ <- Observable.fromTask(testStreamDB.run(writeEntities.insert(lift(insertValue))).countL)
+          _ <- Observable.fromTask(testStreamDB.run(writeEntities.insertValue(lift(insertValue))).countL)
           result <- testStreamDB.run(query[DecodeNullTestEntity])
         } yield {
           result

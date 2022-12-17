@@ -1,9 +1,13 @@
 package io.getquill.norm.capture
 
-import io.getquill.Spec
-import io.getquill.testContext._
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.Query
+import io.getquill.base.Spec
+import io.getquill.util.TraceConfig
 
 class AvoidAliasConflictSpec extends Spec {
+
+  val AvoidAliasConflict = new AvoidAliasConflictApply(TraceConfig.Empty)
 
   "renames alias to avoid conflict between entities during normalization" - {
     "flatMap" in {
@@ -151,12 +155,12 @@ class AvoidAliasConflictSpec extends Spec {
       "multiple" in {
         val q = quote {
           qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
-            .leftJoin(qr1).on((a, b) => a._2.forall(v => v.i == b.i))
+            .leftJoin(qr1).on((a, b) => a._2.exists(v => v.i == b.i)) //
             .map(t => 1)
         }
         val n = quote {
           qr1.leftJoin(qr2).on((a, b) => a.i == b.i)
-            .leftJoin(qr1).on((a1, b1) => a1._2.forall(v => v.i == b1.i))
+            .leftJoin(qr1).on((a1, b1) => a1._2.exists(v => v.i == b1.i))
             .map(t => 1)
         }
         AvoidAliasConflict(q.ast) mustEqual n.ast
@@ -166,7 +170,7 @@ class AvoidAliasConflictSpec extends Spec {
 
   "considers infix as unaliased" in {
     val i = quote {
-      infix"$qr1".as[Query[TestEntity]]
+      sql"$qr1".as[Query[TestEntity]]
     }
     val q = quote {
       i.flatMap(a => qr2.flatMap(a => qr3))

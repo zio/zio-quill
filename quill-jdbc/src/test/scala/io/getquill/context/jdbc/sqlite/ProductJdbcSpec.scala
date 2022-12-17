@@ -32,7 +32,7 @@ class ProductJdbcSpec extends ProductSpec {
       val result =
         testContext.run {
           liftQuery(list).foreach { prd =>
-            query[Product].insert(prd).returningGenerated(_.id)
+            query[Product].insertValue(prd).returningGenerated(_.id)
           }
         }
       result.size mustEqual list.size

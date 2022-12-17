@@ -1,10 +1,10 @@
 package io.getquill.context.cassandra
 
-import java.util.concurrent.Callable
+import com.datastax.oss.driver.shaded.guava.common.base.Charsets
+import com.datastax.oss.driver.shaded.guava.common.cache.CacheBuilder
+import com.datastax.oss.driver.shaded.guava.common.hash.Hashing
 
-import com.google.common.base.Charsets
-import com.google.common.cache.CacheBuilder
-import com.google.common.hash.Hashing
+import java.util.concurrent.Callable
 
 class PrepareStatementCache[V <: AnyRef](size: Long) {
 
@@ -16,14 +16,13 @@ class PrepareStatementCache[V <: AnyRef](size: Long) {
 
   private val hasher = Hashing.goodFastHash(128)
 
-  def apply(stmt: String)(prepare: String => V): V = {
+  def apply(stmt: String)(prepare: String => V): V =
     cache.get(
       hash(stmt),
       new Callable[V] {
         override def call: V = prepare(stmt)
       }
     )
-  }
 
   def invalidate(stmt: String): Unit = cache.invalidate(hash(stmt))
 

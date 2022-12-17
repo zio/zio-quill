@@ -1,6 +1,7 @@
 package io.getquill
+
 import io.getquill.context.monix.MonixJdbcContext
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 import monix.execution.Scheduler
 import monix.reactive.Observable
 

@@ -1,12 +1,11 @@
 package io.getquill
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import scala.util.Success
 import scala.util.Try
 import org.apache.spark.sql.{ Column, Dataset, SQLContext, Encoder => SparkEncoder }
 import org.apache.spark.sql.functions.{ col, struct }
-import io.getquill.context.Context
+import io.getquill.context.{ Context, ExecutionInfo }
 import io.getquill.context.spark.Encoders
 import io.getquill.context.spark.Decoders
 import io.getquill.context.spark.SparkDialect
@@ -14,9 +13,10 @@ import io.getquill.context.spark.Binding
 import io.getquill.context.spark.DatasetBinding
 import io.getquill.context.spark.ValueBinding
 import org.apache.spark.sql.types.{ StructField, StructType }
-
 import io.getquill.context.spark.norm.QuestionMarkEscaper._
+import io.getquill.quat.QuatMaking
 import org.apache.spark.sql.functions._
+
 import scala.reflect.runtime.universe.TypeTag
 
 object QuillSparkContext extends QuillSparkContext
@@ -29,23 +29,34 @@ trait QuillSparkContext
   type Result[T] = Dataset[T]
   type RunQuerySingleResult[T] = T
   type RunQueryResult[T] = T
+  type Session = Unit
+  type Runner = Unit
+
+  override type NullChecker = DummyNullChecker
+  class DummyNullChecker extends BaseNullChecker {
+    // The Quill Spark contexts uses Spark's internal decoders val dataFrame.as[MyRecord] so this is not necessary
+    override def apply(index: Index, row: ResultRow): Boolean = false
+  }
+  implicit val nullChecker: NullChecker = new DummyNullChecker()
+
+  implicit val ignoreDecoders: QuatMaking.IgnoreDecoders = QuatMaking.IgnoreDecoders
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 
   def close() = {}
 
-  def probe(statement: String): Try[_] = Success(Unit)
+  def probe(statement: String): Try[_] = Success(())
 
   val idiom = SparkDialect
   val naming = Literal
 
   private implicit def datasetEncoder[T] =
-    (idx: Int, ds: Dataset[T], row: List[Binding]) =>
+    (idx: Int, ds: Dataset[T], row: List[Binding], session: Session) =>
       row :+ DatasetBinding(ds)
 
   def liftQuery[T](ds: Dataset[T]) =
     quote {
-      infix"${lift(ds)}".pure.as[Query[T]]
+      sql"${lift(ds)}".pure.as[Query[T]]
     }
 
   // Helper class for the perculateNullArrays method
@@ -80,7 +91,7 @@ trait QuillSparkContext
       node.structField.dataType match {
         case st: StructType =>
           // Recursively convert all parent array columns to single null values if all their children are null
-          val preculatedColumn = struct(node.children.map(percolateNullArraysRecursive(_)): _*)
+          val preculatedColumn = struct(node.children.map(percolateNullArraysRecursive(_)).toIndexedSeq: _*)
           // Then express that column back out the schema
 
           val mapped =
@@ -97,7 +108,7 @@ trait QuillSparkContext
       }
 
     ds.select(
-      ds.schema.fields.map(f => percolateNullArraysRecursive(StructElement(col(f.name), f))): _*
+      ds.schema.fields.map(f => percolateNullArraysRecursive(StructElement(col(f.name), f))).toIndexedSeq: _*
     ).as[T]
   }
 
@@ -131,12 +142,12 @@ trait QuillSparkContext
     }
   }
 
-  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuery[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
 
-  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  def executeQuerySingle[T: TypeTag](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
@@ -144,7 +155,7 @@ trait QuillSparkContext
   private[getquill] def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
     var dsId = 0
     val withSubstitutions =
-      prepare(Nil)._2.foldLeft(string) {
+      prepare(Nil, ())._2.foldLeft(string) {
         case (string, DatasetBinding(ds)) =>
           dsId += 1
           val name = s"ds${queryCounter.incrementAndGet()}"

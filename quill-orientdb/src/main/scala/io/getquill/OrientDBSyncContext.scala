@@ -3,13 +3,14 @@ package io.getquill
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 import com.typesafe.config.Config
+import io.getquill.context.ExecutionInfo
 import io.getquill.context.orientdb.OrientDBSessionContext
 import io.getquill.util.{ ContextLogger, LoadConfig }
 
 import scala.jdk.CollectionConverters._
 import io.getquill.monad.SyncIOMonad
 
-class OrientDBSyncContext[N <: NamingStrategy](
+class OrientDBSyncContext[+N <: NamingStrategy](
   naming:   N,
   dbUrl:    String,
   username: String,
@@ -26,6 +27,7 @@ class OrientDBSyncContext[N <: NamingStrategy](
   override type RunQuerySingleResult[T] = T
   override type RunActionResult = Unit
   override type RunBatchActionResult = Unit
+  type Runner = Unit
 
   private val logger = ContextLogger(classOf[OrientDBSyncContext[_]])
 
@@ -34,26 +36,26 @@ class OrientDBSyncContext[N <: NamingStrategy](
     super.performIO(io)
   }
 
-  def executeQuery[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): List[T] = {
-    val (params, objects) = prepare(super.prepare())
+  def executeQuery[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): List[T] = {
+    val (params, objects) = prepare(super.prepare(), session)
     logger.logQuery(orientQl, params)
-    oDatabase.query[java.util.List[ODocument]](new OSQLSynchQuery[ODocument](checkInFilter(orientQl, objects.size)), objects.asJava).asScala.map(extractor).toList
+    oDatabase.query[java.util.List[ODocument]](new OSQLSynchQuery[ODocument](checkInFilter(orientQl, objects.size)), objects.asJava).asScala.map(row => extractor(row, session)).toList
   }
 
-  def executeQuerySingle[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): T =
-    handleSingleResult(executeQuery(orientQl, prepare, extractor))
+  def executeQuerySingle[T](orientQl: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): T =
+    handleSingleResult(orientQl, executeQuery(orientQl, prepare, extractor)(info, dc))
 
-  def executeAction[T](orientQl: String, prepare: Prepare = identityPrepare): Unit = {
-    val (params, objects) = prepare(super.prepare())
+  def executeAction(orientQl: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Unit = {
+    val (params, objects) = prepare(super.prepare(), session)
     logger.logQuery(orientQl, params)
     oDatabase.command(orientQl, objects.toIndexedSeq.asInstanceOf[Seq[Object]]: _*)
     ()
   }
 
-  def executeBatchAction[T](groups: List[BatchGroup]): Unit = {
+  def executeBatchAction[T](groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Unit = {
     groups.foreach {
       case BatchGroup(orientQl, prepare) =>
-        prepare.foreach(executeAction(orientQl, _))
+        prepare.foreach(executeAction(orientQl, _)(info, dc))
     }
   }
 

@@ -1,6 +1,7 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
+import io.getquill.Query
+import io.getquill.base.Spec
 
 class PeopleOrientDBSpec extends Spec {
 
@@ -17,7 +18,7 @@ class PeopleOrientDBSpec extends Spec {
       Person(5, "Dre", 60)
     )
     ctx.run(query[Person].delete)
-    ctx.run(liftQuery(entries).foreach(e => query[Person].insert(e)))
+    ctx.run(liftQuery(entries).foreach(e => query[Person].insertValue(e)))
     ()
   }
 

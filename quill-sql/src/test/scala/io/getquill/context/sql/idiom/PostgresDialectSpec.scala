@@ -47,11 +47,11 @@ class PostgresDialectSpec extends OnConflictSpec {
   "OnConflict" - {
     "no target - ignore" in {
       ctx.run(`no target - ignore`).string mustEqual
-        "INSERT INTO TestEntity AS t (s,i,l,o) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING"
+        "INSERT INTO TestEntity AS t (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING"
     }
     "cols target - ignore" in {
       ctx.run(`cols target - ignore`).string mustEqual
-        "INSERT INTO TestEntity (s,i,l,o) VALUES (?, ?, ?, ?) ON CONFLICT (i) DO NOTHING"
+        "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i) DO NOTHING"
     }
     "no target - update" in {
       intercept[IllegalStateException] {
@@ -60,7 +60,7 @@ class PostgresDialectSpec extends OnConflictSpec {
     }
     "cols target - update" in {
       ctx.run(`cols target - update`).string mustEqual
-        "INSERT INTO TestEntity AS t (s,i,l,o) VALUES (?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET l = ((t.l + EXCLUDED.l) / 2), s = EXCLUDED.s"
+        "INSERT INTO TestEntity AS t (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET l = ((t.l + EXCLUDED.l) / 2), s = EXCLUDED.s"
     }
   }
 }

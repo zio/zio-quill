@@ -1,0 +1,120 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:9.6
+    platform: linux/amd64
+    ports:
+      - "15432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  mysql:
+    image: mysql/mysql-server:8.0.23 # use this because it supports ARM64 architecture for M1 Mac
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "13306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_ROOT_HOST=%
+
+  cassandra:
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile-cassandra
+    ports:
+      - "19042:9042"
+    # enable NativeMemoryTracking so that jcmd in possible in build.sh. For CompressedClassSpaceSize 1gig is default which is too high.
+    environment:
+      - MAX_HEAP_SIZE=256m
+      - HEAP_NEWSIZE=64m
+      - JVM_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
+
+  orientdb:
+    image: orientdb:3.0.11
+    platform: linux/amd64
+    ports:
+      - "12424:2424"
+    # enable NativeMemoryTracking so that jcmd in possible in build.sh. For CompressedClassSpaceSize 1gig is default which is too high.
+    environment:
+      - ORIENTDB_ROOT_PASSWORD=root
+      - ORIENTDB_OPTS_MEMORY=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m -Xms256m -Xmx512m -XX:MetaspaceSize=32m -XX:MaxMetaspaceSize=64m -Xss256k
+
+  sqlserver:
+    image: mcr.microsoft.com/azure-sql-edge:latest # use this because it supports ARM64 architecture for M1 Mac
+    ports:
+      - "11433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=QuillRocks!
+
+  oracle:
+    image: quillbuilduser/oracle-18-xe-micro-sq
+    platform: linux/amd64
+    ports:
+      - "11521:1521"
+    # Opatch is an internal java-based daemon in the Oracle container that updates components, don't really need it here. Reduce it's memory settings.
+    environment:
+      - OPATCH_JRE_MEMORY_OPTIONS=-Xms128m -Xmx256m -XX:PermSize=16m -XX:MaxPermSize=32m -Xss1m
+
+  setup:
+    build:
+      context: .
+      dockerfile: ./build/m1/Dockerfile-setup
+    depends_on:
+      - oracle
+    links:
+      - postgres:postgres
+      - mysql:mysql
+      - cassandra:cassandra
+      - orientdb:orientdb
+      - sqlserver:sqlserver
+      - oracle:oracle
+    volumes:
+      - ./:/app:delegated
+    command:
+      - ./build/setup_local.sh
+
+
+  sbt:
+    build:
+      context: .
+      dockerfile: ./build/m1/Dockerfile-sbt
+    platform: linux/amd64
+    ports:
+      - "15005:5005"
+    command: sbt
+    links:
+      - postgres:postgres
+      - mysql:mysql
+      - cassandra:cassandra
+      - orientdb:orientdb
+      - sqlserver:sqlserver
+      - oracle:oracle
+    volumes:
+      - ./:/app:delegated
+      - ~/.ivy2:/root/.ivy2:cached
+      - ~/.m2:/root/.m2:cached
+      - ~/.sbt:/root/.sbt:cached
+      - ~/.cache/coursier:/root/.cache/coursier:cached
+    environment:
+      - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx4g -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_PASSWORD=root
+      - SQL_SERVER_HOST=sqlserver
+      - SQL_SERVER_PORT=1433
+      - ORACLE_HOST=oracle
+      - ORACLE_PORT=1521
+      # for lagom project compatibility
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      # the values should be used for all new cassandra projects
+      - CASSANDRA_CONTACT_POINT_0=cassandra:9042
+      - CASSANDRA_DC=datacenter1
+      - ORIENTDB_HOST=orientdb
+      - ORIENTDB_PORT=2424

@@ -1,9 +1,10 @@
 package io.getquill.context.sql
 
-import java.time.LocalDate
-import java.util.{ Date, UUID }
+import io.getquill.base.Spec
 
-import io.getquill.Spec
+import java.time
+import java.time.{ Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, OffsetTime, ZoneId, ZoneOffset, ZonedDateTime }
+import java.util.{ Date, UUID }
 
 case class EncodingTestType(value: String)
 
@@ -22,6 +23,65 @@ trait EncodingSpec extends Spec {
   val context: SqlContext[_, _] with TestEncoders with TestDecoders
 
   import context._
+
+  case class TimeEntity(
+    sqlDate:            java.sql.Date, // DATE
+    sqlTime:            java.sql.Time, // TIME
+    sqlTimestamp:       java.sql.Timestamp, // DATETIME
+    timeLocalDate:      java.time.LocalDate, // DATE
+    timeLocalTime:      java.time.LocalTime, // TIME
+    timeLocalDateTime:  java.time.LocalDateTime, // DATETIME
+    timeZonedDateTime:  java.time.ZonedDateTime, // DATETIMEOFFSET
+    timeInstant:        java.time.Instant, // DATETIMEOFFSET
+    timeOffsetTime:     java.time.OffsetTime, // TIME
+    timeOffsetDateTime: java.time.OffsetDateTime // DATETIMEOFFSET
+  ) {
+    override def equals(other: Any): Boolean =
+      other match {
+        case t: TimeEntity =>
+          this.sqlDate == t.sqlDate &&
+            this.sqlTime == t.sqlTime &&
+            this.sqlTimestamp == t.sqlTimestamp &&
+            this.timeLocalDate == t.timeLocalDate &&
+            this.timeLocalTime == t.timeLocalTime &&
+            this.timeLocalDateTime == t.timeLocalDateTime &&
+            this.timeZonedDateTime.isEqual(t.timeZonedDateTime) &&
+            this.timeInstant == t.timeInstant &&
+            this.timeOffsetTime.isEqual(t.timeOffsetTime) &&
+            this.timeOffsetDateTime.isEqual(t.timeOffsetDateTime)
+        case _ => false
+      }
+  }
+
+  object TimeEntity {
+    case class TimeEntityInput(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int, nano: Int) {
+      def toLocalDate = LocalDateTime.of(year, month, day, hour, minute, second, nano)
+    }
+    object TimeEntityInput {
+      def default = new TimeEntityInput(2022, 1, 2, 3, 4, 6, 0)
+    }
+    def make(zoneIdRaw: ZoneId, timeEntity: TimeEntityInput = TimeEntityInput.default) = {
+      val zoneId = zoneIdRaw.normalized()
+      // Millisecond precisions in SQL Server and many contexts are wrong so not using them
+      val nowInstant = timeEntity.toLocalDate.atZone(zoneId).toInstant
+      val nowDateTime = LocalDateTime.ofInstant(nowInstant, zoneId)
+      val nowDate = nowDateTime.toLocalDate
+      val nowTime = nowDateTime.toLocalTime
+      val nowZoned = ZonedDateTime.of(nowDateTime, zoneId)
+      TimeEntity(
+        java.sql.Date.valueOf(nowDate),
+        java.sql.Time.valueOf(nowTime),
+        java.sql.Timestamp.valueOf(nowDateTime),
+        nowDate,
+        nowTime,
+        nowDateTime,
+        nowZoned,
+        nowInstant,
+        OffsetTime.ofInstant(nowInstant, zoneId),
+        OffsetDateTime.ofInstant(nowInstant, zoneId)
+      )
+    }
+  }
 
   case class EncodingTestEntity(
     v1:  String,
@@ -60,7 +120,7 @@ trait EncodingSpec extends Spec {
   }
 
   val insert = quote {
-    (e: EncodingTestEntity) => query[EncodingTestEntity].insert(e)
+    (e: EncodingTestEntity) => query[EncodingTestEntity].insertValue(e)
   }
 
   val insertValues =
@@ -76,7 +136,7 @@ trait EncodingSpec extends Spec {
         34.4f,
         42d,
         Array(1.toByte, 2.toByte),
-        new Date(31200000),
+        Date.from(LocalDateTime.of(2013, 11, 23, 0, 0, 0, 0).toInstant(ZoneOffset.UTC)),
         EncodingTestType("s"),
         LocalDate.of(2013, 11, 23),
         UUID.randomUUID(),
@@ -90,7 +150,7 @@ trait EncodingSpec extends Spec {
         Some(34.4f),
         Some(42d),
         Some(Array(1.toByte, 2.toByte)),
-        Some(new Date(31200000)),
+        Some(Date.from(LocalDateTime.of(2013, 11, 23, 0, 0, 0, 0).toInstant(ZoneOffset.UTC))),
         Some(EncodingTestType("s")),
         Some(LocalDate.of(2013, 11, 23)),
         Some(UUID.randomUUID()),
@@ -168,7 +228,7 @@ trait EncodingSpec extends Spec {
 
   case class BarCode(description: String, uuid: Option[UUID] = None)
 
-  val insertBarCode = quote((b: BarCode) => query[BarCode].insert(b).returningGenerated(_.uuid))
+  val insertBarCode = quote((b: BarCode) => query[BarCode].insertValue(b).returningGenerated(_.uuid))
   val barCodeEntry = BarCode("returning UUID")
 
   def findBarCodeByUuid(uuid: UUID) = quote(query[BarCode].filter(_.uuid.forall(_ == lift(uuid))))

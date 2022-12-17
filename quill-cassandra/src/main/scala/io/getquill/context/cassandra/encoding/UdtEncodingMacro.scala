@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.driver.core.UDTValue
+import com.datastax.oss.driver.api.core.data.UdtValue
 import io.getquill.util.MacroContextExt._
 import io.getquill.util.OptionalTypecheck
 
@@ -12,7 +12,7 @@ class UdtEncodingMacro(val c: MacroContext) {
   import c.universe._
 
   private val encoding = q"io.getquill.context.cassandra.encoding"
-  private val udtRaw = typeOf[UDTValue]
+  private val udtRaw = typeOf[UdtValue]
   private def prefix = c.prefix
   private def UdtValueOps = q"_root_.io.getquill.context.cassandra.encoding.UdtValueOps"
 
@@ -22,8 +22,8 @@ class UdtEncodingMacro(val c: MacroContext) {
       q"""
          ${buildUdtMeta(t.tpe)}
          def udtdecoder[..$typeDefs](implicit ..$params): $prefix.Decoder[${t.tpe}] = {
-           $prefix.decoder { (index, row) =>
-             val udt = row.getUDTValue(index)
+           $prefix.decoder { (index, row, session) =>
+             val udt = row.getUdtValue(index)
              new ${t.tpe}(..$getters)
            }
          }
@@ -38,7 +38,7 @@ class UdtEncodingMacro(val c: MacroContext) {
       q"""
          ${buildUdtMeta(t.tpe)}
          def udtdecodemapper[..$typeDefs](implicit ..$params): $encoding.CassandraMapper[$udtRaw, ${t.tpe}] = {
-           $encoding.CassandraMapper(udt => new ${t.tpe}(..$getters))
+           $encoding.CassandraMapper((udt, session) => new ${t.tpe}(..$getters))
          }
          udtdecodemapper
        """
@@ -47,28 +47,35 @@ class UdtEncodingMacro(val c: MacroContext) {
 
   def udtEncoder[T](implicit t: WeakTypeTag[T]): Tree = {
     val (typeDefs, params, body) = encodeUdt(t.tpe)
-    c.untypecheck {
-      q"""
-         ${buildUdtMeta(t.tpe)}
-         def udtencoder[..$typeDefs](implicit ..$params): $prefix.Encoder[${t.tpe}] = {
-           $prefix.encoder[$t]((i: $prefix.Index, x: ${t.tpe}, row: $prefix.PrepareRow) => row.setUDTValue(i, {..$body}))
-         }
-         udtencoder
-       """
-    }
+    val swapin =
+      c.untypecheck {
+        q"""
+           ${buildUdtMeta(t.tpe)}
+           def udtencoder[..$typeDefs](implicit ..$params): $prefix.Encoder[${t.tpe}] = {
+             $prefix.encoder[$t]((i: $prefix.Index, x: ${t.tpe}, row: $prefix.PrepareRow, session: Session) => row.setUdtValue(i, {..$body}))
+           }
+           udtencoder
+         """
+      }
+
+    //println("=========== SWAPIN udtEncoder ===========\n" + show(swapin))
+    swapin
   }
 
   def udtEncodeMapper[T](implicit t: WeakTypeTag[T]): Tree = {
     val (typeDefs, params, body) = encodeUdt(t.tpe)
-    c.untypecheck {
-      q"""
-         ${buildUdtMeta(t.tpe)}
-         def udtencodemapper[..$typeDefs](implicit ..$params): $encoding.CassandraMapper[${t.tpe}, $udtRaw] = {
-           $encoding.CassandraMapper(x => {..$body})
-         }
-         udtencodemapper
-       """
-    }
+    val swapin =
+      c.untypecheck {
+        q"""
+           ${buildUdtMeta(t.tpe)}
+           def udtencodemapper[..$typeDefs](implicit ..$params): $encoding.CassandraMapper[${t.tpe}, $udtRaw] = {
+             $encoding.CassandraMapper((x, session) => {..$body})
+           }
+           udtencodemapper
+         """
+      }
+    //println("=========== SWAPIN udtEncodeMapper ===========\n" + show(swapin))
+    swapin
   }
 
   private def decodeUdt[T](udtType: Type) = {
@@ -79,7 +86,7 @@ class UdtEncodingMacro(val c: MacroContext) {
 
         def tagTree = q"$tag: scala.reflect.ClassTag[$absType]"
 
-        def rawTree = q"$mapper.f(udt.get[$absType]($name, $classTree))"
+        def rawTree = q"$mapper.f(udt.get[$absType]($name, $classTree), session)"
 
         val params = ListBuffer.empty[Tree]
         val typeDefs = ListBuffer.empty[TypeDef]
@@ -95,12 +102,12 @@ class UdtEncodingMacro(val c: MacroContext) {
           } else if (tpe <:< typeOf[List[Any]]) {
             params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
             val list = q"$UdtValueOps(udt).getScalaList[$absType]($name, $classTree)"
-            q"$list.map($mapper.f).toList"
+            q"$list.map(row => $mapper.f(row, session)).toList"
 
           } else if (isBaseType[Set[Any]](tpe)) {
             params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
             val set = q"$UdtValueOps(udt).getScalaSet[$absType]($name, $classTree)"
-            q"$set.map($mapper.f).toSet"
+            q"$set.map(row => $mapper.f(row, session)).toSet"
 
           } else if (isBaseType[collection.Map[Any, Any]](tpe)) {
             val vAbsName = s"${absTypeDef.name.encodedName}V"
@@ -118,7 +125,7 @@ class UdtEncodingMacro(val c: MacroContext) {
               )
             )
             val map = q"$UdtValueOps(udt).getScalaMap[$absType, $vAbsType]($name, $classTree, $vTag.runtimeClass.asInstanceOf[Class[$vAbsType]])"
-            q"$map.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2)).toMap"
+            q"$map.map(kv => $mapper.f(kv._1, session) -> $vMapper.f(kv._2, session)).toMap"
 
           } else {
             params.appendAll(Seq(single(tpe), tagTree))
@@ -130,7 +137,10 @@ class UdtEncodingMacro(val c: MacroContext) {
   }
 
   private def encodeUdt[T](udtType: Type) = {
-    val trees = ListBuffer[Tree](q"val udt = $prefix.udtValueOf(meta.name, meta.keyspace)")
+    // The `session` variable represents CassandraSession which will either be `this` (if it is CassandraClusterSessionContext)
+    // or it will be `CassanraZioSession` otherwise. Either way, it should have the `udtValueOf` method.
+    // It is passed in via the context.encoder (i.e. $prefix.encoder) variable
+    val trees = ListBuffer[Tree](q"val udt = session.udtValueOf(meta.name, meta.keyspace)")
     val (typeDefs, params) = udtFields(udtType).map {
       case (name, field, tpe, mapper, absType, absTypeDef, tag) =>
 
@@ -147,17 +157,17 @@ class UdtEncodingMacro(val c: MacroContext) {
         if (tpe <:< typeOf[Option[Any]]) {
           params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
           trees.append {
-            q"x.$field.map(v => udt.set[$absType]($name, $mapper.f(v), $classTree)).getOrElse(udt.setToNull($name))"
+            q"x.$field.map(v => udt.set[$absType]($name, $mapper.f(v, session), $classTree)).getOrElse(udt.setToNull($name))"
           }
         } else if (tpe <:< typeOf[List[Any]]) {
           params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-          val list = q"x.$field.map($mapper.f)"
+          val list = q"x.$field.map(row => $mapper.f(row, session))"
           trees.append {
             q"$UdtValueOps(udt).setScalaList[$absType]($name, $list, $classTree)"
           }
         } else if (isBaseType[Set[Any]](tpe)) {
           params.appendAll(Seq(single(tpe.typeArgs.head), tagTree))
-          val set = q"x.$field.map($mapper.f)"
+          val set = q"x.$field.map(row => $mapper.f(row, session))"
           trees.append {
             q"$UdtValueOps(udt).setScalaSet[$absType]($name, $set, $classTree)"
           }
@@ -177,14 +187,14 @@ class UdtEncodingMacro(val c: MacroContext) {
             )
           )
           val vClassTree = q"$vTag.runtimeClass.asInstanceOf[Class[$vAbsType]]"
-          val map = q"x.$field.map(kv => $mapper.f(kv._1) -> $vMapper.f(kv._2))"
+          val map = q"x.$field.map(kv => $mapper.f(kv._1, session) -> $vMapper.f(kv._2, session))"
           trees.append {
             q"$UdtValueOps(udt).setScalaMap[$absType, $vAbsType]($name, $map, $classTree, $vClassTree)"
           }
         } else {
           params.appendAll(Seq(single(tpe), tagTree))
           trees.append {
-            q"udt.set[$absType]($name, $mapper.f(x.$field), $classTree)"
+            q"udt.set[$absType]($name, $mapper.f(x.$field, session), $classTree)"
           }
         }
         typeDefs.toList -> params.toList

@@ -23,6 +23,30 @@ CREATE TABLE Task(
     tsk VARCHAR(255)
 );
 
+CREATE TABLE JsonbEntity(
+     name VARCHAR(255),
+     value JSONB
+);
+
+CREATE TABLE JsonEntity(
+    name VARCHAR(255),
+    value JSON
+);
+
+CREATE TABLE TimeEntity(
+    sqlDate        DATE,                     -- java.sql.Date
+    sqlTime        TIME,                     -- java.sql.Time
+    sqlTimestamp   TIMESTAMP,                -- java.sql.Timestamp
+    timeLocalDate      DATE,                     -- java.time.LocalDate
+    timeLocalTime      TIME,                     -- java.time.LocalTime
+    timeLocalDateTime  TIMESTAMP,                -- java.time.LocalDateTime
+    timeZonedDateTime  TIMESTAMP WITH TIME ZONE, -- java.time.ZonedDateTime
+    timeInstant        TIMESTAMP WITH TIME ZONE, -- java.time.Instant
+    -- Postgres actually has a notion of a Time+Timezone type unlike most DBs
+    timeOffsetTime     TIME WITH TIME ZONE,      -- java.time.OffsetTime
+    timeOffsetDateTime TIMESTAMP WITH TIME ZONE  -- java.time.OffsetDateTime
+);
+
 CREATE TABLE EncodingTestEntity(
     v1 VARCHAR(255),
     v2 DECIMAL(5,2),
@@ -63,7 +87,8 @@ CREATE TABLE TestEntity(
     s VARCHAR(255),
     i INTEGER primary key,
     l BIGINT,
-    o INTEGER
+    o INTEGER,
+    b BOOLEAN
 );
 
 CREATE TABLE TestEntity2(

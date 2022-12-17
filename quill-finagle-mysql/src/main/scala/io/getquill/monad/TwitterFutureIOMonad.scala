@@ -5,6 +5,7 @@ import com.twitter.util.Future
 import io.getquill.context.Context
 import com.twitter.util.Try
 import scala.collection.compat._
+import io.getquill.{ Query, Action, BatchAction, ActionReturning, Quoted }
 
 trait TwitterFutureIOMonad extends IOMonad {
   this: Context[_, _] =>

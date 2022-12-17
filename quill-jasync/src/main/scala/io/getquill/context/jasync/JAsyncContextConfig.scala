@@ -3,7 +3,7 @@ package io.getquill.context.jasync
 import java.nio.charset.Charset
 import java.lang.{ Long => JavaLong }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 import com.github.jasync.sql.db.ConcreteConnection
@@ -45,14 +45,16 @@ abstract class JAsyncContextConfig[C <: ConcreteConnection](
     getLong("connectionCreateTimeout").getOrElse(default.getConnectionCreateTimeout),
     getLong("connectionTestTimeout").getOrElse(default.getConnectionTestTimeout),
     getLong("queryTimeout")
-      .orElse(Option(urlConfiguration.getQueryTimeout).map(_.toMillis)).map(new JavaLong(_)).orNull,
+      .orElse(Option(urlConfiguration.getQueryTimeout).map(_.toMillis)).map(JavaLong.valueOf).orNull,
     urlConfiguration.getEventLoopGroup,
     urlConfiguration.getExecutionContext,
     default.getCoroutineDispatcher,
     new SSLConfiguration(
       Map(
         "sslmode" -> getString("sslmode"),
-        "sslrootcert" -> getString("sslrootcert")
+        "sslrootcert" -> getString("sslrootcert"),
+        "sslcert" -> getString("sslcert"),
+        "sslkey" -> getString("sslkey")
       ).collect {
           case (key, Some(value)) => key -> value
         }.asJava
@@ -62,7 +64,8 @@ abstract class JAsyncContextConfig[C <: ConcreteConnection](
     urlConfiguration.getAllocator,
     getString("applicationName").orElse(Option(urlConfiguration.getApplicationName)).orNull,
     urlConfiguration.getInterceptors,
-    getLong("maxConnectionTtl").map(new JavaLong(_)).orElse(Option(default.getMaxConnectionTtl)).orNull
+    getLong("maxConnectionTtl").map(JavaLong.valueOf).orElse(Option(default.getMaxConnectionTtl)).orNull,
+    getString("currentSchema").orElse(Option(urlConfiguration.getCurrentSchema)).orNull
   )
 
   def pool =
