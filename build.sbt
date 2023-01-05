@@ -8,6 +8,19 @@ import java.io.{ File => JFile }
 
 import scala.collection.immutable.ListSet
 
+inThisBuild(
+  List(
+    organization := "io.getquill",
+    homepage     := Some(url("https://zio.dev/zio-quill")),
+    scmInfo := Some(
+      ScmInfo(
+        homepage.value.get,
+        "scm:git:git@github.com:zio/zio-quill.git"
+      )
+    )
+  )
+)
+
 // During release cycles, GPG will expect passphrase user-input EVEN when --passphrase is specified
 // this should add --pinentry-loopback in order to disable that. See here for more info:
 // https://github.com/sbt/sbt-pgp/issues/178
@@ -1028,6 +1041,41 @@ lazy val docs = project
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions += "-Xlog-implicits",
-    libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio)
+    libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
+    projectName := "ZIO Quill",
+    badgeInfo := Some(
+      BadgeInfo(
+        artifact = "quill-core_2.12",
+        projectStage = ProjectStage.ProductionReady
+      )
+    ),
+    docsPublishBranch := "master",
+    readmeBanner :=
+      """|<p align="center">
+         |  <img src="https://raw.githubusercontent.com/getquill/quill/master/quill.png">
+         |</p>
+         |""".stripMargin,
+    readmeAcknowledgement :=
+      """|The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
+         |
+         |* [A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
+         |* [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
+         |* [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)""".stripMargin,
+    readmeMaintainers :=
+      """|- @deusaquilus (lead maintainer)
+         |- @fwbrasil (creator)
+         |- @jilen
+         |- @juliano
+         |- @mentegy
+         |- @mdedetrich
+         |
+         |### Former maintainers:
+         |
+         |- @gustavoamigo
+         |- @godenji
+         |- @lvicentesanchez
+         |- @mxl
+         |
+         |You can notify all current maintainers using the handle `@getquill/maintainers`.""".stripMargin
   )
   .enablePlugins(WebsitePlugin)
