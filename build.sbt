@@ -51,8 +51,7 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-engine-jvm`,
   `quill-core-jvm`,
   `quill-sql-jvm`, `quill-monix`, `quill-zio`,
-  `quill-util`,
-  docs
+  `quill-util`
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
