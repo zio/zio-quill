@@ -51,7 +51,8 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-engine-jvm`,
   `quill-core-jvm`,
   `quill-sql-jvm`, `quill-monix`, `quill-zio`,
-  `quill-util`
+  `quill-util`,
+  docs
 )
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -1043,6 +1044,9 @@ lazy val docs = project
     libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
     projectName := "ZIO Quill",
     mainModuleName := (`quill-core-jvm` / moduleName).value,
+    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
+      `quill-core-jvm`,
+    ),
     projectStage := ProjectStage.ProductionReady,
     docsPublishBranch := "master",
     readmeBanner :=
