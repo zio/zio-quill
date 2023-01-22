@@ -125,6 +125,7 @@ then
         if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
         if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
         if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
+        if [[ $ARTIFACT == "docs" ]]; then    $SBT_VER -Dmodules=docs publish; fi
 
         # No-Op Publish
         if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
