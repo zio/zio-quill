@@ -82,7 +82,6 @@ jobs:
      run: |
        export SCALA_VERSION=${{ matrix.scala }}
        echo "SCALA_VERSION='$SCALA_VERSION'"
-       sbt +docs/publishLocal
        ./build/build.sh ${{ matrix.module }}
 
   release:
