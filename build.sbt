@@ -1044,9 +1044,9 @@ lazy val docs = project
     libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
     projectName := "ZIO Quill",
     mainModuleName := (`quill-core-jvm` / moduleName).value,
-    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-      `quill-engine-jvm`,
-    ),
+//    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
+//      `quill-engine-jvm`,
+//    ),
     projectStage := ProjectStage.ProductionReady,
     docsPublishBranch := "master",
     readmeBanner :=
