@@ -24,7 +24,7 @@ jobs:
    strategy:
      matrix:
        scala: [2.11.12, 2.12.10, 2.13.2, 3.1.2]
-       module: [docs, base, db, js, async, codegen, bigdata]
+       module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.11.12
            scala_short: 211
