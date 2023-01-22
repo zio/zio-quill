@@ -1051,6 +1051,7 @@ lazy val docs = project
 //      `quill-engine-jvm`,
 //    ),
     projectStage := ProjectStage.ProductionReady,
+    checkArtifactBuildProcessWorkflowStep := None, 
     docsPublishBranch := "master",
     readmeBanner :=
       """|<p align="center">
