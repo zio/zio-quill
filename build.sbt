@@ -54,6 +54,10 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-util`
 )
 
+lazy val docsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  docs
+) 
+
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc`, `quill-doobie`, `quill-jdbc-monix`, `quill-jdbc-zio`
 )
@@ -77,7 +81,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules
+  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules ++ docsModules
 
 lazy val scala213Modules = baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-finagle-mysql`,
@@ -1036,19 +1040,18 @@ lazy val releaseSettings = Seq(
 lazy val docs = project
   .in(file("zio-quill-docs"))
   .settings(
-    publish / skip := true,
     moduleName     := "zio-quill-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions += "-Xlog-implicits",
     libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
     projectName := "ZIO Quill",
-    badgeInfo := Some(
-      BadgeInfo(
-        artifact = "quill-core_2.12",
-        projectStage = ProjectStage.ProductionReady
-      )
-    ),
+    mainModuleName := (`quill-core-jvm` / moduleName).value,
+//    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
+//      `quill-engine-jvm`,
+//    ),
+    projectStage := ProjectStage.ProductionReady,
+    checkArtifactBuildProcessWorkflowStep := None, 
     docsPublishBranch := "master",
     readmeBanner :=
       """|<p align="center">
