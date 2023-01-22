@@ -1045,7 +1045,7 @@ lazy val docs = project
     projectName := "ZIO Quill",
     mainModuleName := (`quill-core-jvm` / moduleName).value,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-      `quill-core-jvm`,
+      `quill-engine-jvm`,
     ),
     projectStage := ProjectStage.ProductionReady,
     docsPublishBranch := "master",
