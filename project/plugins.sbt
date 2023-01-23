@@ -24,6 +24,4 @@ addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.2.0")
 
 addSbtPlugin("com.etsy" % "sbt-compile-quick-plugin" % "1.4.0")
 
-addSbtPlugin("dev.zio" % "zio-sbt-website" % "0.0.0+80-e5b408eb-SNAPSHOT")
-
-resolvers += Resolver.sonatypeRepo("public")
+addSbtPlugin("dev.zio" % "zio-sbt-website" % "0.3.9")
