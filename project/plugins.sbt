@@ -18,7 +18,7 @@ addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.8.1")
 
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.3")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.9.0")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.0")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.2.0")
 
