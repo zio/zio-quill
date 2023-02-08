@@ -766,7 +766,7 @@ lazy val `quill-orientdb` =
         Test / fork := true,
         libraryDependencies ++= Seq(
           // For some reason OrientDB 3.0.42 does not stay up once started during local testing so need to bump to 3.2.6
-          "com.orientechnologies" % "orientdb-graphdb" % "3.2.10"
+          "com.orientechnologies" % "orientdb-graphdb" % "3.2.16"
         )
       )
       .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
