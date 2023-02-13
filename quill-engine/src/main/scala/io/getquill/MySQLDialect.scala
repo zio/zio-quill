@@ -94,6 +94,8 @@ trait MySQLDialect
 
 object MySQLDialect extends MySQLDialect
 
-object MySQL5Dialect extends MySQLDialect {
+trait MySQL5Dialect extends MySQLDialect {
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 }
+
+object MySQL5Dialect extends MySQL5Dialect
