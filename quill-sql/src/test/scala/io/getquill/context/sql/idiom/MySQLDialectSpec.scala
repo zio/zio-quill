@@ -95,23 +95,22 @@ class MySQLDialectSpec extends OnConflictSpec {
     "ctx.run(q.returning(_.i)).string" mustNot compile
   }
 
-  "OnConflict" - {
+  "OnConflict" - `onConflict with all` { i =>
     "no target - ignore" in {
-      ctx.run(`no target - ignore`.dynamic).string mustEqual
+      ctx.run(`no target - ignore`(i).dynamic).string mustEqual
         "INSERT IGNORE INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
-
     }
     "cols target - ignore" in {
-      ctx.run(`cols target - ignore`.dynamic).string mustEqual
+      ctx.run(`cols target - ignore`(i).dynamic).string mustEqual
         "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE i=i"
     }
     "no target - update" in {
-      ctx.run(`no target - update`).string mustEqual
+      ctx.run(`no target - update`(i)).string mustEqual
         "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE l = ((l + VALUES(l)) / 2), s = VALUES(s)"
     }
     "cols target - update" in {
       intercept[IllegalStateException] {
-        ctx.run(`cols target - update`.dynamic)
+        ctx.run(`cols target - update`(i).dynamic)
       }
     }
   }
