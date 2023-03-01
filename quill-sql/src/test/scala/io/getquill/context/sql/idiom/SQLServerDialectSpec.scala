@@ -26,7 +26,7 @@ class SQLServerDialectSpec extends Spec {
       qr1.take(15).map(t => t.i)
     }
     ctx.run(q).string mustEqual
-      "SELECT TOP 15 t.i FROM TestEntity t"
+      "SELECT TOP (15) t.i FROM TestEntity t"
   }
 
   "literal booleans" - {

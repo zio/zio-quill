@@ -37,7 +37,7 @@ trait SQLServerDialect
 
   override protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     Tokenizer[(Option[Ast], Option[Ast])] {
-      case (Some(limit), None)         => stmt"TOP ${limit.token} $query"
+      case (Some(limit), None)         => stmt"TOP (${limit.token}) $query"
       case (Some(limit), Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS FETCH FIRST ${limit.token} ROWS ONLY"
       case (None, Some(offset))        => stmt"$query OFFSET ${offset.token} ROWS"
       case other                       => super.limitOffsetToken(query).token(other)
