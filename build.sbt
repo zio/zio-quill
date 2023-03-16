@@ -868,7 +868,7 @@ val scala_v_30 = "3.1.2"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"  % "logback-classic" % "1.2.11" % Test
+    "ch.qos.logback"  % "logback-classic" % "1.4.6" % Test
   )
 )
 
