@@ -77,6 +77,10 @@ To enable that use `quill.binds.log` option:
 ```
 java -Dquill.binds.log=true -jar myapp.jar
 ```
+The option `quill.query.tooLong` restricts the maximum length of logged SQL statements:
+```
+java -Dquill.binds.log=true -Dquill.query.tooLong=10000 -jar myapp.jar
+```
 
 ## Pretty Printing
 
