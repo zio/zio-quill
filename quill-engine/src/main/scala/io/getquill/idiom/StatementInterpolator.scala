@@ -20,7 +20,7 @@ object StatementInterpolator {
       fallback: Tokenizer[T] => Tokenizer[T]
     )(pf: PartialFunction[T, Token]) =
       new Tokenizer[T] {
-        private val stable = fallback(this)
+        private val stable       = fallback(this)
         override def token(v: T) = pf.applyOrElse(v, stable.token)
       }
   }
@@ -30,13 +30,12 @@ object StatementInterpolator {
   }
 
   implicit def stringTokenizer: Tokenizer[String] =
-    Tokenizer[String] {
-      case string => StringToken(string)
+    Tokenizer[String] { case string =>
+      StringToken(string)
     }
 
-  implicit def externalTokenizer(
-    implicit
-    tagTokenizer:  Tokenizer[Tag],
+  implicit def externalTokenizer(implicit
+    tagTokenizer: Tokenizer[Tag],
     liftTokenizer: Tokenizer[Lift]
   ): Tokenizer[External] =
     Tokenizer[External] {
@@ -56,7 +55,7 @@ object StatementInterpolator {
       case tag: QuotationTag => QuotationTagToken(tag)
       case lift: ScalarLift  => ScalarLiftToken(lift)
       // TODO Longer Explanation
-      case lift: Tag         => fail("Cannot tokenizer a non-scalar tagging.")
+      case lift: Tag => fail("Cannot tokenizer a non-scalar tagging.")
       case lift: Lift =>
         fail(
           s"Can't tokenize a non-scalar lifting. ${lift.name}\n" +
@@ -110,24 +109,22 @@ object StatementInterpolator {
     }
   }
 
-  implicit def listTokenizer[T](
-    implicit
+  implicit def listTokenizer[T](implicit
     tokenize: Tokenizer[T]
   ): Tokenizer[List[T]] =
-    Tokenizer[List[T]] {
-      case list => list.mkStmt()
+    Tokenizer[List[T]] { case list =>
+      list.mkStmt()
     }
 
   implicit class Impl(sc: StringContext) {
 
     private def flatten(tokens: List[Token]): List[Token] = {
 
-      def unestStatements(tokens: List[Token]): List[Token] = {
+      def unestStatements(tokens: List[Token]): List[Token] =
         tokens.flatMap {
           case Statement(innerTokens) => unestStatements(innerTokens)
           case token                  => token :: Nil
         }
-      }
 
       def mergeStringTokens(tokens: List[Token]): List[Token] = {
         val (resultBuilder, leftTokens) =
@@ -155,7 +152,7 @@ object StatementInterpolator {
     }
 
     private def checkLengths(
-      args:  scala.collection.Seq[Any],
+      args: scala.collection.Seq[Any],
       parts: Seq[String]
     ): Unit =
       if (parts.length != args.length + 1)
@@ -167,8 +164,8 @@ object StatementInterpolator {
     def stmt(args: Token*): Statement = {
       checkLengths(args, sc.parts)
       val partsIterator = sc.parts.iterator
-      val argsIterator = args.iterator
-      val bldr = List.newBuilder[Token]
+      val argsIterator  = args.iterator
+      val bldr          = List.newBuilder[Token]
       bldr += StringToken(partsIterator.next())
       while (argsIterator.hasNext) {
         bldr += argsIterator.next()

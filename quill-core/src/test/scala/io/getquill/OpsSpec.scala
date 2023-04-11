@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.MirrorContexts.testContext._
-import io.getquill.ast.{ Query => _, _ }
+import io.getquill.ast.{Query => _, _}
 import io.getquill.base.Spec
 import io.getquill.quat._
 
@@ -79,24 +79,20 @@ class OpsSpec extends Spec {
 
   "unquotes quoted function bodies automatically" - {
     "one param" in {
-      val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
-        (i: Int) =>
-          query[TestEntity].allowFiltering
+      val q: Quoted[Int => EntityQuery[TestEntity]] = quote { (i: Int) =>
+        query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n = quote { (i: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }
     "multiple params" in {
-      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote {
-        (i: Int, j: Int, k: Int) =>
-          query[TestEntity].allowFiltering
+      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote { (i: Int, j: Int, k: Int) =>
+        query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int, j: Int, k: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n = quote { (i: Int, j: Int, k: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }

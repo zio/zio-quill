@@ -6,8 +6,7 @@ import collection.immutable.Set
 
 case class State(seen: Set[IdentName], free: Set[IdentName])
 
-case class FreeVariables(state: State)
-  extends StatefulTransformer[State] {
+case class FreeVariables(state: State) extends StatefulTransformer[State] {
 
   override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
     ast match {
@@ -49,7 +48,7 @@ case class FreeVariables(state: State)
   override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
     e match {
       case Assignment(a, b, c) =>
-        val t = FreeVariables(State(state.seen + a.idName, state.free))
+        val t         = FreeVariables(State(state.seen + a.idName, state.free))
         val (bt, btt) = t(b)
         val (ct, ctt) = t(c)
         (Assignment(a, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
@@ -58,10 +57,13 @@ case class FreeVariables(state: State)
   override def apply(e: AssignmentDual): (AssignmentDual, StatefulTransformer[State]) =
     e match {
       case AssignmentDual(a1, a2, b, c) =>
-        val t = FreeVariables(State(state.seen + a1.idName + a2.idName, state.free))
+        val t         = FreeVariables(State(state.seen + a1.idName + a2.idName, state.free))
         val (bt, btt) = t(b)
         val (ct, ctt) = t(c)
-        (AssignmentDual(a1, a2, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
+        (
+          AssignmentDual(a1, a2, bt, ct),
+          FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free))
+        )
     }
 
   override def apply(action: Action): (Action, StatefulTransformer[State]) =
@@ -78,13 +80,13 @@ case class FreeVariables(state: State)
 
   override def apply(query: Query): (Query, StatefulTransformer[State]) =
     query match {
-      case q @ Filter(a, b, c)     => (q, free(a, b, c))
-      case q @ Map(a, b, c)        => (q, free(a, b, c))
-      case q @ DistinctOn(a, b, c) => (q, free(a, b, c))
-      case q @ FlatMap(a, b, c)    => (q, free(a, b, c))
-      case q @ ConcatMap(a, b, c)  => (q, free(a, b, c))
-      case q @ SortBy(a, b, c, d)  => (q, free(a, b, c))
-      case q @ GroupBy(a, b, c)    => (q, free(a, b, c))
+      case q @ Filter(a, b, c)           => (q, free(a, b, c))
+      case q @ Map(a, b, c)              => (q, free(a, b, c))
+      case q @ DistinctOn(a, b, c)       => (q, free(a, b, c))
+      case q @ FlatMap(a, b, c)          => (q, free(a, b, c))
+      case q @ ConcatMap(a, b, c)        => (q, free(a, b, c))
+      case q @ SortBy(a, b, c, d)        => (q, free(a, b, c))
+      case q @ GroupBy(a, b, c)          => (q, free(a, b, c))
       case q @ GroupByMap(a, b, c, d, e) =>
         // First search for free variables in the groupBy's `by` clause, then search for them in the `to` clause
         // if any were found int he `by` clause, propogate them forward to the to-clause
@@ -93,8 +95,8 @@ case class FreeVariables(state: State)
         (q, s2)
       case q @ FlatJoin(t, a, b, c) => (q, free(a, b, c))
       case q @ Join(t, a, b, iA, iB, on) =>
-        val (_, freeA) = apply(a)
-        val (_, freeB) = apply(b)
+        val (_, freeA)  = apply(a)
+        val (_, freeB)  = apply(b)
         val (_, freeOn) = FreeVariables(State(state.seen + iA.idName + iB.idName, Set.empty))(on)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
       case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
@@ -123,14 +125,18 @@ object FreeVariables {
       case free if free.isEmpty => Right(ast)
       case free =>
         val firstVar = free.headOption.map(_.name).getOrElse("someVar")
-        Left(s"""
-          |Found the following variables: ${free.map(_.name).toList} that seem to originate outside of a `quote {...}` or `run {...}` block.
-          |Quotes and run blocks cannot use values outside their scope directly (with the exception of inline expressions in Scala 3).
-          |In order to use runtime values in a quotation, you need to lift them, so instead
-          |of this `$firstVar` do this: `lift($firstVar)`.
-          |Here is a more complete example:
-          |Instead of this: `def byName(n: String) = quote(query[Person].filter(_.name == n))`
-          |        Do this: `def byName(n: String) = quote(query[Person].filter(_.name == lift(n)))`
-        """.stripMargin)
+        Left(
+          s"""
+             |Found the following variables: ${free
+              .map(_.name)
+              .toList} that seem to originate outside of a `quote {...}` or `run {...}` block.
+             |Quotes and run blocks cannot use values outside their scope directly (with the exception of inline expressions in Scala 3).
+             |In order to use runtime values in a quotation, you need to lift them, so instead
+             |of this `$firstVar` do this: `lift($firstVar)`.
+             |Here is a more complete example:
+             |Instead of this: `def byName(n: String) = quote(query[Person].filter(_.name == n))`
+             |        Do this: `def byName(n: String) = quote(query[Person].filter(_.name == lift(n)))`
+        """.stripMargin
+        )
     }
 }

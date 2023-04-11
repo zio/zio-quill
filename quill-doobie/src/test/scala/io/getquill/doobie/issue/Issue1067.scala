@@ -26,7 +26,7 @@ class Issue1067 extends AnyFreeSpec with Matchers {
   case class Country(name: String, indepYear: Option[Short])
 
   "Issue1067 - correctly select many countries, with a null in last position" in {
-    val stmt = quote(query[Country])
+    val stmt   = quote(query[Country])
     val actual = dc.run(stmt).transact(xa).unsafeRunSync()
     actual.count(_.indepYear.isDefined) mustEqual 3
     actual.count(_.indepYear.isEmpty) mustEqual 1

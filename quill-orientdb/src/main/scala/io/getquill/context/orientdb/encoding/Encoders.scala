@@ -23,7 +23,7 @@ trait Encoders extends CollectionEncoders {
     encoder((index, value, row, session) => f(index, value, row))
 
   private[this] val nullEncoder: Encoder[Null] =
-    encoder((index, value, row, session) => { row.insert(index, null); row })
+    encoder { (index, value, row, session) => row.insert(index, null); row }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     encoder { (index, value, row, session) =>
@@ -36,15 +36,17 @@ trait Encoders extends CollectionEncoders {
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
     OrientDBEncoder(mappedBaseEncoder(mapped, encoder.encoder))
 
-  implicit val stringEncoder: Encoder[String] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder((index, value, row) => { row.insert(index, value.bigDecimal); row })
-  implicit val booleanEncoder: Encoder[Boolean] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val intEncoder: Encoder[Int] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val shortEncoder: Encoder[Short] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val byteEncoder: Encoder[Byte] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val longEncoder: Encoder[Long] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val floatEncoder: Encoder[Float] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val doubleEncoder: Encoder[Double] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val dateEncoder: Encoder[Date] = encoder((index, value, row) => { row.insert(index, value); row })
-  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder((index, value, row) => { row.insert(index, value); row })
+  implicit val stringEncoder: Encoder[String] = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder { (index, value, row) =>
+    row.insert(index, value.bigDecimal); row
+  }
+  implicit val booleanEncoder: Encoder[Boolean]       = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val intEncoder: Encoder[Int]               = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val shortEncoder: Encoder[Short]           = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val byteEncoder: Encoder[Byte]             = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val longEncoder: Encoder[Long]             = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val floatEncoder: Encoder[Float]           = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val doubleEncoder: Encoder[Double]         = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val dateEncoder: Encoder[Date]             = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder { (index, value, row) => row.insert(index, value); row }
 }

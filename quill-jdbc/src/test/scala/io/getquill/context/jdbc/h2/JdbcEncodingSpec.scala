@@ -17,7 +17,7 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "Encode/Decode Other Time Types" in {
     context.run(query[TimeEntity].delete)
-    val zid = ZoneId.systemDefault()
+    val zid        = ZoneId.systemDefault()
     val timeEntity = TimeEntity.make(zid)
     context.run(query[TimeEntity].insertValue(lift(timeEntity)))
     val actual = context.run(query[TimeEntity]).head

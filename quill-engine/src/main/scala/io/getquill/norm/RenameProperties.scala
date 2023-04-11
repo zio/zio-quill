@@ -2,49 +2,52 @@ package io.getquill.norm
 
 import io.getquill.ast._
 import io.getquill.quat.Quat
-import io.getquill.util.{ Interpolator, TraceConfig }
-import io.getquill.util.Messages.{ TraceType, title }
+import io.getquill.util.{Interpolator, TraceConfig}
+import io.getquill.util.Messages.{TraceType, title}
 
 /**
- * Rename properties now relies on the Quats themselves to propagate field renames. The previous
- * itreations of this phase relied on schema propagation via stateful transforms holding
- * field-renames which were then compared to Property AST elements. This was a painstakingly complex and
- * highly error-prone especially when embedded objects were used requiring computation of sub-schemas
- * in a process called 'schema protraction'.
- * The new variation of this phase relies on the Quats directly since the Quats of every Identity, Lift, etc...
- * now know what the field-names contained therein as well as the sub-Quats of any embedded property.
- * This is fairly simple process:
+ * Rename properties now relies on the Quats themselves to propagate field
+ * renames. The previous itreations of this phase relied on schema propagation
+ * via stateful transforms holding field-renames which were then compared to
+ * Property AST elements. This was a painstakingly complex and highly
+ * error-prone especially when embedded objects were used requiring computation
+ * of sub-schemas in a process called 'schema protraction'. The new variation of
+ * this phase relies on the Quats directly since the Quats of every Identity,
+ * Lift, etc... now know what the field-names contained therein as well as the
+ * sub-Quats of any embedded property. This is fairly simple process:
  *
- * <ul>
- * <li> Learning what Quats have which renames is simple since this can be propagated from the Quats of the Entity objects,
- * to the rest of the AST.
- * <li> This has the simple requirement that renames must be propagated fully before they are actually committed
- * so that the knowledge of what needs to be renamed into what can be distributed easily throughout the AST.
- * <li> Once these future-renames are staged to Quats throught the AST, a simple stateless reduction will then apply
- * the renames to the Property AST elements around the Ident's (and potentially Lifts etc...) with the renamed Quats.
- * </ul>
+ * <ul> <li> Learning what Quats have which renames is simple since this can be
+ * propagated from the Quats of the Entity objects, to the rest of the AST. <li>
+ * This has the simple requirement that renames must be propagated fully before
+ * they are actually committed so that the knowledge of what needs to be renamed
+ * into what can be distributed easily throughout the AST. <li> Once these
+ * future-renames are staged to Quats throught the AST, a simple stateless
+ * reduction will then apply the renames to the Property AST elements around the
+ * Ident's (and potentially Lifts etc...) with the renamed Quats. </ul>
  *
- * The entire process above can be done with a series of stateless transformations with straighforward operations
- * since the majority of the logic actually lives within the Quats themselves.
+ * The entire process above can be done with a series of stateless
+ * transformations with straighforward operations since the majority of the
+ * logic actually lives within the Quats themselves.
  */
 class RenameProperties(traceConfig: TraceConfig) {
   private def demarcate(heading: String) =
     ((ast: Ast) => title(heading)(ast))
 
   val ApplyRenamesToPropsPhase = new ApplyRenamesToProps(traceConfig)
-  val RepropagateQuatsPhase = new RepropagateQuats(traceConfig)
+  val RepropagateQuatsPhase    = new RepropagateQuats(traceConfig)
 
-  def apply(ast: Ast) = {
+  def apply(ast: Ast) =
     (identity[Ast] _)
       .andThen(SeedRenames.apply(_: Ast)) // Stage field renames into the Quats of entities
       .andThen(demarcate("SeedRenames"))
       .andThen(RepropagateQuatsPhase.apply(_: Ast))
-      .andThen(demarcate("RepropagateQuats")) // Propagate the renames from Entity-Quats to the rest of the Quats in the AST
+      .andThen(
+        demarcate("RepropagateQuats")
+      ) // Propagate the renames from Entity-Quats to the rest of the Quats in the AST
       .andThen(ApplyRenamesToPropsPhase.apply(_: Ast))
       .andThen(demarcate("ApplyRenamesToProps")) // Go through the Quats and 'commit' the renames
       .andThen(CompleteRenames.apply(_: Ast))
       .andThen(demarcate("CompleteRenames"))(ast) // Quats can be invalid in between this phase and the previous one
-  }
 }
 
 object CompleteRenames extends StatelessTransformer {
@@ -100,12 +103,14 @@ class ApplyRenamesToProps(traceConfig: TraceConfig) extends StatelessTransformer
 }
 
 object SeedRenames extends StatelessTransformer {
+
   /**
-   * In the case that there are entities inside of an infix and the infix is cast to the same entity, propagate the
-   * renames from the entity inside of the infix to the external AST. For example say we have something like this:
+   * In the case that there are entities inside of an infix and the infix is
+   * cast to the same entity, propagate the renames from the entity inside of
+   * the infix to the external AST. For example say we have something like this:
    * {{{
    * val q = quote {
-   *  sql"$${querySchema[A]("C", _.v -> "m")} LIMIT 10".as[Query[A]].filter(x => x.v == 1)
+   *   sql"$${querySchema[A]("C", _.v -> "m")} LIMIT 10".as[Query[A]].filter(x => x.v == 1)
    * }
    * run(q)
    * }}}
@@ -138,7 +143,9 @@ object SeedRenames extends StatelessTransformer {
             // Check if there are any entities that have defined renames and warn them that renames cannot be applied
             // if there is more then one entity in the infix block
             if (br.length > 1 && br.find { case e: Entity => e.properties.length > 0; case _ => false }.isDefined)
-              println(s"Cannot propagate renames from the entity ${e} into Query since there are other AST elements in the infix: ${br}")
+              println(
+                s"Cannot propagate renames from the entity ${e} into Query since there are other AST elements in the infix: ${br}"
+              )
 
             Infix(a, br, pure, tr, qu)
         }

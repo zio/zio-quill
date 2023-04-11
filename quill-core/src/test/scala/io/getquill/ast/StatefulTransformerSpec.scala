@@ -7,12 +7,11 @@ import io.getquill.base.Spec
 class StatefulTransformerSpec extends Spec {
 
   case class Subject(state: List[Ast], replace: (Ast, Ast)*) extends StatefulTransformer[List[Ast]] {
-    override def apply(e: Ast) = {
+    override def apply(e: Ast) =
       replace.toMap.get(e) match {
         case Some(ast) => (ast, Subject(state :+ e, replace: _*))
         case None      => super.apply(e)
       }
-    }
   }
 
   "transforms asts using a transformation state" - {
@@ -196,7 +195,13 @@ class StatefulTransformerSpec extends Spec {
     "action" - {
       "update" in {
         val ast: Ast = Update(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) match {
+        Subject(
+          Nil,
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'"),
+          Ident("d") -> Ident("d'")
+        )(ast) match {
           case (at, att) =>
             at mustEqual Update(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
             att.state mustEqual List(Ident("a"), Ident("c"), Ident("d"))
@@ -204,7 +209,13 @@ class StatefulTransformerSpec extends Spec {
       }
       "insert" in {
         val ast: Ast = Insert(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Nil, Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) match {
+        Subject(
+          Nil,
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'"),
+          Ident("d") -> Ident("d'")
+        )(ast) match {
           case (at, att) =>
             at mustEqual Insert(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
             att.state mustEqual List(Ident("a"), Ident("c"), Ident("d"))
@@ -257,8 +268,15 @@ class StatefulTransformerSpec extends Spec {
         }
       }
       "update" in {
-        val action: OnConflict.Action = OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))))
-        Subject(Nil, Ident("a1") -> Ident("a1'"), Ident("a2") -> Ident("a2'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) match {
+        val action: OnConflict.Action =
+          OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))))
+        Subject(
+          Nil,
+          Ident("a1") -> Ident("a1'"),
+          Ident("a2") -> Ident("a2'"),
+          Ident("b")  -> Ident("b'"),
+          Ident("c")  -> Ident("c'")
+        )(action) match {
           case (at, att) =>
             // I.e. values should be changed in this case but not identifiers. Identifiers are not modified in the stateful transformer.
             // The stateless transformer has a specific clause for them that will activate in some instances.
@@ -559,16 +577,22 @@ class StatefulTransformerSpec extends Spec {
     }
 
     "block" in {
-      val ast: Ast = Block(List(
-        Val(Ident("a"), Entity("a", Nil, QEP)),
-        Val(Ident("b"), Entity("b", Nil, QEP))
-      ))
-      Subject(Nil, Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(ast) match {
+      val ast: Ast = Block(
+        List(
+          Val(Ident("a"), Entity("a", Nil, QEP)),
+          Val(Ident("b"), Entity("b", Nil, QEP))
+        )
+      )
+      Subject(Nil, Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(
+        ast
+      ) match {
         case (at, att) =>
-          at mustEqual Block(List(
-            Val(Ident("a"), Entity("b", Nil, QEP)),
-            Val(Ident("b"), Entity("c", Nil, QEP))
-          ))
+          at mustEqual Block(
+            List(
+              Val(Ident("a"), Entity("b", Nil, QEP)),
+              Val(Ident("b"), Entity("c", Nil, QEP))
+            )
+          )
           att.state mustEqual List(Entity("a", Nil, QEP), Entity("b", Nil, QEP))
       }
     }

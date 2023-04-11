@@ -15,10 +15,10 @@ class ObservationMirrorSpec extends Spec {
   val obs = quote {
     querySchema[Observation](
       "observation",
-      _.data.map(_.value) -> "obs_value",
+      _.data.map(_.value)               -> "obs_value",
       _.data.map(_.position.map(_.lat)) -> "obs_lat",
       _.data.map(_.position.map(_.lon)) -> "obs_lon",
-      _.bar -> "baz"
+      _.bar                             -> "baz"
     )
   }
 

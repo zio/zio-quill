@@ -11,15 +11,11 @@ then
     echo "No Artifact Specified"
 fi
 
-SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
-SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquill.scala.version=2.12.6"
-SBT_2_13="sbt ++2.13.2 -Dquill.macro.log=false -Dquill.scala.version=2.13.2"
-SBT_3_00="sbt ++3.0.2 -Dquill.macro.log=false -Dquill.scala.version=3.0.2"
+SBT_2_12="sbt ++2.12.17 -Dquill.macro.log=false -Dquill.scala.version=2.12.17"
+SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
+SBT_3_00="sbt ++3.2.2 -Dquill.macro.log=false -Dquill.scala.version=3.2.2"
 
-if [[ $VERSION -eq 211 ]]
-then
-    SBT_VER=$SBT_2_11
-elif [[ $VERSION -eq 212 ]]
+if [[ $VERSION -eq 212 ]]
 then
     SBT_VER=$SBT_2_12
 elif [[ $VERSION -eq 213 ]]

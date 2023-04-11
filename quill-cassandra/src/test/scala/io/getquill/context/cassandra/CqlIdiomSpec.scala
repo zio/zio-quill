@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.ast.{ Action => AstAction, Query => _, _ }
+import io.getquill.ast.{Action => AstAction, Query => _, _}
 import io.getquill.idiom.StringToken
 import io.getquill.Query
 import io.getquill.base.Spec
@@ -385,11 +385,23 @@ class CqlIdiomSpec extends Spec {
     }
     "assignment" in {
       val a: Ast = Assignment(Ident("a"), Ident("b"), Ident("c"))
-      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe ((a, stmt"b = c", ExecutionType.Unknown))
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe (
+        (
+          a,
+          stmt"b = c",
+          ExecutionType.Unknown
+        )
+      )
     }
     "assignmentDual" in {
       val a: Ast = AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))
-      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe ((a, stmt"b = c", ExecutionType.Unknown))
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe (
+        (
+          a,
+          stmt"b = c",
+          ExecutionType.Unknown
+        )
+      )
     }
     "aggregation" in {
       val t = implicitly[Tokenizer[AggregationOperator]]
