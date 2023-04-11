@@ -23,7 +23,7 @@ export CASSANDRA_DC=datacenter1
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms3g -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 
 modules=$1
 echo "Start build modules: $modules"
@@ -64,9 +64,9 @@ export -f docker_stats
 
 export SBT_ARGS="++$SCALA_VERSION"
 
-if [[ $SCALA_VERSION == 2.12* ]]; then
-    export SBT_ARGS="$SBT_ARGS coverage"
-fi
+#if [[ $SCALA_VERSION == 2.13* ]]; then
+#    export SBT_ARGS="$SBT_ARGS coverage"
+#fi
 
 function wait_for_databases() {
     show_mem
@@ -164,7 +164,7 @@ function wait_for_bigdata() {
 
 function base_build() {
     echo "build.sh =:> Base Build Specified"
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting Base Build Primary"
     sbt "sbt -Dmodules=base $SBT_ARGS test"
 }
@@ -172,7 +172,7 @@ function base_build() {
 function db_build() {
     echo "build.sh =:> DB Build Specified"
     wait_for_databases
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting DB Build Primary"
     ./build/aware_run.sh "sbt -Dmodules=db $SBT_ARGS test"
 }
@@ -180,7 +180,7 @@ function db_build() {
 function js_build() {
     echo "build.sh =:> JS Build Specified"
     show_mem
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting JS Build Primary"
     sbt -Dmodules=js $SBT_ARGS test
 }
@@ -261,12 +261,12 @@ fi
 show_mem
 echo "Tests completed. Shutting down"
 time docker-compose down
-# for 2.12 publish coverage
-if [[ $SCALA_VERSION == 2.12* ]]; then
-    echo "Coverage"
-    time sbt $SBT_ARGS coverageReport coverageAggregate
-    pip install --user codecov && codecov
-fi
+# for 2.13 publish coverage
+#if [[ $SCALA_VERSION == 2.13* ]]; then
+#    echo "Coverage"
+#    time sbt $SBT_ARGS coverageReport coverageAggregate
+#    pip install --user codecov && codecov
+#fi
 show_mem
 
 sleep 10
