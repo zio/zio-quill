@@ -24,34 +24,34 @@ jobs:
    strategy:
      fail-fast: false
      matrix:
-       scala: [2.12.17, 2.13.10, 3.2.2]
+       scala: [2.12.x, 2.13.x, 3.2.x]
        module: [base, db, js, async, codegen, bigdata]
        include:
-         - scala: 2.12.17
+         - scala: 2.12.x
            scala_short: 212
            scala_short_dot: 2.12
-         - scala: 2.13.10
+         - scala: 2.13.x
            scala_short: 213
            scala_short_dot: 2.13
-         - scala: 3.2.2
+         - scala: 3.2.x
            scala_short: 30
            scala_short_dot: 3.0
        exclude:
          # For now, only do the `base` build for Scala 3
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: db
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: js
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: async
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: codegen
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: bigdata
          # For other modules, `base` build is already included
-         - scala: 2.12.17
+         - scala: 2.12.x
            module: base
-         - scala: 2.13.10
+         - scala: 2.13.x
            module: base
 
    name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
@@ -88,28 +88,28 @@ jobs:
    strategy:
      fail-fast: false
      matrix:
-       scala: [2.12.17, 2.13.10, 3.2.2]
+       scala: [2.12.x, 2.13.x, 3.2.x]
        module: [docs, base, db, js, async, codegen, bigdata]
        include:
-         - scala: 2.12.17
+         - scala: 2.12.x
            scala_short: 212
            scala_short_dot: 2.12
-         - scala: 2.13.10
+         - scala: 2.13.x
            scala_short: 213
            scala_short_dot: 2.13
-         - scala: 3.2.2
+         - scala: 3.2.x
            scala_short: 30
            scala_short_dot: 3.0
        exclude:
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: db
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: js
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: async
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: codegen
-         - scala: 3.2.2
+         - scala: 3.2.x
            module: bigdata
 
    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
@@ -155,10 +155,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scala: [2.13.10]
+        scala: [2.13.x]
         module: [publish]
         include:
-          - scala: 2.13.10
+          - scala: 2.13.x
             scala_short: 212
             scala_short_dot: 2.12
 

@@ -11,7 +11,7 @@ then
     echo "No Artifact Specified"
 fi
 
-SBT_2_12="sbt ++2.12.17 -Dquill.macro.log=false -Dquill.scala.version=2.12.17"
+SBT_2_12="sbt ++2.12.16 -Dquill.macro.log=false -Dquill.scala.version=2.12.16"
 SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
 SBT_3_00="sbt ++3.2.2 -Dquill.macro.log=false -Dquill.scala.version=3.2.2"
 
