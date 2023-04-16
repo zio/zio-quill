@@ -155,8 +155,7 @@ lazy val filteredModules = {
         Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
       case _ | "all" =>
         // Workaround for https://github.com/sbt/sbt/issues/3465
-        val scalaVersion = sys.props.get("quill.scala.version")
-        if(scalaVersion.map(_.startsWith("2.13")).getOrElse(false)) {
+        if(isScala213) {
           println("SBT =:> Compiling Scala 2.13 Modules")
           baseModules ++ dbModules ++ jasyncModules
         } else {
@@ -316,7 +315,8 @@ lazy val `quill-sql` =
     .settings(commonSettings: _*)
     .jsSettings(
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages := ".*"
+      coverageExcludedPackages := ".*",
+      libraryDependencies += "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0"
     )
     .dependsOn(
       `quill-engine` % "compile->compile",
@@ -789,7 +789,7 @@ def excludePaths(paths:Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.17"
+val scala_v_12 = "2.12.16"
 val scala_v_13 = "2.13.10"
 val scala_v_30 = "3.2.2"
 
@@ -806,7 +806,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
     "com.lihaoyi"     %% "pprint"         % "0.6.6",
-    "org.scalatest"   %%% "scalatest"     % "3.2.15"         % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.2.10"         % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro && isScala2) Seq(
@@ -950,6 +950,8 @@ lazy val releaseSettings = Seq(
 
 lazy val docs = project
   .in(file("zio-quill-docs"))
+  .enablePlugins(WebsitePlugin)
+  .settings(coverageEnabled := false)
   .settings(
     moduleName     := "zio-quill-docs",
     scalacOptions -= "-Yno-imports",
@@ -992,4 +994,3 @@ lazy val docs = project
          |
          |You can notify all current maintainers using the handle `@getquill/maintainers`.""".stripMargin
   )
-  .enablePlugins(WebsitePlugin)
