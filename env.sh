@@ -12,5 +12,5 @@ export ORIENTDB_PORT=12424
 export ORACLE_HOST=127.0.0.1
 export ORACLE_PORT=11521
 
-export JAVA_OPTS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+export JVM_OPTS="-Dquill.macro.log=false -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 
