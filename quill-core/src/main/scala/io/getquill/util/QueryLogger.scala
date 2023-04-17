@@ -13,10 +13,11 @@ class QueryLogger(logToFile: LogToFile) {
   val runtime =
     Unsafe.unsafe { implicit u =>
       logToFile match {
-        case LogToFile.Enabled(logFile) => Some(Runtime.unsafe.fromLayer(file(
+        case LogToFile.Enabled(logFile) => Some(Runtime.unsafe.fromLayer(fileLogger(FileLoggerConfig(
+          destination = Paths.get(logFile),
           format = LogFormat.line,
-          destination = Paths.get(logFile)
-        )))
+          filter = LogFilter.logLevel(LogLevel.Info)
+        ))))
         case LogToFile.Disabled => None
       }
     }
