@@ -4,7 +4,7 @@ resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releas
 
 addDependencyTreePlugin
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.9.2")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.0")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "5.2.4")
 
@@ -24,6 +24,4 @@ addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.2.0")
 
 addSbtPlugin("com.etsy" % "sbt-compile-quick-plugin" % "1.4.0")
 
-addSbtPlugin("dev.zio" % "zio-sbt-website" % "0.2.2")
-
-resolvers += Resolver.sonatypeRepo("public")
+addSbtPlugin("dev.zio" % "zio-sbt-website" % "0.3.9")
