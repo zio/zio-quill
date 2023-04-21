@@ -22,44 +22,37 @@ jobs:
      MYSQL_PASSWORD: root
 
    strategy:
+     fail-fast: false
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2, 3.1.2]
+       scala: [2.12.x, 2.13.x, 3.2.x]
        module: [base, db, js, async, codegen, bigdata]
        include:
-         - scala: 2.11.12
-           scala_short: 211
-           scala_short_dot: 2.11
-         - scala: 2.12.10
+         - scala: 2.12.x
            scala_short: 212
            scala_short_dot: 2.12
-         - scala: 2.13.2
+         - scala: 2.13.x
            scala_short: 213
            scala_short_dot: 2.13
-         - scala: 3.1.2
+         - scala: 3.2.x
            scala_short: 30
            scala_short_dot: 3.0
        exclude:
          # For now, only do the `base` build for Scala 3
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: db
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: js
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: async
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: codegen
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: bigdata
          # For other modules, `base` build is already included
-         - scala: 2.11.12
+         - scala: 2.12.x
            module: base
-         - scala: 2.12.10
+         - scala: 2.13.x
            module: base
-         - scala: 2.13.2
-           module: base
-         # Do not build 2.11 Scala JS anymore since various modules such as scala-collection-compat are missing for it
-         - scala: 2.11.12
-           module: js
 
    name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
@@ -74,9 +67,11 @@ jobs:
        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
    - name: Setup Java and Scala
-     uses: olafurpg/setup-scala@v10
+     uses: actions/setup-java@v3.10.0
      with:
-       java-version: 1.8.0
+       distribution: temurin
+       java-version: '8'
+       check-latest: true
 
    - name: Build modules
      run: |
@@ -91,36 +86,31 @@ jobs:
    needs: build
 
    strategy:
+     fail-fast: false
      matrix:
-       scala: [2.11.12, 2.12.10, 2.13.2, 3.1.2]
+       scala: [2.12.x, 2.13.x, 3.2.x]
        module: [docs, base, db, js, async, codegen, bigdata]
        include:
-         - scala: 2.11.12
-           scala_short: 211
-           scala_short_dot: 2.11
-         - scala: 2.12.10
+         - scala: 2.12.x
            scala_short: 212
            scala_short_dot: 2.12
-         - scala: 2.13.2
+         - scala: 2.13.x
            scala_short: 213
            scala_short_dot: 2.13
-         - scala: 3.1.2
+         - scala: 3.2.x
            scala_short: 30
            scala_short_dot: 3.0
        exclude:
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: db
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: js
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: async
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: codegen
-         - scala: 3.1.2
+         - scala: 3.2.x
            module: bigdata
-         # Do not release 2.11 Scala JS anymore since various modules such as scala-collection-compat are missing for it
-         - scala: 2.11.12
-           module: js
 
    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
@@ -135,9 +125,11 @@ jobs:
        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
    - name: Setup Java and Scala
-     uses: olafurpg/setup-scala@v10
+     uses: actions/setup-java@v3.10.0
      with:
-       java-version: 1.8.0
+       distribution: temurin
+       java-version: '8'
+       check-latest: true
 
    - name: Release
      run: |
@@ -161,11 +153,12 @@ jobs:
     needs: release
 
     strategy:
+      fail-fast: false
       matrix:
-        scala: [2.12.10]
+        scala: [2.13.x]
         module: [publish]
         include:
-          - scala: 2.12.10
+          - scala: 2.13.x
             scala_short: 212
             scala_short_dot: 2.12
 
@@ -182,9 +175,11 @@ jobs:
           key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
       - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v10
+        uses: actions/setup-java@v3.10.0
         with:
-          java-version: 1.8.0
+          distribution: temurin
+          java-version: '8'
+          check-latest: true
 
       - name: Release
         run: |
