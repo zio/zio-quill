@@ -3,6 +3,15 @@ id: changelog
 title: "Quill Changelog"
 ---
 
+- [Remove support of Scala 2.11 && Update ZIO to 2.0.12](https://github.com/zio/zio-quill/pull/2722)
+  - Remove support of Scala 2.11
+  - Update Scala versions
+  - Update ZIO to 2.0.12
+  - Update zio-logging to 2.1.12
+  - Update sbt to 1.7.3
+  - Update sbt-scoverage to 2.0.0
+  - Update zio-json to 0.5.0
+
 # 4.6.0
 
 - [Implementing Postgres json/jsonb encoding via zio-json](https://github.com/zio/zio-quill/pull/2615)

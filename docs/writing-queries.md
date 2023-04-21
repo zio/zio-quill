@@ -1774,17 +1774,17 @@ run(q, 2) // i.e. insert rows from the `people` list in batches of 2
 
 Using a batch-count of about 1000-5000 rows (i.e. `run(q, 1000)`) can significantly improve query performance:
 
-|Network Latency | Rows Inserted | Total Time
-|-------|-----------|---------|
-| 0ms   | 10k rows  | 3.772   |
-| 50ms  | 10k rows  | 3.899   |
-| 100ms | 10k rows  | 4.63    |
-| 0ms   | 100k rows | 2.902   |
-| 50ms  | 100k rows | 3.225   |
-| 100ms | 100k rows | 3.554   |
-| 0ms   | 1m rows   | 9.923   |
-| 50ms  | 1m rows   | 10.035  |
-| 100ms | 1m rows   | 10.328  |
+| Network Latency | Rows Inserted | Total Time |
+|-----------------|---------------|------------|
+| 0ms             | 10k rows      | 3.772      |
+| 50ms            | 10k rows      | 3.899      |
+| 100ms           | 10k rows      | 4.63       |
+| 0ms             | 100k rows     | 2.902      |
+| 50ms            | 100k rows     | 3.225      |
+| 100ms           | 100k rows     | 3.554      |
+| 0ms             | 1m rows       | 9.923      |
+| 50ms            | 1m rows       | 10.035     |
+| 100ms           | 1m rows       | 10.328     |
 
 One thing to take note of is that each one of the `?` placeholders above is a prepared-statement variable. This means
 that in batch-sizes of 1000, there will be 1000 `?` variables in each query. In many databases this has a strict limit.

@@ -11,15 +11,11 @@ then
     echo "No Artifact Specified"
 fi
 
-SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
-SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquill.scala.version=2.12.6"
-SBT_2_13="sbt ++2.13.2 -Dquill.macro.log=false -Dquill.scala.version=2.13.2"
-SBT_3_00="sbt ++3.0.2 -Dquill.macro.log=false -Dquill.scala.version=3.0.2"
+SBT_2_12="sbt ++2.12.16 -Dquill.macro.log=false -Dquill.scala.version=2.12.16"
+SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
+SBT_3_00="sbt ++3.2.2 -Dquill.macro.log=false -Dquill.scala.version=3.2.2"
 
-if [[ $VERSION -eq 211 ]]
-then
-    SBT_VER=$SBT_2_11
-elif [[ $VERSION -eq 212 ]]
+if [[ $VERSION -eq 212 ]]
 then
     SBT_VER=$SBT_2_12
 elif [[ $VERSION -eq 213 ]]
@@ -125,6 +121,7 @@ then
         if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
         if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
         if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
+        if [[ $ARTIFACT == "docs" ]]; then    $SBT_VER -Dmodules=docs publish; fi
 
         # No-Op Publish
         if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
