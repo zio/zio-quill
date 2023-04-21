@@ -875,7 +875,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   crossScalaVersions := Seq(scala_v_11, scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
     "com.lihaoyi"     %% "pprint"         % "0.6.6",
-    "org.scalatest"   %%% "scalatest"     % "3.2.15"          % Test,
+    "org.scalatest"   %%% "scalatest"     % "3.2.10"          % Test,
     "com.google.code.findbugs" % "jsr305" % "3.0.2"          % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro && isScala2) Seq(
