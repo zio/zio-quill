@@ -29,7 +29,7 @@ services:
     environment:
       - MAX_HEAP_SIZE=256m
       - HEAP_NEWSIZE=64m
-      - JVM_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
+      - JAVA_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
     init: true
 
   # For some reason OrientDB 3.0.42 does not stay up once started during local testing so need to bump to 3.2.6. Also in build.sbt
