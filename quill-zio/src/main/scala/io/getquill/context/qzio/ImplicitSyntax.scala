@@ -1,10 +1,10 @@
 package io.getquill.context.qzio
 
-import zio.{ IO, Tag, ZEnvironment, ZIO }
+import zio.{IO, Tag, ZEnvironment, ZIO}
 
 /**
- * Use to provide `run(myQuery)` calls with a context implicitly saving the need to provide things multiple times.
- * For example in JDBC:
+ * Use to provide `run(myQuery)` calls with a context implicitly saving the need
+ * to provide things multiple times. For example in JDBC:
  * {{{
  *   case class MyQueryService(ds: DataSource) {
  *     import Ctx._
@@ -34,10 +34,13 @@ import zio.{ IO, Tag, ZEnvironment, ZIO }
  *     def alexes = Ctx.run { query[Person].filter(p => p.name == "Alex") }.implicitly
  *   }
  * }}}
- *
  */
 object ImplicitSyntax {
-  /** A new type that indicates that the value `R` should be made available to the environment implicitly. */
+
+  /**
+   * A new type that indicates that the value `R` should be made available to
+   * the environment implicitly.
+   */
   final case class Implicit[R](env: R)
 
   implicit final class ImplicitSyntaxOps[R, E, A](private val self: ZIO[R, E, A]) extends AnyVal {

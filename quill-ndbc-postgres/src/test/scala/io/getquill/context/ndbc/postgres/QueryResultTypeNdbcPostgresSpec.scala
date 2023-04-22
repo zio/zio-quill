@@ -17,8 +17,8 @@ class QueryResultTypeNdbcPostgresSpec extends QueryResultTypeSpec {
   override def beforeAll = {
     get(context.run(deleteAll))
     val ids = get(context.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()

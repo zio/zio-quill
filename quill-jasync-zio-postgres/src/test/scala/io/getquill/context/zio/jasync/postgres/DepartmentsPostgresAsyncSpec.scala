@@ -22,7 +22,9 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec with ZioSpec {
     }
 
   "Example 8 - nested naive" in {
-    runSyncUnsafe(testContext.run(`Example 8 expertise naive`(lift(`Example 8 param`)))) mustEqual `Example 8 expected result`
+    runSyncUnsafe(
+      testContext.run(`Example 8 expertise naive`(lift(`Example 8 param`)))
+    ) mustEqual `Example 8 expected result`
   }
 
   "Example 9 - nested db" in {

@@ -1,6 +1,6 @@
 package io.getquill.context.jasync
 
-import java.time.{ LocalDate, LocalDateTime, OffsetDateTime }
+import java.time.{LocalDate, LocalDateTime, OffsetDateTime}
 import java.util.Date
 
 trait Encoders {
@@ -10,8 +10,7 @@ trait Encoders {
 
   type EncoderSqlType = SqlTypes.SqlTypes
 
-  case class AsyncEncoder[T](sqlType: DecoderSqlType)(implicit encoder: BaseEncoder[T])
-    extends BaseEncoder[T] {
+  case class AsyncEncoder[T](sqlType: DecoderSqlType)(implicit encoder: BaseEncoder[T]) extends BaseEncoder[T] {
     override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
       encoder.apply(index, value, row, session)
   }
@@ -33,29 +32,32 @@ trait Encoders {
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     AsyncEncoder(d.sqlType)(new BaseEncoder[Option[T]] {
-      def apply(index: Index, value: Option[T], row: PrepareRow, session: Session) = {
+      def apply(index: Index, value: Option[T], row: PrepareRow, session: Session) =
         value match {
           case None    => nullEncoder(index, null, row, session)
           case Some(v) => d(index, v, row, session)
         }
-      }
     })
 
   private[this] val nullEncoder: Encoder[Null] = encoder[Null](SqlTypes.NULL)
 
   implicit val stringEncoder: Encoder[String] = encoder[String](SqlTypes.VARCHAR)
-  implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]((bd: BigDecimal) => bd.bigDecimal, SqlTypes.REAL)
-  implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean](SqlTypes.BOOLEAN)
-  implicit val byteEncoder: Encoder[Byte] = encoder[Byte](SqlTypes.TINYINT)
-  implicit val shortEncoder: Encoder[Short] = encoder[Short](SqlTypes.SMALLINT)
-  implicit val intEncoder: Encoder[Int] = encoder[Int](SqlTypes.INTEGER)
-  implicit val longEncoder: Encoder[Long] = encoder[Long](SqlTypes.BIGINT)
-  implicit val floatEncoder: Encoder[Float] = encoder[Float](SqlTypes.FLOAT)
-  implicit val doubleEncoder: Encoder[Double] = encoder[Double](SqlTypes.DOUBLE)
+  implicit val bigDecimalEncoder: Encoder[BigDecimal] =
+    encoder[BigDecimal]((bd: BigDecimal) => bd.bigDecimal, SqlTypes.REAL)
+  implicit val booleanEncoder: Encoder[Boolean]       = encoder[Boolean](SqlTypes.BOOLEAN)
+  implicit val byteEncoder: Encoder[Byte]             = encoder[Byte](SqlTypes.TINYINT)
+  implicit val shortEncoder: Encoder[Short]           = encoder[Short](SqlTypes.SMALLINT)
+  implicit val intEncoder: Encoder[Int]               = encoder[Int](SqlTypes.INTEGER)
+  implicit val longEncoder: Encoder[Long]             = encoder[Long](SqlTypes.BIGINT)
+  implicit val floatEncoder: Encoder[Float]           = encoder[Float](SqlTypes.FLOAT)
+  implicit val doubleEncoder: Encoder[Double]         = encoder[Double](SqlTypes.DOUBLE)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](SqlTypes.VARBINARY)
-  implicit val dateEncoder: Encoder[Date] = encoder[Date]((date: Date) => {
-    OffsetDateTime.ofInstant(date.toInstant, dateTimeZone).toLocalDateTime
-  }, SqlTypes.TIMESTAMP)
-  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate](SqlTypes.DATE)
+  implicit val dateEncoder: Encoder[Date] = encoder[Date](
+    (date: Date) => {
+      OffsetDateTime.ofInstant(date.toInstant, dateTimeZone).toLocalDateTime
+    },
+    SqlTypes.TIMESTAMP
+  )
+  implicit val localDateEncoder: Encoder[LocalDate]         = encoder[LocalDate](SqlTypes.DATE)
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime](SqlTypes.TIMESTAMP)
 }
