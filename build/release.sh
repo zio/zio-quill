@@ -13,7 +13,7 @@ fi
 
 SBT_2_12="sbt ++2.12.16 -Dquill.macro.log=false -Dquill.scala.version=2.12.16"
 SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
-SBT_3_00="sbt ++3.2.2 -Dquill.macro.log=false -Dquill.scala.version=3.2.2"
+SBT_3_2="sbt ++3.2.2 -Dquill.macro.log=false -Dquill.scala.version=3.2.2"
 
 if [[ $VERSION -eq 212 ]]
 then
@@ -21,9 +21,9 @@ then
 elif [[ $VERSION -eq 213 ]]
 then
     SBT_VER=$SBT_2_13
-elif [[ $VERSION -eq 30 ]]
+elif [[ $VERSION -eq 32 ]]
 then
-    SBT_VER=$SBT_3_00
+    SBT_VER=$SBT_3_2
 else
     echo "No Valid SBT Version Entered"
     exit 1
