@@ -7,7 +7,7 @@ import io.getquill.context.jdbc.{ JdbcContext, OracleJdbcContextBase }
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
-class OracleJdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource with Closeable)
+class OracleJdbcContext[+N <: NamingStrategy](val naming: N, val dataSource: DataSource)
   extends JdbcContext[OracleDialect, N]
   with OracleJdbcContextBase[OracleDialect, N] {
   override val idiom: OracleDialect = OracleDialect

@@ -4,6 +4,7 @@ import io.getquill.{ JsonValue, JsonbValue, ZioSpec }
 import zio.Chunk
 import zio.json.ast.Json
 import zio.json.{ DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder }
+import scala.language.higherKinds
 
 class PostgresJsonSpec extends ZioSpec {
   val context = testContext
@@ -68,5 +69,9 @@ class PostgresJsonSpec extends ZioSpec {
       val inserted = testContext.run(jsonbAstQuery).runSyncUnsafe().head
       inserted mustEqual jsonbAstValue
     }
+  }
+
+  "unwrapping now allowed" in {
+    "testContext.run(query[JsonEntity].map(_.value.value)).runSyncUnsafe().head" mustNot compile
   }
 }
