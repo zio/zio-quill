@@ -93,7 +93,7 @@ then
           echo "Doing Master Publish for BRANCH=$BRANCH VERSION=$VERSION ARTIFACT=$ARTIFACT"
           # Delete the website tag. If it does not currently exist then ignore it.
           git push --delete origin website || true
-          $SBT_VER -Dmodules=none 'release with-defaults default-tag-exists-answer o';
+          $SBT_VER -Dmodules=all 'release with-defaults default-tag-exists-answer o';
         fi
 
     elif [[ $BRANCH == "master" && $(cat version.sbt) == *"SNAPSHOT"* ]]

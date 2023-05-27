@@ -150,20 +150,8 @@ lazy val filteredModules = {
       case "bigdata" =>
         println("SBT =:> Compiling Big Data Modules")
         bigdataModules
-      case "none" =>
-        println("SBT =:> Invoking Aggregate Project")
-        Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
       case _ | "all" =>
-        // Workaround for https://github.com/sbt/sbt/issues/3465
-        if(isScala213) {
-          println("SBT =:> Compiling Scala 2.13 Modules")
-          baseModules ++ dbModules ++ jasyncModules
-        } else {
-          println("SBT =:> Compiling All Modules")
-          allModules
-          // Note, can't do this because things like inform (i.e. formatting) actually do run for all modules
-          //throw new IllegalStateException("Tried to build all modules. Not allowed.")
-        }
+        allModules
     }
 
   val selectedModules = {
@@ -188,13 +176,12 @@ lazy val filteredModules = {
   selectedModules
 }
 
-lazy val `quill` =
-  (project in file("."))
+lazy val root =
+  Project(id = "quill", base = file("."))
     .settings(commonSettings: _*)
+    .settings(publishArtifact := false)
     .aggregate(filteredModules.map(_.project).toSeq: _*)
     .dependsOn(filteredModules.toSeq: _*)
-
-`quill` / publishArtifact := false
 
 lazy val `quill-util` =
   (project in file("quill-util"))
