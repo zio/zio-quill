@@ -224,7 +224,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.1.0")
+        ("org.scalameta" %% "scalafmt-core" % "3.1.2")
           .excludeAll(
             (Seq(
               ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
