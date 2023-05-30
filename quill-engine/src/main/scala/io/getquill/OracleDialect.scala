@@ -1,29 +1,32 @@
 package io.getquill
 
 import io.getquill.ast._
-import io.getquill.context.{ CanInsertReturningWithSingleValue, CanInsertWithSingleValue, CanReturnMultiField }
+import io.getquill.context.{CanInsertReturningWithSingleValue, CanInsertWithSingleValue, CanReturnMultiField}
 import io.getquill.context.sql._
 import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.idiom.{ Statement, StringToken, Token }
+import io.getquill.idiom.{Statement, StringToken, Token}
 import io.getquill.norm.ConcatBehavior.NonAnsiConcat
 import io.getquill.norm.ConcatBehavior
 import io.getquill.sql.idiom.BooleanLiteralSupport
 
 trait OracleDialect
-  extends SqlIdiom
-  with QuestionMarkBindVariables
-  with ConcatSupport
-  with CanReturnMultiField
-  with BooleanLiteralSupport
-  with CanInsertWithSingleValue
-  with CanInsertReturningWithSingleValue {
+    extends SqlIdiom
+    with QuestionMarkBindVariables
+    with ConcatSupport
+    with CanReturnMultiField
+    with BooleanLiteralSupport
+    with CanInsertWithSingleValue
+    with CanInsertReturningWithSingleValue {
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
-  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext)
-    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
+  class OracleFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ) extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
     import q._
 
     override def withFrom: Statement = from match {
@@ -34,7 +37,11 @@ trait OracleDialect
     }
   }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  override implicit def sqlQueryTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case q: FlattenSqlQuery =>
       new OracleFlattenSqlQueryTokenizerHelper(q).apply
     case other =>
@@ -45,7 +52,9 @@ trait OracleDialect
 
   override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
 
-  override protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  override protected def limitOffsetToken(
+    query: Statement
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (Some(limit), None)         => stmt"$query FETCH FIRST ${limit.token} ROWS ONLY"
       case (Some(limit), Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS FETCH NEXT ${limit.token} ROWS ONLY"
@@ -53,7 +62,10 @@ trait OracleDialect
       case other                       => super.limitOffsetToken(query).token(other)
     }
 
-  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
+  override implicit def operationTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[Operation] =
     Tokenizer[Operation] {
       case BinaryOperation(a, NumericOperator.`%`, b) => stmt"MOD(${a.token}, ${b.token})"
       case other                                      => super.operationTokenizer.token(other)
@@ -71,7 +83,11 @@ trait OracleDialect
   override protected def tokenizeTableAlias(strategy: NamingStrategy, column: String): String =
     tokenizeEscapeUnderscores(strategy, column, None)
 
-  private def tokenizeEscapeUnderscores(strategy: NamingStrategy, columnOrTable: String, renameable: Option[Renameable]): String =
+  private def tokenizeEscapeUnderscores(
+    strategy: NamingStrategy,
+    columnOrTable: String,
+    renameable: Option[Renameable]
+  ): String =
     if (columnOrTable.startsWith("_"))
       Escape.column(columnOrTable)
     else

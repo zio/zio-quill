@@ -3,39 +3,43 @@ package io.getquill.norm
 import io.getquill.ast._
 import io.getquill.util.Messages
 
-import scala.collection.immutable.{ Map => IMap }
+import scala.collection.immutable.{Map => IMap}
 
 /**
- * How do we want beta reduction to treat Quats? Typically the right answer is when any variable x type X
- * is reduced to t type T we check that T is a subtype of X and replace it e.g:
- * <pre>x.foo reduce v:V -> t:T where V is CC(foo:V) and T is CC(foo:V, bar:V)</pre>
- * (NOTE: see the notes on Quat Shorthand Syntax in Quats.scala if unfamiliar with the syntax above)
- * However if T is not a subtype of X, then we need to throw an error. The exception to this is
- * in the case where we are substutiting a real type for a Quat.Null or Quat.Generic (roughly speaking, a 'Bottom Type').
- * In that case, just do the substitution.
- * This general behavior we call `SubstituteSubtypes`, it is also considered the default.
+ * How do we want beta reduction to treat Quats? Typically the right answer is
+ * when any variable x type X is reduced to t type T we check that T is a
+ * subtype of X and replace it e.g: <pre>x.foo reduce v:V -> t:T where V is
+ * CC(foo:V) and T is CC(foo:V, bar:V)</pre> (NOTE: see the notes on Quat
+ * Shorthand Syntax in Quats.scala if unfamiliar with the syntax above) However
+ * if T is not a subtype of X, then we need to throw an error. The exception to
+ * this is in the case where we are substutiting a real type for a Quat.Null or
+ * Quat.Generic (roughly speaking, a 'Bottom Type'). In that case, just do the
+ * substitution. This general behavior we call `SubstituteSubtypes`, it is also
+ * considered the default.
  *
- * The behavior with variable-renaming in `PropagateRenames` is and `ReifyLiftings` slightly different.
- * In these cases, it is a carte-blanche replacement of properties that is necessary. In this case
- * we are either plugging in a Generic type that is being specialized (e.g. X is Quat.Generic) or
- * reducing some type CC(foo:V) to the corresponding renamed type CC(foo:V)[foo->renameFoo].
- * This general behavior we call `ReplaceWithReduction` i.e. Quat types are replaced with whatever
- * varaibles are being beta-reduced irregardless of subtyping.
+ * The behavior with variable-renaming in `PropagateRenames` is and
+ * `ReifyLiftings` slightly different. In these cases, it is a carte-blanche
+ * replacement of properties that is necessary. In this case we are either
+ * plugging in a Generic type that is being specialized (e.g. X is Quat.Generic)
+ * or reducing some type CC(foo:V) to the corresponding renamed type
+ * CC(foo:V)[foo->renameFoo]. This general behavior we call
+ * `ReplaceWithReduction` i.e. Quat types are replaced with whatever varaibles
+ * are being beta-reduced irregardless of subtyping.
  */
 sealed trait TypeBehavior
 object TypeBehavior {
-  case object SubstituteSubtypes extends TypeBehavior
+  case object SubstituteSubtypes   extends TypeBehavior
   case object ReplaceWithReduction extends TypeBehavior
 }
 
 sealed trait EmptyProductQuatBehavior
 object EmptyProductQuatBehavior {
-  case object Fail extends EmptyProductQuatBehavior
+  case object Fail   extends EmptyProductQuatBehavior
   case object Ignore extends EmptyProductQuatBehavior
 }
 
 case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyBehavior: EmptyProductQuatBehavior)
-  extends StatelessTransformer {
+    extends StatelessTransformer {
 
   override def apply(ast: Ast): Ast =
     ast match {
@@ -59,7 +63,9 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
               if (leastUpperType.isDefined)
                 terminal.withQuat(leastUpperType.head)
               else
-                throw new IllegalArgumentException(s"Cannot beta reduce [$rep <- $ast] because ${rep.quat.shortString} [of:${rep}] is not a subtype of ${ast.quat.shortString} [of:${ast}]")
+                throw new IllegalArgumentException(
+                  s"Cannot beta reduce [$rep <- $ast] because ${rep.quat.shortString} [of:${rep}] is not a subtype of ${ast.quat.shortString} [of:${ast}]"
+                )
 
             case other =>
               other
@@ -74,15 +80,20 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
         apply(tuples.toMap.apply(name))
 
       case FunctionApply(Function(params, body), values) =>
-        val conflicts = values.flatMap(CollectAst.byType[Ident]).map { (i: Ident) =>
-          i -> Ident(s"tmp_${i.name}", i.quat)
-        }.toMap[Ident, Ident]
+        val conflicts = values
+          .flatMap(CollectAst.byType[Ident])
+          .map { (i: Ident) =>
+            i -> Ident(s"tmp_${i.name}", i.quat)
+          }
+          .toMap[Ident, Ident]
         val newParams = params.map { p =>
           conflicts.getOrElse(p, p)
         }
         // Prepending IMap[Ast, Ast]() is needed otherwise 2.13 fails complaining:
         // Note: io.getquill.ast.Ident <: io.getquill.ast.Ast, but trait Map is invariant in type K.
-        val bodyr = new BetaReduction(IMap[Ast, Ast]() ++ conflicts ++ params.zip(newParams), typeBehavior, emptyBehavior).apply(body)
+        val bodyr =
+          new BetaReduction(IMap[Ast, Ast]() ++ conflicts ++ params.zip(newParams), typeBehavior, emptyBehavior)
+            .apply(body)
         apply(BetaReduction(map ++ newParams.zip(values).toMap, typeBehavior, emptyBehavior).apply(bodyr))
 
       case Function(params, body) =>
@@ -97,19 +108,20 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
       case Block(statements) =>
         apply {
           // Walk through the statements, last to the first
-          statements.reverse.tail.foldLeft((IMap[Ast, Ast](), statements.last)) {
-            case ((map, stmt), line) =>
+          statements.reverse.tail
+            .foldLeft((IMap[Ast, Ast](), statements.last)) { case ((map, stmt), line) =>
               // Beta-reduce the statements from the end to the beginning
               BetaReduction(map, typeBehavior, emptyBehavior)(line) match {
                 // If the beta reduction is a some 'val x=t', add x->t to the beta reductions map
                 case Val(name, body) =>
-                  val newMap = map + (name -> body)
+                  val newMap  = map + (name -> body)
                   val newStmt = BetaReduction(stmt, newMap, typeBehavior, emptyBehavior)
                   (newMap, newStmt)
                 case _ =>
                   (map, stmt)
               }
-          }._2
+            }
+            ._2
         }
 
       case Foreach(query, alias, body) =>
@@ -179,7 +191,13 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
       case GroupBy(a, b, c) =>
         GroupBy(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c))
       case GroupByMap(a, b, c, d, e) =>
-        GroupByMap(apply(a), b, BetaReduction(map - b, typeBehavior, emptyBehavior)(c), d, BetaReduction(map - d, typeBehavior, emptyBehavior)(e))
+        GroupByMap(
+          apply(a),
+          b,
+          BetaReduction(map - b, typeBehavior, emptyBehavior)(c),
+          d,
+          BetaReduction(map - d, typeBehavior, emptyBehavior)(e)
+        )
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), iA, iB, BetaReduction(map - iA - iB, typeBehavior, emptyBehavior)(on))
       case FlatJoin(t, a, iA, on) =>
@@ -194,27 +212,33 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
 object BetaReduction {
 
   private def checkQuats(body: Ast, replacements: Seq[(Ast, Ast)], emptyBehavior: EmptyProductQuatBehavior) =
-    replacements.foreach {
-      case (orig, rep) =>
-        val repQuat = rep.quat
-        val origQuat = orig.quat
-        val leastUpper = repQuat.leastUpperType(origQuat)
-        if (emptyBehavior == EmptyProductQuatBehavior.Fail) {
-          leastUpper match {
-            case Some(reduction: io.getquill.quat.Quat.Product) =>
-              if (reduction.fields.isEmpty)
-                throw new IllegalArgumentException(
-                  s"Reduction of $origQuat and $repQuat yielded an empty Quat product!\n" +
-                    "That means that they represent types that cannot be reduced!"
-                )
-            case _ =>
-          }
+    replacements.foreach { case (orig, rep) =>
+      val repQuat    = rep.quat
+      val origQuat   = orig.quat
+      val leastUpper = repQuat.leastUpperType(origQuat)
+      if (emptyBehavior == EmptyProductQuatBehavior.Fail) {
+        leastUpper match {
+          case Some(reduction: io.getquill.quat.Quat.Product) =>
+            if (reduction.fields.isEmpty)
+              throw new IllegalArgumentException(
+                s"Reduction of $origQuat and $repQuat yielded an empty Quat product!\n" +
+                  "That means that they represent types that cannot be reduced!"
+              )
+          case _ =>
         }
-        if (leastUpper.isEmpty)
-          throw new IllegalArgumentException(s"Cannot beta reduce [this:$rep <- with:$orig] within [$body] because ${repQuat.shortString} of [this:${rep}] is not a subtype of ${origQuat.shortString} of [with:${orig}]")
+      }
+      if (leastUpper.isEmpty)
+        throw new IllegalArgumentException(
+          s"Cannot beta reduce [this:$rep <- with:$orig] within [$body] because ${repQuat.shortString} of [this:${rep}] is not a subtype of ${origQuat.shortString} of [with:${orig}]"
+        )
     }
 
-  private[getquill] def apply(ast: Ast, typeBehavior: TypeBehavior, emptyBehavior: EmptyProductQuatBehavior, t: (Ast, Ast)*): Ast = {
+  private[getquill] def apply(
+    ast: Ast,
+    typeBehavior: TypeBehavior,
+    emptyBehavior: EmptyProductQuatBehavior,
+    t: (Ast, Ast)*
+  ): Ast = {
     typeBehavior match {
       case TypeBehavior.SubstituteSubtypes =>
         checkQuats(ast, t, emptyBehavior)
@@ -242,7 +266,12 @@ object BetaReduction {
   def apply(ast: Ast, t: (Ast, Ast), typeBehavior: TypeBehavior): Ast =
     apply(ast, TypeBehavior.SubstituteSubtypes, t)
 
-  def apply(ast: Ast, replacements: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyBehavior: EmptyProductQuatBehavior): Ast = {
+  def apply(
+    ast: Ast,
+    replacements: IMap[Ast, Ast],
+    typeBehavior: TypeBehavior,
+    emptyBehavior: EmptyProductQuatBehavior
+  ): Ast = {
     typeBehavior match {
       case TypeBehavior.SubstituteSubtypes =>
         checkQuats(ast, replacements.toSeq, emptyBehavior)

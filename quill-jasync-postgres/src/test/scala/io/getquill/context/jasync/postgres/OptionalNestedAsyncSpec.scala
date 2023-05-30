@@ -1,7 +1,7 @@
 package io.getquill.context.jasync.postgres
 
 import io.getquill.context.encoding.OptionalNestedSpec
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
+import scala.concurrent.ExecutionContext.Implicits.{global => ec}
 
 class OptionalProductEncodingJasyncSpec extends OptionalNestedSpec {
 
