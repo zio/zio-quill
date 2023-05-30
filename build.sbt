@@ -544,7 +544,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "2.0.8",
+        "com.github.jasync-sql" % "jasync-common" % "2.1.23",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -557,7 +557,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.8"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.1.23"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -569,7 +569,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.0.8"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.1.23"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -581,7 +581,7 @@ lazy val `quill-jasync-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-common" % "2.0.8",
+        "com.github.jasync-sql" % "jasync-common" % "2.1.23",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
         "dev.zio" %% "zio" % Version.zio,
         "dev.zio" %% "zio-streams" % Version.zio
@@ -597,7 +597,7 @@ lazy val `quill-jasync-zio-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.0.8"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.1.23"
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
