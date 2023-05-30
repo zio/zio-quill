@@ -17,7 +17,7 @@ class CassandraContextSpec extends CassandraAlpakkaSpec {
 
   "fail on returning" in {
 
-    val p: Prepare = (x, session) => (Nil, x)
+    val p: Prepare        = (x, session) => (Nil, x)
     val e: Extractor[Int] = (_, _) => 1
 
     intercept[IllegalStateException](executeActionReturning("", p, e, "")(ExecutionInfo.unknown, ())).getMessage mustBe

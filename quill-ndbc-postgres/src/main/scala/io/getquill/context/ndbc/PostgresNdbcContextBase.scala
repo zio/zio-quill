@@ -3,13 +3,14 @@ package io.getquill.context.ndbc
 import java.time.ZoneOffset
 
 import io.getquill.context.sql.encoding.ArrayEncoding
-import io.getquill.{ NamingStrategy, PostgresDialect }
-import io.trane.ndbc.{ PostgresPreparedStatement, PostgresRow }
+import io.getquill.{NamingStrategy, PostgresDialect}
+import io.trane.ndbc.{PostgresPreparedStatement, PostgresRow}
 
-trait PostgresNdbcContextBase[+N <: NamingStrategy] extends NdbcContextBase[PostgresDialect, N, PostgresPreparedStatement, PostgresRow]
-  with ArrayEncoding
-  with PostgresEncoders
-  with PostgresDecoders {
+trait PostgresNdbcContextBase[+N <: NamingStrategy]
+    extends NdbcContextBase[PostgresDialect, N, PostgresPreparedStatement, PostgresRow]
+    with ArrayEncoding
+    with PostgresEncoders
+    with PostgresDecoders {
 
   override type NullChecker = PostgresNdbcNullChecker
   class PostgresNdbcNullChecker extends BaseNullChecker {

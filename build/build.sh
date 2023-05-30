@@ -71,7 +71,7 @@ fi
 function wait_for_databases() {
     show_mem
 
-    #sbt scalariformFormat test:scalariformFormat
+    #sbt scalafmtAll
     #sbt checkUnformattedFiles
 
     # Start sbt compilation and database setup in parallel
@@ -105,7 +105,7 @@ function wait_for_databases() {
 function wait_for_mysql_postgres() {
     show_mem
 
-    #sbt scalariformFormat test:scalariformFormat
+    #sbt scalafmtAll
     #sbt checkUnformattedFiles
 
     # Start sbt compilation and database setup in parallel
@@ -138,7 +138,7 @@ function wait_for_mysql_postgres() {
 function wait_for_bigdata() {
     show_mem
 
-    sbt scalariformFormat test:scalariformFormat
+    sbt scalafmtAll
     sbt checkUnformattedFiles
     sbt $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
