@@ -7,17 +7,16 @@ import java.util.Date
 class ListsEncodingSpec extends Spec {
 
   case class ListsEntity(
-    id:         Int,
-    texts:      List[String],
-    bools:      List[Boolean],
-    ints:       List[Int],
-    longs:      List[Long],
-    floats:     List[Float],
-    doubles:    List[Double],
+    id: Int,
+    texts: List[String],
+    bools: List[Boolean],
+    ints: List[Int],
+    longs: List[Long],
+    floats: List[Float],
+    doubles: List[Double],
     timestamps: List[Date]
   )
-  val e = ListsEntity(1, List("c"), List(true), List(1, 2), List(2, 3), List(1.2f, 3.2f),
-    List(5.1d), List(new Date()))
+  val e = ListsEntity(1, List("c"), List(true), List(1, 2), List(2, 3), List(1.2f, 3.2f), List(5.1d), List(new Date()))
 
   private def verify(expected: ListsEntity, actual: ListsEntity): Boolean = {
     expected.id mustEqual actual.id
@@ -69,8 +68,7 @@ class ListsEncodingSpec extends Spec {
 
     ctx.run(q.delete)
     ctx.run(q.insertValue(lift(e)))
-    ctx.run(q.filter(_.id == 1))
-      .head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
+    ctx.run(q.filter(_.id == 1)).head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
   }
 
   "List in where clause" in {

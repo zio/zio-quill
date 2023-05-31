@@ -15,8 +15,8 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec with ZioSpec 
   override def beforeAll = {
     runSyncUnsafe(testContext.run(deleteAll))
     val ids = runSyncUnsafe(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()

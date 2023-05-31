@@ -29,10 +29,10 @@ class QueryGenerator(seed: Int) {
     letters.charAt(random.nextInt(letters.size)).toString
   }
 
-  def apply(i: Int): Query = {
+  def apply(i: Int): Query =
     if (i <= 2) {
       val quat = Quat.Product("Test")
-      val s = string(3)
+      val s    = string(3)
       Entity(s, Nil, Quat.Product("Test", (1 to 20).map(i => (string(3), Quat.Value)).toList.distinct: _*))
     } else {
       random.nextInt(8) match {
@@ -46,7 +46,6 @@ class QueryGenerator(seed: Int) {
         case 7 => aggregation(i)
       }
     }
-  }
 
   private def take(i: Int) =
     Take(apply(i - 1), Constant.auto(i))
@@ -55,32 +54,32 @@ class QueryGenerator(seed: Int) {
     Drop(apply(i - 1), Constant.auto(i))
 
   private def map(i: Int) = {
-    val q = apply(i)
+    val q  = apply(i)
     val id = Ident(char, q.quat)
     Map(q, id, id)
   }
 
   private def flatMap(i: Int) = {
     val (a, b) = distribute(i)
-    val q = apply(a)
+    val q      = apply(a)
     FlatMap(q, Ident(char, q.quat), apply(b))
   }
 
   private def filter(i: Int) = {
-    val q = apply(i)
+    val q  = apply(i)
     val id = Ident(char, q.quat)
     Filter(q, id, BinaryOperation(id.randomProperty, EqualityOperator.`_!=`, Constant.auto(1)))
   }
 
   private def sortBy(i: Int) = {
-    val q = apply(i)
+    val q  = apply(i)
     val id = Ident(char, q.quat)
     SortBy(apply(i), id, id.randomProperty, AscNullsFirst)
   }
 
   private def groupBy(i: Int) = {
-    val q = apply(i)
-    val id = Ident(char, q.quat)
+    val q     = apply(i)
+    val id    = Ident(char, q.quat)
     val group = GroupBy(q, id, id.randomProperty)
     Map(group, id, id)
   }

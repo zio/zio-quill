@@ -13,8 +13,8 @@ class RunnerSpec extends Spec {
 
   class SideEffect {
     private var state = 0
-    def apply() = state = 1
-    def applied = state == 1
+    def apply()       = state = 1
+    def applied       = state == 1
   }
 
   implicit val scheduler = Scheduler.global
@@ -25,7 +25,7 @@ class RunnerSpec extends Spec {
 
     "should lazily evaluate" in {
       val sideEffect = new SideEffect
-      val task = wrap(sideEffect())
+      val task       = wrap(sideEffect())
       sideEffect.applied should equal(false)
       task.runSyncUnsafe()
       sideEffect.applied should equal(true)
@@ -60,9 +60,9 @@ class RunnerSpec extends Spec {
   }
 
   "using scheduler runner" - {
-    val prefix = "quill-test-pool"
+    val prefix          = "quill-test-pool"
     val customScheduler = Scheduler.io(prefix)
-    val runner = EffectWrapper.using(customScheduler)
+    val runner          = EffectWrapper.using(customScheduler)
     import runner._
 
     "should run in specified scheduler" in {
