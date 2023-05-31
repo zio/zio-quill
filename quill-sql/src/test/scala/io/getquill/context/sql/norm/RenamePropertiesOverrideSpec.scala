@@ -1,10 +1,10 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
 import io.getquill.base.Spec
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted }
+import io.getquill.{EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted}
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -312,8 +312,8 @@ class RenamePropertiesOverrideSpec extends Spec {
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContextUpper.run(q).string mustEqual

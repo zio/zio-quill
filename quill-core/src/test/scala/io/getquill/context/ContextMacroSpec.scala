@@ -43,7 +43,7 @@ class ContextMacroSpec extends Spec {
       }
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T].delete)
-        val r = testContext.run(test[TestEntity])
+        val r                   = testContext.run(test[TestEntity])
         r.string mustEqual """querySchema("TestEntity").delete"""
       }
     }
@@ -169,7 +169,7 @@ class ContextMacroSpec extends Spec {
       }
       "dynamic type param" in {
         def test[T: SchemaMeta] = quote(query[T])
-        val r = testContext.run(test[TestEntity])
+        val r                   = testContext.run(test[TestEntity])
         r.string mustEqual """querySchema("TestEntity")"""
       }
     }
@@ -360,7 +360,9 @@ class ContextMacroSpec extends Spec {
       ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""
     }
     "four" in {
-      object ctx extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase)) with TestEntities
+      object ctx
+          extends MirrorContext(MirrorIdiom, NamingStrategy(Literal, Escape, UpperCase, SnakeCase))
+          with TestEntities
       import ctx._
       ctx.run(query[TestEntity]).string mustEqual """querySchema("TestEntity")"""
       ctx.translate(query[TestEntity]) mustEqual """querySchema("TestEntity")"""

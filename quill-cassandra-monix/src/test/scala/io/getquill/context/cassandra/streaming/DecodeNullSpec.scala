@@ -14,8 +14,8 @@ class DecodeNullSpec extends Spec {
 
       val result =
         for {
-          _ <- testStreamDB.run(writeEntities.delete)
-          _ <- Observable.fromTask(testStreamDB.run(writeEntities.insertValue(lift(insertValue))).countL)
+          _      <- testStreamDB.run(writeEntities.delete)
+          _      <- Observable.fromTask(testStreamDB.run(writeEntities.insertValue(lift(insertValue))).countL)
           result <- testStreamDB.run(query[DecodeNullTestEntity])
         } yield {
           result

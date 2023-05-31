@@ -9,8 +9,7 @@ trait Encoders {
   type PrepareRow = List[Binding]
 
   def encoder[T](f: T => String): Encoder[T] =
-    (index: Index, value: T, row: PrepareRow, session: Session) =>
-      row :+ ValueBinding(f(value))
+    (index: Index, value: T, row: PrepareRow, session: Session) => row :+ ValueBinding(f(value))
 
   private def toStringEncoder[T]: Encoder[T] = encoder((v: T) => s"$v")
 
@@ -24,12 +23,12 @@ trait Encoders {
         case Some(v) => d(index, v, row, session)
       }
 
-  implicit val stringEncoder: Encoder[String] = encoder(v => s"'${v.replaceAll("""[\\']""", """\\$0""")}'")
+  implicit val stringEncoder: Encoder[String]         = encoder(v => s"'${v.replaceAll("""[\\']""", """\\$0""")}'")
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = toStringEncoder
-  implicit val booleanEncoder: Encoder[Boolean] = toStringEncoder
-  implicit val byteEncoder: Encoder[Byte] = toStringEncoder
-  implicit val shortEncoder: Encoder[Short] = toStringEncoder
-  implicit val intEncoder: Encoder[Int] = toStringEncoder
-  implicit val longEncoder: Encoder[Long] = toStringEncoder
-  implicit val doubleEncoder: Encoder[Double] = toStringEncoder
+  implicit val booleanEncoder: Encoder[Boolean]       = toStringEncoder
+  implicit val byteEncoder: Encoder[Byte]             = toStringEncoder
+  implicit val shortEncoder: Encoder[Short]           = toStringEncoder
+  implicit val intEncoder: Encoder[Int]               = toStringEncoder
+  implicit val longEncoder: Encoder[Long]             = toStringEncoder
+  implicit val doubleEncoder: Encoder[Double]         = toStringEncoder
 }

@@ -1,8 +1,8 @@
 package io.getquill.dsl
 
 import io.getquill.base.Spec
-import io.getquill.context.mirror.{ MirrorSession, Row }
-import io.getquill.quotation.{ CaseClassValueLifting, ScalarValueLifting }
+import io.getquill.context.mirror.{MirrorSession, Row}
+import io.getquill.quotation.{CaseClassValueLifting, ScalarValueLifting}
 import io.getquill.MirrorContexts.testContext._
 
 import scala.language.reflectiveCalls
@@ -119,11 +119,12 @@ class EncodingDslSpec extends Spec {
   "materializes encoding for AnyVal with custom MappedEncoding" - {
     "encoder" in {
       implicit val encodeCustomValue = MappedEncoding[CustomPrivateConstructorValue, Int](_.i + 1)
-      val enc = implicitly[Encoder[CustomPrivateConstructorValue]]
+      val enc                        = implicitly[Encoder[CustomPrivateConstructorValue]]
       enc(0, CustomPrivateConstructorValue.apply(1), Row(), MirrorSession.default) mustEqual Row(2)
     }
     "decoder" in {
-      implicit val decodeCustomValue = MappedEncoding[Int, CustomPrivateConstructorValue](i => CustomPrivateConstructorValue(i + 1))
+      implicit val decodeCustomValue =
+        MappedEncoding[Int, CustomPrivateConstructorValue](i => CustomPrivateConstructorValue(i + 1))
       val dec = implicitly[Decoder[CustomPrivateConstructorValue]]
       dec(0, Row(1), MirrorSession.default) mustEqual CustomPrivateConstructorValue.apply(2)
     }
@@ -147,12 +148,12 @@ class EncodingDslSpec extends Spec {
 
     "encoder" in {
       implicit val encodeCustomValue = MappedEncoding[CustomInt, Int](_ + 1)
-      val enc = implicitly[Encoder[CustomInt]]
+      val enc                        = implicitly[Encoder[CustomInt]]
       enc(0, tag[CustomTag][Int](1), Row(), MirrorSession.default) mustEqual Row(2)
     }
     "decoder" in {
       implicit val decodeCustomValue = MappedEncoding[Int, CustomInt](i => tag[CustomTag][Int](i + 1))
-      val dec = implicitly[Decoder[CustomInt]]
+      val dec                        = implicitly[Decoder[CustomInt]]
       dec(0, Row(1), MirrorSession.default) mustEqual tag[CustomTag][Int](2)
     }
   }

@@ -11,8 +11,8 @@ import io.getquill.util.Messages.fail
 sealed trait Effect
 
 object Effect {
-  trait Read extends Effect
-  trait Write extends Effect
+  trait Read        extends Effect
+  trait Write       extends Effect
   trait Transaction extends Effect
 }
 
@@ -23,15 +23,21 @@ trait IOMonad {
   val Effect = io.getquill.monad.Effect
 
   protected case class FromTry[T](t: Try[T]) extends IO[T, Effect]
-  protected case class Sequence[A, M[X] <: IterableOnce[X], E <: Effect](in: M[IO[A, E]], cbfResultToValue: Factory[A, M[A]]) extends IO[M[A], E]
-  protected case class TransformWith[T, S, E1 <: Effect, E2 <: Effect](io: IO[T, E1], f: Try[T] => IO[S, E2]) extends IO[S, E1 with E2]
+  protected case class Sequence[A, M[X] <: IterableOnce[X], E <: Effect](
+    in: M[IO[A, E]],
+    cbfResultToValue: Factory[A, M[A]]
+  ) extends IO[M[A], E]
+  protected case class TransformWith[T, S, E1 <: Effect, E2 <: Effect](io: IO[T, E1], f: Try[T] => IO[S, E2])
+      extends IO[S, E1 with E2]
   protected case class Transactional[T, E <: Effect](io: IO[T, E]) extends IO[T, E with Effect.Transaction]
 
   object IO {
 
     def fromTry[T](result: Try[T]): IO[T, Effect] = FromTry(result)
 
-    def sequence[A, M[X] <: IterableOnce[X], E <: Effect](in: M[IO[A, E]])(implicit cbfResultToValue: Factory[A, M[A]]): IO[M[A], E] =
+    def sequence[A, M[X] <: IterableOnce[X], E <: Effect](in: M[IO[A, E]])(implicit
+      cbfResultToValue: Factory[A, M[A]]
+    ): IO[M[A], E] =
       Sequence(in, cbfResultToValue)
 
     val unit: IO[Unit, Effect] = fromTry(Success(()))
@@ -54,7 +60,9 @@ trait IOMonad {
     def reduceLeft[T, R >: T, E <: Effect](ios: collection.immutable.Iterable[IO[T, E]])(op: (R, T) => R): IO[R, E] =
       sequence(ios).map(_.reduceLeft(op))
 
-    def traverse[A, B, M[X] <: IterableOnce[X], E <: Effect](in: M[A])(fn: A => IO[B, E])(implicit cbf: Factory[B, M[B]]): IO[M[B], E] =
+    def traverse[A, B, M[X] <: IterableOnce[X], E <: Effect](in: M[A])(fn: A => IO[B, E])(implicit
+      cbf: Factory[B, M[B]]
+    ): IO[M[B], E] =
       sequence(in.iterator.map(fn).asInstanceOf[M[IO[B, E]]])
   }
 
@@ -93,17 +101,20 @@ trait IOMonad {
       }
 
     def filter(p: T => Boolean): IO[T, E] =
-      map { r => if (p(r)) r else throw new NoSuchElementException("IO.filter predicate is not satisfied") }
+      map(r => if (p(r)) r else throw new NoSuchElementException("IO.filter predicate is not satisfied"))
 
     final def withFilter(p: T => Boolean): IO[T, E] = filter(p)
 
     def collect[S](pf: PartialFunction[T, S]): IO[S, E] =
-      map {
-        r => pf.applyOrElse(r, (t: T) => throw new NoSuchElementException("IO.collect partial function is not defined at: " + t))
+      map { r =>
+        pf.applyOrElse(
+          r,
+          (t: T) => throw new NoSuchElementException("IO.collect partial function is not defined at: " + t)
+        )
       }
 
     def recover[U >: T](pf: PartialFunction[Throwable, U]): IO[U, E] =
-      transform { _ recover pf }
+      transform(_ recover pf)
 
     def recoverWith[U >: T, E2 <: Effect](pf: PartialFunction[Throwable, IO[U, E2]]): IO[U, E with E2] =
       transformWith {

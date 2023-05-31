@@ -9,8 +9,8 @@ object Test extends Function1[String, Test] {
 }
 
 class Test(val a: String) extends Product {
-  def canEqual(that: Any) = ???
-  def productArity: Int = ???
+  def canEqual(that: Any)    = ???
+  def productArity: Int      = ???
   def productElement(n: Int) = ???
 }
 

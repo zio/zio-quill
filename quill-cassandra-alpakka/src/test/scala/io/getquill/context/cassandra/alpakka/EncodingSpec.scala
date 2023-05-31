@@ -3,7 +3,7 @@ package io.getquill.context.cassandra.alpakka
 import io.getquill.Query
 import io.getquill.context.cassandra.EncodingSpecHelper
 
-import java.time.{ Instant, LocalDate, ZoneId, ZonedDateTime }
+import java.time.{Instant, LocalDate, ZoneId, ZonedDateTime}
 
 class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
 
@@ -11,8 +11,8 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
     await {
       import testDB._
       for {
-        _ <- testDB.run(query[EncodingTestEntity].delete)
-        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
+        _      <- testDB.run(query[EncodingTestEntity].delete)
+        _      <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         result <- testDB.run(query[EncodingTestEntity])
       } yield {
         verify(result)
@@ -22,9 +22,8 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
 
   "encodes collections" in {
     import testDB._
-    val q = quote {
-      (list: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => list.contains(t.id))
+    val q = quote { (list: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => list.contains(t.id))
     }
     await {
       for {
@@ -66,15 +65,15 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
       val ctx = testDB
       import ctx._
 
-      val epoh = System.currentTimeMillis()
-      val epohDay = epoh / 86400000L
-      val instant = Instant.ofEpochMilli(epoh)
+      val epoh          = System.currentTimeMillis()
+      val epohDay       = epoh / 86400000L
+      val instant       = Instant.ofEpochMilli(epoh)
       val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault)
 
       val jq = quote(querySchema[Java8Types]("EncodingTestEntity"))
-      val j = Java8Types(LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
+      val j  = Java8Types(LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
       val cq = quote(querySchema[CasTypes]("EncodingTestEntity"))
-      val c = CasTypes(LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh), Some(zonedDateTime))
+      val c  = CasTypes(LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh), Some(zonedDateTime))
 
       await {
         for {
@@ -98,4 +97,3 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
     }
   }
 }
-

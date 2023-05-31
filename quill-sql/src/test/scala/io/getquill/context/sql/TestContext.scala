@@ -7,10 +7,10 @@ import io.getquill.norm.EqualityBehavior.NonAnsiEquality
 import io.getquill._
 
 class TestContextTemplate[+Dialect <: SqlIdiom, +Naming <: NamingStrategy](dialect: Dialect, naming: Naming)
-  extends SqlMirrorContext(dialect, naming)
-  with TestEntities
-  with TestEncoders
-  with TestDecoders {
+    extends SqlMirrorContext(dialect, naming)
+    with TestEntities
+    with TestEncoders
+    with TestDecoders {
 
   def withNaming[N <: NamingStrategy](naming: N)(f: TestContextTemplate[Dialect, N] => Any): Unit = {
     val ctx = new TestContextTemplate[Dialect, N](dialect, naming)
@@ -27,18 +27,27 @@ class TestContextTemplate[+Dialect <: SqlIdiom, +Naming <: NamingStrategy](diale
 
 trait UpperCaseNonDefault extends NamingStrategy {
   override def column(s: String): String = s.toUpperCase
-  override def table(s: String): String = s.toUpperCase
-  override def default(s: String) = s
+  override def table(s: String): String  = s.toUpperCase
+  override def default(s: String)        = s
 }
 object UpperCaseNonDefault extends getquill.UpperCaseNonDefault
 
-object testContext extends TestContextTemplate[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal)
+object testContext      extends TestContextTemplate[MirrorSqlDialect, Literal](MirrorSqlDialect, Literal)
 object testContextSnake extends TestContextTemplate[MirrorSqlDialect, SnakeCase](MirrorSqlDialect, SnakeCase)
-object testContextUpper extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseNonDefault](MirrorSqlDialect, UpperCaseNonDefault)
-object testContextEscape extends TestContextTemplate[MirrorSqlDialect, Escape](MirrorSqlDialect, Escape)
+object testContextUpper
+    extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseNonDefault](MirrorSqlDialect, UpperCaseNonDefault)
+object testContextEscape         extends TestContextTemplate[MirrorSqlDialect, Escape](MirrorSqlDialect, Escape)
 object testContextEscapeAndAlias extends TestContextTemplate[MirrorSqlDialect, Escape](MirrorSqlDialect, Escape)
-object testContextUpperEscapeColumn extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseEscapeColumn](MirrorSqlDialect, UpperCaseEscapeColumn)
-object testContextEscapeElements extends TestContextTemplate[MirrorSqlDialect.StrategizeElements, Escape](MirrorSqlDialect.StrategizeElements, Escape)
+object testContextUpperEscapeColumn
+    extends TestContextTemplate[MirrorSqlDialect, getquill.UpperCaseEscapeColumn](
+      MirrorSqlDialect,
+      UpperCaseEscapeColumn
+    )
+object testContextEscapeElements
+    extends TestContextTemplate[MirrorSqlDialect.StrategizeElements, Escape](
+      MirrorSqlDialect.StrategizeElements,
+      Escape
+    )
 
 trait NonAnsiMirrorSqlDialect extends MirrorSqlDialect {
   override def equalityBehavior: EqualityBehavior = NonAnsiEquality
@@ -48,10 +57,9 @@ object NonAnsiMirrorSqlDialect extends NonAnsiMirrorSqlDialect {
 }
 
 class NonAnsiTestContextTemplate[+Naming <: NamingStrategy](naming: Naming)
-  extends SqlMirrorContext(NonAnsiMirrorSqlDialect, naming)
-  with TestEntities
-  with TestEncoders
-  with TestDecoders {
-}
+    extends SqlMirrorContext(NonAnsiMirrorSqlDialect, naming)
+    with TestEntities
+    with TestEncoders
+    with TestDecoders {}
 
 object nonAnsiTestContext extends NonAnsiTestContextTemplate(Literal)
