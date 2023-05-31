@@ -7,7 +7,7 @@ import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
-import scala.reflect.{ ClassTag, classTag }
+import scala.reflect.{ClassTag, classTag}
 
 // I.e. something the type-ancestry does not know about
 class UnknownClass
@@ -23,15 +23,24 @@ class CodeGeneratorRunnerDagTest extends AnyFunSuite with BeforeAndAfter {
     TestCase(
       classTag[BigDecimal],
       Seq(
-        classTag[Boolean], classTag[Int], classTag[Byte], classTag[Long], classTag[BigDecimal]
+        classTag[Boolean],
+        classTag[Int],
+        classTag[Byte],
+        classTag[Long],
+        classTag[BigDecimal]
       ),
       classTag[BigDecimal]
     ),
     TestCase(
       classTag[String],
       Seq(
-        classTag[Boolean], classTag[Int], classTag[Long], classTag[Byte],
-        classTag[BigDecimal], classTag[java.time.LocalDate], classTag[java.time.LocalDateTime]
+        classTag[Boolean],
+        classTag[Int],
+        classTag[Long],
+        classTag[Byte],
+        classTag[BigDecimal],
+        classTag[java.time.LocalDate],
+        classTag[java.time.LocalDateTime]
       ),
       classTag[String]
     ),
@@ -50,10 +59,9 @@ class CodeGeneratorRunnerDagTest extends AnyFunSuite with BeforeAndAfter {
     two <- cas.twos
   } yield (cas.one, two, cas.result)
 
-  casesIter.foreach({
-    case (one, two, expected) =>
-      test(s"Common Ancestry between ${one} and ${two} should be ${expected}") {
-        new CatalogBasedAncestry().apply(one, two) should equal(expected)
-      }
-  })
+  casesIter.foreach { case (one, two, expected) =>
+    test(s"Common Ancestry between ${one} and ${two} should be ${expected}") {
+      new CatalogBasedAncestry().apply(one, two) should equal(expected)
+    }
+  }
 }

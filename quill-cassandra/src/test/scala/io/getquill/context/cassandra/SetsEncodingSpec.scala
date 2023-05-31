@@ -1,28 +1,38 @@
 package io.getquill.context.cassandra
 
-import java.time.{ Instant, LocalDate }
-import java.util.{ Date, UUID }
+import java.time.{Instant, LocalDate}
+import java.util.{Date, UUID}
 
 class SetsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB
   import ctx._
 
   case class SetsEntity(
-    id:         Int,
-    texts:      Set[String],
-    decimals:   Set[BigDecimal],
-    bools:      Set[Boolean],
-    ints:       Set[Int],
-    longs:      Set[Long],
-    floats:     Set[Float],
-    doubles:    Set[Double],
-    dates:      Set[LocalDate],
+    id: Int,
+    texts: Set[String],
+    decimals: Set[BigDecimal],
+    bools: Set[Boolean],
+    ints: Set[Int],
+    longs: Set[Long],
+    floats: Set[Float],
+    doubles: Set[Double],
+    dates: Set[LocalDate],
     timestamps: Set[Instant],
-    uuids:      Set[UUID]
+    uuids: Set[UUID]
   )
-  val e = SetsEntity(1, Set("c"), Set(BigDecimal(1.33)), Set(true), Set(1, 2), Set(2, 3), Set(1f, 3f),
-    Set(5d), Set(LocalDate.now()),
-    Set(Instant.now()), Set(UUID.randomUUID()))
+  val e = SetsEntity(
+    1,
+    Set("c"),
+    Set(BigDecimal(1.33)),
+    Set(true),
+    Set(1, 2),
+    Set(2, 3),
+    Set(1f, 3f),
+    Set(5d),
+    Set(LocalDate.now()),
+    Set(Instant.now()),
+    Set(UUID.randomUUID())
+  )
   val q = quote(query[SetsEntity])
 
   "Set encoders/decoders" in {
@@ -63,8 +73,7 @@ class SetsEncodingSpec extends CollectionsSpec {
     val q = quote(querySchema[BlobsEntity]("SetsEntity"))
 
     ctx.run(q.insertValue(lift(e)))
-    ctx.run(q.filter(_.id == 1))
-      .head.blobs.map(_.toSet) mustBe e.blobs.map(_.toSet)
+    ctx.run(q.filter(_.id == 1)).head.blobs.map(_.toSet) mustBe e.blobs.map(_.toSet)
   }
 
   "Set in where clause" in {

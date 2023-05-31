@@ -1,16 +1,16 @@
 package io.getquill.context.monix
 
-import java.sql.{ Array => _ }
-import io.getquill.context.{ ExecutionInfo, ContextVerbStream }
+import java.sql.{Array => _}
+import io.getquill.context.{ExecutionInfo, ContextVerbStream}
 import io.getquill.context.monix.MonixNdbcContext.Runner
 import io.getquill.context.ndbc.NdbcContextBase
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.ndbc.TraneFutureConverters
 import io.getquill.ndbc.TraneFutureConverters._
 import io.getquill.util.ContextLogger
-import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.{NamingStrategy, ReturnAction}
 import io.trane.future.scala.Future
-import io.trane.ndbc.{ DataSource, PreparedStatement, Row }
+import io.trane.ndbc.{DataSource, PreparedStatement, Row}
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
@@ -20,15 +20,23 @@ import scala.concurrent.duration.Duration
 
 object MonixNdbcContext {
   trait Runner {
-    /** The schedule method can be used to change the scheduler that this task should be run on */
+
+    /**
+     * The schedule method can be used to change the scheduler that this task
+     * should be run on
+     */
     def schedule[T](t: Task[T]): Task[T]
-    /** The schedule method can be used to change the scheduler that this observable should be observed on */
+
+    /**
+     * The schedule method can be used to change the scheduler that this
+     * observable should be observed on
+     */
     def schedule[T](o: Observable[T]): Observable[T]
   }
 
   object Runner {
     def default = new Runner {
-      override def schedule[T](t: Task[T]): Task[T] = t
+      override def schedule[T](t: Task[T]): Task[T]             = t
       override def schedule[T](o: Observable[T]): Observable[T] = o
     }
 
@@ -49,9 +57,8 @@ object MonixNdbcContext {
       p.future
     }
 
-    override def toFuture[T](eff: Task[T], ec: Scheduler): Future[T] = {
+    override def toFuture[T](eff: Task[T], ec: Scheduler): Future[T] =
       TraneFutureConverters.scalaToTraneScala(eff.runToFuture(ec))(ec)
-    }
 
     override def fromDeferredFuture[T](f: Scheduler => Future[T]): Task[T] = Task.deferFutureAction(f(_))
 
@@ -72,26 +79,26 @@ object MonixNdbcContext {
 
 /**
  * Quill context that wraps all NDBC calls in `monix.eval.Task`.
- *
  */
 abstract class MonixNdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy, P <: PreparedStatement, R <: Row](
   dataSource: DataSource[P, R],
-  runner:     Runner
+  runner: Runner
 ) extends MonixContext[Dialect, Naming]
-  with NdbcContextBase[Dialect, Naming, P, R]
-  with ContextVerbStream[Dialect, Naming]
-  with MonixTranslateContext {
+    with NdbcContextBase[Dialect, Naming, P, R]
+    with ContextVerbStream[Dialect, Naming]
+    with MonixTranslateContext {
 
   import runner._
 
   override private[getquill] val logger = ContextLogger(classOf[MonixNdbcContext[_, _, _, _]])
 
-  override type RunActionResult = Long
-  override type RunActionReturningResult[T] = T
-  override type RunBatchActionResult = List[Long]
+  override type RunActionResult                  = Long
+  override type RunActionReturningResult[T]      = T
+  override type RunBatchActionResult             = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
-  override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Task, Scheduler] = MonixNdbcContext.ContextEffect
+  override implicit protected val resultEffect: NdbcContextBase.ContextEffect[Task, Scheduler] =
+    MonixNdbcContext.ContextEffect
 
   def close(): Unit = {
     dataSource.close()
@@ -99,25 +106,49 @@ abstract class MonixNdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy,
   }
 
   // Need explicit return-type annotations due to scala/bug#8356. Otherwise macro system will not understand Result[Long]=Task[Long] etc...
-  override def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Task[Long] =
+  override def executeAction(sql: String, prepare: Prepare = identityPrepare)(
+    info: ExecutionInfo,
+    dc: Runner
+  ): Task[Long] =
     super.executeAction(sql, prepare)(info, dc)
 
-  override def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[List[T]] =
+  override def executeQuery[T](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): Task[List[T]] =
     super.executeQuery(sql, prepare, extractor)(info, dc)
 
-  override def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Task[T] =
+  override def executeQuerySingle[T](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): Task[T] =
     super.executeQuerySingle(sql, prepare, extractor)(info, dc)
 
-  override def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Task[O] =
+  override def executeActionReturning[O](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[O],
+    returningBehavior: ReturnAction
+  )(info: ExecutionInfo, dc: Runner): Task[O] =
     super.executeActionReturning(sql, prepare, extractor, returningBehavior)(info, dc)
 
-  override def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Task[List[O]] =
+  override def executeActionReturningMany[O](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[O],
+    returningBehavior: ReturnAction
+  )(info: ExecutionInfo, dc: Runner): Task[List[O]] =
     super.executeActionReturningMany(sql, prepare, extractor, returningBehavior)(info, dc)
 
   override def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Task[List[Long]] =
     super.executeBatchAction(groups)(info, dc)
 
-  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Task[List[T]] =
+  override def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(
+    info: ExecutionInfo,
+    dc: Runner
+  ): Task[List[T]] =
     super.executeBatchActionReturning(groups, extractor)(info, dc)
 
   override def transaction[T](f: => Task[T]): Task[T] = super.transaction(f)
@@ -129,23 +160,28 @@ abstract class MonixNdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy,
     schedule(f(dataSource))
 
   // TODO: What about fetchSize? Not really applicable here
-  def streamQuery[T](fetchSize: Option[Index], sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Observable[T] =
-    Observable
-      .eval {
-        // TODO: Do we need to set ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY?
-        val stmt = createPreparedStatement(sql)
-        val (params, ps) = prepare(stmt, ())
-        logger.logQuery(sql, params)
-        ps
-      }
-      .flatMap(ps => withDataSourceObservable { ds =>
-        Observable.fromReactivePublisher(ds.stream(ps))
-      })
+  def streamQuery[T](
+    fetchSize: Option[Index],
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): Observable[T] =
+    Observable.eval {
+      // TODO: Do we need to set ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY?
+      val stmt         = createPreparedStatement(sql)
+      val (params, ps) = prepare(stmt, ())
+      logger.logQuery(sql, params)
+      ps
+    }
+      .flatMap(ps =>
+        withDataSourceObservable { ds =>
+          Observable.fromReactivePublisher(ds.stream(ps))
+        }
+      )
       .map(row => extractor(row, ()))
 
-  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Task[Seq[String]] = {
+  override private[getquill] def prepareParams(statement: String, prepare: Prepare): Task[Seq[String]] =
     withDataSource { _ =>
       resultEffect.wrap(prepare(createPreparedStatement(statement), ())._1.reverse.map(prepareParam))
     }
-  }
 }

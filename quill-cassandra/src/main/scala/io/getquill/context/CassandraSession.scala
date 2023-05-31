@@ -23,19 +23,28 @@ trait CassandraSession extends UdtValueLookup {
       case udt :: Nil => udt.newValue()
       case Nil =>
         fail(s"Could not find UDT `$udtName` in any keyspace")
-      case udts => udts
-        .find(udt => keyspace.contains(udt.getKeyspace.toString) || udt.getKeyspace.toString == session.getKeyspace.get().toString)
-        .map(_.newValue())
-        .getOrElse(fail(s"Could not determine to which keyspace `$udtName` UDT belongs. " +
-          s"Please specify desired keyspace using UdtMeta"))
+      case udts =>
+        udts
+          .find(udt =>
+            keyspace
+              .contains(udt.getKeyspace.toString) || udt.getKeyspace.toString == session.getKeyspace.get().toString
+          )
+          .map(_.newValue())
+          .getOrElse(
+            fail(
+              s"Could not determine to which keyspace `$udtName` UDT belongs. " +
+                s"Please specify desired keyspace using UdtMeta"
+            )
+          )
     }
 
-  def close(): Unit = {
+  def close(): Unit =
     session.close()
-  }
 }
 
 trait UdtValueLookup {
-  def udtValueOf(udtName: String, keyspace: Option[String] = None): UdtValue = throw new IllegalStateException("UDTs are not supported by this context")
+  def udtValueOf(udtName: String, keyspace: Option[String] = None): UdtValue = throw new IllegalStateException(
+    "UDTs are not supported by this context"
+  )
   def session: CqlSession
 }

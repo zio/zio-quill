@@ -3,6 +3,22 @@ id: changelog
 title: "Quill Changelog"
 ---
 
+# 4.6.1
+
+- [Remove support of Scala 2.11 && Update ZIO to 2.0.12](https://github.com/zio/zio-quill/pull/2722)
+  - Remove support of Scala 2.11
+  - Update Scala versions
+  - Update ZIO to 2.0.12
+  - Update zio-logging to 2.1.12
+  - Update sbt to 1.7.3
+  - Update sbt-scoverage to 2.0.0
+  - Update zio-json to 0.5.0
+
+#### Notes:
+- Besides for Scala-version support update and the dependency bumps (thank you Guizmaii and Juliano!) the purpose of this
+  release is to set the stage of future infrastructure changes e.g. adding Scalafmt to do formatting instead
+  of the long-standing scalariform.
+
 # 4.6.0
 
 - [Implementing Postgres json/jsonb encoding via zio-json](https://github.com/zio/zio-quill/pull/2615)
@@ -15,9 +31,9 @@ title: "Quill Changelog"
 - [jasync zio current schema configuration, jasync version  update](https://github.com/zio/zio-quill/pull/2588)
 
 #### Migration Notes:
-- It is no longer necessary to do extend `Embedded` for case classes that should be embedded within an entity. 
+- It is no longer necessary to do extend `Embedded` for case classes that should be embedded within an entity.
   In the case that the embedded case class "looks" like it should be encoded/decoded (i.e. it has only one field),
-  an additional warning has been introduced to notify the user of this potential issue. 
+  an additional warning has been introduced to notify the user of this potential issue.
 
 # 4.4.1
 
@@ -46,7 +62,7 @@ title: "Quill Changelog"
 #### Migration Notes:
 - The `infix` interpolator is now deprecated because in Scala 2, infix is a keyword. Instead of
   `infix"MyUdf(${person.name})"` use `sql"MyUdf(${person.name})"`. For contexts such as Doobie that already
-  have an `sql` interpolator. Import `context.compat._` and use the `qsql` interpolator instead. 
+  have an `sql` interpolator. Import `context.compat._` and use the `qsql` interpolator instead.
 
 # 4.1.0
 

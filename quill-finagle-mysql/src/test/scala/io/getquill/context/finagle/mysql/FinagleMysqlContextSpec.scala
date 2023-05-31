@@ -3,9 +3,9 @@ package io.getquill.context.finagle.mysql
 import java.util.TimeZone
 
 import com.twitter.finagle.mysql
-import com.twitter.finagle.mysql.{ EmptyValue, Error, IsolationLevel }
+import com.twitter.finagle.mysql.{EmptyValue, Error, IsolationLevel}
 import com.twitter.util._
-import io.getquill.context.sql.{ TestDecoders, TestEncoders }
+import io.getquill.context.sql.{TestDecoders, TestEncoders}
 import io.getquill.FinagleMysqlContext
 import io.getquill.Literal
 import io.getquill.TestEntities
@@ -29,8 +29,7 @@ class FinagleMysqlContextSpec extends Spec {
     val inserted: Long = await(testContext.run {
       qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
     })
-    await(testContext.run(qr4.filter(_.i == lift(inserted))))
-      .head.i mustBe inserted
+    await(testContext.run(qr4.filter(_.i == lift(inserted)))).head.i mustBe inserted
   }
 
   "SingleValueRow" in {
@@ -58,14 +57,16 @@ class FinagleMysqlContextSpec extends Spec {
 
   def masterSlaveContext(
     master: mysql.Client with mysql.Transactions,
-    slave:  mysql.Client with mysql.Transactions
-  ): FinagleMysqlContext[Literal] = {
-    new FinagleMysqlContext[Literal](Literal, master, slave, TimeZone.getDefault) with TestEntities with TestEncoders with TestDecoders
-  }
+    slave: mysql.Client with mysql.Transactions
+  ): FinagleMysqlContext[Literal] =
+    new FinagleMysqlContext[Literal](Literal, master, slave, TimeZone.getDefault)
+      with TestEntities
+      with TestEncoders
+      with TestDecoders
 
   "master & slave client writes to master" in {
-    val master = new OkTestClient
-    val slave = new OkTestClient
+    val master  = new OkTestClient
+    val slave   = new OkTestClient
     val context = masterSlaveContext(master, slave)
 
     import context._
@@ -76,8 +77,8 @@ class FinagleMysqlContextSpec extends Spec {
   }
 
   "master & slave client reads from slave" in {
-    val master = new OkTestClient
-    val slave = new OkTestClient
+    val master  = new OkTestClient
+    val slave   = new OkTestClient
     val context = masterSlaveContext(master, slave)
 
     import context._
@@ -99,7 +100,8 @@ class FinagleMysqlContextSpec extends Spec {
     import com.twitter.finagle.mysql.Parameter
 
     testContext.prepareParams(
-      "", (ps, session) => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
+      "",
+      (ps, session) => (Nil, ps ++: List(Parameter.of("Sarah"), Parameter.of(127)))
     ) mustEqual List("'Sarah'", "127")
   }
 

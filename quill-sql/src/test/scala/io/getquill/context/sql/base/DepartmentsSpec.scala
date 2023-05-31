@@ -17,8 +17,8 @@ trait DepartmentsSpec extends Spec {
   case class Task(emp: String, tsk: String)
 
   val departmentInsert =
-    quote {
-      (dpt: Department) => query[Department].insertValue(dpt)
+    quote { (dpt: Department) =>
+      query[Department].insertValue(dpt)
     }
 
   val departmentEntries =
@@ -30,8 +30,8 @@ trait DepartmentsSpec extends Spec {
     )
 
   val employeeInsert =
-    quote {
-      (emp: Employee) => query[Employee].insertValue(emp)
+    quote { (emp: Employee) =>
+      query[Employee].insertValue(emp)
     }
 
   val employeeEntries =
@@ -45,8 +45,8 @@ trait DepartmentsSpec extends Spec {
     )
 
   val taskInsert =
-    quote {
-      (tsk: Task) => query[Task].insertValue(tsk)
+    quote { (tsk: Task) =>
+      query[Task].insertValue(tsk)
     }
 
   val taskEntries =
@@ -65,21 +65,20 @@ trait DepartmentsSpec extends Spec {
     )
 
   val `Example 8 expertise naive` =
-    quote {
-      (u: String) =>
-        for {
-          d <- query[Department] if (
-            (for {
-              e <- query[Employee] if (
-                e.dpt == d.dpt && (
-                  for {
-                    t <- query[Task] if (e.emp == t.emp && t.tsk == u)
-                  } yield {}
-                ).isEmpty
-              )
-            } yield {}).isEmpty
-          )
-        } yield d.dpt
+    quote { (u: String) =>
+      for {
+        d <- query[Department] if (
+          (for {
+            e <- query[Employee] if (
+              e.dpt == d.dpt && (
+                for {
+                  t <- query[Task] if (e.emp == t.emp && t.tsk == u)
+                } yield {}
+              ).isEmpty
+            )
+          } yield {}).isEmpty
+        )
+      } yield d.dpt
     }
 
   val `Example 8 param` = "abstract"
@@ -99,17 +98,21 @@ trait DepartmentsSpec extends Spec {
         for {
           d <- query[Department]
         } yield {
-          (d.dpt,
+          (
+            d.dpt,
             for {
               e <- query[Employee] if (d.dpt == e.dpt)
             } yield {
-              (e.emp,
+              (
+                e.emp,
                 for {
                   t <- query[Task] if (e.emp == t.emp)
                 } yield {
                   t.tsk
-                })
-            })
+                }
+              )
+            }
+          )
         }
       }
 
@@ -123,13 +126,12 @@ trait DepartmentsSpec extends Spec {
         any(xs)(x => x == u)
       }
 
-    quote {
-      (u: String) =>
-        for {
-          (dpt, employees) <- nestedOrg if (all(employees) { case (emp, tasks) => contains(tasks)(u) })
-        } yield {
-          dpt
-        }
+    quote { (u: String) =>
+      for {
+        (dpt, employees) <- nestedOrg if (all(employees) { case (emp, tasks) => contains(tasks)(u) })
+      } yield {
+        dpt
+      }
     }
   }
 

@@ -5,28 +5,38 @@ import java.util.Date
 
 import io.getquill.MappedEncoding
 import io.getquill.base.Spec
-import org.scalatest.{ Assertion, BeforeAndAfterEach }
+import org.scalatest.{Assertion, BeforeAndAfterEach}
 
 trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
 
   // Support all sql base types and `Seq` implementers
   case class ArraysTestEntity(
-    texts:      List[String],
-    decimals:   Seq[BigDecimal],
-    bools:      Vector[Boolean],
-    bytes:      List[Byte],
-    shorts:     IndexedSeq[Short],
-    ints:       Seq[Int],
-    longs:      Seq[Long],
-    floats:     Seq[Float],
-    doubles:    Seq[Double],
+    texts: List[String],
+    decimals: Seq[BigDecimal],
+    bools: Vector[Boolean],
+    bytes: List[Byte],
+    shorts: IndexedSeq[Short],
+    ints: Seq[Int],
+    longs: Seq[Long],
+    floats: Seq[Float],
+    doubles: Seq[Double],
     timestamps: Seq[Date],
-    dates:      Seq[LocalDate]
+    dates: Seq[LocalDate]
   )
 
-  val e = ArraysTestEntity(List("test"), Seq(BigDecimal(2.33)), Vector(true, true), List(1),
-    IndexedSeq(3), Seq(2), Seq(1, 2, 3), Seq(1f, 2f), Seq(4d, 3d),
-    Seq(new Date(System.currentTimeMillis())), Seq(LocalDate.now()))
+  val e = ArraysTestEntity(
+    List("test"),
+    Seq(BigDecimal(2.33)),
+    Vector(true, true),
+    List(1),
+    IndexedSeq(3),
+    Seq(2),
+    Seq(1, 2, 3),
+    Seq(1f, 2f),
+    Seq(4d, 3d),
+    Seq(new Date(System.currentTimeMillis())),
+    Seq(LocalDate.now())
+  )
 
   // casting types can be dangerous so we need to ensure that everything is ok
   def baseEntityDeepCheck(e1: ArraysTestEntity, e2: ArraysTestEntity): Assertion = {

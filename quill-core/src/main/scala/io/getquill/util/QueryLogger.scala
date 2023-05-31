@@ -13,27 +13,38 @@ class QueryLogger(logToFile: LogToFile) {
   val runtime =
     Unsafe.unsafe { implicit u =>
       logToFile match {
-        case LogToFile.Enabled(logFile) => Some(Runtime.unsafe.fromLayer(file(
-          format = LogFormat.line,
-          destination = Paths.get(logFile)
-        )))
+        case LogToFile.Enabled(logFile) =>
+          Some(
+            Runtime.unsafe.fromLayer(
+              fileLogger(
+                FileLoggerConfig(
+                  destination = Paths.get(logFile),
+                  format = LogFormat.line,
+                  filter = LogFilter.logLevel(LogLevel.Info)
+                )
+              )
+            )
+          )
         case LogToFile.Disabled => None
       }
     }
 
-  def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
+  def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit =
     runtime match {
       case Some(runtimeValue) =>
         Unsafe.unsafe { implicit u =>
-          runtimeValue.unsafe.run(ZIO.logInfo(
-            s"""
-               |-- file: $sourcePath:$line:$column
-               |-- time: ${ZonedDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}
-               |$queryString;
-               |""".stripMargin
-          )).getOrThrow()
+          runtimeValue.unsafe
+            .run(
+              ZIO.logInfo(
+                s"""
+                   |-- file: $sourcePath:$line:$column
+                   |-- time: ${ZonedDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}
+                   |$queryString;
+                   |""".stripMargin
+              )
+            )
+            .getOrThrow()
         }
       case None => // do nothing
     }
-  }
 }
