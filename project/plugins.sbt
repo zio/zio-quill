@@ -4,7 +4,7 @@ resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releas
 
 addDependencyTreePlugin
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.7")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.0")
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "5.2.4")
 
