@@ -5,13 +5,13 @@ import java.time.LocalDate
 import java.util.UUID
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import io.getquill.{ Literal, PostgresJdbcContext }
+import io.getquill.{Literal, PostgresJdbcContext}
 
 class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext
   import ctx._
 
-  val q = quote(query[ArraysTestEntity])
+  val q         = quote(query[ArraysTestEntity])
   val corrected = e.copy(timestamps = e.timestamps.map(d => new Timestamp(d.getTime)))
 
   "Support all sql base types and `Seq` implementers" in {
@@ -38,7 +38,9 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   "Catch invalid decoders" in {
     val newCtx = new PostgresJdbcContext(Literal, "testPostgresDB") {
       // avoid transforming from java.sql.Date to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
+      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit
+        bf: CBF[LocalDate, Col]
+      ): Decoder[Col] =
         arrayDecoder[LocalDate, LocalDate, Col](identity)
     }
     import newCtx._
@@ -55,7 +57,8 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
     val q = quote(querySchema[Entity]("ArraysTestEntity"))
 
     implicit def arrayUUIDEncoder[Col <: Seq[UUID]]: Encoder[Col] = arrayRawEncoder[UUID, Col]("uuid")
-    implicit def arrayUUIDDecoder[Col <: Seq[UUID]](implicit bf: CBF[UUID, Col]): Decoder[Col] = arrayRawDecoder[UUID, Col]
+    implicit def arrayUUIDDecoder[Col <: Seq[UUID]](implicit bf: CBF[UUID, Col]): Decoder[Col] =
+      arrayRawDecoder[UUID, Col]
 
     ctx.run(q.insertValue(lift(e)))
     ctx.run(q).head.uuids mustBe e.uuids

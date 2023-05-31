@@ -10,11 +10,11 @@ import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
 class SqlServerMonixJdbcContext[+N <: NamingStrategy](
-  val naming:     N,
+  val naming: N,
   val dataSource: DataSource with Closeable,
-  runner:         EffectWrapper
+  runner: EffectWrapper
 ) extends MonixJdbcContext[SQLServerDialect, N](dataSource, runner)
-  with SqlServerJdbcContextBase[SQLServerDialect, N] {
+    with SqlServerJdbcContextBase[SQLServerDialect, N] {
   val idiom: SQLServerDialect = SQLServerDialect
 
   def this(naming: N, config: JdbcContextConfig, runner: EffectWrapper) = this(naming, config.dataSource, runner)

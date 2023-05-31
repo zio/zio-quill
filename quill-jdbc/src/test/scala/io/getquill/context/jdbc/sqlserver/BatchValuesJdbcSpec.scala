@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.sqlserver
 
-import io.getquill.{ Delete, Insert }
+import io.getquill.{Delete, Insert}
 import io.getquill.context.sql.base.BatchValuesSpec
 
 class BatchValuesJdbcSpec extends BatchValuesSpec {

@@ -46,13 +46,19 @@ class UdtEncodingSessionContextSpec extends UdtSpec with ZioCassandraSpec {
     "without meta" in {
       case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
 
-      val e = WithEverything(1, Personal(1, "strt",
-        Name("first", Some("last")),
-        Some(Name("f", None)),
-        List("e"),
-        Set(1, 2),
-        Map(1 -> "1", 2 -> "2")),
-        List(Name("first", None)))
+      val e = WithEverything(
+        1,
+        Personal(
+          1,
+          "strt",
+          Name("first", Some("last")),
+          Some(Name("f", None)),
+          List("e"),
+          Set(1, 2),
+          Map(1 -> "1", 2 -> "2")
+        ),
+        List(Name("first", None))
+      )
       ctx.run(query[WithEverything].insertValue(lift(e))).runSyncUnsafe()
       ctx.run(query[WithEverything].filter(_.id == 1)).runSyncUnsafe().headOption must contain(e)
     }

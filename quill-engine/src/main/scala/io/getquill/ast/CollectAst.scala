@@ -4,11 +4,11 @@ import scala.collection.immutable.Queue
 import scala.reflect.ClassTag
 
 /**
- * The collection is treated as immutable internally but an ArrayBuffer is more effecient then Collection.list at
- * appending which is mostly what the collection does
+ * The collection is treated as immutable internally but an ArrayBuffer is more
+ * effecient then Collection.list at appending which is mostly what the
+ * collection does
  */
-class CollectAst[T](p: PartialFunction[Ast, T], val state: Queue[T])
-  extends StatefulTransformer[Queue[T]] {
+class CollectAst[T](p: PartialFunction[Ast, T], val state: Queue[T]) extends StatefulTransformer[Queue[T]] {
 
   override def apply(a: Ast) =
     a match {
@@ -20,8 +20,8 @@ class CollectAst[T](p: PartialFunction[Ast, T], val state: Queue[T])
 object CollectAst {
 
   def byType[T: ClassTag](a: Ast) =
-    apply[T](a) {
-      case t: T => t
+    apply[T](a) { case t: T =>
+      t
     }
 
   def apply[T](a: Ast)(p: PartialFunction[Ast, T]) =

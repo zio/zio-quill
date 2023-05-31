@@ -1,12 +1,12 @@
 package io.getquill
 
 import fansi.Str
-import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
-import io.getquill.ast.Visibility.{ Hidden, Visible }
+import io.getquill.ast.Renameable.{ByStrategy, Fixed}
+import io.getquill.ast.Visibility.{Hidden, Visible}
 import io.getquill.ast._
 import io.getquill.quat.Quat
 import io.getquill.util.Messages.QuatTrace
-import pprint.{ Renderer, Tree, Truncated }
+import pprint.{Renderer, Tree, Truncated}
 
 object AstPrinter {
   object Implicits {
@@ -19,13 +19,13 @@ object AstPrinter {
 }
 
 class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: QuatTrace) extends pprint.Walker {
-  val defaultWidth: Int = 150
-  val defaultHeight: Int = Integer.MAX_VALUE
-  val defaultIndent: Int = 2
-  val colorLiteral: fansi.Attrs = fansi.Color.Green
+  val defaultWidth: Int             = 150
+  val defaultHeight: Int            = Integer.MAX_VALUE
+  val defaultIndent: Int            = 2
+  val colorLiteral: fansi.Attrs     = fansi.Color.Green
   val colorApplyPrefix: fansi.Attrs = fansi.Color.Yellow
-  def escapeUnicode = false
-  override def showFieldNames = false
+  def escapeUnicode                 = false
+  override def showFieldNames       = false
 
   val traceAllQuats = traceQuats == QuatTrace.All
 
@@ -51,9 +51,9 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
         case e: treemake.Tree    => treemake.Content(List(e))
         case c: treemake.Content => c
       }
-    def withQuat(q: Quat): treemake = toContent.andWith(treemake.Quat(q))
+    def withQuat(q: Quat): treemake        = toContent.andWith(treemake.Quat(q))
     def withTree(t: pprint.Tree): treemake = toContent.andWith(treemake.Tree(t))
-    def withElem(a: Any): treemake = toContent.andWith(treemake.Elem(a))
+    def withElem(a: Any): treemake         = toContent.andWith(treemake.Elem(a))
     private def treeifyList: List[Tree] =
       toContent.list.flatMap {
         case e: treemake.Quat =>
@@ -70,8 +70,8 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
   }
   private object treemake {
     private case class Quat(q: io.getquill.quat.Quat) extends treemake
-    private case class Elem(any: Any) extends treemake
-    private case class Tree(any: pprint.Tree) extends treemake
+    private case class Elem(any: Any)                 extends treemake
+    private case class Tree(any: pprint.Tree)         extends treemake
     private case class Content(list: List[treemake]) extends treemake {
       def andWith(elem: treemake) =
         elem match {
@@ -103,33 +103,42 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
         )
 
       case i: Infix =>
-        val content = List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure") else List()) ++ (if (i.transparent) List("transparent") else List())
+        val content =
+          List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure") else List()) ++ (if (i.transparent)
+                                                                                                List("transparent")
+                                                                                              else List())
         Tree.Apply("Infix", treemake(content: _*).withQuat(i.bestQuat).make)
 
       case e: Entity if (!traceOpinions) =>
         Tree.Apply("Entity", treemake(e.name, e.properties).withQuat(e.bestQuat).make)
 
-      case q: Quat            => Tree.Literal(q.shortString)
+      case q: Quat => Tree.Literal(q.shortString)
 
       case s: ScalarValueLift => Tree.Apply("ScalarValueLift", treemake(s.name, s.source).withQuat(s.bestQuat).make)
 
       case p: Property if (traceOpinions) =>
-        TreeApplyList("Property", l(treeify(p.ast)) ++ l(treeify(p.name)) ++
-          (
-            if (traceOpinions)
-              l(printRenameable(p.renameable), printVisibility(p.visibility))
-            else
-              List.empty[Tree]
-          ) ++
+        TreeApplyList(
+          "Property",
+          l(treeify(p.ast)) ++ l(treeify(p.name)) ++
+            (
+              if (traceOpinions)
+                l(printRenameable(p.renameable), printVisibility(p.visibility))
+              else
+                List.empty[Tree]
+            ) ++
             (
               if (traceAllQuats)
                 l(treeify(p.bestQuat))
               else
                 List.empty[Tree]
-            ))
+            )
+        )
 
       case e: Entity if (traceOpinions) =>
-        Tree.Apply("Entity", treemake(e.name, e.properties).withTree(printRenameable(e.renameable)).withQuat(e.bestQuat).make)
+        Tree.Apply(
+          "Entity",
+          treemake(e.name, e.properties).withTree(printRenameable(e.renameable)).withQuat(e.bestQuat).make
+        )
 
       case ast: Ast =>
         if (traceAllQuats)
@@ -148,22 +157,22 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
 
   private def l(trees: Tree*): List[Tree] = List[Tree](trees: _*)
 
-  def apply(x: Any): fansi.Str = {
+  def apply(x: Any): fansi.Str =
     fansi.Str.join(this.tokenize(x).toSeq: _*)
-  }
 
   def tokenize(x: Any): Iterator[fansi.Str] = {
-    val tree = this.treeify(x)
-    val renderer = new Renderer(defaultWidth, colorApplyPrefix, colorLiteral, defaultIndent)
-    val rendered = renderer.rec(tree, 0, 0).iter
+    val tree      = this.treeify(x)
+    val renderer  = new Renderer(defaultWidth, colorApplyPrefix, colorLiteral, defaultIndent)
+    val rendered  = renderer.rec(tree, 0, 0).iter
     val truncated = new Truncated(rendered, defaultWidth, defaultHeight)
     truncated
   }
 }
 
 /**
- * A trait to be used by elements that are not proper AST elements but should still be treated as though
- * they were in the case where `traceAstSimple` is enabled (i.e. their toString method should be
- * used instead of the standard qprint AST printing)
+ * A trait to be used by elements that are not proper AST elements but should
+ * still be treated as though they were in the case where `traceAstSimple` is
+ * enabled (i.e. their toString method should be used instead of the standard
+ * qprint AST printing)
  */
 trait PseudoAst

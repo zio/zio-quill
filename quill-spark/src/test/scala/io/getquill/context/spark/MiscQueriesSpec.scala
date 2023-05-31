@@ -78,13 +78,12 @@ class MiscQueriesSpec extends Spec {
     val q = quote(
       originals
         .groupBy(p => (p.id, p.name))
-        .map {
-          case ((id, name), items) =>
-            MapTo(
-              id,
-              name,
-              items.map(_.numeric).sum.getOrElse(0L)
-            )
+        .map { case ((id, name), items) =>
+          MapTo(
+            id,
+            name,
+            items.map(_.numeric).sum.getOrElse(0L)
+          )
         }
     )
     testContext.run(q).collect.toList mustEqual

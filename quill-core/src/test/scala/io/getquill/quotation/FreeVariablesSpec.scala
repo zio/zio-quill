@@ -20,8 +20,8 @@ class FreeVariablesSpec extends Spec {
     }
     "function" in {
       val q =
-        quote {
-          (a: String) => s
+        quote { (a: String) =>
+          s
         }
       FreeVariables(q.ast) mustEqual Set(IdentName("s"))
     }
@@ -91,7 +91,8 @@ class FreeVariablesSpec extends Spec {
     "join" in {
       val i = 1
       val q = quote {
-        qr1.join(qr2.filter(_.i == i))
+        qr1
+          .join(qr2.filter(_.i == i))
           .on((t1, t2) => t1.i == t2.i)
       }
       FreeVariables(q.ast) mustEqual Set(IdentName("i"))
@@ -131,8 +132,8 @@ class FreeVariablesSpec extends Spec {
 
   "takes in consideration variables defined in the quotation" - {
     "function" in {
-      val q = quote {
-        (s: String) => s
+      val q = quote { (s: String) =>
+        s
       }
       FreeVariables(q.ast) mustBe empty
     }
