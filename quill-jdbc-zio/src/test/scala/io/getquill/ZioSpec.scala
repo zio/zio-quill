@@ -3,8 +3,8 @@ package io.getquill
 import io.getquill.base.Spec
 import io.getquill.context.qzio.ImplicitSyntax._
 import org.scalatest.BeforeAndAfterAll
-import zio.stream.{ ZSink, ZStream }
-import zio.{ Runtime, Tag, Unsafe, ZEnvironment, ZIO, ZLayer }
+import zio.stream.{ZSink, ZStream}
+import zio.{Runtime, Tag, Unsafe, ZEnvironment, ZIO, ZLayer}
 
 import java.sql.Connection
 import javax.sql.DataSource
@@ -50,7 +50,9 @@ trait ZioProxySpec extends Spec with BeforeAndAfterAll {
 
   def collect[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]): List[T] =
     Unsafe.unsafe { implicit u =>
-      zio.Runtime.default.unsafe.run(stream.run(ZSink.collectAll).map(_.toList).provideEnvironment(ZEnvironment(runtime.env))).getOrThrow()
+      zio.Runtime.default.unsafe
+        .run(stream.run(ZSink.collectAll).map(_.toList).provideEnvironment(ZEnvironment(runtime.env)))
+        .getOrThrow()
     }
 
   def collect[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]): T =

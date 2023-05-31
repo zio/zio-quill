@@ -1,34 +1,60 @@
 package io.getquill.context.spark
 
-import io.getquill.{ IdiomContext, NamingStrategy }
-import io.getquill.ast.{ Ast, BinaryOperation, CaseClass, Constant, ExternalIdent, Ident, Operation, Property, Query, StringOperator, Tuple, Value }
+import io.getquill.{IdiomContext, NamingStrategy}
+import io.getquill.ast.{
+  Ast,
+  BinaryOperation,
+  CaseClass,
+  Constant,
+  ExternalIdent,
+  Ident,
+  Operation,
+  Property,
+  Query,
+  StringOperator,
+  Tuple,
+  Value
+}
 import io.getquill.context.spark.norm.EscapeQuestionMarks
-import io.getquill.context.sql.{ FlattenSqlQuery, SelectValue, SetOperationSqlQuery, SqlQuery, SqlQueryApply, UnaryOperationSqlQuery }
+import io.getquill.context.sql.{
+  FlattenSqlQuery,
+  SelectValue,
+  SetOperationSqlQuery,
+  SqlQuery,
+  SqlQueryApply,
+  UnaryOperationSqlQuery
+}
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
-import io.getquill.context.{ CannotReturn, ExecutionType }
+import io.getquill.context.{CannotReturn, ExecutionType}
 import io.getquill.quat.Quat
 
 class SparkDialect extends SparkIdiom
 
 trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
-  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) = super.sqlQueryTokenizer
+  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) =
+    super.sqlQueryTokenizer
 
   def liftingPlaceholder(index: Int): String = "?"
 
   override def prepareForProbing(string: String) = string
 
-  override implicit def externalIdentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[ExternalIdent] = super.externalIdentTokenizer
+  override implicit def externalIdentTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[ExternalIdent] = super.externalIdentTokenizer
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(implicit naming: NamingStrategy) = {
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
+    implicit naming: NamingStrategy
+  ) = {
     val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, idiomContext.config))
 
     implicit val implicitIdiomContext: IdiomContext = idiomContext
-    implicit val tokernizer = defaultTokenizer
+    implicit val tokernizer                         = defaultTokenizer
 
     val token =
       normalizedAst match {
@@ -49,7 +75,10 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   override def concatFunction = "explode"
 
-  override implicit def identTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Ident] = Tokenizer[Ident] {
+  override implicit def identTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[Ident] = Tokenizer[Ident] {
     case id @ Ident(name, q @ Quat.Product(fields)) if (q.tpe == Quat.Product.Type.Concrete) =>
       stmt"struct(${fields.map { case (field, subQuat) => (Property(id, field): Ast) }.toList.token})"
     case id @ Ident(name, q: Quat.Product) if (q.tpe == Quat.Product.Type.Abstract) =>
@@ -62,10 +91,13 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
       stmt"${name.token}"
   }
 
-  class SparkFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext)
-    extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
+  class SparkFlattenSqlQueryTokenizerHelper(q: FlattenSqlQuery)(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ) extends FlattenSqlQueryTokenizerHelper(q)(astTokenizer, strategy, idiomContext) {
 
-    override def selectTokenizer: Token = {
+    override def selectTokenizer: Token =
       // Note that by the time we have reached this point, all Idents representing case classes/tuples in selection have
       // already been expanded into their composite properties. This is handled via the select.token which delegates
       // to the list tokenizer which delegates to the select value tokenizer. The remaining cases that need special handling
@@ -103,11 +135,14 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
         // TODO Maybe we should even introduce an exception here because all the support single-value selects have already been enumerated
         case _ => q.select.token
       }
-    }
 
   }
 
-  override implicit def sqlQueryTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+  override implicit def sqlQueryTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
     case q: FlattenSqlQuery =>
       new SparkFlattenSqlQueryTokenizerHelper(q).apply
     case SetOperationSqlQuery(a, op, b) =>
@@ -116,7 +151,10 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
       stmt"SELECT ${op.token} (${q.token})"
   }
 
-  override implicit def propertyTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Property] = {
+  override implicit def propertyTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[Property] = {
     def path(ast: Ast): Token =
       ast match {
         case Ident(name, _) => name.token
@@ -125,24 +163,36 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
         case other =>
           other.token
       }
-    Tokenizer[Property] {
-      case p => path(p).token
+    Tokenizer[Property] { case p =>
+      path(p).token
     }
   }
 
-  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] = Tokenizer[Operation] {
+  override implicit def operationTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[Operation] = Tokenizer[Operation] {
     case BinaryOperation(a, StringOperator.`+`, b) => stmt"concat(${a.token}, ${b.token})"
     case op                                        => super.operationTokenizer.token(op)
   }
 
-  override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] = Tokenizer[Value] {
+  override implicit def valueTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String, _) => stmt"'${v.replaceAll("""[\\']""", """\\$0""").token}'"
-    case Tuple(values)          => stmt"struct(${values.zipWithIndex.map { case (value, index) => stmt"${value.token} AS _${(index + 1).toString.token}" }.token})"
-    case CaseClass(_, values)   => stmt"struct(${values.map { case (name, value) => stmt"${value.token} AS ${name.token}" }.token})"
-    case other                  => super.valueTokenizer.token(other)
+    case Tuple(values) =>
+      stmt"struct(${values.zipWithIndex.map { case (value, index) =>
+          stmt"${value.token} AS _${(index + 1).toString.token}"
+        }.token})"
+    case CaseClass(_, values) =>
+      stmt"struct(${values.map { case (name, value) => stmt"${value.token} AS ${name.token}" }.token})"
+    case other => super.valueTokenizer.token(other)
   }
 
-  override protected def tokenizeGroupBy(values: Ast)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =
+  override protected def tokenizeGroupBy(
+    values: Ast
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Token =
     values match {
       case Tuple(items) => items.mkStmt()
       case values       => values.token
@@ -150,4 +200,3 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 }
 
 object SparkDialect extends SparkDialect
-

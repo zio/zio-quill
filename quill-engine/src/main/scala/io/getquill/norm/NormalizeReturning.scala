@@ -5,12 +5,13 @@ import io.getquill.ast.Implicits._
 import io.getquill.norm.capture.AvoidAliasConflict
 
 /**
- * When actions are used with a `.returning` clause, remove the columns used in the returning clause from the action.
- * E.g. for `insert(Person(id, name)).returning(_.id)` remove the `id` column from the original insert.
+ * When actions are used with a `.returning` clause, remove the columns used in
+ * the returning clause from the action. E.g. for `insert(Person(id,
+ * name)).returning(_.id)` remove the `id` column from the original insert.
  */
 class NormalizeReturning(normalize: Normalize) {
 
-  def apply(e: Action): Action = {
+  def apply(e: Action): Action =
     e match {
       case ReturningGenerated(a: Action, alias, body) =>
         // De-alias the body first so variable shadows won't accidentally be interpreted as columns to remove from the insert/update action.
@@ -36,17 +37,17 @@ class NormalizeReturning(normalize: Normalize) {
 
       case _ => e
     }
-  }
 
   /**
-   * In some situations, a query can exist inside of a `returning` clause. In this case, we need to rename
-   * if the aliases used in that query override the alias used in the `returning` clause otherwise
-   * they will be treated as returning-clause aliases ExpandReturning (i.e. they will become ExternalAlias instances)
-   * and later be tokenized incorrectly.
+   * In some situations, a query can exist inside of a `returning` clause. In
+   * this case, we need to rename if the aliases used in that query override the
+   * alias used in the `returning` clause otherwise they will be treated as
+   * returning-clause aliases ExpandReturning (i.e. they will become
+   * ExternalAlias instances) and later be tokenized incorrectly.
    */
   private def dealiasBody(body: Ast, alias: Ident): Ast =
-    Transform(body) {
-      case q: Query => AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName), normalize)
+    Transform(body) { case q: Query =>
+      AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName), normalize)
     }
 
   private def apply(e: Action, body: Ast, returningIdent: Ident): Action = e match {
@@ -56,19 +57,23 @@ class NormalizeReturning(normalize: Normalize) {
     case _                                  => e
   }
 
-  private def filterReturnedColumn(assignments: List[Assignment], column: Ast, returningIdent: Ident): List[Assignment] =
+  private def filterReturnedColumn(
+    assignments: List[Assignment],
+    column: Ast,
+    returningIdent: Ident
+  ): List[Assignment] =
     assignments.flatMap(filterReturnedColumn(_, column, returningIdent))
 
   /**
-   * In situations like Property(Property(ident, foo), bar) pull out the inner-most ident
+   * In situations like Property(Property(ident, foo), bar) pull out the
+   * inner-most ident
    */
   object NestedProperty {
-    def unapply(ast: Property): Option[Ast] = {
+    def unapply(ast: Property): Option[Ast] =
       ast match {
         case p @ Property(subAst, _) => Some(innerMost(subAst))
         case _                       => None
       }
-    }
 
     private def innerMost(ast: Ast): Ast = ast match {
       case Property(inner, _) => innerMost(inner)
@@ -77,10 +82,12 @@ class NormalizeReturning(normalize: Normalize) {
   }
 
   /**
-   * Remove the specified column from the assignment. For example, in a query like `insert(Person(id, name)).returning(r => r.id)`
-   * we need to remove the `id` column from the insertion. The value of the `column:Ast` in this case will be `Property(Ident(r), id)`
-   * and the values fo the assignment `p1` property will typically be `v.id` and `v.name` (the `v` variable is a default
-   * used for `insert` queries).
+   * Remove the specified column from the assignment. For example, in a query
+   * like `insert(Person(id, name)).returning(r => r.id)` we need to remove the
+   * `id` column from the insertion. The value of the `column:Ast` in this case
+   * will be `Property(Ident(r), id)` and the values fo the assignment `p1`
+   * property will typically be `v.id` and `v.name` (the `v` variable is a
+   * default used for `insert` queries).
    */
   private def filterReturnedColumn(assignment: Assignment, body: Ast, returningIdent: Ident): Option[Assignment] =
     assignment match {
@@ -93,7 +100,7 @@ class NormalizeReturning(normalize: Normalize) {
         // in order to know what to exclude.
         val matchedProps =
           CollectAst(body) {
-            //case prop @ NestedProperty(`returningIdent`) => prop
+            // case prop @ NestedProperty(`returningIdent`) => prop
             case prop @ NestedProperty(Ident(name, quat)) if (name == returningIdent.name)         => prop
             case prop @ NestedProperty(ExternalIdent(name, quat)) if (name == returningIdent.name) => prop
           }
@@ -116,7 +123,8 @@ class NormalizeReturning(normalize: Normalize) {
   }
 
   /**
-   * Is it the same property (but possibly of a different identity). E.g. `p.foo.bar` and `v.foo.bar`
+   * Is it the same property (but possibly of a different identity). E.g.
+   * `p.foo.bar` and `v.foo.bar`
    */
   private def isSameProperties(p1: Property, p2: Property): Boolean = (p1.ast, p2.ast) match {
     case (SomeIdent(_), SomeIdent(_)) =>

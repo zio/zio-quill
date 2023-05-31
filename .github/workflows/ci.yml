@@ -34,8 +34,8 @@ jobs:
            scala_short: 213
            scala_short_dot: 2.13
          - scala: 3.2.x
-           scala_short: 30
-           scala_short_dot: 3.0
+           scala_short: 32
+           scala_short_dot: 3.2
        exclude:
          # For now, only do the `base` build for Scala 3
          - scala: 3.2.x
@@ -98,8 +98,8 @@ jobs:
            scala_short: 213
            scala_short_dot: 2.13
          - scala: 3.2.x
-           scala_short: 30
-           scala_short_dot: 3.0
+           scala_short: 32
+           scala_short_dot: 3.2
        exclude:
          - scala: 3.2.x
            module: db
@@ -159,8 +159,8 @@ jobs:
         module: [publish]
         include:
           - scala: 2.13.x
-            scala_short: 212
-            scala_short_dot: 2.12
+            scala_short: 213
+            scala_short_dot: 2.13
 
     name: Publish ${{matrix.scala_short_dot}} - ${{matrix.module}}
 

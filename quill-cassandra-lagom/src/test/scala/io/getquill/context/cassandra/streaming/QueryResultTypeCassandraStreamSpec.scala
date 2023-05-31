@@ -11,9 +11,8 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
   val context = testStreamDB
   import context._
 
-  def result[T](stream: Source[T, NotUsed]): List[T] = {
+  def result[T](stream: Source[T, NotUsed]): List[T] =
     await(stream.runFold(List.empty[T])(_ :+ _))
-  }
 
   override def beforeAll = {
     result(context.run(deleteAll))

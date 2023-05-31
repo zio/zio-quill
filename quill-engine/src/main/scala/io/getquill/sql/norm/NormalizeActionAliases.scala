@@ -21,7 +21,9 @@ object NormalizeFilteredActionAliases {
   }
 }
 
-/** In actions inner properties typically result from embedded classes, hide them */
+/**
+ * In actions inner properties typically result from embedded classes, hide them
+ */
 object HideInnerProperties extends StatelessTransformer {
   override def apply(e: Property): Property =
     e.copyAll(ast = recurseHide(e.ast))
@@ -76,7 +78,7 @@ case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends St
       case Assignment(alias, prop, value) =>
         // Beta reduction will not swap an alias out from under a property so need to use a full transform
         val newProp = Transform(prop) { case `alias` => newAlias }
-        val newVal = Transform(value) { case `alias` => newAlias }
+        val newVal  = Transform(value) { case `alias` => newAlias }
         Assignment(newAlias, newProp, newVal)
     }
 
@@ -84,8 +86,8 @@ case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends St
     a match {
       case Assignment(alias, prop, value) =>
         val newAlias = alias.copy(name = newAliasName)
-        val newProp = Transform(prop) { case `alias` => newAlias }
-        val newVal = Transform(value) { case `alias` => newAlias }
+        val newProp  = Transform(prop) { case `alias` => newAlias }
+        val newVal   = Transform(value) { case `alias` => newAlias }
         Assignment(newAlias, newProp, newVal)
     }
 }

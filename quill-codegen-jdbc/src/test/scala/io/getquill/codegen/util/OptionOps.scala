@@ -1,5 +1,5 @@
 package io.getquill.codegen.util
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object OptionOps {
   implicit class OptExt[T](o: Option[T]) {

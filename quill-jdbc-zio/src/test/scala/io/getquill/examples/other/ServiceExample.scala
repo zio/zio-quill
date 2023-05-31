@@ -1,9 +1,9 @@
 package io.getquill.examples.other
 
 import io.getquill.jdbczio.Quill
-import io.getquill.{ Literal, PostgresZioJdbcContext }
+import io.getquill.{Literal, PostgresZioJdbcContext}
 import zio.Console._
-import zio.{ ZIO, ZIOAppDefault, ZLayer }
+import zio.{ZIO, ZIOAppDefault, ZLayer}
 
 import java.sql.SQLException
 import javax.sql.DataSource
@@ -11,16 +11,15 @@ import javax.sql.DataSource
 object ServiceExample extends ZIOAppDefault {
   import DBModel._
 
-  override def run = {
+  override def run =
     runApp.provide(DBManager.live).exitCode
-  }
 
   def runApp =
     for {
-      _ <- DBManager.deleteJoes
-      _ <- DBManager.persist(Person("Joe", 123))
+      _    <- DBManager.deleteJoes
+      _    <- DBManager.persist(Person("Joe", 123))
       joes <- DBManager.retrieveJoes
-      _ <- printLine(s"Joes: ${joes}")
+      _    <- printLine(s"Joes: ${joes}")
     } yield ()
 }
 
