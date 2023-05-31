@@ -1,7 +1,7 @@
 package io.getquill.util
 
 import collection.immutable.ListSet
-import collection.mutable.{ LinkedHashMap => MMap, Builder }
+import collection.mutable.{LinkedHashMap => MMap, Builder}
 import scala.language.higherKinds
 
 object OrderedGroupByExt {

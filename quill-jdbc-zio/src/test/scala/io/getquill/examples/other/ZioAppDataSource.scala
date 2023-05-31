@@ -3,7 +3,7 @@ package io.getquill.examples.other
 import io.getquill._
 import io.getquill.util.LoadConfig
 import zio.Console.printLine
-import zio.{ ZEnvironment, ZIOAppDefault }
+import zio.{ZEnvironment, ZIOAppDefault}
 
 object ZioAppDataSource extends ZIOAppDefault {
 
@@ -18,7 +18,8 @@ object ZioAppDataSource extends ZIOAppDefault {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }
-    MyPostgresContext.run(people)
+    MyPostgresContext
+      .run(people)
       .provideEnvironment(ZEnvironment(dataSource))
       .tap(result => printLine(result.toString))
       .exitCode

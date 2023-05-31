@@ -9,8 +9,7 @@ import java.util.concurrent.Callable
 class PrepareStatementCache[V <: AnyRef](size: Long) {
 
   private val cache =
-    CacheBuilder
-      .newBuilder
+    CacheBuilder.newBuilder
       .maximumSize(size)
       .build[java.lang.Long, V]()
 
@@ -26,10 +25,9 @@ class PrepareStatementCache[V <: AnyRef](size: Long) {
 
   def invalidate(stmt: String): Unit = cache.invalidate(hash(stmt))
 
-  private def hash(string: String): java.lang.Long = {
+  private def hash(string: String): java.lang.Long =
     hasher
       .hashString(string, Charsets.UTF_8)
       .asLong()
-  }
 
 }

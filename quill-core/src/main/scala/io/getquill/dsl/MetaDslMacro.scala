@@ -3,7 +3,7 @@ package io.getquill.dsl
 import io.getquill.util.MacroContextExt._
 import io.getquill.util.OptionalTypecheck
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 
 class MetaDslMacro(val c: MacroContext) extends ValueComputation {
   import c.universe._
@@ -65,14 +65,16 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           }
         """
     } else {
-      c.fail(s"Can't materialize a `SchemaMeta` for non-case-class type '${t.tpe}', please provide an implicit `SchemaMeta`.")
+      c.fail(
+        s"Can't materialize a `SchemaMeta` for non-case-class type '${t.tpe}', please provide an implicit `SchemaMeta`."
+      )
     }
 
   private def expandQuery[T](value: Value)(implicit t: WeakTypeTag[T]) = {
     val elements = flatten(q"x", value)
     if (elements.isEmpty)
       c.fail(s"Case class type ${t.tpe} has no values")
-    //q"${c.prefix}.quote((q: io.getquill.Query[$t]) => q.map(x => io.getquill.dsl.UnlimitedTuple(..$elements)))"
+    // q"${c.prefix}.quote((q: io.getquill.Query[$t]) => q.map(x => io.getquill.dsl.UnlimitedTuple(..$elements)))"
     q"${c.prefix}.quote((q: io.getquill.Query[$t]) => q.map(x => x))"
   }
 
@@ -126,15 +128,15 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
             // E.g. for Person("Joe", 123)
             // !NullChecker("Joe") || !NullChecker(123)
             val allColumnsNotNull = nullChecks.flatMap(v => v).reduce((a, b) => q"$a || $b")
-            val newProductCreate = q"if ($allColumnsNotNull) Some(new $tpe(...${productElements})) else None"
+            val newProductCreate  = q"if ($allColumnsNotNull) Some(new $tpe(...${productElements})) else None"
 
             FieldExpansion(newProductCreate, allColumnsNotNull)
           } else {
-            val dualGroups = params.map(_.map(expandRecurse(_)))
-            val nullChecks: Seq[List[Tree]] = dualGroups.map(_.map(_.nullChecker))
+            val dualGroups                        = params.map(_.map(expandRecurse(_)))
+            val nullChecks: Seq[List[Tree]]       = dualGroups.map(_.map(_.nullChecker))
             val productElements: List[List[Tree]] = dualGroups.map(_.map(_.lookup))
 
-            val lookup = q"new $tpe(...${productElements})"
+            val lookup            = q"new $tpe(...${productElements})"
             val allColumnsNotNull = nullChecks.flatMap(v => v).reduce((a, b) => q"$a || $b")
 
             FieldExpansion(
@@ -158,9 +160,8 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
     val assignments =
       flatten(q"v", value)
         .zip(flatten(q"value", value))
-        .map {
-          case (vTree, valueTree) =>
-            q"(v: $t) => $vTree -> $valueTree"
+        .map { case (vTree, valueTree) =>
+          q"(v: $t) => $vTree -> $valueTree"
         }
     c.untypecheck {
       q"""

@@ -1,6 +1,6 @@
 package io.getquill.quat
 
-import io.getquill.ast.{ Ast, Ident, Property }
+import io.getquill.ast.{Ast, Ident, Property}
 
 object QuatNestingHelper {
   def valueQuat(quat: Quat): Quat =

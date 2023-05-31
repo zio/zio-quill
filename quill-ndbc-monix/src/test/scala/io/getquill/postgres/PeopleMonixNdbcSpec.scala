@@ -13,11 +13,11 @@ class PeopleMonixNdbcSpec extends PeopleSpec {
   import context._
 
   def collect[T](o: Observable[T]) =
-    o.foldLeft(List[T]())({ case (l, elem) => elem +: l })
+    o.foldLeft(List[T]()) { case (l, elem) => elem +: l }
       .firstL
       .runSyncUnsafe()
 
-  override def beforeAll = {
+  override def beforeAll =
     testContext.transaction {
       for {
         _ <- testContext.run(query[Couple].delete)
@@ -26,9 +26,8 @@ class PeopleMonixNdbcSpec extends PeopleSpec {
         _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()
     }.runSyncUnsafe()
-  }
 
-  val `Ex 11 query` = quote(query[Person])
+  val `Ex 11 query`    = quote(query[Person])
   val `Ex 11 expected` = peopleEntries
 
   "Example 1 - differences" in {
@@ -36,7 +35,9 @@ class PeopleMonixNdbcSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`))).runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
+    testContext
+      .run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))
+      .runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
   }
 
   "Example 3 - satisfies" in {
@@ -48,7 +49,9 @@ class PeopleMonixNdbcSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    testContext.run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`))).runSyncUnsafe() mustEqual `Ex 5 expected result`
+    testContext
+      .run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`)))
+      .runSyncUnsafe() mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

@@ -3,27 +3,27 @@ package io.getquill.context
 import io.getquill.ast._
 import io.getquill.quat.Quat
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.util.{ EnableReflectiveCalls, Messages, OptionalTypecheck }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
+import io.getquill.util.{EnableReflectiveCalls, Messages, OptionalTypecheck}
 
 class QueryMacro(val c: MacroContext) extends ContextMacro {
-  import c.universe.{ Ident => _, _ }
+  import c.universe.{Ident => _, _}
 
   sealed trait FetchSizeArg
   case class UsesExplicitFetch(tree: Tree) extends FetchSizeArg
-  case object UsesDefaultFetch extends FetchSizeArg
-  case object DoesNotUseFetch extends FetchSizeArg
+  case object UsesDefaultFetch             extends FetchSizeArg
+  case object DoesNotUseFetch              extends FetchSizeArg
 
   sealed trait PrettyPrintingArg
   case class ExplicitPrettyPrint(tree: Tree) extends PrettyPrintingArg
-  case object DefaultPrint extends PrettyPrintingArg
+  case object DefaultPrint                   extends PrettyPrintingArg
 
   sealed trait ContextMethod { def name: String }
-  case class StreamQuery(fetchSizeBehavior: FetchSizeArg) extends ContextMethod { val name = "streamQuery" }
-  case object ExecuteQuery extends ContextMethod { val name = "executeQuery" }
-  case object ExecuteQuerySingle extends ContextMethod { val name = "executeQuerySingle" }
-  case class TranslateQuery(prettyPrintingArg: PrettyPrintingArg) extends ContextMethod { val name = "translateQuery" }
-  case object PrepareQuery extends ContextMethod { val name = "prepareQuery" }
+  case class StreamQuery(fetchSizeBehavior: FetchSizeArg)         extends ContextMethod { val name = "streamQuery"        }
+  case object ExecuteQuery                                        extends ContextMethod { val name = "executeQuery"       }
+  case object ExecuteQuerySingle                                  extends ContextMethod { val name = "executeQuerySingle" }
+  case class TranslateQuery(prettyPrintingArg: PrettyPrintingArg) extends ContextMethod { val name = "translateQuery"     }
+  case object PrepareQuery                                        extends ContextMethod { val name = "prepareQuery"       }
 
   def streamQuery[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandQuery[T](quoted, StreamQuery(UsesDefaultFetch))
@@ -56,7 +56,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
 
   private def expandQueryWithDecoder(quoted: Tree, method: ContextMethod, decoder: Tree, topLevelQuat: Quat) = {
     val extractedAst = extractAst(quoted)
-    val ast = Map(extractedAst, Ident("x", extractedAst.quat), Ident("x", extractedAst.quat))
+    val ast          = Map(extractedAst, Ident("x", extractedAst.quat), Ident("x", extractedAst.quat))
     val invocation =
       method match {
         case StreamQuery(UsesExplicitFetch(size)) =>
@@ -120,22 +120,25 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
            """
       }
 
-    val liftUnlift = new { override val mctx: c.type = c } with TokenLift(0) // Don't serialize quats for the top-level
+    val liftUnlift               = new { override val mctx: c.type = c } with TokenLift(0) // Don't serialize quats for the top-level
     val liftQuat: Liftable[Quat] = liftUnlift.quatLiftable
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
-        val staticTopLevelQuat = ${if (Messages.attachTopLevelQuats) liftQuat(topLevelQuat) else q"io.getquill.quat.Quat.Unknown"}
+        val staticTopLevelQuat = ${if (Messages.attachTopLevelQuats) liftQuat(topLevelQuat)
+        else q"io.getquill.quat.Quat.Unknown"}
         val (idiomContext, expanded) = ${expand(ast, topLevelQuat)}
         ${invocation}
       """
     }
   }
 
-  private def expandQueryWithMeta[T](quoted: Tree, method: ContextMethod, topLevelQuat: Quat)(implicit t: WeakTypeTag[T]) = {
+  private def expandQueryWithMeta[T](quoted: Tree, method: ContextMethod, topLevelQuat: Quat)(implicit
+    t: WeakTypeTag[T]
+  ) = {
     val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
-    val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
-    val ast = extractAst(c.typecheck(q"${c.prefix}.quote($meta.expand($quoted))"))
+    val meta    = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+    val ast     = extractAst(c.typecheck(q"${c.prefix}.quote($meta.expand($quoted))"))
     val invocation =
       method match {
         case StreamQuery(UsesExplicitFetch(size)) =>
@@ -199,12 +202,13 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
            """
       }
 
-    val liftUnlift = new { override val mctx: c.type = c } with TokenLift(0) // Don't serialize quats for the top level
+    val liftUnlift               = new { override val mctx: c.type = c } with TokenLift(0) // Don't serialize quats for the top level
     val liftQuat: Liftable[Quat] = liftUnlift.quatLiftable
     c.untypecheck {
       q"""
         ..${EnableReflectiveCalls(c)}
-        val staticTopLevelQuat = ${if (Messages.attachTopLevelQuats) liftQuat(topLevelQuat) else q"io.getquill.quat.Quat.Unknown"}
+        val staticTopLevelQuat = ${if (Messages.attachTopLevelQuats) liftQuat(topLevelQuat)
+        else q"io.getquill.quat.Quat.Unknown"}
         val (idiomContext, expanded) = ${expand(ast, topLevelQuat)}
         ${invocation}
       """

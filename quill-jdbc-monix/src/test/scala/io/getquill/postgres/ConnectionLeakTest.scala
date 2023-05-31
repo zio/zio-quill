@@ -3,7 +3,7 @@ package io.getquill.postgres
 import java.util.UUID
 
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
-import io.getquill.{ JdbcContextConfig, Literal, PostgresMonixJdbcContext }
+import io.getquill.{JdbcContextConfig, Literal, PostgresMonixJdbcContext}
 import io.getquill.context.sql.ProductSpec
 import io.getquill.util.LoadConfig
 import monix.execution.Scheduler
@@ -29,15 +29,15 @@ class ConnectionLeakTest extends ProductSpec {
       context.transaction {
         for {
           _ <- context.run {
-            quote {
-              query[Product].insertValue(
-                lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
-              )
-            }
-          }
+                 quote {
+                   query[Product].insertValue(
+                     lift(Product(1, UUID.randomUUID().toString, Random.nextLong()))
+                   )
+                 }
+               }
           result <- context.run {
-            query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
-          }
+                      query[Product].filter(p => query[Product].map(_.id).max.exists(_ == p.id))
+                    }
         } yield (result)
       }
         .map(_.headOption.map(_.id))

@@ -635,7 +635,7 @@ class DynamicQuerySpec extends Spec {
     }
     "filterOpt" in {
       val o = Some(1)
-      val q = dynamicQuery[TestEntity].filterOpt(o) { (t, i) => quote(t.i == i) }
+      val q = dynamicQuery[TestEntity].filterOpt(o)((t, i) => quote(t.i == i))
       testContext.run(q).string mustEqual ("""querySchema("TestEntity").filter(v0 => v0.i == ?)""")
     }
     "update" in {

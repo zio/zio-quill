@@ -1,6 +1,6 @@
 package io.getquill.mysql
 
-import java.sql.{ Connection, ResultSet }
+import java.sql.{Connection, ResultSet}
 import io.getquill.PrepareZioJdbcSpecBase
 import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import org.scalatest.BeforeAndAfter
@@ -16,7 +16,7 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
   }
 
   def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
-  val prepareQuery = prepare(query[Product])
+  val prepareQuery     = prepare(query[Product])
 
   "single" in {
     val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))
