@@ -12,8 +12,8 @@ class DecodeNullSpec extends Spec {
 
       val result =
         for {
-          _ <- testLagomAsyncDB.run(writeEntities.delete)
-          _ <- testLagomAsyncDB.run(writeEntities.insert(lift(insertValue)))
+          _      <- testLagomAsyncDB.run(writeEntities.delete)
+          _      <- testLagomAsyncDB.run(writeEntities.insert(lift(insertValue)))
           result <- testLagomAsyncDB.run(query[DecodeNullTestEntity])
         } yield {
           result

@@ -2,7 +2,7 @@ package io.getquill.util
 
 import io.getquill.util.ThrowableOps._
 import org.scalafmt.config.ScalafmtConfig
-import org.scalafmt.{ Formatted, Scalafmt }
+import org.scalafmt.{Formatted, Scalafmt}
 
 /**
  * Based on ScalaFmt210 from scalafmt cli

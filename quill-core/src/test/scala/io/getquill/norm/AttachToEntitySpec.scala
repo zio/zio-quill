@@ -1,13 +1,14 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ AscNullsFirst, Constant, Ident, Map, SortBy }
+import io.getquill.ast.{AscNullsFirst, Constant, Ident, Map, SortBy}
 import io.getquill.MirrorContexts.testContext._
 import io.getquill.Query
 import io.getquill.base.Spec
 
 class AttachToEntitySpec extends Spec {
 
-  val attachToEntity = (AttachToEntity(SortBy(_, _, Constant.auto(1), AscNullsFirst)) _).andThen(replaceTempIdent.apply _)
+  val attachToEntity =
+    (AttachToEntity(SortBy(_, _, Constant.auto(1), AscNullsFirst)) _).andThen(replaceTempIdent.apply _)
 
   "attaches clause to the root of the query (entity)" - {
     "query is the entity" in {

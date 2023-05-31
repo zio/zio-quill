@@ -56,8 +56,8 @@ class QueryMacroSpec extends Spec {
         r.prepareRow mustEqual Row(1, "a")
       }
       "nested" in {
-        val c = quote {
-          (t: TestEntity) => t.i == lift(1)
+        val c = quote { (t: TestEntity) =>
+          t.i == lift(1)
         }
         val q = quote {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)
@@ -85,8 +85,8 @@ class QueryMacroSpec extends Spec {
         r.prepareRow mustEqual Row(1, "a")
       }
       "nested" in {
-        val c = quote {
-          (t: TestEntity) => t.i == lift(1)
+        val c = quote { (t: TestEntity) =>
+          t.i == lift(1)
         }
         val q = quote {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)
@@ -115,8 +115,8 @@ class QueryMacroSpec extends Spec {
           """querySchema("TestEntity").filter(t => (t.i == 1) && (t.s == 'a')).map(t => t.i)"""
       }
       "nested" in {
-        val c = quote {
-          (t: TestEntity) => t.i == lift(1)
+        val c = quote { (t: TestEntity) =>
+          t.i == lift(1)
         }
         val q = quote {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)
@@ -141,8 +141,8 @@ class QueryMacroSpec extends Spec {
           """querySchema("TestEntity").filter(t => (t.i == 1) && (t.s == 'a')).map(t => t.i)"""
       }
       "nested" in {
-        val c = quote {
-          (t: TestEntity) => t.i == lift(1)
+        val c = quote { (t: TestEntity) =>
+          t.i == lift(1)
         }
         val q = quote {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)

@@ -13,8 +13,8 @@ class DecodeNullSpec extends Spec {
 
       val result =
         for {
-          _ <- testStreamDB.run(writeEntities.delete).runForeach(_ => ())
-          _ <- testStreamDB.run(writeEntities.insert(lift(insertValue))).runForeach(_ => ())
+          _      <- testStreamDB.run(writeEntities.delete).runForeach(_ => ())
+          _      <- testStreamDB.run(writeEntities.insert(lift(insertValue))).runForeach(_ => ())
           result <- testStreamDB.run(query[DecodeNullTestEntity]).runFold(List.empty[DecodeNullTestEntity])(_ :+ _)
         } yield {
           result

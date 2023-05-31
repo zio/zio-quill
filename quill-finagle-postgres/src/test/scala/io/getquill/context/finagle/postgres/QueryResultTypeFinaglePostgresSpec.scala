@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.postgres
 
 import io.getquill.context.sql._
-import com.twitter.util.{ Await, Future }
+import com.twitter.util.{Await, Future}
 import io.getquill.context.sql.base.QueryResultTypeSpec
 
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -19,8 +19,8 @@ class QueryResultTypeFinaglePostgresSpec extends QueryResultTypeSpec {
   override def beforeAll = {
     await(testContext.run(deleteAll))
     val rs = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (rs zip productEntries).map {
-      case (r, prod) => prod.copy(id = r)
+    val inserted = (rs zip productEntries).map { case (r, prod) =>
+      prod.copy(id = r)
     }
     insertedProducts.addAll(inserted.asJava)
     ()

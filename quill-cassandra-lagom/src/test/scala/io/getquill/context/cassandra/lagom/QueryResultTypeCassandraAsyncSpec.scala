@@ -13,13 +13,11 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
 
   import context._
 
-  def result[T](function: CassandraSession => Future[T]): T = {
+  def result[T](function: CassandraSession => Future[T]): T =
     await(function(context.session))
-  }
 
-  def result[T](future: Future[T]): T = {
+  def result[T](future: Future[T]): T =
     await(future)
-  }
 
   override def beforeAll = {
     result(context.run(deleteAll))
@@ -49,7 +47,9 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
       }
 
       "withArgs" in {
-        val batches = result(context.prepare(liftQuery(List(OrderTestEntity(1, 2))).foreach(e => insert(e)))(context.wrappedSession))
+        val batches = result(
+          context.prepare(liftQuery(List(OrderTestEntity(1, 2))).foreach(e => insert(e)))(context.wrappedSession)
+        )
         batches.foreach { bs =>
           bs.preparedStatement().getVariables.size() mustEqual 2
           bs.getInt("id") mustEqual 1

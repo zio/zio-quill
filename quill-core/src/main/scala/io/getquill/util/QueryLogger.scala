@@ -29,19 +29,22 @@ class QueryLogger(logToFile: LogToFile) {
       }
     }
 
-  def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit = {
+  def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit =
     runtime match {
       case Some(runtimeValue) =>
         Unsafe.unsafe { implicit u =>
-          runtimeValue.unsafe.run(ZIO.logInfo(
-            s"""
-               |-- file: $sourcePath:$line:$column
-               |-- time: ${ZonedDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}
-               |$queryString;
-               |""".stripMargin
-          )).getOrThrow()
+          runtimeValue.unsafe
+            .run(
+              ZIO.logInfo(
+                s"""
+                   |-- file: $sourcePath:$line:$column
+                   |-- time: ${ZonedDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}
+                   |$queryString;
+                   |""".stripMargin
+              )
+            )
+            .getOrThrow()
         }
       case None => // do nothing
     }
-  }
 }

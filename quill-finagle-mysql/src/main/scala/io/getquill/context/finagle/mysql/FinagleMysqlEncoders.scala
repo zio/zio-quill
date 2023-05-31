@@ -1,8 +1,8 @@
 package io.getquill.context.finagle.mysql
 
 import java.sql.Timestamp
-import java.time.{ LocalDate, LocalDateTime }
-import java.util.{ Date, UUID }
+import java.time.{LocalDate, LocalDateTime}
+import java.util.{Date, UUID}
 
 import com.twitter.finagle.mysql.CanBeParameter._
 import com.twitter.finagle.mysql.Parameter.wrap
@@ -43,22 +43,22 @@ trait FinagleMysqlEncoders {
     encoder[BigDecimal] { (value: BigDecimal) =>
       BigDecimalValue(value): Parameter
     }
-  implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
-  implicit val byteEncoder: Encoder[Byte] = encoder[Byte]
-  implicit val shortEncoder: Encoder[Short] = encoder[Short]
-  implicit val intEncoder: Encoder[Int] = encoder[Int]
-  implicit val longEncoder: Encoder[Long] = encoder[Long]
-  implicit val floatEncoder: Encoder[Float] = encoder[Float]
-  implicit val doubleEncoder: Encoder[Double] = encoder[Double]
+  implicit val booleanEncoder: Encoder[Boolean]       = encoder[Boolean]
+  implicit val byteEncoder: Encoder[Byte]             = encoder[Byte]
+  implicit val shortEncoder: Encoder[Short]           = encoder[Short]
+  implicit val intEncoder: Encoder[Int]               = encoder[Int]
+  implicit val longEncoder: Encoder[Long]             = encoder[Long]
+  implicit val floatEncoder: Encoder[Float]           = encoder[Float]
+  implicit val doubleEncoder: Encoder[Double]         = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
-  implicit val dateEncoder: Encoder[Date] = encoder[Date] {
-    (value: Date) => timestampValue(new Timestamp(value.getTime)): Parameter
+  implicit val dateEncoder: Encoder[Date] = encoder[Date] { (value: Date) =>
+    timestampValue(new Timestamp(value.getTime)): Parameter
   }
-  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate] {
-    (d: LocalDate) => DateValue(java.sql.Date.valueOf(d)): Parameter
+  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate] { (d: LocalDate) =>
+    DateValue(java.sql.Date.valueOf(d)): Parameter
   }
-  implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime] {
-    (d: LocalDateTime) => timestampValue(new Timestamp(d.atZone(injectionTimeZone.toZoneId).toInstant.toEpochMilli)): Parameter
+  implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime] { (d: LocalDateTime) =>
+    timestampValue(new Timestamp(d.atZone(injectionTimeZone.toZoneId).toInstant.toEpochMilli)): Parameter
   }
   implicit val uuidEncoder: Encoder[UUID] = mappedEncoder(MappedEncoding(_.toString), stringEncoder)
 }
