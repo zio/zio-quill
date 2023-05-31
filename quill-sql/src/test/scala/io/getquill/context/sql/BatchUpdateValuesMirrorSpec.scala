@@ -2,7 +2,7 @@ package io.getquill.context.sql
 
 import io.getquill.context.ExecutionType.Unknown
 import io.getquill.context.sql.base.BatchUpdateValuesSpec
-import io.getquill.{ Literal, PostgresDialect, SnakeCase, SqlMirrorContext }
+import io.getquill.{Literal, PostgresDialect, SnakeCase, SqlMirrorContext}
 import io.getquill.context.sql.util.StringOps._
 
 class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
@@ -19,13 +19,14 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
           List("Joe", "Joe", "BloggsU", 22, "Jan", "Jan", "RoggsU", 33),
           List("James", "James", "JonesU", 44, "Dale", "Dale", "DomesU", 55)
         ),
-          Unknown
-      ), (
+        Unknown
+      ),
+      (
         "UPDATE Contact AS p SET firstName = ps.firstName1, lastName = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.firstName = ps.firstName",
         List(
           List("Caboose", "Caboose", "CastleU", 66)
         ),
-          Unknown
+        Unknown
       )
     )
   }
@@ -44,13 +45,14 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
           List("Joe", "Joe", "BloggsU", 22, "Jan", "Jan", "RoggsU", 33),
           List("James", "James", "JonesU", 44, "Dale", "Dale", "DomesU", 55)
         ),
-          Unknown
-      ), (
+        Unknown
+      ),
+      (
         "UPDATE contact AS p SET first_name = ps.firstName1, last_name = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.first_name = ps.firstName",
         List(
           List("Caboose", "Caboose", "CastleU", 66)
         ),
-          Unknown
+        Unknown
       )
     )
   }
@@ -65,7 +67,8 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
     }
     val update = quote {
       liftQuery(updateData: List[Contact]).foreach(ps =>
-        contacts.filter(p => p.firstName == ps.firstName).updateValue(ps))
+        contacts.filter(p => p.firstName == ps.firstName).updateValue(ps)
+      )
     }
     context.run(update, 2).tripleBatchMulti mustEqual List(
       (
@@ -74,13 +77,14 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
           List("Joe", "Joe", "BloggsU", 22, "Jan", "Jan", "RoggsU", 33),
           List("James", "James", "JonesU", 44, "Dale", "Dale", "DomesU", 55)
         ),
-          Unknown
-      ), (
+        Unknown
+      ),
+      (
         "UPDATE tblContact AS p SET colFirstName = ps.firstName1, last_name = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.colFirstName = ps.firstName",
         List(
           List("Caboose", "Caboose", "CastleU", 66)
         ),
-          Unknown
+        Unknown
       )
     )
   }
@@ -93,12 +97,15 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
         List(
           List("Joe", "Joe", "BloggsU", 22, "Jan", "Jan", "RoggsU", 33, "Joe"),
           List("James", "James", "JonesU", 44, "Dale", "Dale", "DomesU", 55, "Joe")
-        ), Unknown
-      ), (
+        ),
+        Unknown
+      ),
+      (
         "UPDATE Contact AS p SET firstName = ps.firstName1, lastName = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.firstName = ps.firstName AND p.firstName = ?",
         List(
           List("Caboose", "Caboose", "CastleU", 66, "Joe")
-        ), Unknown
+        ),
+        Unknown
       )
     )
   }
@@ -108,10 +115,16 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
     context.run(update, 2).tripleBatchMulti mustEqual List(
       (
         "UPDATE Contact AS p SET lastName = ps.lastName || ? FROM (VALUES (?, ?), (?, ?)) AS ps(firstName, lastName) WHERE p.firstName = ps.firstName AND (p.firstName = ? OR p.firstName = ?)",
-        List(List(" Jr.", "Joe", "BloggsU", "Jan", "RoggsU", "Joe", "Jan"), List(" Jr.", "James", "JonesU", "Dale", "DomesU", "Joe", "Jan")), Unknown
-      ), (
+        List(
+          List(" Jr.", "Joe", "BloggsU", "Jan", "RoggsU", "Joe", "Jan"),
+          List(" Jr.", "James", "JonesU", "Dale", "DomesU", "Joe", "Jan")
+        ),
+        Unknown
+      ),
+      (
         "UPDATE Contact AS p SET lastName = ps.lastName || ? FROM (VALUES (?, ?)) AS ps(firstName, lastName) WHERE p.firstName = ps.firstName AND (p.firstName = ? OR p.firstName = ?)",
-        List(List(" Jr.", "Caboose", "CastleU", "Joe", "Jan")), Unknown
+        List(List(" Jr.", "Caboose", "CastleU", "Joe", "Jan")),
+        Unknown
       )
     )
   }
@@ -124,12 +137,15 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
         List(
           List("Joe", "Joe", "BloggsU", 22, "Jan", "Jan", "RoggsU", 33, "Joe", "Dale", "Caboose"),
           List("James", "James", "JonesU", 44, "Dale", "Dale", "DomesU", 55, "Joe", "Dale", "Caboose")
-        ), Unknown
-      ), (
+        ),
+        Unknown
+      ),
+      (
         "UPDATE Contact AS p SET firstName = ps.firstName1, lastName = ps.lastName, age = ps.age FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age) WHERE p.firstName = ps.firstName AND (p.firstName = ? OR p.firstName IN (?, ?))",
         List(
           List("Caboose", "Caboose", "CastleU", 66, "Joe", "Dale", "Caboose")
-        ), Unknown
+        ),
+        Unknown
       )
     )
   }

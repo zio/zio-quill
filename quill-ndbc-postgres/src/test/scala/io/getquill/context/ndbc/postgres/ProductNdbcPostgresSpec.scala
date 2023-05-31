@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.context.sql.{ Id, ProductSpec }
+import io.getquill.context.sql.{Id, ProductSpec}
 import io.trane.future.scala.Future
 
 class ProductNdbcPostgresSpec extends ProductSpec {
@@ -16,14 +16,14 @@ class ProductNdbcPostgresSpec extends ProductSpec {
   "Product" - {
     "Insert multiple products" in {
       val inserted = get(Future.sequence(productEntries.map(product => context.run(productInsert(lift(product))))))
-      val product = get(context.run(productById(lift(inserted(2))))).head
+      val product  = get(context.run(productById(lift(inserted(2))))).head
       product.description mustEqual productEntries(2).description
       product.id mustEqual inserted(2)
     }
 
     "Single insert product" in {
       val inserted = get(context.run(productSingleInsert))
-      val product = get(context.run(productById(lift(inserted)))).head
+      val product  = get(context.run(productById(lift(inserted)))).head
       product.description mustEqual "Window"
       product.id mustEqual inserted
     }
@@ -46,7 +46,7 @@ class ProductNdbcPostgresSpec extends ProductSpec {
       val q1 = quote {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
       }
-      val inserted = get(context.run(q1))
+      val inserted        = get(context.run(q1))
       val returnedProduct = get(context.run(productById(lift(inserted)))).head
       returnedProduct.description mustEqual "test2"
       returnedProduct.sku mustEqual 2L
@@ -54,8 +54,8 @@ class ProductNdbcPostgresSpec extends ProductSpec {
     }
 
     "Single product insert with a method quotation" in {
-      val prd = Product(0L, "test3", 3L)
-      val inserted = get(context.run(productInsert(lift(prd))))
+      val prd             = Product(0L, "test3", 3L)
+      val inserted        = get(context.run(productInsert(lift(prd))))
       val returnedProduct = get(context.run(productById(lift(inserted)))).head
       returnedProduct.description mustEqual "test3"
       returnedProduct.sku mustEqual 3L

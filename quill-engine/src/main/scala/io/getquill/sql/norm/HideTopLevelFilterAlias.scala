@@ -25,10 +25,10 @@ object HideTopLevelFilterAlias extends StatelessTransformer {
   }
 
   def hideAssignmentAlias(assignment: Assignment) = {
-    val alias = assignment.alias
-    val newAlias = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden)
-    val newValue = BetaReduction(assignment.value, alias -> newAlias)
-    val newProperty = BetaReduction(assignment.property, alias -> newAlias)
+    val alias         = assignment.alias
+    val newAlias      = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden)
+    val newValue      = BetaReduction(assignment.value, alias -> newAlias)
+    val newProperty   = BetaReduction(assignment.property, alias -> newAlias)
     val newAssignment = Assignment(newAlias, newProperty, newValue)
     newAssignment.asInstanceOf[Assignment]
   }

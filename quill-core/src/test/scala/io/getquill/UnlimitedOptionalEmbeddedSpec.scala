@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.ast.Renameable.Fixed
-import io.getquill.ast.{ Entity, PropertyAlias }
+import io.getquill.ast.{Entity, PropertyAlias}
 import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.quat._
@@ -33,13 +33,13 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   val qrOptEmd = quote {
     querySchema[OptEmd](
       "OptEmd",
-      _.e1.e1.e1.value -> "value111",
-      _.e1.e1.e2.map(_.value) -> "value112",
-      _.e1.e2.map(_.e1.value) -> "value121",
-      _.e1.e2.map(_.e2.map(_.value)) -> "value122",
-      _.e2.map(_.e1.e1.value) -> "value211",
-      _.e2.map(_.e1.e2.map(_.value)) -> "value212",
-      _.e2.map(_.e2.map(_.e1.value)) -> "value221",
+      _.e1.e1.e1.value                      -> "value111",
+      _.e1.e1.e2.map(_.value)               -> "value112",
+      _.e1.e2.map(_.e1.value)               -> "value121",
+      _.e1.e2.map(_.e2.map(_.value))        -> "value122",
+      _.e2.map(_.e1.e1.value)               -> "value211",
+      _.e2.map(_.e1.e2.map(_.value))        -> "value212",
+      _.e2.map(_.e2.map(_.e1.value))        -> "value221",
       _.e2.map(_.e2.map(_.e2.map(_.value))) -> "value222"
     )
   }

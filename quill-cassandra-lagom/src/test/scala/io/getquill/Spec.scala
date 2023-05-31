@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.ast.{ Ident, StatelessTransformer }
+import io.getquill.ast.{Ident, StatelessTransformer}
 import io.getquill.norm.capture.TemporaryIdent
 import io.getquill.quat.Quat
 import org.scalatest.BeforeAndAfterAll
@@ -8,11 +8,11 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 
 abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
-  val QV = Quat.Value
-  val QEP = Quat.Product.empty
+  val QV                  = Quat.Value
+  val QEP                 = Quat.Product.empty
   def QP(fields: String*) = Quat.LeafProduct(fields: _*)
 
   // Used by various tests to replace temporary idents created by AttachToEntity with 'x'

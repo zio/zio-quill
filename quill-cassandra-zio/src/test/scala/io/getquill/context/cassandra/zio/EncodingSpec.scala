@@ -9,8 +9,8 @@ class EncodingSpec extends EncodingSpecHelper with ZioCassandraSpec {
       import testZioDB._
       val ret =
         for {
-          _ <- testZioDB.run(query[EncodingTestEntity].delete)
-          _ <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
+          _      <- testZioDB.run(query[EncodingTestEntity].delete)
+          _      <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testZioDB.run(query[EncodingTestEntity])
         } yield {
           result
@@ -23,14 +23,13 @@ class EncodingSpec extends EncodingSpecHelper with ZioCassandraSpec {
   "encodes collections" - {
     "stream" in {
       import testZioDB._
-      val q = quote {
-        (list: Query[Int]) =>
-          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      val q = quote { (list: Query[Int]) =>
+        query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       val ret =
         for {
-          _ <- testZioDB.run(query[EncodingTestEntity].delete)
-          _ <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
+          _      <- testZioDB.run(query[EncodingTestEntity].delete)
+          _      <- testZioDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
           result <- testZioDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result
@@ -40,4 +39,3 @@ class EncodingSpec extends EncodingSpecHelper with ZioCassandraSpec {
     }
   }
 }
-

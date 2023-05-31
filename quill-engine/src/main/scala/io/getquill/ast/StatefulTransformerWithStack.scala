@@ -50,7 +50,7 @@ trait StatefulTransformerWithStack[T] {
         val (ct, ctt) = btt.apply(c)(History(e))
         (If(at, bt, ct), ctt)
 
-      case l: Dynamic  => (l, this)
+      case l: Dynamic => (l, this)
 
       case l: External => (l, this)
 
@@ -210,12 +210,12 @@ trait StatefulTransformerWithStack[T] {
         val (bt, btt) = att.apply(b)(History(eq))
         (UnionAll(at, bt), btt)
       case Join(t, a, b, iA, iB, on) =>
-        val (at, att) = apply(a)(History(eq))
-        val (bt, btt) = att.apply(b)(History(eq))
+        val (at, att)   = apply(a)(History(eq))
+        val (bt, btt)   = att.apply(b)(History(eq))
         val (ont, ontt) = btt.apply(on)(History(eq))
         (Join(t, at, bt, iA, iB, ont), ontt)
       case FlatJoin(t, a, iA, on) =>
-        val (at, att) = apply(a)(History(eq))
+        val (at, att)   = apply(a)(History(eq))
         val (ont, ontt) = att.apply(on)(History(eq))
         (FlatJoin(t, at, iA, ont), ontt)
       case Distinct(a) =>
@@ -277,7 +277,7 @@ trait StatefulTransformerWithStack[T] {
         (Tuple(at), att)
       case CaseClass(n, a) =>
         val (keys, values) = a.unzip
-        val (at, att) = apply(values)(s => (u => s.apply(u)(History(e))))
+        val (at, att)      = apply(values)(s => (u => s.apply(u)(History(e))))
         (CaseClass(n, keys.zip(at)), att)
     }
 
@@ -329,10 +329,11 @@ trait StatefulTransformerWithStack[T] {
         (OnConflict.Update(at), att)
     }
 
-  def apply[U, R](list: List[U])(f: StatefulTransformerWithStack[T] => U => (R, StatefulTransformerWithStack[T]))(implicit parent: History) =
-    list.foldLeft((List[R](), this)) {
-      case ((values, t), v) =>
-        val (vt, vtt) = f(t)(v)
-        (values :+ vt, vtt)
+  def apply[U, R](list: List[U])(f: StatefulTransformerWithStack[T] => U => (R, StatefulTransformerWithStack[T]))(
+    implicit parent: History
+  ) =
+    list.foldLeft((List[R](), this)) { case ((values, t), v) =>
+      val (vt, vtt) = f(t)(v)
+      (values :+ vt, vtt)
     }
 }
