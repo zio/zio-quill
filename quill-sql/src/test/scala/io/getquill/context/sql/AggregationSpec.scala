@@ -1,8 +1,8 @@
 package io.getquill.context.sql
 
 import io.getquill.base.Spec
-import io.getquill.norm.{ DisablePhase, OptionalPhase }
-import io.getquill.{ Literal, MirrorSqlDialect, SqlMirrorContext, TestEntities }
+import io.getquill.norm.{DisablePhase, OptionalPhase}
+import io.getquill.{Literal, MirrorSqlDialect, SqlMirrorContext, TestEntities}
 import io.getquill.norm.ConfigList._
 
 class AggregationSpec extends Spec {
@@ -28,16 +28,20 @@ class AggregationSpec extends Spec {
   //   => SELECT p.age + 1 FROM (SELECT x.age FROM Person x) AS p WHERE (p.age + 1) = 123
   // Instead it should remain as the former query
   "simple operation should not propogate from nested" in {
-    ctx.run { query[Person].map(p => p.age + 1).nested.filter(p => p == 123) }.string mustEqual "SELECT p.x FROM (SELECT p.age + 1 AS x FROM Person p) AS p WHERE p.x = 123"
+    ctx.run {
+      query[Person].map(p => p.age + 1).nested.filter(p => p == 123)
+    }.string mustEqual "SELECT p.x FROM (SELECT p.age + 1 AS x FROM Person p) AS p WHERE p.x = 123"
   }
 
   "aggregation functions should" - {
     "work in a map clause that is last in a query" - {
-      "max" in { ctx.run { query[Person].map(p => max(p.name)) }.string mustEqual "SELECT MAX(p.name) FROM Person p" }
-      "min" in { ctx.run { query[Person].map(p => min(p.name)) }.string mustEqual "SELECT MIN(p.name) FROM Person p" }
-      "count" in { ctx.run { query[Person].map(p => count(p.name)) }.string mustEqual "SELECT COUNT(p.name) FROM Person p" }
-      "avg" in { ctx.run { query[Person].map(p => avg(p.age)) }.string mustEqual "SELECT AVG(p.age) FROM Person p" }
-      "sum" in { ctx.run { query[Person].map(p => sum(p.age)) }.string mustEqual "SELECT SUM(p.age) FROM Person p" }
+      "max" in { ctx.run(query[Person].map(p => max(p.name))).string mustEqual "SELECT MAX(p.name) FROM Person p" }
+      "min" in { ctx.run(query[Person].map(p => min(p.name))).string mustEqual "SELECT MIN(p.name) FROM Person p" }
+      "count" in {
+        ctx.run(query[Person].map(p => count(p.name))).string mustEqual "SELECT COUNT(p.name) FROM Person p"
+      }
+      "avg" in { ctx.run(query[Person].map(p => avg(p.age))).string mustEqual "SELECT AVG(p.age) FROM Person p" }
+      "sum" in { ctx.run(query[Person].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) FROM Person p" }
     }
 
     "work correctly with a filter cause that is BEFORE the aggreation" in {
@@ -80,45 +84,79 @@ class AggregationSpec extends Spec {
     }
 
     "work externally with optional mapping" - {
-      "max" in { ctx.run { query[PersonOpt].map(p => max(p.name)) }.string mustEqual "SELECT MAX(p.name) FROM PersonOpt p" }
-      "min" in { ctx.run { query[PersonOpt].map(p => min(p.name)) }.string mustEqual "SELECT MIN(p.name) FROM PersonOpt p" }
-      "count" in { ctx.run { query[PersonOpt].map(p => count(p.name)) }.string mustEqual "SELECT COUNT(p.name) FROM PersonOpt p" }
-      "avg" in { ctx.run { query[PersonOpt].map(p => avg(p.age)) }.string mustEqual "SELECT AVG(p.age) FROM PersonOpt p" }
-      "sum" in { ctx.run { query[PersonOpt].map(p => sum(p.age)) }.string mustEqual "SELECT SUM(p.age) FROM PersonOpt p" }
+      "max" in {
+        ctx.run(query[PersonOpt].map(p => max(p.name))).string mustEqual "SELECT MAX(p.name) FROM PersonOpt p"
+      }
+      "min" in {
+        ctx.run(query[PersonOpt].map(p => min(p.name))).string mustEqual "SELECT MIN(p.name) FROM PersonOpt p"
+      }
+      "count" in {
+        ctx.run(query[PersonOpt].map(p => count(p.name))).string mustEqual "SELECT COUNT(p.name) FROM PersonOpt p"
+      }
+      "avg" in {
+        ctx.run(query[PersonOpt].map(p => avg(p.age))).string mustEqual "SELECT AVG(p.age) FROM PersonOpt p"
+      }
+      "sum" in {
+        ctx.run(query[PersonOpt].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) FROM PersonOpt p"
+      }
     }
   }
 
   "groupByMap should" - {
     "work in the simple form" - {
-      "max" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, max(p.name))) }.string mustEqual "SELECT p.name AS _1, MAX(p.name) AS _2 FROM Person p GROUP BY p.id" }
-      "min" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, min(p.name))) }.string mustEqual "SELECT p.name AS _1, MIN(p.name) AS _2 FROM Person p GROUP BY p.id" }
-      "count" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, count(p.name))) }.string mustEqual "SELECT p.name AS _1, COUNT(p.name) AS _2 FROM Person p GROUP BY p.id" }
-      "avg" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, avg(p.age))) }.string mustEqual "SELECT p.name AS _1, AVG(p.age) AS _2 FROM Person p GROUP BY p.id" }
-      "sum" in { ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, sum(p.age))) }.string mustEqual "SELECT p.name AS _1, SUM(p.age) AS _2 FROM Person p GROUP BY p.id" }
+      "max" in {
+        ctx.run {
+          query[Person].groupByMap(p => p.id)(p => (p.name, max(p.name)))
+        }.string mustEqual "SELECT p.name AS _1, MAX(p.name) AS _2 FROM Person p GROUP BY p.id"
+      }
+      "min" in {
+        ctx.run {
+          query[Person].groupByMap(p => p.id)(p => (p.name, min(p.name)))
+        }.string mustEqual "SELECT p.name AS _1, MIN(p.name) AS _2 FROM Person p GROUP BY p.id"
+      }
+      "count" in {
+        ctx.run {
+          query[Person].groupByMap(p => p.id)(p => (p.name, count(p.name)))
+        }.string mustEqual "SELECT p.name AS _1, COUNT(p.name) AS _2 FROM Person p GROUP BY p.id"
+      }
+      "avg" in {
+        ctx.run {
+          query[Person].groupByMap(p => p.id)(p => (p.name, avg(p.age)))
+        }.string mustEqual "SELECT p.name AS _1, AVG(p.age) AS _2 FROM Person p GROUP BY p.id"
+      }
+      "sum" in {
+        ctx.run {
+          query[Person].groupByMap(p => p.id)(p => (p.name, sum(p.age)))
+        }.string mustEqual "SELECT p.name AS _1, SUM(p.age) AS _2 FROM Person p GROUP BY p.id"
+      }
     }
 
     "work with multiple aggregators" in {
-      ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, max(p.name), avg(p.age))) }.string mustEqual
+      ctx.run(query[Person].groupByMap(p => p.id)(p => (p.name, max(p.name), avg(p.age)))).string mustEqual
         "SELECT p.name AS _1, MAX(p.name) AS _2, AVG(p.age) AS _3 FROM Person p GROUP BY p.id"
     }
 
     "work with a filter clause after" in {
-      ctx.run { query[Person].groupByMap(p => p.id)(p => (p.name, max(p.name))).filter(p => p._2 == "Joe") }.string mustEqual
+      ctx.run {
+        query[Person].groupByMap(p => p.id)(p => (p.name, max(p.name))).filter(p => p._2 == "Joe")
+      }.string mustEqual
         "SELECT p._1, p._2 FROM (SELECT p.name AS _1, MAX(p.name) AS _2 FROM Person p GROUP BY p.id) AS p WHERE p._2 = 'Joe'"
     }
 
     "work with a filter clause before" in {
-      ctx.run { query[Person].filter(p => p.name == "Joe").groupByMap(p => p.id)(p => (p.name, max(p.name))) }.string mustEqual
+      ctx.run {
+        query[Person].filter(p => p.name == "Joe").groupByMap(p => p.id)(p => (p.name, max(p.name)))
+      }.string mustEqual
         "SELECT p.name AS _1, MAX(p.name) AS _2 FROM Person p WHERE p.name = 'Joe' GROUP BY p.id"
     }
 
     "work with a groupByMap(to-leaf).filter" in {
-      ctx.run { query[Person].groupByMap(p => p.age)(p => max(p.age)).filter(a => a > 1000) }.string mustEqual
+      ctx.run(query[Person].groupByMap(p => p.age)(p => max(p.age)).filter(a => a > 1000)).string mustEqual
         "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM Person p GROUP BY p.age) AS p WHERE p.x > 1000"
     }
 
     "work with a map(to-leaf).groupByMap.filter" in {
-      ctx.run { query[Person].map(p => p.age).groupByMap(p => p)(p => max(p)).filter(a => a > 1000) }.string mustEqual
+      ctx.run(query[Person].map(p => p.age).groupByMap(p => p)(p => max(p)).filter(a => a > 1000)).string mustEqual
         "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM Person p GROUP BY p.age) AS p WHERE p.x > 1000"
     }
 
@@ -126,7 +164,7 @@ class AggregationSpec extends Spec {
     // Infix has a special case already so want to not use that specifically.
     "work with a map(to-leaf).groupByMap.filter - no ApplyMap" in {
       implicit val d = new DisablePhase { override type Phase = OptionalPhase.ApplyMap :: HNil }
-      ctx.run { query[Person].map(p => p.age).groupByMap(p => p)(p => max(p)).filter(a => a > 1000) }.string mustEqual
+      ctx.run(query[Person].map(p => p.age).groupByMap(p => p)(p => max(p)).filter(a => a > 1000)).string mustEqual
         "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM (SELECT p.age FROM Person p) AS p GROUP BY p.age) AS p WHERE p.x > 1000"
     }
 
@@ -134,7 +172,10 @@ class AggregationSpec extends Spec {
 
     "work with map(product).filter.groupByMap.filter" in {
       ctx.run {
-        query[Person].map(p => NameAge(p.name, p.age)).filter(t => t.age == 123).groupByMap(t => t.name)(t => (t.name, max(t.age)))
+        query[Person]
+          .map(p => NameAge(p.name, p.age))
+          .filter(t => t.age == 123)
+          .groupByMap(t => t.name)(t => (t.name, max(t.age)))
       }.string mustEqual
         "SELECT p.name AS _1, MAX(p.age) AS _2 FROM Person p WHERE p.age = 123 GROUP BY p.name"
     }
@@ -142,7 +183,10 @@ class AggregationSpec extends Spec {
     "work with map(product).filter.groupByMap.filter - no ApplyMap" in {
       implicit val d = new DisablePhase { override type Phase = OptionalPhase.ApplyMap :: HNil }
       ctx.run {
-        query[Person].map(p => NameAge(p.name, p.age)).filter(t => t.age == 123).groupByMap(t => t.name)(t => (t.name, max(t.age)))
+        query[Person]
+          .map(p => NameAge(p.name, p.age))
+          .filter(t => t.age == 123)
+          .groupByMap(t => t.name)(t => (t.name, max(t.age)))
       }.string mustEqual
         "SELECT p.name AS _1, MAX(p.age) AS _2 FROM (SELECT p.name, p.age FROM Person p) AS p WHERE p.age = 123 GROUP BY p.name"
     }
@@ -156,7 +200,9 @@ class AggregationSpec extends Spec {
       ctx.run {
         for {
           a <- query[Address]
-          p <- query[Person].groupByMap(p => p.name == "Joe")(p => PersonInfo(p.id, max(p.age))).leftJoin(p => p.id == a.owner)
+          p <- query[Person]
+                 .groupByMap(p => p.name == "Joe")(p => PersonInfo(p.id, max(p.age)))
+                 .leftJoin(p => p.id == a.owner)
           f <- query[Furniture].leftJoin(f => f.owner === p.map(_.id) && f.location == a.id)
         } yield (a, p, f)
       }.string mustEqual

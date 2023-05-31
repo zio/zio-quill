@@ -8,9 +8,8 @@ class ScalaFutureIOMonadSpec extends IOMonadSpec {
   override val ctx = io.getquill.MirrorContexts.testAsyncContext
   import ctx._
 
-  override def eval[T](io: IO[T, _]) = {
+  override def eval[T](io: IO[T, _]) =
     ctx.eval(ctx.performIO(io))
-  }
 
   override def resultValue[T](x: T): Result[T] = Future.successful(x)
 

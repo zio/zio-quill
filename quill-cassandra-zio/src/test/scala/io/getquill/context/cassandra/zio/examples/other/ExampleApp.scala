@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra.zio.examples.other
 
-import io.getquill.{ CassandraZioContext, _ }
+import io.getquill.{CassandraZioContext, _}
 import zio.ZIOAppDefault
 import zio.Console.printLine
 
@@ -18,8 +18,10 @@ object ExampleApp extends ZIOAppDefault {
     val people = quote {
       query[Person]
     }
-    MyZioPostgresContext.run(people)
+    MyZioPostgresContext
+      .run(people)
       .tap(result => printLine(result.toString))
-      .provide(zioSessionLayer).exitCode
+      .provide(zioSessionLayer)
+      .exitCode
   }
 }

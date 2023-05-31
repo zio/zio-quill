@@ -8,7 +8,7 @@ object NormalizeCaching {
 
   def apply(f: Ast => Ast): Ast => Ast = { ori =>
     val (stablized, state) = StablizeLifts.stablize(ori)
-    val cachedR = cache.get(stablized)
+    val cachedR            = cache.get(stablized)
     val normalized = if (cachedR != null) {
       cachedR
     } else {

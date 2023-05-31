@@ -3,8 +3,8 @@ package io.getquill.context.cassandra.encoding
 import io.getquill.context.cassandra.CassandraRowContext
 
 import java.nio.ByteBuffer
-import java.time.{ Instant, LocalDate, LocalTime }
-import java.util.{ Date, UUID }
+import java.time.{Instant, LocalDate, LocalTime}
+import java.util.{Date, UUID}
 
 trait Encoders extends CollectionEncoders {
   this: CassandraRowContext[_] =>
@@ -39,16 +39,16 @@ trait Encoders extends CollectionEncoders {
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     encoder((index, value, row, _) => row.setBigDecimal(index, value.bigDecimal))
   implicit val booleanEncoder: Encoder[Boolean] = encoder(_.setBoolean)
-  implicit val byteEncoder: Encoder[Byte] = encoder(_.setByte)
-  implicit val shortEncoder: Encoder[Short] = encoder(_.setShort)
-  implicit val intEncoder: Encoder[Int] = encoder(_.setInt)
-  implicit val longEncoder: Encoder[Long] = encoder(_.setLong)
-  implicit val floatEncoder: Encoder[Float] = encoder(_.setFloat)
-  implicit val doubleEncoder: Encoder[Double] = encoder(_.setDouble)
+  implicit val byteEncoder: Encoder[Byte]       = encoder(_.setByte)
+  implicit val shortEncoder: Encoder[Short]     = encoder(_.setShort)
+  implicit val intEncoder: Encoder[Int]         = encoder(_.setInt)
+  implicit val longEncoder: Encoder[Long]       = encoder(_.setLong)
+  implicit val floatEncoder: Encoder[Float]     = encoder(_.setFloat)
+  implicit val doubleEncoder: Encoder[Double]   = encoder(_.setDouble)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] =
     encoder((index, value, row, _) => row.setByteBuffer(index, ByteBuffer.wrap(value)))
-  implicit val uuidEncoder: Encoder[UUID] = encoder(_.setUuid)
-  implicit val timestampEncoder: Encoder[Instant] = encoder(_.setInstant)
+  implicit val uuidEncoder: Encoder[UUID]                    = encoder(_.setUuid)
+  implicit val timestampEncoder: Encoder[Instant]            = encoder(_.setInstant)
   implicit val cassandraLocalTimeEncoder: Encoder[LocalTime] = encoder(_.setLocalTime)
   implicit val cassandraLocalDateEncoder: Encoder[LocalDate] = encoder(_.setLocalDate)
 }

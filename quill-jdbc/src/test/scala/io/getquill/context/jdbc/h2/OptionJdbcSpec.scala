@@ -27,7 +27,9 @@ class OptionJdbcSpec extends OptionQuerySpec {
   }
 
   "Example 1.2 - Simple Map with Condition and GetOrElse" in {
-    testContext.run(`Simple Map with Condition and GetOrElse`) should contain theSameElementsAs `Simple Map with Condition and GetOrElse Result`
+    testContext.run(
+      `Simple Map with Condition and GetOrElse`
+    ) should contain theSameElementsAs `Simple Map with Condition and GetOrElse Result`
   }
 
   "Example 2 - Simple GetOrElse" in {

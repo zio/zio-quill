@@ -1,7 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.ReturnAction.ReturnColumns
-import io.getquill.{ Literal, MirrorSqlDialectWithReturnMulti, MySQLDialect, SqlMirrorContext }
+import io.getquill.{Literal, MirrorSqlDialectWithReturnMulti, MySQLDialect, SqlMirrorContext}
 import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.testContext
@@ -31,39 +31,57 @@ class SqlActionSpec extends Spec {
               query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            ctx.run(q(lift(v)).returning(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
+            ctx
+              .run(q(lift(v)).returning(v => v.i))
+              .string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
           }
           "returning generated" in {
             val q = quote { (v: TestEntity) =>
               query[TestEntity].insertValue(v)
             }
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            testContext.run(q(lift(v)).returningGenerated(v => v.i)).string mustEqual "INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)"
+            testContext
+              .run(q(lift(v)).returningGenerated(v => v.i))
+              .string mustEqual "INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)"
           }
           "foreach" in {
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v))
-            ).groups mustEqual List(("INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)", List(Row(v.productIterator.toList: _*))))
+            testContext
+              .run(
+                liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v))
+              )
+              .groups mustEqual List(
+              ("INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)", List(Row(v.productIterator.toList: _*)))
+            )
           }
           "foreach returning" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
             import ctx._
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            ctx.run(liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returning(v => v.i))).groups mustEqual
-              List(("INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)",
-                ReturnColumns(List("i")),
-                List(Row(v.productIterator.toList: _*))
-              ))
+            ctx
+              .run(liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returning(v => v.i)))
+              .groups mustEqual
+              List(
+                (
+                  "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)",
+                  ReturnColumns(List("i")),
+                  List(Row(v.productIterator.toList: _*))
+                )
+              )
           }
           "foreach returning generated" in {
             val v = TestEntity("s", 1, 2L, Some(1), true)
-            testContext.run(
-              liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returningGenerated(v => v.i))
-            ).groups mustEqual
-              List(("INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)",
-                ReturnColumns(List("i")),
-                List(Row(v.productIterator.toList.filter(m => !m.isInstanceOf[Int]): _*))
-              ))
+            testContext
+              .run(
+                liftQuery(List(v)).foreach(v => query[TestEntity].insertValue(v).returningGenerated(v => v.i))
+              )
+              .groups mustEqual
+              List(
+                (
+                  "INSERT INTO TestEntity (s,l,o,b) VALUES (?, ?, ?, ?)",
+                  ReturnColumns(List("i")),
+                  List(Row(v.productIterator.toList.filter(m => !m.isInstanceOf[Int]): _*))
+                )
+              )
           }
         }
         "simple" in {

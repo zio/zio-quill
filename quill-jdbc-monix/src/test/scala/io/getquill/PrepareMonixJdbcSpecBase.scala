@@ -1,6 +1,6 @@
 package io.getquill
 
-import java.sql.{ Connection, PreparedStatement, ResultSet }
+import java.sql.{Connection, PreparedStatement, ResultSet}
 
 import io.getquill.context.jdbc.ResultSetExtractor
 import io.getquill.context.sql.ProductSpec
@@ -21,27 +21,29 @@ trait PrepareMonixJdbcSpecBase extends ProductSpec {
   def withOrderedIds(products: List[Product]) =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
 
-  def singleInsert(conn: => Connection)(prep: Connection => Task[PreparedStatement]) = {
+  def singleInsert(conn: => Connection)(prep: Connection => Task[PreparedStatement]) =
     Task(conn).bracket { conn =>
       prep(conn).bracket { stmt =>
         Task(stmt.execute())
       }(stmt => Task(stmt.close()))
     }(conn => Task(conn.close()))
-  }
 
-  def batchInsert(conn: => Connection)(prep: Connection => Task[List[PreparedStatement]]) = {
+  def batchInsert(conn: => Connection)(prep: Connection => Task[List[PreparedStatement]]) =
     Task(conn).bracket { conn =>
       prep(conn).flatMap(stmts =>
         Task.sequence(
           stmts.map(stmt =>
             Task(stmt).bracket { stmt =>
               Task(stmt.execute())
-            }(stmt => Task(stmt.close())))
-        ))
+            }(stmt => Task(stmt.close()))
+          )
+        )
+      )
     }(conn => Task(conn.close()))
-  }
 
-  def extractResults[T](conn: => Connection)(prep: Connection => Task[PreparedStatement])(extractor: (ResultSet, Connection) => T) = {
+  def extractResults[T](
+    conn: => Connection
+  )(prep: Connection => Task[PreparedStatement])(extractor: (ResultSet, Connection) => T) =
     Task(conn).bracket { conn =>
       prep(conn).bracket { stmt =>
         Task(stmt.executeQuery()).bracket { rs =>
@@ -49,7 +51,6 @@ trait PrepareMonixJdbcSpecBase extends ProductSpec {
         }(rs => Task(rs.close()))
       }(stmt => Task(stmt.close()))
     }(conn => Task(conn.close()))
-  }
 
   def extractProducts(conn: => Connection)(prep: Connection => Task[PreparedStatement]) =
     extractResults(conn)(prep)(productExtractor)

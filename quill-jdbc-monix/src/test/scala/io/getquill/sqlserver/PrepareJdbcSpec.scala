@@ -1,6 +1,6 @@
 package io.getquill.sqlserver
 
-import java.sql.{ Connection, ResultSet }
+import java.sql.{Connection, ResultSet}
 import io.getquill.PrepareMonixJdbcSpecBase
 import monix.execution.Scheduler
 import org.scalatest.BeforeAndAfter
@@ -16,8 +16,8 @@ class PrepareJdbcSpec extends PrepareMonixJdbcSpecBase with BeforeAndAfter {
   }
 
   def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
-  val prepareQuery = prepare(query[Product])
-  implicit val im = insertMeta[Product](_.id)
+  val prepareQuery     = prepare(query[Product])
+  implicit val im      = insertMeta[Product](_.id)
 
   "single" in {
     val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))

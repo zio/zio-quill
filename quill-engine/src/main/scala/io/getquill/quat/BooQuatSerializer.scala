@@ -18,14 +18,13 @@ object BooQuatSerializer {
       state.pickle(value.renames)
       ()
     }
-    override def unpickle(implicit state: UnpickleState): Quat.Product = {
+    override def unpickle(implicit state: UnpickleState): Quat.Product =
       Quat.Product.WithRenames(
         state.unpickle[String],
         state.unpickle[Quat.Product.Type],
         state.unpickle[LinkedHashMap[String, Quat]],
         state.unpickle[LinkedHashMap[String, String]]
       )
-    }
   }
 
   implicit val quatProductTypePickler: Pickler[Quat.Product.Type] =
@@ -44,7 +43,7 @@ object BooQuatSerializer {
       .addConcreteType[Quat.Null.type]
 
   def serialize(quat: Quat): String = {
-    val bytes = Pickle.intoBytes(quat)
+    val bytes            = Pickle.intoBytes(quat)
     val arr: Array[Byte] = new Array[Byte](bytes.remaining())
     bytes.get(arr)
     Base64.getEncoder.encodeToString(arr)

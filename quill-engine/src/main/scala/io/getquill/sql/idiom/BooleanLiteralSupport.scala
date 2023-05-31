@@ -6,7 +6,7 @@ import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.StringToken
-import io.getquill.norm.{ ConcatBehavior, EqualityBehavior }
+import io.getquill.norm.{ConcatBehavior, EqualityBehavior}
 import io.getquill.quat.Quat
 import io.getquill.sql.norm.VendorizeBooleans
 import io.getquill.util.Messages
@@ -14,7 +14,12 @@ import io.getquill.IdiomContext
 
 trait BooleanLiteralSupport extends SqlIdiom {
 
-  override def normalizeAst(ast: Ast, concatBehavior: ConcatBehavior, equalityBehavior: EqualityBehavior, idiomContext: IdiomContext) = {
+  override def normalizeAst(
+    ast: Ast,
+    concatBehavior: ConcatBehavior,
+    equalityBehavior: EqualityBehavior,
+    idiomContext: IdiomContext
+  ) = {
     val norm = SqlNormalize(ast, idiomContext.config, concatBehavior, equalityBehavior)
     if (Messages.smartBooleans)
       VendorizeBooleans(norm)
@@ -22,7 +27,10 @@ trait BooleanLiteralSupport extends SqlIdiom {
       norm
   }
 
-  override implicit def valueTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Value] =
+  override implicit def valueTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[Value] =
     Tokenizer[Value] {
       case Constant(b: Boolean, Quat.BooleanValue) =>
         StringToken(if (b) "1" else "0")

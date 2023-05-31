@@ -47,17 +47,23 @@ class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
     "without meta" in {
       case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
 
-      val e = WithEverything(1, Personal(1, "strt",
-        Name("first", Some("last")),
-        Some(Name("f", None)),
-        List("e"),
-        Set(1, 2),
-        Map(1 -> "1", 2 -> "2")),
-        List(Name("first", None)))
+      val e = WithEverything(
+        1,
+        Personal(
+          1,
+          "strt",
+          Name("first", Some("last")),
+          Some(Name("f", None)),
+          List("e"),
+          Set(1, 2),
+          Map(1 -> "1", 2 -> "2")
+        ),
+        List(Name("first", None))
+      )
 
       await {
         for {
-          _ <- ctx1.run(query[WithEverything].insertValue(lift(e)))
+          _   <- ctx1.run(query[WithEverything].insertValue(lift(e)))
           res <- ctx1.run(query[WithEverything].filter(_.id == 1))
         } yield {
           res.headOption must contain(e)
@@ -73,7 +79,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
 
       await {
         for {
-          _ <- ctx1.run(query[WithEverything].insertValue(lift(e)))
+          _   <- ctx1.run(query[WithEverything].insertValue(lift(e)))
           res <- ctx1.run(query[WithEverything].filter(_.id == 2))
         } yield {
           res.headOption must contain(e)
