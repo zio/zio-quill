@@ -1,6 +1,6 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class OrientDBContextSpec extends Spec {
 
@@ -36,8 +36,8 @@ class OrientDBContextSpec extends Spec {
   "fail on returning" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    val e: Extractor[Int] = (_) => 1
-    intercept[IllegalStateException](executeActionReturning("", (x) => (Nil, x), e, "")).getMessage mustBe
+    val e: Extractor[Int] = (_, _) => 1
+    intercept[IllegalStateException](executeActionReturning("", (x, session) => (Nil, x), e, "")).getMessage mustBe
       intercept[IllegalStateException](executeBatchActionReturning(Nil, e)).getMessage
   }
 

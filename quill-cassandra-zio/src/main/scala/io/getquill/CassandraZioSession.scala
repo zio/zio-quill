@@ -1,42 +1,33 @@
 package io.getquill
 
-import com.datastax.driver.core.{ BoundStatement, Cluster, PreparedStatement }
+import com.datastax.oss.driver.api.core.CqlSession
 import com.typesafe.config.Config
-import io.getquill.CassandraZioContext.CIO
-import io.getquill.context.{ CassandraSession, SyncCache }
-import io.getquill.context.cassandra.PrepareStatementCache
+import io.getquill.context.{AsyncFutureCache, CassandraSession, SyncCache}
 import io.getquill.util.LoadConfig
-import zio.{ Has, ZIO, ZLayer, ZManaged }
-import io.getquill.util.ZioConversions._
-import zio.blocking.Blocking
-
-trait AsyncZioCache { self: CassandraSession =>
-  lazy val asyncCache = new PrepareStatementCache[CIO[PreparedStatement]](preparedStatementCacheSize)
-  def prepareAsync(cql: String): CIO[BoundStatement] =
-    asyncCache(cql)(stmt => session.prepareAsync(stmt).asCio.tapError {
-      _ => ZIO.effect(asyncCache.invalidate(stmt))
-    }).map(_.bind())
-}
+import zio.{ZIO, ZLayer}
 
 case class CassandraZioSession(
-  override val cluster:                    Cluster,
-  override val keyspace:                   String,
+  override val session: CqlSession,
   override val preparedStatementCacheSize: Long
-) extends CassandraSession with SyncCache with AsyncZioCache with AutoCloseable
+) extends CassandraSession
+    with SyncCache
+    with AsyncFutureCache
+    with AutoCloseable
 
 object CassandraZioSession {
-  def fromContextConfig(config: CassandraContextConfig) = {
-    val managed =
-      for {
-        env <- ZManaged.environment[Blocking]
-        block = env.get[Blocking.Service]
+  val live: ZLayer[CassandraContextConfig, Throwable, CassandraZioSession] =
+    ZLayer.scoped {
+      (for {
+        config <- ZIO.service[CassandraContextConfig]
         // Evaluate the configuration inside of 'effect' and then create the session from it
-        session <- ZManaged.fromAutoCloseable(
-          ZIO.effect(CassandraZioSession(config.cluster, config.keyspace, config.preparedStatementCacheSize))
-        )
-      } yield Has(session) ++ Has(block)
-    ZLayer.fromManagedMany(managed)
-  }
+        session <- ZIO.fromAutoCloseable(
+                     ZIO.attempt(CassandraZioSession(config.session, config.preparedStatementCacheSize))
+                   )
+      } yield session)
+    }
+
+  def fromContextConfig(config: CassandraContextConfig): ZLayer[Any, Throwable, CassandraZioSession] =
+    ZLayer.succeed(config) >>> live
 
   def fromConfig(config: Config) = fromContextConfig(CassandraContextConfig(config))
   // Call the by-name constructor for the construction to fail inside of the effect if it fails

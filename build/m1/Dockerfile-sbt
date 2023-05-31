@@ -1,0 +1,8 @@
+FROM --platform=linux/arm64 hseeberger/scala-sbt:8u312_1.5.5_2.13.6
+MAINTAINER mdedetrich@gmail.com
+
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends nodejs
+ENV JAVA_OPTS "-Dquill.macro.log=false -Xmx3G"
+
+WORKDIR /app

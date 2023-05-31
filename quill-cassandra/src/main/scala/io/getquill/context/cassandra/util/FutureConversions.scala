@@ -1,24 +1,28 @@
 package io.getquill.context.cassandra.util
 
+import com.datastax.oss.driver.shaded.guava.common.util.concurrent.ListenableFuture
+
 import java.util.concurrent.Executor
 
-import com.google.common.util.concurrent.ListenableFuture
-
-import scala.concurrent.{ ExecutionContext, Future, Promise }
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
 object FutureConversions {
 
-  implicit class ListenableFutureConverter[A](val lf: ListenableFuture[A])
-    extends AnyVal {
+  implicit class ListenableFutureConverter[A](val lf: ListenableFuture[A]) extends AnyVal {
     def asScala(implicit ec: ExecutionContext): Future[A] = {
       val promise = Promise[A]()
-      lf.addListener(new Runnable {
-        def run(): Unit = {
-          promise.complete(Try(lf.get()))
-          ()
+      lf.addListener(
+        new Runnable {
+          def run(): Unit = {
+            promise.complete(Try(lf.get()))
+            ()
+          }
+        },
+        new Executor {
+          override def execute(command: Runnable): Unit = ec.execute(command)
         }
-      }, ec.asInstanceOf[Executor])
+      )
       promise.future
     }
 

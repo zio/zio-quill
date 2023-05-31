@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.context.sql.DepartmentsSpec
+import io.getquill.context.sql.base.DepartmentsSpec
 
 class DepartmentsNdbcPostgresSpec extends DepartmentsSpec {
 

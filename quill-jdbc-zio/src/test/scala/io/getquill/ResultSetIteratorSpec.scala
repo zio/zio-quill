@@ -1,25 +1,22 @@
 package io.getquill
 
-import io.getquill.ZioTestUtil._
-import io.getquill.context.ZioJdbc._
-import io.getquill.util.LoadConfig
-import zio.Task
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import io.getquill.context.qzio.ResultSetIterator
+import zio.ZIO
 
+import javax.sql.DataSource
 import scala.collection.mutable.ArrayBuffer
 
-class ResultSetIteratorSpec extends ZioSpec {
+class ResultSetIteratorSpec extends ZioProxySpec {
 
-  override def prefix = Prefix("testPostgresDB")
-
-  val ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
-
-  val ctx = new PostgresZioJdbcContext(Literal)
+  implicit val pool = Implicit(io.getquill.postgres.pool)
+  val ctx           = new PostgresZioJdbcContext(Literal)
   import ctx._
 
   case class Person(name: String, age: Int)
 
   val peopleInsert =
-    quote((p: Person) => query[Person].insert(p))
+    quote((p: Person) => query[Person].insertValue(p))
 
   val peopleEntries = List(
     Person("Alex", 60),
@@ -34,33 +31,42 @@ class ResultSetIteratorSpec extends ZioSpec {
         _ <- ctx.run(query[Person].delete)
         _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       } yield ()
-    }.provideConnectionFrom(pool).defaultRun
+    }.runSyncUnsafe()
   }
 
   "traverses correctly" in {
     val results =
-      Task(ds.getConnection).bracketAuto { conn =>
-        Task {
-          val stmt = conn.prepareStatement("select * from person")
-          val rs = new ResultSetIterator[String](stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
-          val accum = ArrayBuffer[String]()
-          while (rs.hasNext) accum += rs.next()
-          accum
+      ZIO
+        .service[DataSource]
+        .mapAttempt(ds => ds.getConnection)
+        .acquireReleaseWithAuto { conn =>
+          ZIO.attempt {
+            val stmt = conn.prepareStatement("select * from person")
+            val rs =
+              new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+            val accum = ArrayBuffer[String]()
+            while (rs.hasNext) accum += rs.next()
+            accum
+          }
         }
-      }.defaultRun
+        .runSyncUnsafe()
 
     results must contain theSameElementsAs (peopleEntries.map(_.name))
   }
 
   "can take head element" in {
     val result =
-      Task(ds.getConnection).bracketAuto { conn =>
-        Task {
-          val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-          val rs = new ResultSetIterator(stmt.executeQuery(), extractor = (rs) => { rs.getString(1) })
-          rs.head
+      ZIO
+        .service[DataSource]
+        .mapAttempt(ds => ds.getConnection)
+        .acquireReleaseWithAuto { conn =>
+          ZIO.attempt {
+            val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
+            val rs   = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+            rs.head
+          }
         }
-      }.defaultRun
+        .runSyncUnsafe()
 
     result must equal("Alex")
   }

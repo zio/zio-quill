@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.mysql
 
-import com.twitter.util.{ Await, Future }
-import io.getquill.context.sql.CaseClassQuerySpec
+import com.twitter.util.{Await, Future}
+import io.getquill.context.sql.base.CaseClassQuerySpec
 import org.scalatest.matchers.should.Matchers._
 
 class CaseClassQueryFinagleSpec extends CaseClassQuerySpec {
@@ -24,20 +24,30 @@ class CaseClassQueryFinagleSpec extends CaseClassQuerySpec {
     }
 
   "Example 1 - Single Case Class Mapping" in {
-    await(testContext.run(`Ex 1 CaseClass Record Output`)) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    await(
+      testContext.run(`Ex 1 CaseClass Record Output`)
+    ) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
   "Example 1A - Single Case Class Mapping" in {
-    await(testContext.run(`Ex 1A CaseClass Record Output`)) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    await(
+      testContext.run(`Ex 1A CaseClass Record Output`)
+    ) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
   "Example 1B - Single Case Class Mapping" in {
-    await(testContext.run(`Ex 1B CaseClass Record Output`)) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    await(
+      testContext.run(`Ex 1B CaseClass Record Output`)
+    ) should contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
 
   "Example 2 - Single Record Mapped Join" in {
-    await(testContext.run(`Ex 2 Single-Record Join`)) should contain theSameElementsAs `Ex 2 Single-Record Join expected result`
+    await(
+      testContext.run(`Ex 2 Single-Record Join`)
+    ) should contain theSameElementsAs `Ex 2 Single-Record Join expected result`
   }
 
   "Example 3 - Inline Record as Filter" in {
-    await(testContext.run(`Ex 3 Inline Record Usage`)) should contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
+    await(
+      testContext.run(`Ex 3 Inline Record Usage`)
+    ) should contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
   }
 }

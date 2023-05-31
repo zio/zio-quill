@@ -2,11 +2,9 @@ package io.getquill.postgres
 
 import io.getquill.ZioSpec
 import io.getquill.context.sql.ProductSpec
-import io.getquill.context.ZioJdbc.Prefix
 
 class ProductJdbcSpec extends ProductSpec with ZioSpec {
 
-  override def prefix: Prefix = Prefix("testPostgresDB")
   val context = testContext
   import testContext._
 
@@ -20,7 +18,10 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
     "Insert multiple products" in {
       val (inserted, product) =
         (for {
-          i <- testContext.run(liftQuery(productEntries).foreach(e => productInsert(e)))
+          i <- testContext.run {
+                 val a = liftQuery(productEntries).foreach(e => productInsert(e))
+                 a
+               }
           ps <- testContext.run(productById(lift(i(2))))
         } yield (i, ps.head)).runSyncUnsafe()
 
@@ -31,7 +32,7 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
     "Single insert product" in {
       val (inserted, product) =
         (for {
-          i <- testContext.run(productSingleInsert)
+          i  <- testContext.run(productSingleInsert)
           ps <- testContext.run(productById(lift(i)))
         } yield (i, ps.head)).runSyncUnsafe()
       product.description mustEqual "Window"
@@ -43,8 +44,8 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
       val (inserted, returnedProduct) =
         (for {
           i <- testContext.run {
-            product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
-          }
+                 product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
+               }
           rps <- testContext.run(productById(lift(i)))
         } yield (i, rps.head)).runSyncUnsafe()
 
@@ -60,7 +61,7 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
       }
       val (inserted, returnedProduct) =
         (for {
-          i <- testContext.run(q1)
+          i   <- testContext.run(q1)
           rps <- testContext.run(productById(lift(i)))
         } yield (i, rps.head)).runSyncUnsafe()
 
@@ -73,7 +74,7 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
       val prd = Product(0L, "test3", 3L)
       val (inserted, returnedProduct) =
         (for {
-          i <- testContext.run(productInsert(lift(prd)))
+          i   <- testContext.run(productInsert(lift(prd)))
           rps <- testContext.run(productById(lift(i)))
         } yield (i, rps.head)).runSyncUnsafe()
 

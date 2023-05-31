@@ -1,6 +1,6 @@
 package io.getquill.context.ndbc.postgres
 
-import io.getquill.context.sql.CaseClassQuerySpec
+import io.getquill.context.sql.base.CaseClassQuerySpec
 
 class CaseClassQueryNdbcPostgresSpec extends CaseClassQuerySpec {
 
@@ -20,15 +20,21 @@ class CaseClassQueryNdbcPostgresSpec extends CaseClassQuerySpec {
     }
 
   "Example 1 - Single Case Class Mapping" in {
-    get(context.run(`Ex 1 CaseClass Record Output`)) must contain theSameElementsAs (`Ex 1 CaseClass Record Output expected result`)
+    get(
+      context.run(`Ex 1 CaseClass Record Output`)
+    ) must contain theSameElementsAs (`Ex 1 CaseClass Record Output expected result`)
   }
 
   "Example 1A - Single Case Class Mapping" in {
-    get(context.run(`Ex 1A CaseClass Record Output`)) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    get(
+      context.run(`Ex 1A CaseClass Record Output`)
+    ) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
 
   "Example 1B - Single Case Class Mapping" in {
-    get(context.run(`Ex 1B CaseClass Record Output`)) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    get(
+      context.run(`Ex 1B CaseClass Record Output`)
+    ) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
 
   "Example 2 - Single Record Mapped Join" in {
@@ -36,6 +42,8 @@ class CaseClassQueryNdbcPostgresSpec extends CaseClassQuerySpec {
   }
 
   "Example 3 - Inline Record as Filter" in {
-    get(context.run(`Ex 3 Inline Record Usage`)) must contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
+    get(
+      context.run(`Ex 3 Inline Record Usage`)
+    ) must contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
   }
 }

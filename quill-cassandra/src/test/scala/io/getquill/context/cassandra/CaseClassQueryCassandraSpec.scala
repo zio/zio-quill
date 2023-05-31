@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class CaseClassQueryCassandraSpec extends Spec {
 
@@ -10,7 +10,7 @@ class CaseClassQueryCassandraSpec extends Spec {
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
 
   val peopleInsert =
-    quote((p: Contact) => query[Contact].insert(p))
+    quote((p: Contact) => query[Contact].insertValue(p))
 
   val peopleEntries = List(
     Contact(1, "Alex", "Jones", 60, 2, "foo"),
@@ -19,7 +19,7 @@ class CaseClassQueryCassandraSpec extends Spec {
   )
 
   val addressInsert =
-    quote((c: Address) => query[Address].insert(c))
+    quote((c: Address) => query[Address].insertValue(c))
 
   val addressEntries = List(
     Address(1, "123 Fake Street", 11234, "something"),

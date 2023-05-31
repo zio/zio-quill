@@ -1,6 +1,6 @@
 package io.getquill.context.finagle.postgres
 
-import com.twitter.util.{ Await, Future, Throw }
+import com.twitter.util.{Await, Future, Throw}
 
 import io.getquill.context.sql.ProductSpec
 
@@ -17,19 +17,21 @@ class TransactionSpec extends ProductSpec {
       context.transaction {
         for {
           id <- context.transaction {
-            context.run(productInsert(lift(p)))
-          }
+                  context.run(productInsert(lift(p)))
+                }
           Throw(_) <- context.transaction {
-            context.run(quote {
-              query[Product].insert(lift(p.copy(id = id)))
-            }).liftToTry
-          }
+                        context
+                          .run(quote {
+                            query[Product].insertValue(lift(p.copy(id = id)))
+                          })
+                          .liftToTry
+                      }
         } yield id
       }
     }
     // Since a query inside a transaction failed, the outermost transaction had
     // to rollback.
-    val res: List[Product] = await { context.run(productById(lift(id))) }
+    val res: List[Product] = await(context.run(productById(lift(id))))
     res mustEqual List()
   }
 
@@ -41,8 +43,8 @@ class TransactionSpec extends ProductSpec {
           // A subtransaction should have access to the previous queries of an
           // outer transaction.
           res: List[Product] <- context.transaction {
-            context.run(productById(lift(id)))
-          }
+                                  context.run(productById(lift(id)))
+                                }
         } yield res.head
       }
     }
@@ -50,7 +52,7 @@ class TransactionSpec extends ProductSpec {
   }
 
   override def beforeAll = {
-    await(context.run(quote { query[Product].delete }))
+    await(context.run(quote(query[Product].delete)))
     ()
   }
 }

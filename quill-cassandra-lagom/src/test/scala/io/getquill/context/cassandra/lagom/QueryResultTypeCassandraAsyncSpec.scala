@@ -13,13 +13,11 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
 
   import context._
 
-  def result[T](function: CassandraSession => Future[T]): T = {
+  def result[T](function: CassandraSession => Future[T]): T =
     await(function(context.session))
-  }
 
-  def result[T](future: Future[T]): T = {
+  def result[T](future: Future[T]): T =
     await(future)
-  }
 
   override def beforeAll = {
     result(context.run(deleteAll))
@@ -30,12 +28,12 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
   "bind" - {
     "action" - {
       "noArgs" in {
-        val bs = result(context.prepare(insert(OrderTestEntity(1, 2))))
+        val bs = result(context.prepare(insert(OrderTestEntity(1, 2)))(context.wrappedSession))
         bs.preparedStatement().getVariables.size() mustEqual 0
       }
 
       "withArgs" in {
-        val bs = result(context.prepare(insert(lift(OrderTestEntity(1, 2)))))
+        val bs = result(context.prepare(insert(lift(OrderTestEntity(1, 2))))(context.wrappedSession))
         bs.preparedStatement().getVariables.size() mustEqual 2
         bs.getInt("id") mustEqual 1
         bs.getInt("i") mustEqual 2
@@ -44,12 +42,14 @@ class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec {
 
     "query" - {
       "noArgs" in {
-        val bs = result(context.prepare(deleteAll))
+        val bs = result(context.prepare(deleteAll)(context.wrappedSession))
         bs.preparedStatement().getVariables.size() mustEqual 0
       }
 
       "withArgs" in {
-        val batches = result(context.prepare(liftQuery(List(OrderTestEntity(1, 2))).foreach(e => insert(e))))
+        val batches = result(
+          context.prepare(liftQuery(List(OrderTestEntity(1, 2))).foreach(e => insert(e)))(context.wrappedSession)
+        )
         batches.foreach { bs =>
           bs.preparedStatement().getVariables.size() mustEqual 2
           bs.getInt("id") mustEqual 1

@@ -1,52 +1,66 @@
 package io.getquill.context.qzio
 
 import io.getquill.NamingStrategy
-import io.getquill.context.PrepareContext
+import io.getquill.context.{ExecutionInfo, ContextVerbPrepare}
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
-import zio.blocking.Blocking
-import zio.{ Has, ZIO }
+import zio.ZIO
 
-import java.sql.{ Connection, PreparedStatement, ResultSet, SQLException }
+import java.sql.{Connection, PreparedStatement, ResultSet, SQLException}
 
-trait ZioPrepareContext[Dialect <: SqlIdiom, Naming <: NamingStrategy] extends ZioContext[Dialect, Naming]
-  with PrepareContext {
+trait ZioPrepareContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
+    extends ZioContext[Dialect, Naming]
+    with ContextVerbPrepare {
 
   private[getquill] val logger = ContextLogger(classOf[ZioPrepareContext[_, _]])
 
-  override type PrepareRow = PreparedStatement
-  override type ResultRow = ResultSet
-  override type PrepareQueryResult = QIO[PrepareRow]
-  override type PrepareActionResult = QIO[PrepareRow]
-  override type PrepareBatchActionResult = QIO[List[PrepareRow]]
+  override type PrepareRow               = PreparedStatement
+  override type ResultRow                = ResultSet
+  override type PrepareQueryResult       = QCIO[PrepareRow]
+  override type PrepareActionResult      = QCIO[PrepareRow]
+  override type PrepareBatchActionResult = QCIO[List[PrepareRow]]
+  override type Session                  = Connection
 
-  def prepareQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor): PrepareQueryResult =
-    prepareSingle(sql, prepare)
+  def prepareQuery(sql: String, prepare: Prepare = identityPrepare)(
+    info: ExecutionInfo,
+    dc: Runner
+  ): PrepareQueryResult =
+    prepareSingle(sql, prepare)(info, dc)
 
-  def prepareAction(sql: String, prepare: Prepare = identityPrepare): PrepareActionResult =
-    prepareSingle(sql, prepare)
+  def prepareAction(sql: String, prepare: Prepare = identityPrepare)(
+    info: ExecutionInfo,
+    dc: Runner
+  ): PrepareActionResult =
+    prepareSingle(sql, prepare)(info, dc)
 
-  /** Execute SQL on connection and return prepared statement. Closes the statement in a bracket. */
-  def prepareSingle(sql: String, prepare: Prepare = identityPrepare): QIO[PreparedStatement] = {
-    ZIO.environment[QConnection]
-      .mapEffect(bconn => bconn.get[Connection].prepareStatement(sql))
-      .mapEffect { stmt =>
-        val (params, ps) = prepare(stmt)
-        logger.logQuery(sql, params)
-        ps
-      }.refineToOrDie[SQLException]
-  }
+  /**
+   * Execute SQL on connection and return prepared statement. Closes the
+   * statement in a bracket.
+   */
+  def prepareSingle(
+    sql: String,
+    prepare: Prepare = identityPrepare
+  )(info: ExecutionInfo, dc: Runner): QCIO[PreparedStatement] =
+    (for {
+      conn <- ZIO.service[Session]
+      stmt <- ZIO.attempt(conn.prepareStatement(sql))
+      ps <- ZIO.attempt {
+              val (params, ps) = prepare(stmt, conn)
+              logger.logQuery(sql, params)
+              ps
+            }
+    } yield ps).refineToOrDie[SQLException]
 
-  def prepareBatchAction(groups: List[BatchGroup]): PrepareBatchActionResult =
-    ZIO.collectAll[Has[Connection] with Blocking, Throwable, PrepareRow, List] {
-      val batches = groups.flatMap {
-        case BatchGroup(sql, prepares) =>
+  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): PrepareBatchActionResult =
+    ZIO
+      .collectAll[Connection, Throwable, PrepareRow, List] {
+        val batches = groups.flatMap { case BatchGroup(sql, prepares) =>
           prepares.map(sql -> _)
+        }
+        batches.map { case (sql, prepare) =>
+          prepareSingle(sql, prepare)(info, dc)
+        }
       }
-      batches.map {
-        case (sql, prepare) =>
-          prepareSingle(sql, prepare)
-      }
-    }.refineToOrDie[SQLException]
+      .refineToOrDie[SQLException]
 }

@@ -1,4 +1,4 @@
-version: '2.2'
+version: '3.7'
 
 services:
   postgres:
@@ -10,12 +10,14 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
 
   mysql:
-    image: mysql:5.7
+    image: mysql/mysql-server:8.0.23 # use this because it supports ARM64 architecture for M1 Mac
+    command: --default-authentication-plugin=mysql_native_password
     ports:
       - "13306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_ROOT_HOST=%
 
   cassandra:
     build:
@@ -27,11 +29,12 @@ services:
     environment:
       - MAX_HEAP_SIZE=256m
       - HEAP_NEWSIZE=64m
-      - JVM_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
+      - JAVA_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
     init: true
 
+  # For some reason OrientDB 3.0.42 does not stay up once started during local testing so need to bump to 3.2.6. Also in build.sbt
   orientdb:
-    image: orientdb:3.0.11
+    image: orientdb:3.2.6
     ports:
       - "12424:2424"
     # enable NativeMemoryTracking so that jcmd in possible in build.sh. For CompressedClassSpaceSize 1gig is default which is too high.
@@ -41,7 +44,7 @@ services:
     init: true
 
   sqlserver:
-    image: microsoft/mssql-server-linux
+    image: mcr.microsoft.com/azure-sql-edge:latest # use this because it supports ARM64 architecture for M1 Mac
     ports:
       - "11433:1433"
     environment:
@@ -94,17 +97,23 @@ services:
       - ~/.ivy2:/root/.ivy2:cached
       - ~/.m2:/root/.m2:cached
       - ~/.sbt:/root/.sbt:cached
+      - ~/.cache/coursier:/root/.cache/coursier:cached
     environment:
-      - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx1536m -Xss2m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC
+      - SBT_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Dfile.encoding=UTF-8 -Xms512m -Xmx6g -Xss2m -XX:ReservedCodeCacheSize=512m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -XX:+UseStringDeduplication
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
+      - MYSQL_PASSWORD=root
       - SQL_SERVER_HOST=sqlserver
       - SQL_SERVER_PORT=1433
       - ORACLE_HOST=oracle
       - ORACLE_PORT=1521
+      # for lagom project compatibility
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
+      # the values should be used for all new cassandra projects
+      - CASSANDRA_CONTACT_POINT_0=cassandra:9042
+      - CASSANDRA_DC=datacenter1
       - ORIENTDB_HOST=orientdb
       - ORIENTDB_PORT=2424

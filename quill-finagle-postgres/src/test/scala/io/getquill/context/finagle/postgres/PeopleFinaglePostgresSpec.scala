@@ -2,8 +2,7 @@ package io.getquill.context.finagle.postgres
 
 import com.twitter.util.Await
 import com.twitter.util.Future
-
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleFinaglePostgresSpec extends PeopleSpec {
 
@@ -17,7 +16,7 @@ class PeopleFinaglePostgresSpec extends PeopleSpec {
       testContext.transaction {
         for {
           _ <- testContext.run(query[Couple].delete)
-          _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+          _ <- testContext.run(query[Person].delete)
           _ <- testContext.run(liftQuery(peopleEntries).foreach(e => peopleInsert(e)))
           _ <- testContext.run(liftQuery(couplesEntries).foreach(e => couplesInsert(e)))
         } yield {}
@@ -29,7 +28,9 @@ class PeopleFinaglePostgresSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    await(testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))) mustEqual `Ex 2 expected result`
+    await(
+      testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))
+    ) mustEqual `Ex 2 expected result`
   }
 
   "Examples 3 - satisfies" in {

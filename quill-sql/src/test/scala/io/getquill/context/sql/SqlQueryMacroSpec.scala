@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
-import io.getquill.context.mirror.Row
+import io.getquill.base.Spec
+import io.getquill.context.mirror.{MirrorSession, Row}
 import io.getquill.context.sql.testContext._
 
 class SqlQueryMacroSpec extends Spec {
@@ -14,7 +14,8 @@ class SqlQueryMacroSpec extends Spec {
         }
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row()
-        mirror.extractor(Row("s", 1, 2L, None, true)) mustEqual TestEntity("s", 1, 2L, None, true)
+        mirror
+          .extractor(Row("s", 1, 2L, null, true), MirrorSession.default) mustEqual TestEntity("s", 1, 2L, None, true)
         mirror.string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s IS NOT NULL"
       }
       "with map" in {
@@ -23,8 +24,8 @@ class SqlQueryMacroSpec extends Spec {
         }
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row()
-        mirror.extractor(Row("s", 1, 2L)) mustEqual (("s", 1, 2L))
-        mirror.string mustEqual "SELECT t.s, t.i, t.l FROM TestEntity t"
+        mirror.extractor(Row("s", 1, 2L), MirrorSession.default) mustEqual (("s", 1, 2L))
+        mirror.string mustEqual "SELECT t.s AS _1, t.i AS _2, t.l AS _3 FROM TestEntity t"
       }
       "with flatMap" in {
         val q = quote {
@@ -32,7 +33,7 @@ class SqlQueryMacroSpec extends Spec {
         }
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row()
-        mirror.extractor(Row("s", 1, 2L, None)) mustEqual TestEntity2("s", 1, 2L, None)
+        mirror.extractor(Row("s", 1, 2L, null), MirrorSession.default) mustEqual TestEntity2("s", 1, 2L, None)
         mirror.string mustEqual "SELECT x.s, x.i, x.l, x.o FROM TestEntity t, TestEntity2 x"
       }
     }

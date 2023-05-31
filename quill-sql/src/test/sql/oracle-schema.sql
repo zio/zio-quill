@@ -23,6 +23,20 @@ CREATE TABLE Task(
   tsk VARCHAR(255)
 );
 
+CREATE TABLE TimeEntity(
+    sqlDate        DATE,                     -- java.sql.Date
+    -- Oracle has no TIME type
+    sqlTime        TIMESTAMP,                     -- java.sql.Time
+    sqlTimestamp   TIMESTAMP,                -- java.sql.Timestamp
+    timeLocalDate      DATE,                     -- java.time.LocalDate
+    timeLocalTime      TIMESTAMP,                     -- java.time.LocalTime
+    timeLocalDateTime  TIMESTAMP,                -- java.time.LocalDateTime
+    timeZonedDateTime  TIMESTAMP WITH TIME ZONE, -- java.time.ZonedDateTime
+    timeInstant        TIMESTAMP WITH TIME ZONE, -- java.time.Instant
+    timeOffsetTime     TIMESTAMP WITH TIME ZONE,      -- java.time.OffsetTime
+    timeOffsetDateTime TIMESTAMP WITH TIME ZONE  -- java.time.OffsetDateTime
+);
+
 CREATE TABLE EncodingTestEntity(
   v1 VARCHAR(255),
   v2 DECIMAL(5,2),

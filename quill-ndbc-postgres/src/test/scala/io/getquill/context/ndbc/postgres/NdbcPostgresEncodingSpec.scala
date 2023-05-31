@@ -1,7 +1,7 @@
 package io.getquill.context.ndbc.postgres
 
-import java.time.{ LocalDate, LocalDateTime }
-import java.util.{ Date, UUID }
+import java.time.{LocalDate, LocalDateTime}
+import java.util.{Date, UUID}
 
 import io.getquill.context.sql.EncodingSpec
 import io.getquill.Query
@@ -14,8 +14,8 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
   "encodes and decodes types" in {
     val r =
       for {
-        _ <- context.run(delete)
-        _ <- context.run(liftQuery(insertValues).foreach(e => insert(e)))
+        _      <- context.run(delete)
+        _      <- context.run(liftQuery(insertValues).foreach(e => insert(e)))
         result <- context.run(query[EncodingTestEntity])
       } yield result
 
@@ -27,11 +27,11 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
     val testUUID = UUID.fromString("e5240c08-6ee7-474a-b5e4-91f79c48338f")
 
     // delete old values
-    val q0 = quote(query[EncodingUUIDTestEntity].delete)
+    val q0   = quote(query[EncodingUUIDTestEntity].delete)
     val rez0 = get(context.run(q0))
 
     // insert new uuid
-    val rez1 = get(context.run(query[EncodingUUIDTestEntity].insert(lift(EncodingUUIDTestEntity(testUUID)))))
+    val rez1 = get(context.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
 
     // verify you can get the uuid back from the db
     val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
@@ -59,14 +59,13 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
   }
 
   "encodes sets" in {
-    val q = quote {
-      (set: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    val q = quote { (set: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     val fut =
       for {
         _ <- context.run(query[EncodingTestEntity].delete)
-        _ <- context.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- context.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         r <- context.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         r
@@ -76,7 +75,7 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
 
   "returning UUID" in {
     val success = for {
-      uuid <- get(context.run(insertBarCode(lift(barCodeEntry))))
+      uuid    <- get(context.run(insertBarCode(lift(barCodeEntry))))
       barCode <- get(context.run(findBarCodeByUuid(uuid))).headOption
     } yield {
       verifyBarcode(barCode)
@@ -88,8 +87,8 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDate)
     val entity = DateEncodingTestEntity(LocalDate.now, LocalDate.now)
     val r = for {
-      _ <- context.run(query[DateEncodingTestEntity].delete)
-      _ <- context.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      _      <- context.run(query[DateEncodingTestEntity].delete)
+      _      <- context.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- context.run(query[DateEncodingTestEntity])
     } yield result
     get(r) must contain(entity)
@@ -99,8 +98,8 @@ class NdbcPostgresEncodingSpec extends EncodingSpec {
     case class DateEncodingTestEntity(v1: LocalDateTime, v2: LocalDateTime)
     val entity = DateEncodingTestEntity(LocalDateTime.now, LocalDateTime.now)
     val r = for {
-      _ <- context.run(query[DateEncodingTestEntity].delete)
-      _ <- context.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      _      <- context.run(query[DateEncodingTestEntity].delete)
+      _      <- context.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- context.run(query[DateEncodingTestEntity])
     } yield result
     get(r)

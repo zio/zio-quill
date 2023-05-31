@@ -1,7 +1,7 @@
 package io.getquill.context.finagle.mysql
 
-import io.getquill.context.sql.QueryResultTypeSpec
-import com.twitter.util.{ Await, Future }
+import com.twitter.util.{Await, Future}
+import io.getquill.context.sql.base.QueryResultTypeSpec
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 
@@ -17,8 +17,8 @@ class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec {
   override def beforeAll = {
     await(testContext.run(deleteAll))
     val rs = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (rs zip productEntries).map {
-      case (r, prod) => prod.copy(id = r)
+    val inserted = (rs zip productEntries).map { case (r, prod) =>
+      prod.copy(id = r)
     }
     insertedProducts.addAll(inserted.asJava)
     ()
@@ -139,7 +139,9 @@ class QueryResultTypeFinagleMysqlSpec extends QueryResultTypeSpec {
       await(testContext.stream(join).flatMap(_.toSeq())) must contain theSameElementsAs (products zip products)
     }
     "distinct" in {
-      await(testContext.stream(distinct).flatMap(_.toSeq())) must contain theSameElementsAs (products.map(_.id).distinct)
+      await(testContext.stream(distinct).flatMap(_.toSeq())) must contain theSameElementsAs (products
+        .map(_.id)
+        .distinct)
     }
   }
 }

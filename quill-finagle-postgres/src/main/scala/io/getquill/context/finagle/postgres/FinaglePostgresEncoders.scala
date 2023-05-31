@@ -4,7 +4,7 @@ import com.twitter.finagle.postgres._
 import com.twitter.finagle.postgres.values._
 import com.twitter.finagle.postgres.values.ValueEncoder._
 import io.getquill.FinaglePostgresContext
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 import java.time._
 
 trait FinaglePostgresEncoders {
@@ -13,7 +13,7 @@ trait FinaglePostgresEncoders {
   type Encoder[T] = FinaglePostgresEncoder[T]
 
   case class FinaglePostgresEncoder[T](encoder: ValueEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
       row :+ Param(value)(encoder)
   }
 
@@ -28,19 +28,19 @@ trait FinaglePostgresEncoders {
   implicit def optionEncoder[T](implicit e: Encoder[T]): Encoder[Option[T]] =
     FinaglePostgresEncoder[Option[T]](option(e.encoder))
 
-  implicit val stringEncoder: Encoder[String] = encoder[String]
+  implicit val stringEncoder: Encoder[String]         = encoder[String]
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
-  implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
-  implicit val byteEncoder: Encoder[Byte] = encoder[Short, Byte](_.toShort)
-  implicit val shortEncoder: Encoder[Short] = encoder[Short]
-  implicit val intEncoder: Encoder[Int] = encoder[Int]
-  implicit val longEncoder: Encoder[Long] = encoder[Long]
-  implicit val floatEncoder: Encoder[Float] = encoder[Float]
-  implicit val doubleEncoder: Encoder[Double] = encoder[Double]
+  implicit val booleanEncoder: Encoder[Boolean]       = encoder[Boolean]
+  implicit val byteEncoder: Encoder[Byte]             = encoder[Short, Byte](_.toShort)
+  implicit val shortEncoder: Encoder[Short]           = encoder[Short]
+  implicit val intEncoder: Encoder[Int]               = encoder[Int]
+  implicit val longEncoder: Encoder[Long]             = encoder[Long]
+  implicit val floatEncoder: Encoder[Float]           = encoder[Float]
+  implicit val doubleEncoder: Encoder[Double]         = encoder[Double]
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]](bytea)
   implicit val dateEncoder: Encoder[Date] =
     encoder[LocalDateTime, Date]((v: Date) => LocalDateTime.ofInstant(v.toInstant, ZoneId.systemDefault()))
-  implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate]
+  implicit val localDateEncoder: Encoder[LocalDate]         = encoder[LocalDate]
   implicit val localDateTimeEncoder: Encoder[LocalDateTime] = encoder[LocalDateTime]
-  implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]
+  implicit val uuidEncoder: Encoder[UUID]                   = encoder[UUID]
 }

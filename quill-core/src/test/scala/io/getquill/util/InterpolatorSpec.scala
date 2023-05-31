@@ -1,13 +1,13 @@
 package io.getquill.util
 
-import java.io.{ ByteArrayOutputStream, PrintStream }
-
-import io.getquill.Spec
+import io.getquill.base.Spec
+import java.io.{ByteArrayOutputStream, PrintStream}
 import io.getquill.util.Messages.TraceType.Standard
 
 class InterpolatorSpec extends Spec {
 
-  val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true)
+  val interp =
+    new Interpolator(Standard, TraceConfig.Empty, defaultIndent = 0, color = false, globalTracesEnabled = _ => true)
   import interp._
 
   case class Small(id: Int)
@@ -26,18 +26,30 @@ class InterpolatorSpec extends Spec {
 and bar $small""".generateString() mustEqual (
       (
         """small object:
-        ||  Small(123)
-        ||and foo
-        ||and bar
-        ||  Small(123)
-        |""".stripMargin,
+          ||  Small(123)
+          ||and foo
+          ||and bar
+          ||  Small(123)
+          |""".stripMargin,
         0
       )
     )
   }
 
-  case class Large(id: Int, one: String, two: String, three: String, four: String, five: String, six: String, seven: String, eight: String, nine: String, ten: String)
-  val vars = (0 until 10).map(i => (0 until i).map(_ => "Test").mkString("")).toList
+  case class Large(
+    id: Int,
+    one: String,
+    two: String,
+    three: String,
+    four: String,
+    five: String,
+    six: String,
+    seven: String,
+    eight: String,
+    nine: String,
+    ten: String
+  )
+  val vars  = (0 until 10).map(i => (0 until i).map(_ => "Test").mkString("")).toList
   val large = Large(123, vars(0), vars(1), vars(2), vars(3), vars(4), vars(5), vars(6), vars(7), vars(8), vars(9))
 
   "traces large objects on multiple line - single" in {
@@ -56,7 +68,8 @@ and bar $small""".generateString() mustEqual (
         ||    "TestTestTestTestTestTestTestTest",
         ||    "TestTestTestTestTestTestTestTestTest"
         ||  )
-        |""".stripMargin, 0
+        |""".stripMargin,
+      0
     ))
   }
 
@@ -76,7 +89,8 @@ and bar $small""".generateString() mustEqual (
         |    |    "TestTestTestTestTestTestTestTest",
         |    |    "TestTestTestTestTestTestTestTestTest"
         |    |  )
-        |""".stripMargin, 2
+        |""".stripMargin,
+      2
     ))
   }
 
@@ -110,15 +124,23 @@ and bar $small""".generateString() mustEqual (
         ||    "TestTestTestTestTestTestTestTest",
         ||    "TestTestTestTestTestTestTestTestTest"
         ||  )
-        |""".stripMargin, 0
+        |""".stripMargin,
+      0
     ))
   }
 
   "should log to print stream" - {
     "do not log if traces disabled" in {
       val buff = new ByteArrayOutputStream()
-      val ps = new PrintStream(buff)
-      val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => false, out = ps)
+      val ps   = new PrintStream(buff)
+      val interp = new Interpolator(
+        Standard,
+        TraceConfig.Empty,
+        defaultIndent = 0,
+        color = false,
+        globalTracesEnabled = _ => false,
+        out = ps
+      )
       import interp._
 
       trace"small object: $small".andLog()
@@ -128,8 +150,15 @@ and bar $small""".generateString() mustEqual (
 
     "log if traces disabled" in {
       val buff = new ByteArrayOutputStream()
-      val ps = new PrintStream(buff)
-      val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true, out = ps)
+      val ps   = new PrintStream(buff)
+      val interp = new Interpolator(
+        Standard,
+        TraceConfig.Empty,
+        defaultIndent = 0,
+        color = false,
+        globalTracesEnabled = _ => true,
+        out = ps
+      )
       import interp._
 
       trace"small object: $small".andLog()
@@ -139,8 +168,15 @@ and bar $small""".generateString() mustEqual (
 
     "traces large objects on multiple line - multi - with return" in {
       val buff = new ByteArrayOutputStream()
-      val ps = new PrintStream(buff)
-      val interp = new Interpolator(Standard, defaultIndent = 0, color = false, tracesEnabled = _ => true, out = ps)
+      val ps   = new PrintStream(buff)
+      val interp = new Interpolator(
+        Standard,
+        TraceConfig.Empty,
+        defaultIndent = 0,
+        color = false,
+        globalTracesEnabled = _ => true,
+        out = ps
+      )
       import interp._
 
       trace"large object: $large and $large".andReturn(large) mustEqual large

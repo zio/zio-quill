@@ -8,46 +8,54 @@ import org.apache.spark.sql.SparkSession
 import io.getquill.Ord
 import io.getquill.QuillSparkContext._
 
+import scala.concurrent.ExecutionContext.Implicits._
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+
 case class User(
-  id:          String,
-  login:       String,
+  id: String,
+  login: String,
   gravatar_id: String,
-  url:         String,
-  avatar_url:  String
+  url: String,
+  avatar_url: String
 )
 
 case class Repo(
-  id:   String,
+  id: String,
   name: String,
-  url:  String
+  url: String
 )
 
 case class Activity(
-  id:         String,
-  `type`:     String,
-  actor:      User,
-  repo:       Repo,
+  id: String,
+  `type`: String,
+  actor: User,
+  repo: Repo,
   created_at: String,
-  org:        User
+  org: User
 )
 
 object GithubExample extends App {
 
   val files =
     for {
-      year <- 2017 to 2017
+      year  <- 2017 to 2017
       month <- 10 to 10
-      day <- 22 to 22
-      hour <- 0 to 23
-    } yield "%04d-%02d-%02d-%02d".format(year, month, day, hour)
+      day   <- 22 to 22
+      hour  <- 0 to 23
+    } yield "%04d-%02d-%02d-%d".format(year, month, day, hour)
 
-  files.par.foreach { name =>
-    val file = new File(s"$name.json.gz")
-    if (!file.exists()) {
-      println(s"downloading missing file $name")
-      new URL(s"http://data.githubarchive.org/$name.json.gz") #> new File(s"$name.json.gz") !!
+  val f = Future.traverse(files) { name =>
+    Future {
+      val file = new File(s"$name.json.gz")
+      if (!file.exists()) {
+        println(s"downloading missing file $file")
+        new URL(s"https://data.gharchive.org/$file") #> file !!
+      }
     }
   }
+
+  Await.result(f, 30.seconds)
 
   implicit val sqlContext =
     SparkSession
@@ -64,10 +72,11 @@ object GithubExample extends App {
   val topStargazers = quote {
     activities
       .groupBy(_.actor)
-      .map {
-        case (actor, list) => (actor.login, list.size)
-      }.sortBy {
-        case (login, size) => size
+      .map { case (actor, list) =>
+        (actor.login, list.size)
+      }
+      .sortBy { case (login, size) =>
+        size
       }(Ord.desc)
   }
 
@@ -75,10 +84,11 @@ object GithubExample extends App {
     activities
       .filter(_.`type` == "WatchEvent")
       .groupBy(_.repo)
-      .map {
-        case (repo, list) => (repo.name, list.size)
-      }.sortBy {
-        case (repoName, size) => size
+      .map { case (repo, list) =>
+        (repo.name, list.size)
+      }
+      .sortBy { case (repoName, size) =>
+        size
       }(Ord.desc)
   }
 

@@ -11,9 +11,11 @@ class EncodingSpec extends EncodingSpecHelper {
       import testStreamDB._
       val result =
         for {
-          _ <- testStreamDB.run(query[EncodingTestEntity].delete)
+          _      <- testStreamDB.run(query[EncodingTestEntity].delete)
           inserts = Observable(insertValues: _*)
-          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
+          _ <- Observable.fromTask(
+                 testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e))).countL
+               )
           result <- testStreamDB.run(query[EncodingTestEntity])
         } yield {
           result
@@ -27,15 +29,16 @@ class EncodingSpec extends EncodingSpecHelper {
     "stream" in {
       import monix.execution.Scheduler.Implicits.global
       import testStreamDB._
-      val q = quote {
-        (list: Query[Int]) =>
-          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      val q = quote { (list: Query[Int]) =>
+        query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       val result =
         for {
-          _ <- testStreamDB.run(query[EncodingTestEntity].delete)
+          _      <- testStreamDB.run(query[EncodingTestEntity].delete)
           inserts = Observable(insertValues: _*)
-          _ <- Observable.fromTask(testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e))).countL)
+          _ <- Observable.fromTask(
+                 testStreamDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e))).countL
+               )
           result <- testStreamDB.run(q(liftQuery(insertValues.map(_.id))))
         } yield {
           result

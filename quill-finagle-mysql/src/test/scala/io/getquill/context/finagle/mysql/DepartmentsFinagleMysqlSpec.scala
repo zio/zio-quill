@@ -2,8 +2,7 @@ package io.getquill.context.finagle.mysql
 
 import com.twitter.util.Await
 import com.twitter.util.Future
-
-import io.getquill.context.sql.DepartmentsSpec
+import io.getquill.context.sql.base.DepartmentsSpec
 
 class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
 
@@ -36,6 +35,8 @@ class DepartmentsFinagleMysqlSpec extends DepartmentsSpec {
   }
 
   "Example 9 - streamed result" in {
-    await(testContext.stream(`Example 9 expertise`(lift(`Example 9 param`))).flatMap(_.toSeq())) mustEqual `Example 9 expected result`
+    await(
+      testContext.stream(`Example 9 expertise`(lift(`Example 9 param`))).flatMap(_.toSeq())
+    ) mustEqual `Example 9 expected result`
   }
 }

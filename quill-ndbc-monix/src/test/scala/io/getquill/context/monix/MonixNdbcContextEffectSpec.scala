@@ -1,8 +1,8 @@
 package io.getquill.context.monix
 
+import io.getquill.base.Spec
 import scala.concurrent.duration.Duration
-import io.getquill.Spec
-import io.trane.future.scala.{ Await, Future }
+import io.trane.future.scala.{Await, Future}
 import io.getquill.ndbc.TraneFutureConverters._
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
@@ -24,7 +24,7 @@ class MonixNdbcContextEffectSpec extends Spec {
 
   "evaluates asynchronous values" in {
     await(wrapAsync[String] { doComplete =>
-      Future { Thread.sleep(100) }.onComplete { _ =>
+      Future(Thread.sleep(100)).onComplete { _ =>
         doComplete(Try("hello"))
         ()
       }
@@ -41,7 +41,7 @@ class MonixNdbcContextEffectSpec extends Spec {
   }
 
   "executes effects in sequence" in {
-    await(wrap(2).flatMap { prev => wrap(prev + 3) }) mustEqual 5
+    await(wrap(2).flatMap(prev => wrap(prev + 3))) mustEqual 5
   }
 
   "converts a sequence correctly" in {

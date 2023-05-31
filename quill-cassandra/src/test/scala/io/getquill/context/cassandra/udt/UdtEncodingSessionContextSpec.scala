@@ -1,6 +1,8 @@
 package io.getquill.context.cassandra.udt
 
-import io.getquill.{ CassandraContextConfig, CassandraSyncContext, SnakeCase }
+import com.datastax.oss.driver.api.core.CqlIdentifier
+import com.typesafe.config.{ConfigValue, ConfigValueFactory}
+import io.getquill.{CassandraContextConfig, CassandraSyncContext, SnakeCase}
 import io.getquill.context.cassandra.testSyncDB
 import io.getquill.util.LoadConfig
 import io.getquill.Udt
@@ -8,8 +10,13 @@ import io.getquill.Udt
 class UdtEncodingSessionContextSpec extends UdtSpec {
 
   val ctx1 = testSyncDB
-  val cluster = CassandraContextConfig(LoadConfig("testSyncDB")).cluster
-  val ctx2 = new CassandraSyncContext(SnakeCase, cluster, "quill_test_2", 1000)
+  val config0 = CassandraContextConfig(
+    LoadConfig("testSyncDB").withValue("keyspace", ConfigValueFactory.fromAnyRef("system"))
+  )
+  val config2 = CassandraContextConfig(
+    LoadConfig("testSyncDB").withValue("keyspace", ConfigValueFactory.fromAnyRef("quill_test_2"))
+  )
+  val ctx2 = new CassandraSyncContext(SnakeCase, config2)
 
   "Provide encoding for UDT" - {
     import ctx1._
@@ -50,14 +57,20 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
     "without meta" in {
       case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
 
-      val e = WithEverything(1, Personal(1, "strt",
-        Name("first", Some("last")),
-        Some(Name("f", None)),
-        List("e"),
-        Set(1, 2),
-        Map(1 -> "1", 2 -> "2")),
-        List(Name("first", None)))
-      ctx1.run(query[WithEverything].insert(lift(e)))
+      val e = WithEverything(
+        1,
+        Personal(
+          1,
+          "strt",
+          Name("first", Some("last")),
+          Some(Name("f", None)),
+          List("e"),
+          Set(1, 2),
+          Map(1 -> "1", 2 -> "2")
+        ),
+        List(Name("first", None))
+      )
+      ctx1.run(query[WithEverything].insertValue(lift(e)))
       ctx1.run(query[WithEverything].filter(_.id == 1)).headOption must contain(e)
     }
     "with meta" in {
@@ -66,21 +79,21 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
       implicit val myNameMeta = udtMeta[MyName]("Name", _.first -> "firstName")
 
       val e = WithEverything(2, MyName("first"), List(MyName("first")))
-      ctx1.run(query[WithEverything].insert(lift(e)))
+      ctx1.run(query[WithEverything].insertValue(lift(e)))
       ctx1.run(query[WithEverything].filter(_.id == 2)).headOption must contain(e)
     }
   }
 
   "fail on inconsistent states" - {
-    val ctx0 = new CassandraSyncContext(SnakeCase, cluster, null, 1000)
+    val ctx0 = new CassandraSyncContext(SnakeCase, config0)
     "found several UDT with the same name, but not in current session" in {
       intercept[IllegalStateException](ctx0.udtValueOf("Name")).getMessage mustBe
         "Could not determine to which keyspace `Name` UDT belongs. Please specify desired keyspace using UdtMeta"
 
       // but ok when specified
-      ctx0.udtValueOf("Name", Some("quill_test")).getType.getKeyspace mustBe "quill_test"
+      ctx0.udtValueOf("Name", Some("quill_test")).getType.getKeyspace mustBe CqlIdentifier.fromCql("quill_test")
       // "nAmE" - identifiers are case insensitive
-      ctx0.udtValueOf("nAmE", Some("quill_test_2")).getType.getKeyspace mustBe "quill_test_2"
+      ctx0.udtValueOf("nAmE", Some("quill_test_2")).getType.getKeyspace mustBe CqlIdentifier.fromCql("quill_test_2")
     }
     "could not find UDT with given name" in {
       intercept[IllegalStateException](ctx0.udtValueOf("Whatever")).getMessage mustBe
@@ -89,7 +102,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
   }
 
   "return udt if it's found in another keyspace" in {
-    ctx2.udtValueOf("Personal").getType.getKeyspace mustBe "quill_test"
+    ctx2.udtValueOf("Personal").getType.getKeyspace.toString mustBe "quill_test"
   }
 
   "naming strategy" in {
@@ -97,7 +110,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
     case class WithUdt(id: Int, name: Name)
     val e = WithUdt(1, Name("first", Some("second")))
     // quill_test_2 uses snake case
-    ctx2.run(query[WithUdt].insert(lift(e)))
+    ctx2.run(query[WithUdt].insertValue(lift(e)))
     ctx2.run(query[WithUdt].filter(_.id == 1)).headOption must contain(e)
   }
 
@@ -118,7 +131,6 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
     ()
   }
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll(): Unit =
     ctx2.close()
-  }
 }
