@@ -4,8 +4,7 @@ import com.github.jasync.sql.db.Connection
 
 import scala.concurrent.ExecutionContext
 
-case class TransactionalExecutionContext(ec: ExecutionContext, conn: Connection)
-  extends ExecutionContext {
+case class TransactionalExecutionContext(ec: ExecutionContext, conn: Connection) extends ExecutionContext {
 
   def execute(runnable: Runnable): Unit =
     ec.execute(runnable)

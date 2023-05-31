@@ -22,7 +22,9 @@ class InfixSpec extends Spec { // //
       val q = quote {
         query[Data].map(e => TwoValue(e.id, sql"RAND()".as[Int])).filter(r => r.value > 10)
       }
-      ctx.run(q).string mustEqual "SELECT e.id, e.value FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10"
+      ctx
+        .run(q)
+        .string mustEqual "SELECT e.id, e.value FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10"
     }
 
     "collapse nesting where not needed" in {
@@ -41,7 +43,11 @@ class InfixSpec extends Spec { // //
 
     "do not double-nest" in {
       val q = quote {
-        query[Data].map(e => TwoValue(e.id, sql"RAND()".as[Int])).nested.filter(r => r.value > 10).map(r => (r.id, r.value + 1))
+        query[Data]
+          .map(e => TwoValue(e.id, sql"RAND()".as[Int]))
+          .nested
+          .filter(r => r.value > 10)
+          .map(r => (r.id, r.value + 1))
       }
       ctx.run(q).string mustEqual "SELECT r.id AS _1, r.value + 1 AS _2 FROM (SELECT e.id, RAND() AS value FROM Data e) AS r WHERE r.value > 10"
     }
@@ -62,14 +68,21 @@ class InfixSpec extends Spec { // //
 
     "preserve triple nesting with filter in between" in {
       val q = quote {
-        query[Data].map(e => TwoValue(e.id, sql"RAND()".as[Int])).filter(r => r.value > 10).map(r => TwoValue(r.id, r.value + 1))
+        query[Data]
+          .map(e => TwoValue(e.id, sql"RAND()".as[Int]))
+          .filter(r => r.value > 10)
+          .map(r => TwoValue(r.id, r.value + 1))
       }
       ctx.run(q).string mustEqual "SELECT e.id, e.value + 1 AS value FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10"
     }
 
     "preserve triple nesting with filter in between plus second filter" in {
       val q = quote {
-        query[Data].map(e => TwoValue(e.id, sql"RAND()".as[Int])).filter(r => r.value > 10).map(r => TwoValue(r.id, r.value + 1)).filter(_.value > 111)
+        query[Data]
+          .map(e => TwoValue(e.id, sql"RAND()".as[Int]))
+          .filter(r => r.value > 10)
+          .map(r => TwoValue(r.id, r.value + 1))
+          .filter(_.value > 111)
       }
       ctx.run(q).string mustEqual "SELECT e.id, e.value + 1 AS value FROM (SELECT e.id, RAND() AS value FROM Data e) AS e WHERE e.value > 10 AND (e.value + 1) > 111"
     }
@@ -136,7 +149,9 @@ class InfixSpec extends Spec { // //
 
       "should not be selected twice in one field matched, one missing" in {
         val q = quote {
-          query[Person].map(p => (p.name, (p.id, sql"foo(${p.other}, ${p.other2})".as[Int], p.other))).map(p => (p._1, p._2._1, p._2._3))
+          query[Person]
+            .map(p => (p.name, (p.id, sql"foo(${p.other}, ${p.other2})".as[Int], p.other)))
+            .map(p => (p._1, p._2._1, p._2._3))
         }
 
         ctx.run(q).string mustEqual "SELECT p._1, p._2_1 AS _2, p._2_3 AS _3 FROM (SELECT p.name AS _1, p.id AS _2_1, foo(p.other, p.other2) AS _2_2, p.other AS _2_3 FROM Person p) AS p"

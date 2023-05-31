@@ -1,41 +1,48 @@
 package io.getquill
 
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.ast.{ Action, Query, _ }
+import io.getquill.ast.{Action, Query, _}
 import io.getquill.ast
 import io.getquill.context.sql.idiom
-import io.getquill.context.sql.idiom.SqlIdiom.{ InsertUpdateStmt, copyIdiom }
-import io.getquill.context.{ CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnClause }
+import io.getquill.context.sql.idiom.SqlIdiom.{InsertUpdateStmt, copyIdiom}
+import io.getquill.context.{CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnClause}
 import io.getquill.context.sql.idiom._
-import io.getquill.idiom.{ ScalarTagToken, Statement, Token, ValuesClauseToken }
+import io.getquill.idiom.{ScalarTagToken, Statement, Token, ValuesClauseToken}
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.{ BetaReduction, ExpandReturning, ProductAggregationToken }
+import io.getquill.norm.{BetaReduction, ExpandReturning, ProductAggregationToken}
 import io.getquill.quat.Quat
 import io.getquill.sql.norm.NormalizeFilteredActionAliases
 import io.getquill.util.Messages.fail
 
 import scala.annotation.tailrec
-import scala.collection.immutable.{ ListMap, ListSet, Queue }
+import scala.collection.immutable.{ListMap, ListSet, Queue}
 
 trait PostgresDialect
-  extends SqlIdiom
-  with QuestionMarkBindVariables
-  with ConcatSupport
-  with OnConflictSupport
-  with CanReturnClause
-  with CanInsertWithMultiValues
-  with CanInsertReturningWithMultiValues {
+    extends SqlIdiom
+    with QuestionMarkBindVariables
+    with ConcatSupport
+    with OnConflictSupport
+    with CanReturnClause
+    with CanInsertWithMultiValues
+    with CanInsertReturningWithMultiValues {
 
   override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
 
-  override def astTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Ast] =
+  override def astTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ): Tokenizer[Ast] =
     Tokenizer[Ast] {
       case ListContains(ast, body) => stmt"${body.token} = ANY(${ast.token})"
       case c: OnConflict           => conflictTokenizer.token(c)
       case ast                     => super.astTokenizer.token(ast)
     }
 
-  override implicit def operationTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Operation] =
+  override implicit def operationTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy
+  ): Tokenizer[Operation] =
     Tokenizer[Operation] {
       case UnaryOperation(StringOperator.`toLong`, ast) => stmt"${scopedTokenizer(ast)}::bigint"
       case UnaryOperation(StringOperator.`toInt`, ast)  => stmt"${scopedTokenizer(ast)}::integer"
@@ -46,10 +53,13 @@ trait PostgresDialect
 
   override def prepareForProbing(string: String) = {
     var i = 0
-    val query = string.flatMap(x => if (x != '?') s"$x" else {
-      i += 1
-      s"$$$i"
-    })
+    val query = string.flatMap(x =>
+      if (x != '?') s"$x"
+      else {
+        i += 1
+        s"$$$i"
+      }
+    )
     s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $query"
   }
 
@@ -57,18 +67,22 @@ trait PostgresDialect
     override def apply(e: ast.Action): ast.Action =
       e match {
         case Returning(action, alias, property) =>
-          val newAlias = alias.copy(name = batchAlias)
+          val newAlias    = alias.copy(name = batchAlias)
           val newProperty = BetaReduction(property, alias -> newAlias)
           Returning(action, newAlias, newProperty)
         case ReturningGenerated(action, alias, property) =>
-          val newAlias = alias.copy(name = batchAlias)
+          val newAlias    = alias.copy(name = batchAlias)
           val newProperty = BetaReduction(property, alias -> newAlias)
           ReturningGenerated(action, newAlias, newProperty)
         case _ => super.apply(e)
       }
   }
 
-  override protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[ast.Action] =
+  override protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ): Tokenizer[ast.Action] =
     Tokenizer[ast.Action] {
       // Don't need to check if this is supported, we know it is since it's postgres.
       // Also, only do it for updates, for inserts we don't want the Returning Alias to be the returning-clause otherwise
@@ -80,7 +94,9 @@ trait PostgresDialect
       case returning @ ReturningAction(action: ast.Update, alias, prop) if (idiomContext.queryType.isBatch) =>
         val batchAlias =
           idiomContext.queryType.batchAlias.getOrElse {
-            throw new IllegalArgumentException(s"Batch alias not found in the action: ${idiomContext.queryType} but it is a batch context. This should not be possible.")
+            throw new IllegalArgumentException(
+              s"Batch alias not found in the action: ${idiomContext.queryType} but it is a batch context. This should not be possible."
+            )
           }
         val returningNew = ReplaceReturningAlias(batchAlias)(returning).asInstanceOf[ReturningAction]
         stmt"${(action: Ast).token} RETURNING ${tokenizeReturningClause(returningNew, Some(returningNew.alias.name))}"
@@ -92,14 +108,20 @@ trait PostgresDialect
         super.actionTokenizer(insertEntityTokenizer).token(other)
     }
 
-  protected def specialPropertyTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) =
-    Tokenizer.withFallback[Ast](this.astTokenizer(_, strategy, idiomContext)) {
-      case p: Property => this.propertyTokenizer.token(p)
+  protected def specialPropertyTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ) =
+    Tokenizer.withFallback[Ast](this.astTokenizer(_, strategy, idiomContext)) { case p: Property =>
+      this.propertyTokenizer.token(p)
     }
 
   object ConcatableBatchUpdate {
 
-    private[getquill] def columnsAndValuesTogether(assignments: List[Assignment])(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) = {
+    private[getquill] def columnsAndValuesTogether(
+      assignments: List[Assignment]
+    )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) =
       assignments.map(assignment =>
         assignment.property match {
           case Property.Opinionated(_, key, renameable, visibility) =>
@@ -108,12 +130,15 @@ trait PostgresDialect
               specialPropertyTokenizer.token(assignment.value)
             )
           case _ => fail(s"Invalid assignment value of ${assignment}. Must be a Property object.")
-        })
-    }
+        }
+      )
 
-    //case class UpdateWithValues(action: Statement, where: Statement)
-    def unapply(action: ast.Update)(implicit actionAstTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Option[Statement] = {
-
+    // case class UpdateWithValues(action: Statement, where: Statement)
+    def unapply(action: ast.Update)(implicit
+      actionAstTokenizer: Tokenizer[Ast],
+      strategy: NamingStrategy,
+      idiomContext: IdiomContext
+    ): Option[Statement] =
       //    Typical Postgres batch update syntax
       //    UPDATE people AS p SET id = p.id, name = p.name, age = p.age
       //    FROM (values (1, 'Joe', 111), (2, 'Jack', 222))
@@ -123,7 +148,6 @@ trait PostgresDialect
       // Uses the `alias` passed in as `actionAlias` since that is now assigned to the copied SqlIdiom
       (action, idiomContext.queryType) match {
         case (clause @ Update(Filter(table: Entity, origTableAlias, _), _), IdiomContext.QueryType.Batch(batchAlias)) =>
-
           // Original Query looks like:
           //   liftQuery(people).foreach(ps => query[Person].filter(p => p.id == ps.id).update(_.name -> ps.name))
           // This has already been transpiled to (foreach part has been removed):
@@ -153,9 +177,8 @@ trait PostgresDialect
           //   All the lifts in the WHERE clause that we need to put into the actual VALUES clause instead
           //   Originally was `WHERE ps.id = STag(uid:3)`
           //   (replacedWhere: `WHERE ps.id = p.id1`, additionalColumns: [id] /*and any other column names of STags in WHERE*/, additionalLifts: [STag(uid:3)])
-          val (Update(Filter(table: Entity, tableAlias, replacedWhere), assignments), valuesColumns, valuesLifts) = {
+          val (Update(Filter(table: Entity, tableAlias, replacedWhere), assignments), valuesColumns, valuesLifts) =
             ReplaceLiftings.of(clause)(batchAlias, List())
-          }
           if (valuesLifts.nonEmpty) {
             // The SET columns/values i.e. ([name, id], [STag(uid:1), STag(uid:2)]
             val columnsAndValues = columnsAndValuesTogether(assignments)
@@ -165,31 +188,35 @@ trait PostgresDialect
             val setColumns = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
             // The columns that go inside ps(name, id, id1) i.e. stmt"name, id, id1"
             val asColumns = valuesColumns.toList.mkStmt(", ")
-            val output = stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})")}) AS ${colsId.token}($asColumns) WHERE ${specialPropertyTokenizer.token(replacedWhere)}"
+            val output =
+              stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(
+                  stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})"
+                )}) AS ${colsId.token}($asColumns) WHERE ${specialPropertyTokenizer.token(replacedWhere)}"
             Some(output)
           } else None
 
         case (clause @ Update(_: Entity, _), IdiomContext.QueryType.Batch(batchAlias)) =>
-          val (Update(table: Entity, assignments), valuesColumns, valuesLifts) = {
+          val (Update(table: Entity, assignments), valuesColumns, valuesLifts) =
             ReplaceLiftings.of(clause)(batchAlias, List())
-          }
 
           // Choose table alias based on how assignments clauses were realized. Batch-Alias should mean the same thing as when NormalizeFilteredActionAliases was run in Idiom should the
           // value should be the same thing as the cluases that were realiased.
           if (valuesLifts.nonEmpty) {
-            val tableAlias = NormalizeFilteredActionAliases.chooseAlias(table.name, Some(batchAlias))
-            val colsId = batchAlias
+            val tableAlias       = NormalizeFilteredActionAliases.chooseAlias(table.name, Some(batchAlias))
+            val colsId           = batchAlias
             val columnsAndValues = columnsAndValuesTogether(assignments)
-            val setColumns = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
-            val asColumns = valuesColumns.toList.mkStmt(", ")
-            val output = stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})")}) AS ${colsId.token}($asColumns)"
+            val setColumns       = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
+            val asColumns        = valuesColumns.toList.mkStmt(", ")
+            val output =
+              stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(
+                  stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})"
+                )}) AS ${colsId.token}($asColumns)"
             Some(output)
           } else None
 
         case _ =>
           None
       }
-    }
   }
 }
 
@@ -200,7 +227,11 @@ case class ReplaceAssignmentAliases(newAlias: Ident) extends StatelessTransforme
     Assignment(newAlias, BetaReduction(e.property, e.alias -> newAlias), BetaReduction(e.value, e.alias -> newAlias))
 }
 
-case class ReplaceLiftings(foreachIdentName: String, existingColumnNames: List[String], state: ListMap[String, ScalarTag]) extends StatefulTransformer[ListMap[String, ScalarTag]] {
+case class ReplaceLiftings(
+  foreachIdentName: String,
+  existingColumnNames: List[String],
+  state: ListMap[String, ScalarTag]
+) extends StatefulTransformer[ListMap[String, ScalarTag]] {
 
   private def columnExists(col: String) =
     existingColumnNames.contains(col) || state.keySet.contains(col)
@@ -226,9 +257,12 @@ case class ReplaceLiftings(foreachIdentName: String, existingColumnNames: List[S
   override def apply(e: Ast): (Ast, StatefulTransformer[ListMap[String, ScalarTag]]) =
     e match {
       case lift @ ScalarTag(_, External.Source.UnparsedProperty(propNameRaw)) =>
-        val id = Ident(foreachIdentName, lift.quat)
+        val id       = Ident(foreachIdentName, lift.quat)
         val propName = freshIdent(propNameRaw)
-        (Property.Opinionated(id, propName, Renameable.Fixed, Visibility.neutral), ReplaceLiftings(foreachIdentName, existingColumnNames, state + (propName -> lift)))
+        (
+          Property.Opinionated(id, propName, Renameable.Fixed, Visibility.neutral),
+          ReplaceLiftings(foreachIdentName, existingColumnNames, state + (propName -> lift))
+        )
       case _ => super.apply(e)
     }
 }

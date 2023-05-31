@@ -6,7 +6,7 @@ import java.sql._
 
 import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import javax.sql.DataSource
-import io.getquill.{ Literal, PostgresMonixJdbcContext }
+import io.getquill.{Literal, PostgresMonixJdbcContext}
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.mockito.scalatest.AsyncMockitoSugar
@@ -16,16 +16,16 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 class MockTests extends Spec with AsyncMockitoSugar {
-  import scala.reflect.runtime.{ universe => ru }
+  import scala.reflect.runtime.{universe => ru}
   implicit val scheduler = Scheduler.io()
 
   object MockResultSet {
     def apply[T: ClassTag: ru.TypeTag](data: Seq[T]) = {
-      val rs = mock[ResultSet]
+      val rs       = mock[ResultSet]
       var rowIndex = -1
 
-      def introspection = new Introspection(data(rowIndex))
-      def getIndex(i: Int): Any = introspection.getIndex(i)
+      def introspection                = new Introspection(data(rowIndex))
+      def getIndex(i: Int): Any        = introspection.getIndex(i)
       def getColumn(name: String): Any = introspection.getField(name)
 
       when(rs.next()) thenAnswer {
@@ -53,10 +53,10 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed after usage" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
@@ -68,7 +68,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
 
     val results =
       stream(query[Person])
-        .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+        .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
         .map(_.reverse)
         .runSyncUnsafe()
 
@@ -91,7 +91,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed when ending conn.setAutoCommit returns error but is caught" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
 
@@ -103,7 +103,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
 
     val results =
       stream(query[Person])
-        .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+        .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
         .map(_.reverse)
         .materialize
         .runSyncUnsafe()
@@ -122,10 +122,10 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed after usage and conn.setAutoCommit afterward fails" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
@@ -141,7 +141,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     val results =
       Try {
         stream(query[Person])
-          .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+          .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
           .map(_.reverse)
           .runSyncUnsafe()
       }
@@ -167,10 +167,10 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed after usage and conn.setAutoCommit after results fails - with custom wrapClose" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
@@ -190,7 +190,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
 
     val results =
       stream(query[Person])
-        .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+        .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
         .map(_.reverse)
         .runSyncUnsafe()
 
