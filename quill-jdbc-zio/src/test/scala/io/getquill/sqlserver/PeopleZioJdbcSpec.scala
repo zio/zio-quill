@@ -26,7 +26,9 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
   }
 
   "Example 2 - range simple" in {
-    testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`))).runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
+    testContext
+      .run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))
+      .runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
   }
 
   "Example 3 - satisfies" in {
@@ -38,7 +40,9 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
   }
 
   "Example 5 - compose" in {
-    testContext.run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`))).runSyncUnsafe() mustEqual `Ex 5 expected result`
+    testContext
+      .run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`)))
+      .runSyncUnsafe() mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

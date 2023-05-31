@@ -1,14 +1,14 @@
 package io.getquill.context.zio
 
 import io.getquill.context.Context
-import io.getquill.monad.{ IOMonad, IOMonadMacro }
-import io.getquill.{ Action, ActionReturning, BatchAction, Query, Quoted }
-import zio.{ RIO, ZIO }
+import io.getquill.monad.{IOMonad, IOMonadMacro}
+import io.getquill.{Action, ActionReturning, BatchAction, Query, Quoted}
+import zio.{RIO, ZIO}
 
 import scala.collection.compat._
 import scala.language.experimental.macros
 import scala.language.higherKinds
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 trait ZIOMonad extends IOMonad {
   this: Context[_, _] =>
@@ -28,18 +28,18 @@ trait ZIOMonad extends IOMonad {
     quoted: Quoted[BatchAction[ActionReturning[_, T]]]
   ): IO[RunBatchActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
 
-  case class Run[T, E <: Effect](f: () => Result[T])
-    extends IO[T, E]
+  case class Run[T, E <: Effect](f: () => Result[T]) extends IO[T, E]
 
   def flatten[Y, M[X] <: IterableOnce[X]](
     seq: Sequence[Y, M, Effect]
   ) = {
     val builder = seq.cbfResultToValue.newBuilder
-    ZIO.foldLeft(seq.in.iterator.toIterable)(builder) { (r, ioa) =>
-      for {
-        a <- performIO(ioa)
-      } yield r += a
-    }
+    ZIO
+      .foldLeft(seq.in.iterator.toIterable)(builder) { (r, ioa) =>
+        for {
+          a <- performIO(ioa)
+        } yield r += a
+      }
       .map(_.result())
   }
 

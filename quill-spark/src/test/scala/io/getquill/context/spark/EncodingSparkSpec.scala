@@ -45,28 +45,30 @@ class EncodingSparkSpec extends Spec {
   "string with ' " in {
     val v = "will'break"
 
-    val entities = liftQuery(Seq(
-      EncodingTestEntity(
-        v,
-        BigDecimal(1.1),
-        true,
-        11.toByte,
-        23.toShort,
-        33,
-        431L,
-        42d,
-        Array(1.toByte, 2.toByte),
-        Some("s"),
-        Some(BigDecimal(1.1)),
-        Some(true),
-        Some(11.toByte),
-        Some(23.toShort),
-        Some(33),
-        Some(431L),
-        Some(42d),
-        Some(Array(1.toByte, 2.toByte))
-      )
-    ).toDS)
+    val entities = liftQuery(
+      Seq(
+        EncodingTestEntity(
+          v,
+          BigDecimal(1.1),
+          true,
+          11.toByte,
+          23.toShort,
+          33,
+          431L,
+          42d,
+          Array(1.toByte, 2.toByte),
+          Some("s"),
+          Some(BigDecimal(1.1)),
+          Some(true),
+          Some(11.toByte),
+          Some(23.toShort),
+          Some(33),
+          Some(431L),
+          Some(42d),
+          Some(Array(1.toByte, 2.toByte))
+        )
+      ).toDS
+    )
 
     val q = quote {
       entities.filter(_.v1 == lift(v)).map(_.v1)
@@ -183,7 +185,7 @@ class EncodingSparkSpec extends Spec {
         0.toShort,
         0,
         0L,
-        0D,
+        0d,
         Array(),
         None,
         None,
@@ -201,7 +203,6 @@ class EncodingSparkSpec extends Spec {
   def verify(result: List[EncodingTestEntity]) =
     result match {
       case List(e1, e2) =>
-
         e1.v1 mustEqual "s"
         e1.v2 mustEqual BigDecimal(1.1)
         e1.v3 mustEqual true

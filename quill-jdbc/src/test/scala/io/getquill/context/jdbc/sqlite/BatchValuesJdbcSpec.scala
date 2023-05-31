@@ -10,8 +10,8 @@ class BatchValuesJdbcSpec extends BatchValuesSpec { //
 
   override def beforeEach(): Unit = {
     testContext.run(query[Product].delete)
-    //For the Ex 2 test to actually work, the ids of the inserted entities need to start
-    //testContext.run(sql"DELETE FROM sqlite_sequence WHERE name='Product';".as[Delete[Product]])
+    // For the Ex 2 test to actually work, the ids of the inserted entities need to start
+    // testContext.run(sql"DELETE FROM sqlite_sequence WHERE name='Product';".as[Delete[Product]])
     super.beforeEach()
   }
 

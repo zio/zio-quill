@@ -28,15 +28,15 @@ trait ArrayOpsSpec extends Spec {
     def idByContains(x: Int) = quote(entity.filter(_.numbers.contains(lift(x))).map(_.id))
 
     val `Ex 1 return all` = quote(idByContains(1))
-    val `Ex 1 expected` = List(1, 2, 3)
+    val `Ex 1 expected`   = List(1, 2, 3)
 
     val `Ex 2 return 1` = quote(idByContains(3))
     val `Ex 2 expected` = List(1)
 
     val `Ex 3 return 2,3` = quote(idByContains(4))
-    val `Ex 3 expected` = List(2, 3)
+    val `Ex 3 expected`   = List(2, 3)
 
     val `Ex 4 return empty` = quote(idByContains(10))
-    val `Ex 4 expected` = Nil
+    val `Ex 4 expected`     = Nil
   }
 }

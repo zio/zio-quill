@@ -35,9 +35,8 @@ class EncodingSpec extends Spec {
     "sync" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      val q = quote {
-        (list: Query[Int]) =>
-          query[EncodingTestEntity].filter(t => list.contains(t.id))
+      val q = quote { (list: Query[Int]) =>
+        query[EncodingTestEntity].filter(t => list.contains(t.id))
       }
       ctx.run(query[EncodingTestEntity].delete)
       ctx.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
@@ -46,13 +45,12 @@ class EncodingSpec extends Spec {
     }
   }
 
-  private def verify(result: List[EncodingTestEntity]): Unit = {
+  private def verify(result: List[EncodingTestEntity]): Unit =
     result.zip(insertValues) match {
       case List((e1, a1), (e2, a2)) =>
         verify(e1, a1)
         verify(e2, a2)
     }
-  }
 
   private def verify(e: EncodingTestEntity, a: EncodingTestEntity): Unit = {
     e.id mustEqual a.id
@@ -81,27 +79,27 @@ class EncodingSpec extends Spec {
   }
 
   case class EncodingTestEntity(
-    id:  Int,
-    v1:  String,
-    v2:  BigDecimal,
-    v3:  Boolean,
-    v4:  Int,
-    v5:  Long,
-    v6:  Float,
-    v7:  Double,
-    v8:  Array[Byte],
+    id: Int,
+    v1: String,
+    v2: BigDecimal,
+    v3: Boolean,
+    v4: Int,
+    v5: Long,
+    v6: Float,
+    v7: Double,
+    v8: Array[Byte],
     v11: Date,
     v12: Short,
     v13: Byte,
-    o1:  Option[String],
-    o2:  Option[BigDecimal],
-    o3:  Option[Boolean],
-    o4:  Option[Int],
-    o5:  Option[Long],
-    o6:  Option[Float],
-    o7:  Option[Double],
-    o8:  Option[Array[Byte]],
-    o9:  Option[Date],
+    o1: Option[String],
+    o2: Option[BigDecimal],
+    o3: Option[Boolean],
+    o4: Option[Int],
+    o5: Option[Long],
+    o6: Option[Float],
+    o7: Option[Double],
+    o8: Option[Array[Byte]],
+    o9: Option[Date],
     o10: Option[Byte]
   )
 
@@ -138,8 +136,8 @@ class EncodingSpec extends Spec {
         v3 = false,
         v4 = 0,
         v5 = 0L,
-        v6 = 0.0F,
-        v7 = 0.0D,
+        v6 = 0.0f,
+        v7 = 0.0d,
         v8 = Array(),
         v11 = new Date(0),
         v12 = 2,

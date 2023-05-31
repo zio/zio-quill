@@ -18,14 +18,14 @@ trait QueryResultTypeCassandraSpec extends Spec {
     OrderTestEntity(3, 3)
   )
 
-  val insert = quote((e: OrderTestEntity) => query[OrderTestEntity].insertValue(e))
-  val deleteAll = quote(query[OrderTestEntity].delete)
-  val selectAll = quote(query[OrderTestEntity])
-  val map = quote(query[OrderTestEntity].map(_.id))
-  val filter = quote(query[OrderTestEntity].filter(_.id == 1))
+  val insert     = quote((e: OrderTestEntity) => query[OrderTestEntity].insertValue(e))
+  val deleteAll  = quote(query[OrderTestEntity].delete)
+  val selectAll  = quote(query[OrderTestEntity])
+  val map        = quote(query[OrderTestEntity].map(_.id))
+  val filter     = quote(query[OrderTestEntity].filter(_.id == 1))
   val withFilter = quote(query[OrderTestEntity].withFilter(_.id == 1))
-  val sortBy = quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))
-  val take = quote(query[OrderTestEntity].take(10))
+  val sortBy     = quote(query[OrderTestEntity].filter(_.id == 1).sortBy(_.i)(Ord.asc))
+  val take       = quote(query[OrderTestEntity].take(10))
   val entitySize = quote(query[OrderTestEntity].size)
   val parametrizedSize = quote { (id: Int) =>
     query[OrderTestEntity].filter(_.id == id).size

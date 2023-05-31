@@ -28,8 +28,7 @@ class FinaglePostgresContextSpec extends Spec with BeforeAndAfter {
     val inserted: Long = await(testContext.run {
       qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
     })
-    await(testContext.run(qr4.filter(_.i == lift(inserted))))
-      .head.i mustBe inserted
+    await(testContext.run(qr4.filter(_.i == lift(inserted)))).head.i mustBe inserted
   }
 
   "performIo" in {
@@ -48,7 +47,8 @@ class FinaglePostgresContextSpec extends Spec with BeforeAndAfter {
     import com.twitter.finagle.postgres.values.ValueEncoder._
 
     testContext.prepareParams(
-      "", (ps, session) => (Nil, ps ++: List(Param("Sarah"), Param(127)))
+      "",
+      (ps, session) => (Nil, ps ++: List(Param("Sarah"), Param(127)))
     ) mustEqual List("'Sarah'", "'127'")
   }
 }
