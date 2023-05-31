@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.base.Spec
-import io.getquill.context.mirror.{ MirrorSession, Row }
+import io.getquill.context.mirror.{MirrorSession, Row}
 
 class OptionalProductEncodingSpec extends Spec {
 

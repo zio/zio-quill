@@ -1,8 +1,8 @@
 package io.getquill.context.cassandra.zio
 
 import io.getquill.base.Spec
-import zio.stream.{ ZSink, ZStream }
-import zio.{ Runtime, Tag, Unsafe, ZEnvironment, ZIO, ZLayer }
+import zio.stream.{ZSink, ZStream}
+import zio.{Runtime, Tag, Unsafe, ZEnvironment, ZIO, ZLayer}
 
 object ZioCassandraSpec {
   def runLayerUnsafe[T: Tag](layer: ZLayer[Any, Throwable, T]): T =
@@ -17,7 +17,9 @@ trait ZioCassandraSpec extends Spec {
 
   def result[T](stream: ZStream[Any, Throwable, T]): List[T] =
     Unsafe.unsafe { implicit u =>
-      Runtime.default.unsafe.run(stream.run(ZSink.collectAll).map(_.toList).provideEnvironment(ZEnvironment(pool))).getOrThrow()
+      Runtime.default.unsafe
+        .run(stream.run(ZSink.collectAll).map(_.toList).provideEnvironment(ZEnvironment(pool)))
+        .getOrThrow()
     }
 
   def result[T](qzio: ZIO[Any, Throwable, T]): T =

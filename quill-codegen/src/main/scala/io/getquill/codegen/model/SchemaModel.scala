@@ -14,10 +14,10 @@ trait BasicColumnMeta {
 }
 
 case class JdbcTableMeta(
-  tableCat:   Option[String],
+  tableCat: Option[String],
   tableSchem: Option[String],
-  tableName:  String,
-  tableType:  Option[String]
+  tableName: String,
+  tableType: Option[String]
 ) extends BasicTableMeta
 
 object JdbcTableMeta {
@@ -30,14 +30,14 @@ object JdbcTableMeta {
 }
 
 case class JdbcColumnMeta(
-  tableCat:   Option[String],
+  tableCat: Option[String],
   tableSchem: Option[String],
-  tableName:  String,
+  tableName: String,
   columnName: String,
-  dataType:   Int,
-  typeName:   String,
-  nullable:   Int,
-  size:       Int
+  dataType: Int,
+  typeName: String,
+  nullable: Int,
+  size: Int
 ) extends BasicColumnMeta
 
 object JdbcColumnMeta {
@@ -54,6 +54,4 @@ object JdbcColumnMeta {
     )
 }
 
-object SchemaModel {
-
-}
+object SchemaModel {}

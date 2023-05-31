@@ -1,6 +1,6 @@
 package io.getquill.util
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 
 class PrintMacMacro(val c: MacroContext) {
   import c.universe._

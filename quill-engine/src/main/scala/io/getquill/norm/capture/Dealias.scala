@@ -2,7 +2,7 @@ package io.getquill.norm.capture
 
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
-import io.getquill.util.{ Interpolator, TraceConfig }
+import io.getquill.util.{Interpolator, TraceConfig}
 import io.getquill.util.Messages.TraceType
 
 case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends StatefulTransformer[Option[Ident]] {
@@ -58,7 +58,7 @@ case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends State
         val (bn, _) = apply(b)
         (UnionAll(an, bn), Dealias(None, traceConfig))
       case Join(t, a, b, iA, iB, o) =>
-        val ((an, iAn, on), _) = dealias(a, iA, o)((_, _, _))
+        val ((an, iAn, on), _)  = dealias(a, iA, o)((_, _, _))
         val ((bn, iBn, onn), _) = dealias(b, iB, on)((_, _, _))
         (Join(t, an, bn, iAn, iBn, onn), Dealias(None, traceConfig))
       case FlatJoin(t, a, iA, o) =>
