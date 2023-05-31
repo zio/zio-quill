@@ -1,6 +1,6 @@
 package io.getquill.context.finagle.postgres
 
-import com.twitter.util.{ Await, Future }
+import com.twitter.util.{Await, Future}
 import io.getquill.context.encoding.OptionalNestedSpec
 
 class OptionalProductEncodingFinagleSpec extends OptionalNestedSpec {

@@ -1,9 +1,9 @@
 package io.getquill.postgres
 
-import io.getquill.{ JsonValue, JsonbValue, ZioSpec }
+import io.getquill.{JsonValue, JsonbValue, ZioSpec}
 import zio.Chunk
 import zio.json.ast.Json
-import zio.json.{ DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder }
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 class PostgresJsonSpec extends ZioSpec {
   val context = testContext
@@ -15,9 +15,9 @@ class PostgresJsonSpec extends ZioSpec {
   case class JsonEntity(name: String, value: JsonValue[PersonJson])
   case class JsonbEntity(name: String, value: JsonbValue[PersonJsonb])
 
-  val jsonJoe = JsonValue(PersonJson("Joe", 123))
-  val jsonValue = JsonEntity("JoeEntity", jsonJoe)
-  val jsonbJoe = JsonbValue(PersonJsonb("Joe", 123))
+  val jsonJoe    = JsonValue(PersonJson("Joe", 123))
+  val jsonValue  = JsonEntity("JoeEntity", jsonJoe)
+  val jsonbJoe   = JsonbValue(PersonJsonb("Joe", 123))
   val jsonbValue = JsonbEntity("JoeEntity", jsonbJoe)
 
   case class JsonAstEntity(name: String, value: JsonValue[Json])
@@ -51,11 +51,11 @@ class PostgresJsonSpec extends ZioSpec {
   }
 
   "encodes and decodes json ast" - {
-    val jsonJoe = Json.Obj(Chunk("age" -> Json.Num(123), "name" -> Json.Str("Joe")))
-    val jsonAstQuery = quote { querySchema[JsonAstEntity]("JsonEntity") }
-    val jsonbAstQuery = quote { querySchema[JsonbAstEntity]("JsonbEntity") }
+    val jsonJoe       = Json.Obj(Chunk("age" -> Json.Num(123), "name" -> Json.Str("Joe")))
+    val jsonAstQuery  = quote(querySchema[JsonAstEntity]("JsonEntity"))
+    val jsonbAstQuery = quote(querySchema[JsonbAstEntity]("JsonbEntity"))
 
-    val jsonAstValue = JsonAstEntity("JoeEntity", JsonValue(jsonJoe))
+    val jsonAstValue  = JsonAstEntity("JoeEntity", JsonValue(jsonJoe))
     val jsonbAstValue = JsonbAstEntity("JoeEntity", JsonbValue(jsonJoe))
 
     "json" in {

@@ -50,8 +50,8 @@ class MonixNdbcContextSpec extends MonixSpec {
       (for {
         _ <- testContext.run(qr1.delete)
         _ <- testContext.transaction {
-          testContext.run(qr1.insert(_.i -> 33))
-        }
+               testContext.run(qr1.insert(_.i -> 33))
+             }
         r <- testContext.run(qr1)
       } yield r).runSyncUnsafe(10 seconds).map(_.i) mustEqual List(33)
     }
@@ -73,9 +73,9 @@ class MonixNdbcContextSpec extends MonixSpec {
       (for {
         _ <- testContext.run(qr1.delete)
         s <- testContext.transaction(for {
-          _ <- testContext.run(qr1.insert(_.i -> 33))
-          s <- accumulate(testContext.stream(qr1))
-        } yield s)
+               _ <- testContext.run(qr1.insert(_.i -> 33))
+               s <- accumulate(testContext.stream(qr1))
+             } yield s)
       } yield s).runSyncUnsafe(10 seconds).map(_.i) mustEqual List(33)
     }
 
@@ -86,9 +86,9 @@ class MonixNdbcContextSpec extends MonixSpec {
       (for {
         _ <- testContext.run(qr1.delete)
         s <- testContext.transaction(for {
-          _ <- testContext.run(liftQuery(List(1, 2, 3, 4)).foreach(n => qr1.insert(_.i -> n)))
-          s <- accumulate(testContext.stream(qr1))
-        } yield s)
+               _ <- testContext.run(liftQuery(List(1, 2, 3, 4)).foreach(n => qr1.insert(_.i -> n)))
+               s <- accumulate(testContext.stream(qr1))
+             } yield s)
       } yield s).runSyncUnsafe(10 seconds).map(_.i) mustEqual List(4, 3, 2, 1)
       // Caution: NDBC streams result in reverse order compared to JDBC. But users can not expect a specific order anyway.
     }
@@ -97,15 +97,17 @@ class MonixNdbcContextSpec extends MonixSpec {
       (for {
         _ <- testContext.run(qr1.delete)
         e <- testContext.transaction {
-          Task.sequence(Seq(
-            testContext.run(qr1.insert(_.i -> 18)),
-            Task.eval {
-              throw new IllegalStateException
-            }
-          ))
-        }.onErrorHandleWith {
-          case e: Exception => Task(e.getClass.getSimpleName)
-        }
+               Task.sequence(
+                 Seq(
+                   testContext.run(qr1.insert(_.i -> 18)),
+                   Task.eval {
+                     throw new IllegalStateException
+                   }
+                 )
+               )
+             }.onErrorHandleWith { case e: Exception =>
+               Task(e.getClass.getSimpleName)
+             }
         r <- testContext.run(qr1)
       } yield (e, r.isEmpty)).runSyncUnsafe(10 seconds) mustEqual (("IllegalStateException", true))
     }
@@ -114,18 +116,21 @@ class MonixNdbcContextSpec extends MonixSpec {
       (for {
         _ <- testContext.run(qr1.delete)
         _ <- testContext.transaction {
-          testContext.transaction {
-            testContext.run(qr1.insert(_.i -> 33))
-          }
-        }
+               testContext.transaction {
+                 testContext.run(qr1.insert(_.i -> 33))
+               }
+             }
         r <- testContext.run(qr1)
       } yield r).runSyncUnsafe(10 seconds).map(_.i) mustEqual List(33)
     }
 
     "prepare" in {
-      testContext.prepareParams(
-        "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
-      ).runSyncUnsafe() mustEqual List("127", "'Sarah'")
+      testContext
+        .prepareParams(
+          "select * from Person where name=? and age > ?",
+          (ps, session) => (List("Sarah", 127), ps)
+        )
+        .runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }
   }
 }

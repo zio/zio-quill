@@ -66,7 +66,9 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
 
   "Example 1 - Single Case Class Mapping" in {
     await {
-      testDB.run(`Ex 1 CaseClass Record Output`).map(res => res mustEqual `Ex 1 CaseClass Record Output expected result`)
+      testDB
+        .run(`Ex 1 CaseClass Record Output`)
+        .map(res => res mustEqual `Ex 1 CaseClass Record Output expected result`)
     }
   }
 

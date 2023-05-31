@@ -13,7 +13,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
 
-  val ds = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  val ds                 = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
   implicit val scheduler = Scheduler.global
 
   val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.default)
@@ -30,26 +30,26 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
     Person("Cora", 33)
   )
 
-  override def beforeAll = {
+  override def beforeAll =
     ctx.transaction {
       for {
         _ <- ctx.run(query[Person].delete)
         _ <- ctx.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       } yield ()
     }.runSyncUnsafe()
-  }
 
   "traverses correctly" in {
     val results =
       Task(ds.getConnection).bracket { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person")
-          val rs = new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+          val rs =
+            new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
           val accum = ArrayBuffer[String]()
           while (rs.hasNext) accum += rs.next()
           accum
         }
-      } { conn => Task(conn.close()) }.runSyncUnsafe()
+      }(conn => Task(conn.close())).runSyncUnsafe()
 
     results should contain theSameElementsAs (peopleEntries.map(_.name))
   }
@@ -59,10 +59,10 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
       Task(ds.getConnection).bracket { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-          val rs = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+          val rs   = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
           rs.head
         }
-      } { conn => Task(conn.close()) }.runSyncUnsafe()
+      }(conn => Task(conn.close())).runSyncUnsafe()
 
     result must equal("Alex")
   }

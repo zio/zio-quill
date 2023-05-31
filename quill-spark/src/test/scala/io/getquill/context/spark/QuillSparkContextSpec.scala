@@ -32,7 +32,7 @@ class QuillSparkContextSpec extends Spec {
     }
     "mapped decoder" in {
       implicit val m = MappedEncoding[String, Int](_.toInt)
-      val d = mappedDecoder[String, Int]
+      val d          = mappedDecoder[String, Int]
       intercept[IllegalStateException] {
         d(0, {}, ())
       }

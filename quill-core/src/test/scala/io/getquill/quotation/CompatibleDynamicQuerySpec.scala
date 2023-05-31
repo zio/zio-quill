@@ -120,7 +120,9 @@ class CompatibleDynamicQuerySpec extends Spec {
       }
       "with map" in {
         test(
-          quote(query[TestEntity]).dynamic.flatMap(v0 => quote(query[TestEntity]).dynamic.map(v1 => quote((unquote(v0), unquote(v1))))),
+          quote(query[TestEntity]).dynamic.flatMap(v0 =>
+            quote(query[TestEntity]).dynamic.map(v1 => quote((unquote(v0), unquote(v1))))
+          ),
           query[TestEntity].flatMap(v0 => query[TestEntity].map(v1 => (v0, v1)))
         )
       }
@@ -416,7 +418,9 @@ class CompatibleDynamicQuerySpec extends Spec {
     "contains" - {
       "quoted" in {
         test(
-          quote(query[TestEntity]).dynamic.map(v0 => quote(query[TestEntity]).dynamic.map(v1 => v1.i).contains(quote(v0.i))),
+          quote(query[TestEntity]).dynamic.map(v0 =>
+            quote(query[TestEntity]).dynamic.map(v1 => v1.i).contains(quote(v0.i))
+          ),
           query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).contains(v0.i))
         )
       }

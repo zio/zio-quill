@@ -67,22 +67,20 @@ class SqlQuerySpec extends Spec {
         querySchema[TestEntity]("CustomEntity", _.i -> "field_i")
       }
       val q = quote {
-        qs1.leftJoin(qr2).on {
-          (a, b) =>
+        qs1
+          .leftJoin(qr2)
+          .on { (a, b) =>
             a.i == b.i
-        }.filter {
-          ab =>
-            {
-              val (a, b) = ab
-              b.map(bv => bv.l).contains(3L)
-            }
-        }.leftJoin(qr3).on {
-          (ab, c) =>
-            {
-              val (a, b) = ab
-              b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
-            }
-        }
+          }
+          .filter { ab =>
+            val (a, b) = ab
+            b.map(bv => bv.l).contains(3L)
+          }
+          .leftJoin(qr3)
+          .on { (ab, c) =>
+            val (a, b) = ab
+            b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """
@@ -125,22 +123,20 @@ class SqlQuerySpec extends Spec {
 
     "nested join - named variables - map to case class" in {
       val q = quote {
-        qr1.leftJoin(qr2).on {
-          (a, b) =>
+        qr1
+          .leftJoin(qr2)
+          .on { (a, b) =>
             a.i == b.i // Map to case class CC(TestEntity, TestEntity) here
-        }.filter {
-          ab =>
-            {
-              val (a, b) = ab
-              b.map(bv => bv.l).contains(3L)
-            }
-        }.leftJoin(qr3).on {
-          (ab, c) =>
-            {
-              val (a, b) = ab
-              b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
-            }
-        }
+          }
+          .filter { ab =>
+            val (a, b) = ab
+            b.map(bv => bv.l).contains(3L)
+          }
+          .leftJoin(qr3)
+          .on { (ab, c) =>
+            val (a, b) = ab
+            b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """SELECT
@@ -182,22 +178,20 @@ class SqlQuerySpec extends Spec {
 
     "nested join - named variables" in {
       val q = quote {
-        qr1.leftJoin(qr2).on {
-          (a, b) =>
+        qr1
+          .leftJoin(qr2)
+          .on { (a, b) =>
             a.i == b.i
-        }.filter {
-          ab =>
-            {
-              val (a, b) = ab
-              b.map(bv => bv.l).contains(3L)
-            }
-        }.leftJoin(qr3).on {
-          (ab, c) =>
-            {
-              val (a, b) = ab
-              b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
-            }
-        }
+          }
+          .filter { ab =>
+            val (a, b) = ab
+            b.map(bv => bv.l).contains(3L)
+          }
+          .leftJoin(qr3)
+          .on { (ab, c) =>
+            val (a, b) = ab
+            b.map(bv => bv.i).contains(a.i) && b.map(bv => bv.i).contains(c.i)
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """SELECT
@@ -239,16 +233,18 @@ class SqlQuerySpec extends Spec {
 
     "nested join" in {
       val q = quote {
-        qr1.leftJoin(qr2).on {
-          case (a, b) =>
+        qr1
+          .leftJoin(qr2)
+          .on { case (a, b) =>
             a.i == b.i
-        }.filter {
-          case (a, b) =>
+          }
+          .filter { case (a, b) =>
             b.map(_.l).contains(3L)
-        }.leftJoin(qr3).on {
-          case ((a, b), c) =>
+          }
+          .leftJoin(qr3)
+          .on { case ((a, b), c) =>
             b.map(_.i).contains(a.i) && b.map(_.i).contains(c.i)
-        }
+          }
       }
       testContext.run(q).string(true).collapseSpace mustEqual
         """SELECT
@@ -302,8 +298,7 @@ class SqlQuerySpec extends Spec {
 
       "flat join without map" in {
         val q: io.getquill.Quoted[Query[TestEntity]] = quote {
-          qr1.flatMap(e1 =>
-            qr1.join(e2 => e1.i == e2.i))
+          qr1.flatMap(e1 => qr1.join(e2 => e1.i == e2.i))
         }
         testContext.run(q).string mustEqual
           "SELECT e2.s, e2.i, e2.l, e2.o, e2.b FROM TestEntity e1 INNER JOIN TestEntity e2 ON e1.i = e2.i"
@@ -506,8 +501,8 @@ class SqlQuerySpec extends Spec {
       "aggregated" - {
         "simple" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, entities) => (i, entities.size)
+            qr1.groupBy(t => t.i).map { case (i, entities) =>
+              (i, entities.size)
             }
           }
           testContext.run(q).string mustEqual
@@ -515,8 +510,8 @@ class SqlQuerySpec extends Spec {
         }
         "mapped" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, entities) => (i, entities.map(_.l).max)
+            qr1.groupBy(t => t.i).map { case (i, entities) =>
+              (i, entities.map(_.l).max)
             }
           }
           testContext.run(q).string mustEqual
@@ -524,8 +519,8 @@ class SqlQuerySpec extends Spec {
         }
         "distinct" in {
           val q = quote {
-            qr1.groupBy(t => t.s).map {
-              case (s, entities) => (s, entities.map(_.i).distinct.size)
+            qr1.groupBy(t => t.s).map { case (s, entities) =>
+              (s, entities.map(_.i).distinct.size)
             }
           }
           testContext.run(q).string mustEqual
@@ -535,11 +530,12 @@ class SqlQuerySpec extends Spec {
       "with map" - {
         "not nested" in {
           val q = quote {
-            qr1.join(qr2).on((a, b) => a.s == b.s)
+            qr1
+              .join(qr2)
+              .on((a, b) => a.s == b.s)
               .groupBy(t => t._2.i)
-              .map {
-                case (i, l) =>
-                  (i, l.map(_._1.i).sum)
+              .map { case (i, l) =>
+                (i, l.map(_._1.i).sum)
               }
           }
           testContext.run(q).string mustEqual
@@ -547,12 +543,13 @@ class SqlQuerySpec extends Spec {
         }
         "nested" in {
           val q = quote {
-            qr1.join(qr2).on((a, b) => a.s == b.s)
+            qr1
+              .join(qr2)
+              .on((a, b) => a.s == b.s)
               .nested
               .groupBy(t => t._2.i)
-              .map {
-                case (i, l) =>
-                  (i, l.map(_._1.i).sum)
+              .map { case (i, l) =>
+                (i, l.map(_._1.i).sum)
               }
           }
           testContext.run(q).string mustEqual
@@ -588,7 +585,7 @@ class SqlQuerySpec extends Spec {
           qr1.map(t => t.i).distinct.map(t => 1)
         }
         testContext.run(q).string mustEqual
-          "SELECT 1 FROM (SELECT DISTINCT t.i AS _1 FROM TestEntity t) AS t" //hel
+          "SELECT 1 FROM (SELECT DISTINCT t.i AS _1 FROM TestEntity t) AS t" // hel
       }
 
       "with map uppsercase" in {
@@ -674,7 +671,7 @@ class SqlQuerySpec extends Spec {
           "SELECT a.s, a.i, a.l, a.o, a.b, q21.one, q21.two FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i AS one, q2.l AS two FROM TestEntity2 q2) AS q21 ON a.i = q21.one"
       }
 
-      "sort with distinct immediately afterward" in { //hello
+      "sort with distinct immediately afterward" in { // hello
         val q = quote {
           qr1
             .join(qr2)
@@ -724,7 +721,8 @@ class SqlQuerySpec extends Spec {
             p <- query[Person]
             a <- query[Address].join(a => a.fk == p.id)
           } yield (p, a))
-            .distinctOn(e => e._1.name).sortBy(e => e._1.name)(Ord.asc)
+            .distinctOn(e => e._1.name)
+            .sortBy(e => e._1.name)(Ord.asc)
         }
 
         testContext.run(q).string mustEqual
@@ -944,7 +942,7 @@ class SqlQuerySpec extends Spec {
       case class EntityA(id: Int, s: String, o: Option[String])
       case class EntityB(id: Int, s: String, o: Option[String])
 
-      val e = quote(query[Entity])
+      val e  = quote(query[Entity])
       val ea = quote(query[EntityA])
       val eb = quote(query[EntityB])
 

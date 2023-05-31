@@ -264,8 +264,8 @@ class SqlIdiomSpec extends Spec {
       "grouped" - {
         "simple" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, entities) => (i, entities.size)
+            qr1.groupBy(t => t.i).map { case (i, entities) =>
+              (i, entities.size)
             }
           }
           testContext.run(q).string mustEqual
@@ -274,9 +274,9 @@ class SqlIdiomSpec extends Spec {
         "nested" in {
           val q = quote {
             for {
-              (a, b) <- qr1.groupBy(t => t.i).map {
-                case (i, entities) => (i, entities.size)
-              }
+              (a, b) <- qr1.groupBy(t => t.i).map { case (i, entities) =>
+                          (i, entities.size)
+                        }
               c <- qr2 if c.i == a
             } yield {
               (a, b, c)
@@ -287,10 +287,12 @@ class SqlIdiomSpec extends Spec {
         }
         "limited" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, e) =>
+            qr1
+              .groupBy(t => t.i)
+              .map { case (i, e) =>
                 (i, e.map(_.l).min)
-            }.take(10)
+              }
+              .take(10)
           }
 
           testContext.run(q).string mustEqual
@@ -346,8 +348,8 @@ class SqlIdiomSpec extends Spec {
           }
           "with groupBy" in {
             val q = quote {
-              qr1.map(t => (t.i, t.s)).groupBy(t => t._1).map {
-                case (i, l) => l.size
+              qr1.map(t => (t.i, t.s)).groupBy(t => t._1).map { case (i, l) =>
+                l.size
               }
             }
             testContext.run(q).string mustEqual
@@ -377,8 +379,8 @@ class SqlIdiomSpec extends Spec {
         }
         "group by + binary op select" in {
           val q = quote {
-            qr1.groupBy(t => t.i).map {
-              case (i, list) => (i, list.size + 1)
+            qr1.groupBy(t => t.i).map { case (i, list) =>
+              (i, list.size + 1)
             }
           }
           testContext.run(q).string mustEqual
@@ -771,7 +773,7 @@ class SqlIdiomSpec extends Spec {
         }
         "unit" in {
           val q = quote {
-            qr1.filter(t => qr1.map(u => {}).isEmpty)
+            qr1.filter(t => qr1.map { u => }.isEmpty)
           }
           testContext.run(q).string mustEqual
             "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT EXISTS (SELECT 1 FROM TestEntity u)"
@@ -908,14 +910,14 @@ class SqlIdiomSpec extends Spec {
       "getOrElse" - {
         "is null" in {
           val q = quote {
-            qr1.filter { t => t.o.map(_ < 10).getOrElse(true) }.map(t => t.i)
+            qr1.filter(t => t.o.map(_ < 10).getOrElse(true)).map(t => t.i)
           }
           testContext.run(q).string mustEqual
             "SELECT t.i FROM TestEntity t WHERE t.o IS NOT NULL AND t.o < 10 OR t.o IS NULL AND true"
         }
         "is not null" in {
           val q = quote {
-            qr1.filter { t => t.o.map(_ < 10).getOrElse(false) }.map(t => t.i)
+            qr1.filter(t => t.o.map(_ < 10).getOrElse(false)).map(t => t.i)
           }
           testContext.run(q).string mustEqual
             "SELECT t.i FROM TestEntity t WHERE t.o IS NOT NULL AND t.o < 10 OR t.o IS NULL AND false"
@@ -955,8 +957,8 @@ class SqlIdiomSpec extends Spec {
       }
       "do not nest query if infix starts with input query" in {
         case class Entity(i: Int)
-        val forUpdate = quote {
-          q: Query[Entity] => sql"$q FOR UPDATE".as[Query[Entity]].map(a => a.i)
+        val forUpdate = quote { q: Query[Entity] =>
+          sql"$q FOR UPDATE".as[Query[Entity]].map(a => a.i)
         }
         testContext.run(forUpdate(query[Entity])).string mustEqual
           "SELECT a.i FROM Entity a FOR UPDATE"
@@ -998,7 +1000,7 @@ class SqlIdiomSpec extends Spec {
         val q = quote {
           query[TestEntity].map { x =>
             val (a, b) = (x.i, x.l)
-            val ab = a * b
+            val ab     = a * b
             (a, b, ab)
           }
         }
@@ -1025,10 +1027,10 @@ class SqlIdiomSpec extends Spec {
       "aggregated" in {
         val q = quote {
           query[TestEntity].map { a =>
-            val (b, c) = (query[TestEntity2], query[TestEntity3])
+            val (b, c)       = (query[TestEntity2], query[TestEntity3])
             val (ai, bi, ci) = (a.i, b.map(t => t.i), c.map(t => t.i))
             val (sumB, sumC) = (bi.sum, ci.sum)
-            val sumABC = bi.flatMap(b => ci.map(t => ai + b + t)).sum
+            val sumABC       = bi.flatMap(b => ci.map(t => ai + b + t)).sum
             (sumB, sumC, sumABC)
           }
         }

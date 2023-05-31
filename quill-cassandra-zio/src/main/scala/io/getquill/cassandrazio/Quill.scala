@@ -1,13 +1,13 @@
 package io.getquill.cassandrazio
 
-import com.datastax.oss.driver.api.core.cql.{ BoundStatement, Row }
-import io.getquill.context.cassandra.{ CassandraRowContext, CqlIdiom }
+import com.datastax.oss.driver.api.core.cql.{BoundStatement, Row}
+import io.getquill.context.cassandra.{CassandraRowContext, CqlIdiom}
 import io.getquill.context.qzio.ZioContext
-import io.getquill.context.{ Context, ExecutionInfo }
+import io.getquill.context.{Context, ExecutionInfo}
 import io.getquill.util.ContextLogger
-import io.getquill.{ CassandraZioContext, NamingStrategy }
+import io.getquill.{CassandraZioContext, NamingStrategy}
 import zio.stream.ZStream
-import zio.{ Tag, ZEnvironment, ZIO, ZLayer }
+import zio.{Tag, ZEnvironment, ZIO, ZLayer}
 
 object Quill {
 
@@ -20,39 +20,54 @@ object Quill {
   }
 
   case class Cassandra[+N <: NamingStrategy](val naming: N, session: CassandraZioSession)
-    extends CassandraRowContext[N]
-    with ZioContext[CqlIdiom, N]
-    with Context[CqlIdiom, N]
-    with Probing {
+      extends CassandraRowContext[N]
+      with ZioContext[CqlIdiom, N]
+      with Context[CqlIdiom, N]
+      with Probing {
 
     private val logger = ContextLogger(classOf[Quill.Cassandra[_]])
 
-    override type Error = Throwable
+    override type Error       = Throwable
     override type Environment = Any
 
     override type StreamResult[T] = ZStream[Any, Throwable, T]
     override type RunActionResult = Unit
-    override type Result[T] = ZIO[Any, Throwable, T]
+    override type Result[T]       = ZIO[Any, Throwable, T]
 
-    override type RunQueryResult[T] = List[T]
+    override type RunQueryResult[T]       = List[T]
     override type RunQuerySingleResult[T] = T
-    override type RunBatchActionResult = Unit
+    override type RunBatchActionResult    = Unit
 
     override type PrepareRow = BoundStatement
-    override type ResultRow = Row
-    override type Session = CassandraZioSession
+    override type ResultRow  = Row
+    override type Session    = CassandraZioSession
 
     val underlying: CassandraZioContext[N] = new CassandraZioContext[N](naming)
 
-    def streamQuery[T](fetchSize: Option[Int], cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): ZStream[Any, Throwable, T] =
+    def streamQuery[T](
+      fetchSize: Option[Int],
+      cql: String,
+      prepare: Prepare = identityPrepare,
+      extractor: Extractor[T] = identityExtractor
+    )(info: ExecutionInfo, dc: Runner): ZStream[Any, Throwable, T] =
       onSessionStream(underlying.streamQuery(fetchSize, cql, prepare, extractor)(info, dc))
-    def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): ZIO[Any, Throwable, List[T]] =
+    def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(
+      info: ExecutionInfo,
+      dc: Runner
+    ): ZIO[Any, Throwable, List[T]] =
       onSession(underlying.executeQuery(cql, prepare, extractor)(info, dc))
 
-    def executeQuerySingle[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): ZIO[Any, Throwable, T] =
+    def executeQuerySingle[T](
+      cql: String,
+      prepare: Prepare = identityPrepare,
+      extractor: Extractor[T] = identityExtractor
+    )(info: ExecutionInfo, dc: Runner): ZIO[Any, Throwable, T] =
       onSession(underlying.executeQuerySingle(cql, prepare, extractor)(info, dc))
 
-    def executeAction(cql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): ZIO[Any, Throwable, Unit] =
+    def executeAction(cql: String, prepare: Prepare = identityPrepare)(
+      info: ExecutionInfo,
+      dc: Runner
+    ): ZIO[Any, Throwable, Unit] =
       onSession(underlying.executeAction(cql, prepare)(info, dc))
 
     def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): ZIO[Any, Throwable, Unit] =
