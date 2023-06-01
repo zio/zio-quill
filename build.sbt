@@ -79,8 +79,8 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-finagle-mysql`,
-  `quill-finagle-postgres`,
+  //`quill-finagle-mysql`,
+  //`quill-finagle-postgres`,
   `quill-ndbc`,
   `quill-ndbc-postgres`,
   `quill-ndbc-monix`
@@ -106,7 +106,7 @@ lazy val allModules =
 
 lazy val scala213Modules =
   baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-    `quill-finagle-mysql`,
+    //`quill-finagle-mysql`,
     `quill-cassandra`,
     `quill-cassandra-alpakka`,
     `quill-cassandra-monix`,
@@ -543,33 +543,33 @@ lazy val `quill-spark` =
     .settings(commonNoLogSettings: _*)
     .settings(
       Test / fork := true,
-      libraryDependencies ++= Seq("org.apache.spark" %% "spark-sql" % "3.2.1"),
+      libraryDependencies ++= Seq("org.apache.spark" %% "spark-sql" % "3.4.0"),
       excludeDependencies ++= Seq("ch.qos.logback" % "logback-classic")
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-finagle-mysql` =
-  (project in file("quill-finagle-mysql"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq("com.twitter" %% "finagle-mysql" % "21.9.0")
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
+//lazy val `quill-finagle-mysql` =
+//  (project in file("quill-finagle-mysql"))
+//    .settings(commonSettings: _*)
+//    .settings(
+//      Test / fork := true,
+//      libraryDependencies ++= Seq("com.twitter" %% "finagle-mysql" % "22.12.0")
+//    )
+//    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+//    .enablePlugins(MimaPlugin)
 
-lazy val `quill-finagle-postgres` =
-  (project in file("quill-finagle-postgres"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.github.finagle" %% "finagle-postgres" % "0.12.0"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
+//lazy val `quill-finagle-postgres` =
+//  (project in file("quill-finagle-postgres"))
+//    .settings(commonSettings: _*)
+//    .settings(
+//      Test / fork := true,
+//      libraryDependencies ++= Seq(
+//        "io.github.finagle" %% "finagle-postgres" % "0.13.0"
+//      )
+//    )
+//    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+//    .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync` =
   (project in file("quill-jasync"))
@@ -668,7 +668,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss"        % "java-driver-core"   % "4.14.1",
+        "com.datastax.oss"        % "java-driver-core"   % "4.15.0",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -705,9 +705,10 @@ lazy val `quill-cassandra-alpakka` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "3.0.4",
-        "com.typesafe.akka"  %% "akka-testkit"                  % "2.6.14" % Test
-      )
+        "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "6.0.1",
+        "com.typesafe.akka"  %% "akka-testkit"                  % "2.8.1" % Test
+      ),
+      dependencyOverrides += "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
@@ -822,7 +823,7 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.16"
+val scala_v_12 = "2.12.17"
 val scala_v_13 = "2.13.10"
 val scala_v_30 = "3.2.2"
 
@@ -839,7 +840,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
     "com.lihaoyi"             %% "pprint"    % "0.6.6",
-    "org.scalatest"          %%% "scalatest" % "3.2.10" % Test,
+    "org.scalatest"          %%% "scalatest" % "3.2.16" % Test,
     "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro && isScala2)
