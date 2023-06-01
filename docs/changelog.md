@@ -3,6 +3,10 @@ id: changelog
 title: "Quill Changelog"
 ---
 
+# 4.7.0
+
+- [Update Scala 2.12 && Drop `quill-finagle-mysql` and `quill-finagle-postgres` modules](https://github.com/zio/zio-quill/pull/2756)
+
 # 4.6.1
 
 - [Remove support of Scala 2.11 && Update ZIO to 2.0.12](https://github.com/zio/zio-quill/pull/2722)

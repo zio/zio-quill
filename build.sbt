@@ -79,8 +79,6 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  // `quill-finagle-mysql`,
-  // `quill-finagle-postgres`,
   `quill-ndbc`,
   `quill-ndbc-postgres`,
   `quill-ndbc-monix`
@@ -106,7 +104,6 @@ lazy val allModules =
 
 lazy val scala213Modules =
   baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-    // `quill-finagle-mysql`,
     `quill-cassandra`,
     `quill-cassandra-alpakka`,
     `quill-cassandra-monix`,
@@ -548,28 +545,6 @@ lazy val `quill-spark` =
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
-
-//lazy val `quill-finagle-mysql` =
-//  (project in file("quill-finagle-mysql"))
-//    .settings(commonSettings: _*)
-//    .settings(
-//      Test / fork := true,
-//      libraryDependencies ++= Seq("com.twitter" %% "finagle-mysql" % "22.12.0")
-//    )
-//    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-//    .enablePlugins(MimaPlugin)
-
-//lazy val `quill-finagle-postgres` =
-//  (project in file("quill-finagle-postgres"))
-//    .settings(commonSettings: _*)
-//    .settings(
-//      Test / fork := true,
-//      libraryDependencies ++= Seq(
-//        "io.github.finagle" %% "finagle-postgres" % "0.13.0"
-//      )
-//    )
-//    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-//    .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync` =
   (project in file("quill-jasync"))
