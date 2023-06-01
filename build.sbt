@@ -79,8 +79,8 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  //`quill-finagle-mysql`,
-  //`quill-finagle-postgres`,
+  // `quill-finagle-mysql`,
+  // `quill-finagle-postgres`,
   `quill-ndbc`,
   `quill-ndbc-postgres`,
   `quill-ndbc-monix`
@@ -106,7 +106,7 @@ lazy val allModules =
 
 lazy val scala213Modules =
   baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-    //`quill-finagle-mysql`,
+    // `quill-finagle-mysql`,
     `quill-cassandra`,
     `quill-cassandra-alpakka`,
     `quill-cassandra-monix`,
@@ -668,8 +668,11 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss"        % "java-driver-core"   % "4.15.0",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+        "com.datastax.oss" % "java-driver-core" % "4.15.0",
+        (CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
+          case _             => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
+        })
       )
     )
     .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
@@ -707,8 +710,7 @@ lazy val `quill-cassandra-alpakka` =
       libraryDependencies ++= Seq(
         "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "6.0.1",
         "com.typesafe.akka"  %% "akka-testkit"                  % "2.8.1" % Test
-      ),
-      dependencyOverrides += "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+      )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
