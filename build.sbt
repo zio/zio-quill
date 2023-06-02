@@ -290,7 +290,7 @@ lazy val `quill-engine` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi"            %%% "pprint"                  % "0.6.6",
+        "com.lihaoyi"            %%% "pprint"                  % "0.8.1",
         "io.github.cquiroz"      %%% "scala-java-time"         % "2.5.0",
         "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
         "io.suzaku"              %%% "boopickle"               % "1.4.0"
@@ -320,7 +320,7 @@ lazy val `quill-core` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % "0.6.6"
+        "com.lihaoyi" %%% "pprint" % "0.8.1"
       ),
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages         := ".*"
@@ -816,7 +816,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "com.lihaoyi"             %% "pprint"    % "0.6.6",
+    "com.lihaoyi"             %% "pprint"    % "0.8.1",
     "org.scalatest"          %%% "scalatest" % "3.2.16" % Test,
     "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
