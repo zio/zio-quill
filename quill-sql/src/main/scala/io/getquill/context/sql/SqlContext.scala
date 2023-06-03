@@ -2,16 +2,14 @@ package io.getquill.context.sql
 
 import java.time.LocalDate
 
-import io.getquill.idiom.{ Idiom => BaseIdiom }
-import java.util.{ Date, UUID }
+import io.getquill.idiom.{Idiom => BaseIdiom}
+import java.util.{Date, UUID}
 
 import io.getquill.context.Context
 import io.getquill.context.sql.dsl.SqlDsl
 import io.getquill.NamingStrategy
 
-trait SqlContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy]
-  extends Context[Idiom, Naming]
-  with SqlDsl {
+trait SqlContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy] extends Context[Idiom, Naming] with SqlDsl {
 
   implicit val nullChecker: NullChecker
 

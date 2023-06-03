@@ -1,26 +1,26 @@
 package io.getquill.mock
 
-import io.getquill.{ Literal, PostgresZioJdbcContext }
+import io.getquill.{Literal, PostgresZioJdbcContext}
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers._
-import zio.{ Unsafe, ZEnvironment }
+import zio.{Unsafe, ZEnvironment}
 
 import java.io.Closeable
 import java.sql._
 import javax.sql.DataSource
 import scala.reflect.ClassTag
 
-class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSugar
-  import scala.reflect.runtime.{ universe => ru }
+class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSugar
+  import scala.reflect.runtime.{universe => ru}
 
   object MockResultSet {
     def apply[T: ClassTag: ru.TypeTag](data: Seq[T]) = {
-      val rs = mock[ResultSet]
+      val rs       = mock[ResultSet]
       var rowIndex = -1
 
-      def introspection = new Introspection(data(rowIndex))
-      def getIndex(i: Int): Any = introspection.getIndex(i)
+      def introspection                = new Introspection(data(rowIndex))
+      def getIndex(i: Int): Any        = introspection.getIndex(i)
       def getColumn(name: String): Any = introspection.getField(name)
 
       when(rs.next()) thenAnswer {
@@ -48,10 +48,10 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
   "stream is correctly closed after usage" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
 
@@ -66,7 +66,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       Unsafe.unsafe { implicit u =>
         zio.Runtime.default.unsafe.run {
           stream(query[Person])
-            .runFold(Seq[Person]())({ case (l, p) => p +: l })
+            .runFold(Seq[Person]()) { case (l, p) => p +: l }
             .map(_.reverse)
             .provideEnvironment(ZEnvironment(ds))
         }.getOrThrow()
@@ -93,10 +93,10 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
   "managed connection throwing exception on close is caught internally" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String])) thenReturn stmt
@@ -109,7 +109,8 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     val results =
       Unsafe.unsafe { implicit u =>
         zio.Runtime.default.unsafe.run {
-          ctx.run(query[Person])
+          ctx
+            .run(query[Person])
             .provideEnvironment(ZEnvironment(ds))
         }.getOrThrow()
       }
@@ -126,7 +127,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
   "stream is correctly closed when ending conn.setAutoCommit returns error but is caught" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
 
@@ -140,9 +141,10 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
       Unsafe.unsafe { implicit u =>
         zio.Runtime.default.unsafe.run {
           stream(query[Person])
-            .runFold(Seq[Person]())({ case (l, p) => p +: l })
+            .runFold(Seq[Person]()) { case (l, p) => p +: l }
             .map(_.reverse)
-            .provideEnvironment(ZEnvironment(ds)).foldCause(cause => cause.prettyPrint, _ => "")
+            .provideEnvironment(ZEnvironment(ds))
+            .foldCause(cause => cause.prettyPrint, _ => "")
         }.getOrThrow()
       }
 
@@ -159,10 +161,10 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
   "stream is correctly closed after usage and conn.setAutoCommit afterward fails" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
@@ -178,9 +180,10 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { //with AsyncMockitoSug
     val resultMsg = Unsafe.unsafe { implicit u =>
       zio.Runtime.default.unsafe.run {
         stream(query[Person])
-          .runFold(Seq[Person]())({ case (l, p) => p +: l })
+          .runFold(Seq[Person]()) { case (l, p) => p +: l }
           .map(_.reverse)
-          .provideEnvironment(ZEnvironment(ds)).foldCause(cause => cause.prettyPrint, success => s"Query SUCCEEDED with $success. This should not happen!")
+          .provideEnvironment(ZEnvironment(ds))
+          .foldCause(cause => cause.prettyPrint, success => s"Query SUCCEEDED with $success. This should not happen!")
       }.getOrThrow()
     }
 

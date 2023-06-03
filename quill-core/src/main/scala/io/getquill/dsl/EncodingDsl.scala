@@ -64,9 +64,15 @@ trait EncodingDsl extends LowPriorityImplicits {
   type MappedEncoding[I, O] = io.getquill.MappedEncoding[I, O]
   val MappedEncoding = io.getquill.MappedEncoding
 
-  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] = mappedEncoder
+  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit
+    mapped: MappedEncoding[I, O],
+    encoder: Encoder[O]
+  ): Encoder[I] = mappedEncoder
 
-  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] = mappedDecoder
+  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit
+    mapped: MappedEncoding[I, O],
+    decoder: Decoder[I]
+  ): Decoder[O] = mappedDecoder
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I]
 

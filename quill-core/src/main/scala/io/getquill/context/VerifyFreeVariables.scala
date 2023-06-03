@@ -1,6 +1,6 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.quotation.FreeVariables
 import io.getquill.ast.Ast
 import io.getquill.util.MacroContextExt._

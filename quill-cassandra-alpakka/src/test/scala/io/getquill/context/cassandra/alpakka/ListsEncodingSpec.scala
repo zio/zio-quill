@@ -2,7 +2,7 @@ package io.getquill.context.cassandra.alpakka
 
 import io.getquill.context.cassandra.CollectionsSpec
 
-import java.time.{ Instant, LocalDate }
+import java.time.{Instant, LocalDate}
 import java.util.UUID
 
 class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
@@ -10,31 +10,43 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   import ctx._
 
   case class ListsEntity(
-    id:         Int,
-    texts:      List[String],
-    decimals:   List[BigDecimal],
-    bools:      List[Boolean],
-    bytes:      List[Byte],
-    shorts:     List[Short],
-    ints:       List[Int],
-    longs:      List[Long],
-    floats:     List[Float],
-    doubles:    List[Double],
-    dates:      List[LocalDate],
+    id: Int,
+    texts: List[String],
+    decimals: List[BigDecimal],
+    bools: List[Boolean],
+    bytes: List[Byte],
+    shorts: List[Short],
+    ints: List[Int],
+    longs: List[Long],
+    floats: List[Float],
+    doubles: List[Double],
+    dates: List[LocalDate],
     timestamps: List[Instant],
-    uuids:      List[UUID]
+    uuids: List[UUID]
   )
 
-  val e = ListsEntity(1, List("c"), List(BigDecimal(1.33)), List(true), List(0, 1), List(3, 2), List(1, 2), List(2, 3),
-    List(1f, 3f), List(5d), List(LocalDate.now()),
-    List(Instant.now()), List(UUID.randomUUID()))
+  val e = ListsEntity(
+    1,
+    List("c"),
+    List(BigDecimal(1.33)),
+    List(true),
+    List(0, 1),
+    List(3, 2),
+    List(1, 2),
+    List(2, 3),
+    List(1f, 3f),
+    List(5d),
+    List(LocalDate.now()),
+    List(Instant.now()),
+    List(UUID.randomUUID())
+  )
 
   val q = quote(query[ListsEntity])
 
   "List encoders/decoders for CassandraTypes and CassandraMappers" in {
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -49,7 +61,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -64,7 +76,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -79,7 +91,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -94,7 +106,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 4))
       } yield {
         res.head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
@@ -106,7 +118,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     val e = ListFrozen(List(1, 2))
     await {
       for {
-        _ <- ctx.run(listFroz.insertValue(lift(e)))
+        _    <- ctx.run(listFroz.insertValue(lift(e)))
         res1 <- ctx.run(listFroz.filter(_.id == lift(List(1, 2))))
         res2 <- ctx.run(listFroz.filter(_.id == lift(List(1))))
       } yield {
@@ -116,7 +128,7 @@ class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     }
     await {
       for {
-        _ <- ctx.run(listFroz.insertValue(lift(e)))
+        _    <- ctx.run(listFroz.insertValue(lift(e)))
         res1 <- ctx.run(listFroz.filter(_.id.contains(2)).allowFiltering)
         res2 <- ctx.run(listFroz.filter(_.id.contains(3)).allowFiltering)
       } yield {

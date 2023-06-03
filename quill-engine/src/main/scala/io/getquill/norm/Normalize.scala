@@ -3,10 +3,10 @@ package io.getquill.norm
 import io.getquill.ast.Ast
 import io.getquill.ast.Query
 import io.getquill.ast.StatelessTransformer
-import io.getquill.norm.capture.{ AvoidAliasConflictApply, DealiasApply }
+import io.getquill.norm.capture.{AvoidAliasConflictApply, DealiasApply}
 import io.getquill.ast.Action
 import io.getquill.util.Interpolator
-import io.getquill.util.Messages.{ TraceType, title, trace }
+import io.getquill.util.Messages.{TraceType, title, trace}
 import io.getquill.util.Messages.TraceType.Normalizations
 
 import scala.annotation.tailrec
@@ -14,17 +14,17 @@ import scala.annotation.tailrec
 class Normalize(config: TranspileConfig) extends StatelessTransformer {
 
   val traceConf = config.traceConfig
-  val interp = new Interpolator(TraceType.Normalizations, traceConf, 1)
+  val interp    = new Interpolator(TraceType.Normalizations, traceConf, 1)
   import interp._
 
   // These are the actual phases of core-normalization. Highlighting them as such.
-  lazy val NormalizeReturningPhase = new NormalizeReturning(this)
-  lazy val DealiasPhase = new DealiasApply(traceConf)
-  lazy val AvoidAliasConflictPhase = new AvoidAliasConflictApply(traceConf)
+  lazy val NormalizeReturningPhase   = new NormalizeReturning(this)
+  lazy val DealiasPhase              = new DealiasApply(traceConf)
+  lazy val AvoidAliasConflictPhase   = new AvoidAliasConflictApply(traceConf)
   val NormalizeNestedStructuresPhase = new NormalizeNestedStructures(this)
-  val SymbolicReductionPhase = new SymbolicReduction(traceConf)
-  val AdHocReductionPhase = new AdHocReduction(traceConf)
-  val OrderTermsPhase = new OrderTerms(traceConf)
+  val SymbolicReductionPhase         = new SymbolicReduction(traceConf)
+  val AdHocReductionPhase            = new AdHocReduction(traceConf)
+  val OrderTermsPhase                = new OrderTerms(traceConf)
 
   override def apply(q: Ast): Ast =
     super.apply(BetaReduction(q))
@@ -46,9 +46,9 @@ class Normalize(config: TranspileConfig) extends StatelessTransformer {
   // This is a simple way of not running the phase at all if it is not configured to run.
   object ApplyMapPhase {
     // For logging that ApplyMap has been disabled
-    val applyMapInterp = new Interpolator(TraceType.ApplyMap, traceConf, 1)
+    val applyMapInterp   = new Interpolator(TraceType.ApplyMap, traceConf, 1)
     val applyMapInstance = new ApplyMap(traceConf)
-    def unapply(query: Query): Option[Query] = {
+    def unapply(query: Query): Option[Query] =
       if (config.disablePhases.contains(OptionalPhase.ApplyMap)) {
         import applyMapInterp._
         trace"ApplyMap phase disabled. Not executing on: $query".andLog()
@@ -56,7 +56,6 @@ class Normalize(config: TranspileConfig) extends StatelessTransformer {
       } else {
         applyMapInstance.unapply(query)
       }
-    }
   }
 
   @tailrec

@@ -2,7 +2,7 @@ package io.getquill.context.sql.base
 
 import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
-import io.getquill.{ Ord, Query, Quoted }
+import io.getquill.{Ord, Query, Quoted}
 
 trait PeopleSpec extends Spec {
 
@@ -47,63 +47,58 @@ trait PeopleSpec extends Spec {
     }
   val `Ex 1 expected result` = List(("Alex", 5), ("Cora", 2))
 
-  val `Ex 2 rangeSimple` = quote {
-    (a: Int, b: Int) =>
+  val `Ex 2 rangeSimple` = quote { (a: Int, b: Int) =>
+    for {
+      u <- query[Person] if (a <= u.age && u.age < b)
+    } yield {
+      u
+    }
+  }
+  val `Ex 2 param 1`         = 30
+  val `Ex 2 param 2`         = 40
+  val `Ex 2 expected result` = List(Person("Cora", 33), Person("Drew", 31))
+
+  val satisfies =
+    quote { (p: Int => Boolean) =>
+      for {
+        u <- query[Person] if (p(u.age))
+      } yield {
+        u
+      }
+    }
+  val `Ex 3 satisfies`       = quote(satisfies((x: Int) => 20 <= x && x < 30))
+  val `Ex 3 expected result` = List(Person("Edna", 21))
+
+  val `Ex 4 satisfies`       = quote(satisfies((x: Int) => x % 2 == 0))
+  val `Ex 4 expected result` = List(Person("Alex", 60), Person("Fred", 60))
+
+  val `Ex 5 compose` = {
+    val range = quote { (a: Int, b: Int) =>
       for {
         u <- query[Person] if (a <= u.age && u.age < b)
       } yield {
         u
       }
-  }
-  val `Ex 2 param 1` = 30
-  val `Ex 2 param 2` = 40
-  val `Ex 2 expected result` = List(Person("Cora", 33), Person("Drew", 31))
-
-  val satisfies =
-    quote {
-      (p: Int => Boolean) =>
-        for {
-          u <- query[Person] if (p(u.age))
-        } yield {
-          u
-        }
     }
-  val `Ex 3 satisfies` = quote(satisfies((x: Int) => 20 <= x && x < 30))
-  val `Ex 3 expected result` = List(Person("Edna", 21))
-
-  val `Ex 4 satisfies` = quote(satisfies((x: Int) => x % 2 == 0))
-  val `Ex 4 expected result` = List(Person("Alex", 60), Person("Fred", 60))
-
-  val `Ex 5 compose` = {
-    val range = quote {
-      (a: Int, b: Int) =>
-        for {
-          u <- query[Person] if (a <= u.age && u.age < b)
-        } yield {
-          u
-        }
+    val ageFromName = quote { (s: String) =>
+      for {
+        u <- query[Person] if (s == u.name)
+      } yield {
+        u.age
+      }
     }
-    val ageFromName = quote {
-      (s: String) =>
-        for {
-          u <- query[Person] if (s == u.name)
-        } yield {
-          u.age
-        }
-    }
-    quote {
-      (s: String, t: String) =>
-        for {
-          a <- ageFromName(s)
-          b <- ageFromName(t)
-          r <- range(a, b)
-        } yield {
-          r
-        }
+    quote { (s: String, t: String) =>
+      for {
+        a <- ageFromName(s)
+        b <- ageFromName(t)
+        r <- range(a, b)
+      } yield {
+        r
+      }
     }
   }
-  val `Ex 5 param 1` = "Drew"
-  val `Ex 5 param 2` = "Bert"
+  val `Ex 5 param 1`         = "Drew"
+  val `Ex 5 param 2`         = "Bert"
   val `Ex 5 expected result` = List(Person("Cora", 33), Person("Drew", 31))
 
   sealed trait Predicate
@@ -127,22 +122,21 @@ trait PeopleSpec extends Spec {
       case Not(t0)     => quote((x: Int) => !eval(t0)(x))
     }
 
-  val `Ex 6 predicate` = And(Above(30), Below(40))
+  val `Ex 6 predicate`       = And(Above(30), Below(40))
   val `Ex 6 expected result` = List(Person("Cora", 33), Person("Drew", 31))
 
-  val `Ex 7 predicate` = Not(Or(Below(20), Above(30)))
+  val `Ex 7 predicate`       = Not(Or(Below(20), Above(30)))
   val `Ex 7 expected result` = List(Person("Edna", 21))
 
   val `Ex 8 and 9 contains` =
-    quote {
-      (set: Query[Int]) =>
-        query[Person].filter(p => set.contains(p.age))
+    quote { (set: Query[Int]) =>
+      query[Person].filter(p => set.contains(p.age))
     }
 
-  val `Ex 8 param` = Set.empty[Int]
+  val `Ex 8 param`           = Set.empty[Int]
   val `Ex 8 expected result` = List.empty[Person]
 
-  val `Ex 9 param` = Set(55, 33)
+  val `Ex 9 param`           = Set(55, 33)
   val `Ex 9 expected result` = List(Person("Bert", 55), Person("Cora", 33))
 
   val `Ex 10 page 1 query` = quote {
@@ -167,7 +161,9 @@ trait PeopleSpec extends Spec {
     }
 
   val `Ex 12 filtered update co-related` = quote {
-    query[Person].filter(p => query[Couple].filter(c => c.her == "Alex" && c.him == p.name).nonEmpty).update(_.age -> 45)
+    query[Person]
+      .filter(p => query[Couple].filter(c => c.her == "Alex" && c.him == p.name).nonEmpty)
+      .update(_.age -> 45)
   }
   val `Ex 12 filtered update co-related get` = quote {
     query[Person]
