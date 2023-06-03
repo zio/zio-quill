@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import java.util.{ Date, UUID }
+import java.util.{Date, UUID}
 
 import com.datastax.driver.core.LocalDate
 import io.getquill.Spec
@@ -42,29 +42,29 @@ abstract class EncodingSpecHelper extends Spec {
   }
 
   case class EncodingTestEntity(
-    id:  Int,
-    v1:  String,
-    v2:  BigDecimal,
-    v3:  Boolean,
-    v4:  Int,
-    v5:  Long,
-    v6:  Float,
-    v7:  Double,
-    v8:  Array[Byte],
-    v9:  LocalDate,
+    id: Int,
+    v1: String,
+    v2: BigDecimal,
+    v3: Boolean,
+    v4: Int,
+    v5: Long,
+    v6: Float,
+    v7: Double,
+    v8: Array[Byte],
+    v9: LocalDate,
     v10: UUID,
     v11: Date,
     v12: Byte,
     v13: Short,
-    o1:  Option[String],
-    o2:  Option[BigDecimal],
-    o3:  Option[Boolean],
-    o4:  Option[Int],
-    o5:  Option[Long],
-    o6:  Option[Float],
-    o7:  Option[Double],
-    o8:  Option[Array[Byte]],
-    o9:  Option[Date],
+    o1: Option[String],
+    o2: Option[BigDecimal],
+    o3: Option[Boolean],
+    o4: Option[Int],
+    o5: Option[Long],
+    o6: Option[Float],
+    o7: Option[Double],
+    o8: Option[Array[Byte]],
+    o9: Option[Date],
     o10: Option[LocalDate]
   )
 
@@ -105,8 +105,8 @@ abstract class EncodingSpecHelper extends Spec {
         v3 = false,
         v4 = 0,
         v5 = 0L,
-        v6 = 0F,
-        v7 = 0D,
+        v6 = 0f,
+        v7 = 0d,
         v8 = Array(),
         v9 = LocalDate.fromMillisSinceEpoch(0),
         v10 = fixUUID,

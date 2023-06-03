@@ -6,8 +6,8 @@ import io.getquill.base.Spec
 
 class ExpandMappedInfixSpec extends Spec {
   "expand infix out of map body if first part is empty" in {
-    val forUpdate = quote {
-      q: Query[TestEntity] => sql"$q FOR UPDATE".as[Query[TestEntity]]
+    val forUpdate = quote { q: Query[TestEntity] =>
+      sql"$q FOR UPDATE".as[Query[TestEntity]]
     }
     val q = quote {
       forUpdate(qr1).map(x => x)
@@ -20,8 +20,8 @@ class ExpandMappedInfixSpec extends Spec {
   }
 
   "do not expand other cases" in {
-    val forUpdate = quote {
-      q: Query[TestEntity] => sql"SELECT $q FOR UPDATE".as[Query[TestEntity]]
+    val forUpdate = quote { q: Query[TestEntity] =>
+      sql"SELECT $q FOR UPDATE".as[Query[TestEntity]]
     }
     val q = quote {
       forUpdate(qr1).map(x => x)

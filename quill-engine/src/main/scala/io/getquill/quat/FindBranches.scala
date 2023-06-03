@@ -18,14 +18,19 @@ object VerifyNoBranches {
     def isNonEmpty = str.trim != ""
   }
 
-  case class BranchFound(outerClass: Option[String], pathToInnerField: String, innerField: String, possibleInnerPaths: List[String])
+  case class BranchFound(
+    outerClass: Option[String],
+    pathToInnerField: String,
+    innerField: String,
+    possibleInnerPaths: List[String]
+  )
   object BranchFound {
     def constructFrom(result: FindBranches.Result): List[BranchFound] = {
       def recurse(result: FindBranches.Result, classesToHere: List[String]): List[BranchFound] =
         result match {
           case Result.SingleBranch(path, innermostField) =>
             val pathToInnerField = classesToHere ++ path.map(_.fieldClassName)
-            val innerField = innermostField
+            val innerField       = innermostField
             // CCOuter(foo: CCFoo(bar: CCBar(baz: V))) is Branch(foo->CCFoo,bar->CCBar, baz)
             val shiftedBranchPaths = {
               val pathToHere = classesToHere.dots
@@ -36,7 +41,8 @@ object VerifyNoBranches {
               //   Then tack "CCOuter." to everything
               //   Then prepend with "CCOuter" since that's the root-level class
               //   So then we have List(CCOuter, "CCOuter." + CCFoo)
-              val fullPathClasses = pathToHere +: path.map(_.fieldClassName).dropRight(1).map(pathToHere.appendIfNotEmpty(".") + _)
+              val fullPathClasses =
+                pathToHere +: path.map(_.fieldClassName).dropRight(1).map(pathToHere.appendIfNotEmpty(".") + _)
               // recompose into foo->CCOuter,bar->CCFoo
               (shiftedFields zip fullPathClasses).collect {
                 // This should become List(CCOuter.foo, CCOuter.CCFoo.bar)
@@ -56,14 +62,13 @@ object VerifyNoBranches {
       // Should merge these together
       foundBranches
         .groupBy(b => (b.outerClass, b.innerField, b.pathToInnerField))
-        .map {
-          case ((outerClass, innerField, pathToInnerField), branches) =>
-            BranchFound(
-              outerClass,
-              pathToInnerField,
-              innerField,
-              branches.map(_.possibleInnerPaths).flatten
-            )
+        .map { case ((outerClass, innerField, pathToInnerField), branches) =>
+          BranchFound(
+            outerClass,
+            pathToInnerField,
+            innerField,
+            branches.map(_.possibleInnerPaths).flatten
+          )
         }
         .toList
     }
@@ -78,7 +83,9 @@ object VerifyNoBranches {
       // Are you sure this is the intended behavior? Perhaps you meant to write an encoder/decoder for Person.Name.First?
       // See the section on Mapped Encodings in the quill documentation here: <> for the simplest way to do that.
       val msg =
-        s"The field '${found.innerField}' in the object ${found.pathToInnerField} will be used in the query${found.outerClass.map(r => s"[$r]").getOrElse("")} " +
+        s"The field '${found.innerField}' in the object ${found.pathToInnerField} will be used in the query${found.outerClass
+            .map(r => s"[$r]")
+            .getOrElse("")} " +
           s"instead of the field ${found.possibleInnerPaths.mkString(" or ")}." +
           s"\nAre you sure this is the intended behavior? " +
           s"Perhaps you meant to write an encoder/decoder for ${found.pathToInnerField}?" +
@@ -91,7 +98,7 @@ object VerifyNoBranches {
   case class Output(messages: List[BranchFoundMessage])
   def in(quat: Quat) = {
     val foundBranchResults = FindBranches.in(quat)
-    val foundBranches = foundBranchResults.map(BranchFound.constructFrom(_)).getOrElse(List())
+    val foundBranches      = foundBranchResults.map(BranchFound.constructFrom(_)).getOrElse(List())
     Output(foundBranches.map(BranchFoundMessage.makeFrom(_)))
   }
 }
@@ -101,7 +108,7 @@ private[getquill] object FindBranches {
   sealed trait Result
   object Result {
     case class SingleBranch private[quat] (path: List[PathElement], innermostField: String) extends Result
-    case class ProductWithBranches(name: String, children: List[Result]) extends Result
+    case class ProductWithBranches(name: String, children: List[Result])                    extends Result
   }
 
   def in(quat: Quat) = recurseFind("root", quat)
@@ -111,18 +118,18 @@ private[getquill] object FindBranches {
       // CCParent(foo:CCFoo(bar: CCBar(baz: Value), other:Value) - say we are in CCParent and recursing on `foo` which becomes:
       // -> Result.SingleBranch(Branch(Path(root->CCFoo,bar->CCBar),baz)) - when we parse it, it became this
       // -> Result.SingleBranch(Branch(Path(foo->CCFoo,bar->CCBar),baz)) - from the upper level we know the property name is foo, so swap that in
-      case BranchQuat(branch) => Some(Result.SingleBranch(branch.pathWithRootField(currentPropName), branch.innermostField))
+      case BranchQuat(branch) =>
+        Some(Result.SingleBranch(branch.pathWithRootField(currentPropName), branch.innermostField))
       // if it is not a product then it has to be a leaf at this point, return nothing
       case _ if (!quat.isProduct) =>
         None
       // if it is a product, check if there are any branches or products-with-branches inside
       case p: Quat.Product =>
         val children =
-          p.fields.collect {
-            case (name, quat: Quat.Product) =>
-              recurseFind(name, quat)
-          }.toList.collect {
-            case Some(v) => v
+          p.fields.collect { case (name, quat: Quat.Product) =>
+            recurseFind(name, quat)
+          }.toList.collect { case Some(v) =>
+            v
           }
         Some(ProductWithBranches(p.name, children))
     }
@@ -152,7 +159,7 @@ private[getquill] object FindBranches {
         // If it's a product that's not singleton we know it's not a singleton branch
         case _: Quat.Product => None
         // (assuming we are already in a brach of at least 1-depth) if we ran into a Quat Value return the path to it
-        case _               => Some(Branch(path.first, path.rest, thisField))
+        case _ => Some(Branch(path.first, path.rest, thisField))
       }
 
     object SingletonProduct {

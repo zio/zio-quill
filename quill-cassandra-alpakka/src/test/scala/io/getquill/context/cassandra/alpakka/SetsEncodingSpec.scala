@@ -2,7 +2,7 @@ package io.getquill.context.cassandra.alpakka
 
 import io.getquill.context.cassandra.CollectionsSpec
 
-import java.time.{ Instant, LocalDate }
+import java.time.{Instant, LocalDate}
 import java.util.UUID
 
 class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
@@ -11,27 +11,37 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   import ctx._
 
   case class SetsEntity(
-    id:         Int,
-    texts:      Set[String],
-    decimals:   Set[BigDecimal],
-    bools:      Set[Boolean],
-    ints:       Set[Int],
-    longs:      Set[Long],
-    floats:     Set[Float],
-    doubles:    Set[Double],
-    dates:      Set[LocalDate],
+    id: Int,
+    texts: Set[String],
+    decimals: Set[BigDecimal],
+    bools: Set[Boolean],
+    ints: Set[Int],
+    longs: Set[Long],
+    floats: Set[Float],
+    doubles: Set[Double],
+    dates: Set[LocalDate],
     timestamps: Set[Instant],
-    uuids:      Set[UUID]
+    uuids: Set[UUID]
   )
-  val e = SetsEntity(1, Set("c"), Set(BigDecimal(1.33)), Set(true), Set(1, 2), Set(2, 3), Set(1f, 3f),
-    Set(5d), Set(LocalDate.now()),
-    Set(Instant.now()), Set(UUID.randomUUID()))
+  val e = SetsEntity(
+    1,
+    Set("c"),
+    Set(BigDecimal(1.33)),
+    Set(true),
+    Set(1, 2),
+    Set(2, 3),
+    Set(1f, 3f),
+    Set(5d),
+    Set(LocalDate.now()),
+    Set(Instant.now()),
+    Set(UUID.randomUUID())
+  )
   val q = quote(query[SetsEntity])
 
   "Set encoders/decoders for CassandraTypes and CassandraMappers" in {
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -46,7 +56,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -61,7 +71,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -76,7 +86,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 1))
       } yield {
         res.head mustBe e
@@ -91,7 +101,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
 
     await {
       for {
-        _ <- ctx.run(q.insertValue(lift(e)))
+        _   <- ctx.run(q.insertValue(lift(e)))
         res <- ctx.run(q.filter(_.id == 4))
       } yield {
         res.head.blobs.map(_.toSet) mustBe e.blobs.map(_.toSet)
@@ -103,7 +113,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     val e = SetFrozen(Set(1, 2))
     await {
       for {
-        _ <- ctx.run(setFroz.insertValue(lift(e)))
+        _    <- ctx.run(setFroz.insertValue(lift(e)))
         res1 <- ctx.run(setFroz.filter(_.id == lift(Set(1, 2))))
         res2 <- ctx.run(setFroz.filter(_.id == lift(Set(1))))
       } yield {
