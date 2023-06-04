@@ -249,7 +249,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
 
     "join" - {
-      "both sidess" in {
+      "both sides" in {
         val q = quote {
           e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
         }
