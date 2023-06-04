@@ -1223,7 +1223,7 @@ historical moments (`java.sql.Timestamp` extents `java.util.Date`).
 ### Migration notes
 
 * The fallback mechanism that looks for implicit encoders defined in the context instance has been removed. This means that if you don't `import context._`, you have to change the specific imports to include the encoders in use.
-* `context.run` now receives only one parameter. The second parameter that used to receive runtime values now doesn't exist any more. Use [`lift` or `liftQuery`](https://github.com/getquill/quill/#bindings) instead.
+* `context.run` now receives only one parameter. The second parameter that used to receive runtime values now doesn't exist anymore. Use [`lift` or `liftQuery`](https://github.com/getquill/quill/#bindings) instead.
 * Use [`liftQuery` + `foreach`](https://github.com/getquill/quill/#bindings) to perform batch actions and define contains/in queries.
 * `insert` now always receives a parameter, that [can be a case class](https://github.com/getquill/quill/#actions).
 - Non-lifted collections aren't supported anymore. Example: `query[Person].filter(t => List(10, 20).contains(p.age))`. Use `liftQuery` instead.
