@@ -123,12 +123,12 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem
+        qschema
           .map(e => SimpleEnt(e.a + 1, e.b))
           .distinct
           .map(e => SimpleEnt2(e.a + 2, e.b))
@@ -141,12 +141,12 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem
+        qschema
           .map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
           .nested
           .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
@@ -160,12 +160,12 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem
+        qschema
           .map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
           .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
       }

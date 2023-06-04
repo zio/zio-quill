@@ -296,8 +296,8 @@ class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
             entityNamingStrategy =
               SnakeCaseCustomTable(_.tableName.toLowerCase.replaceFirst("(alpha_)|(bravo_)", "").capitalize),
             entityNamespacer =
-              _.tableSchem.map(_.toLowerCase.replaceAll("(alpha)|(bravo)", "public")).getOrElse(this.defaultNamespace),
-            entityMemberNamer = ts => s"${ts.tableSchem.get}_${ts.tableName}".toLowerCase.snakeToLowerCamel
+              _.tableSchema.map(_.toLowerCase.replaceAll("(alpha)|(bravo)", "public")).getOrElse(this.defaultNamespace),
+            entityMemberNamer = ts => s"${ts.tableSchema.get}_${ts.tableName}".toLowerCase.snakeToLowerCamel
           ).makeGenerators.toList.sortBy(_.caseClassesCode)
 
           gens.foreach(gen => LOG.info(gen.code))

@@ -310,7 +310,7 @@ Here is an example of how that is done:
 val gen = new ComposeableTraitsJdbcCodegen(twoSchemaConfig, "com.my.project") {
   override def namingStrategy: EntityNamingStrategy = CustomStrategy()
   override val namespacer: Namespacer =
-    ts => if (ts.tableSchem.toLowerCase == "alpha" || ts.tableSchem.toLowerCase == "bravo") "common" else ts.tableSchem.toLowerCase
+    ts => if (ts.tableSchema.toLowerCase == "alpha" || ts.tableSchema.toLowerCase == "bravo") "common" else ts.tableSchema.toLowerCase
     
   // Be sure to set the querySchemaNaming correctly so that the different
   // querySchemas generated won't all be called '.query' in the common object (which would

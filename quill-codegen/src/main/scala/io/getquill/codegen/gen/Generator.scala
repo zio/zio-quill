@@ -225,7 +225,7 @@ trait Generator {
           """.stripMargin.trimFront
 
         override def tableName: String          = schema.tableName
-        override def schemaName: Option[String] = schema.tableSchem
+        override def schemaName: Option[String] = schema.tableSchema
 
         def QuerySchemaMapping = new QuerySchemaMappingGen(_)
         class QuerySchemaMappingGen(val column: ColumnFusion[ColumnMeta])

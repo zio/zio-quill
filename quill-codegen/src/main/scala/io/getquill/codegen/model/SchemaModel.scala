@@ -5,7 +5,7 @@ import java.sql.ResultSet
 case class RawSchema[T, C](table: T, columns: Seq[C])
 
 trait BasicTableMeta {
-  def tableSchem: Option[String]
+  def tableSchema: Option[String]
   def tableName: String
 }
 
@@ -15,7 +15,7 @@ trait BasicColumnMeta {
 
 case class JdbcTableMeta(
   tableCat: Option[String],
-  tableSchem: Option[String],
+  tableSchema: Option[String],
   tableName: String,
   tableType: Option[String]
 ) extends BasicTableMeta
@@ -23,7 +23,7 @@ case class JdbcTableMeta(
 object JdbcTableMeta {
   def fromResultSet(rs: ResultSet) = JdbcTableMeta(
     tableCat = Option(rs.getString("TABLE_CAT")),
-    tableSchem = Option(rs.getString("TABLE_SCHEM")),
+    tableSchema = Option(rs.getString("TABLE_SCHEM")),
     tableName = rs.getString("TABLE_NAME"),
     tableType = Option(rs.getString("TABLE_TYPE"))
   )
@@ -31,7 +31,7 @@ object JdbcTableMeta {
 
 case class JdbcColumnMeta(
   tableCat: Option[String],
-  tableSchem: Option[String],
+  tableSchema: Option[String],
   tableName: String,
   columnName: String,
   dataType: Int,
@@ -44,7 +44,7 @@ object JdbcColumnMeta {
   def fromResultSet(rs: ResultSet) =
     JdbcColumnMeta(
       tableCat = Option(rs.getString("TABLE_CAT")),
-      tableSchem = Option(rs.getString("TABLE_SCHEM")),
+      tableSchema = Option(rs.getString("TABLE_SCHEM")),
       tableName = rs.getString("TABLE_NAME"),
       columnName = rs.getString("COLUMN_NAME"),
       dataType = rs.getInt("DATA_TYPE"),

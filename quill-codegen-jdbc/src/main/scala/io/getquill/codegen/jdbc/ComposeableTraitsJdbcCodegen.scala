@@ -43,8 +43,8 @@ import javax.sql.DataSource
  * <code>Common</code> object.
  *
  * <pre> class MyStereotypingGen(...) extends ComposeableTraitsGen(...) {
- * override def namespacer: Namespacer = ts=> if(ts.tableSchem == "alpha" ||
- * ts.tableSchem == "bravo") "common" else ts.tableSchem
+ * override def namespacer: Namespacer = ts=> if(ts.tableSchema == "alpha" ||
+ * ts.tableSchema == "bravo") "common" else ts.tableSchema
  *
  * override def memberNamer: MemberNamer = ts => ts.tableName.snakeToLowerCamel
  * } </pre>

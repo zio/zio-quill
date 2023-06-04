@@ -78,13 +78,13 @@ class DefaultJdbcSchemaReader(
   override def apply(connectionMaker: JdbcConnectionMaker): Seq[RawSchema[JdbcTableMeta, JdbcColumnMeta]] = {
     val tableMap =
       extractTables(connectionMaker)
-        .map(t => ((t.tableCat, t.tableSchem, t.tableName), t))
+        .map(t => ((t.tableCat, t.tableSchema, t.tableName), t))
         .toMap
 
     val columns = extractColumns(connectionMaker)
     val tableColumns =
       columns
-        .groupBy(c => (c.tableCat, c.tableSchem, c.tableName))
+        .groupBy(c => (c.tableCat, c.tableSchema, c.tableName))
         .map { case (tup, cols) => tableMap.get(tup).map(RawSchema(_, cols)) }
         .collect { case Some(tbl) => tbl }
 

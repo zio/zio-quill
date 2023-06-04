@@ -251,7 +251,7 @@ object CodegenTestCases {
       case H2 =>
         tc.table.tableCat.exists(_.toLowerCase startsWith "codegen_test")
       case Postgres =>
-        tc.table.tableSchem.existsInSetNocase("public", "alpha", "bravo")
+        tc.table.tableSchema.existsInSetNocase("public", "alpha", "bravo")
       case SqlServer =>
         tc.table.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo")
     }
