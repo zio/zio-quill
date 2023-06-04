@@ -54,7 +54,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, idiomContext.config))
 
     implicit val implicitIdiomContext: IdiomContext = idiomContext
-    implicit val tokernizer                         = defaultTokenizer
+    implicit val tokenizer                          = defaultTokenizer
 
     val token =
       normalizedAst match {

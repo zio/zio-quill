@@ -77,7 +77,7 @@ trait SqlIdiom extends Idiom {
       }
 
     implicit val transpileContextImplicit: IdiomContext = idiomContext
-    implicit val tokernizer: Tokenizer[Ast]             = defaultTokenizer
+    implicit val tokenizer: Tokenizer[Ast]              = defaultTokenizer
     val interp                                          = new Interpolator(TraceType.SqlNormalizations, idiomContext.traceConfig, 1)
     import interp._
 
