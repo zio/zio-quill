@@ -63,7 +63,7 @@ class OpsSpec extends Spec {
     }
   }
 
-  "unquotes duble quotations" in {
+  "unquotes double quotations" in {
     val q: Quoted[EntityQuery[TestEntity]] = quote {
       quote(query[TestEntity])
     }
