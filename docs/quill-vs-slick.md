@@ -3,7 +3,7 @@ id: quill-vs-slick
 title: "Quill vs. Slick"
 ---
 
-This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) library. This is an incomplete comparison, additions and corrections are welcome.
+This document compares Quill to the [Typesafe Slick](https://scala-slick.org) library. This is an incomplete comparison, additions and corrections are welcome.
 
 ## Abstraction level ##
 
@@ -88,7 +88,7 @@ val q =
     }
 ```
 
-Slick requires explicit type definition to map the database model to lifted values, which can be automatically generated and maintained by the [`slick-codegen`](http://slick.typesafe.com/doc/3.1.0/code-generation.html) tool. The query definition also requires special equality operators and usage of `Rep` for composable queries.
+Slick requires explicit type definition to map the database model to lifted values, which can be automatically generated and maintained by the [`slick-codegen`](https://scala-slick.org/doc/3.1.0/code-generation.html) tool. The query definition also requires special equality operators and usage of `Rep` for composable queries.
 
 ## Compile-time versus Runtime ##
 
