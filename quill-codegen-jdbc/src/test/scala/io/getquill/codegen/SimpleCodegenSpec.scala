@@ -41,9 +41,9 @@ class SimpleCodegenSpec extends AnyFreeSpec with Matchers {
         querySchemas.zip(body).foreach {
           case (schema, methodTree) => {
             methodTree match {
-              case q"$mods def $tname(...$paramss): $tpt = $expr" => {
+              case q"$mods def $tname(...$params): $tpt = $expr" => {
                 assert(tname.toString.unquote == schema.defName, s"Def method ${tname} should be ${schema.defName}")
-                assert(paramss.length == 0, s"Def method ${tname} should not have any params for $tname")
+                assert(params.length == 0, s"Def method ${tname} should not have any params for $tname")
 
                 val quotedExpr = expr match {
                   case q"quote { $qs_args }" => {
@@ -116,9 +116,9 @@ class SimpleCodegenSpec extends AnyFreeSpec with Matchers {
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox()
     val cc = tb.parse(generatedCode)
     cc match {
-      case q"case class $tpname(...$paramss) extends { ..$earlydefns } with ..$parents" => {
+      case q"case class $tpname(...$params) extends { ..$earlydefns } with ..$parents" => {
         tpname.toString() should equal(className)
-        val constructorList = paramss
+        val constructorList = params
         if (constructorList.length != 1) fail(s"Class $tpname has more then one constructor list")
         val paramList: Seq[_] = constructorList.toList(0).toList
         if (paramList.length != fields.length)
