@@ -838,7 +838,7 @@ class QuotationSpec extends Spec {
             }
             """ mustNot compile
           }
-          "comparing types with suclassing" - {
+          "comparing types with subclassing" - {
             case class Foo(id: Int)
             trait Foot
             case class Bar(id: Int)
@@ -1087,7 +1087,7 @@ class QuotationSpec extends Spec {
             }
             """ mustNot compile
           }
-          "comparing types with suclassing" - {
+          "comparing types with subclassing" - {
             case class Foo(id: Int)
             trait Foot
             case class Bar(id: Int)
