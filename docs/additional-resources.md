@@ -44,7 +44,7 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 - Juliano Alves's Blog - [Quill NDBC Postgres: A New Async Module](https://juliano-alves.com/2019/11/29/quill-ndbc-postgres-a-new-async-module/)
 - Juliano Alves's Blog - [Contributing to Quill, a Pairing Session](https://juliano-alves.com/2019/11/18/contributing-to-quill-a-pairing-session/)
 - Medium @ Fwbrasil - [quill-spark: A type-safe Scala API for Spark SQL](https://medium.com/@fwbrasil/quill-spark-a-type-safe-scala-api-for-spark-sql-2672e8582b0d)
-- Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
+- Scalac.io blog - [Compile-time Queries with Quill](https://web.archive.org/web/20170512003505/https://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
 
 ## Code of Conduct
 
