@@ -7,7 +7,7 @@ import io.getquill.util.TraceConfig
  * This stage represents Normalization Stage1: Symbolic Reduction in Philip
  * Wadler's Paper "A Practical Theory of Language Integrated Query", given in
  * Figure 11.
- * http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf
+ * https://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf
  *
  * It represents foundational normalizations done to sequences that represents
  * queries. In Wadler's paper, he characterizes them as `for x in P ...``

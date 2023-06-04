@@ -931,7 +931,7 @@ lazy val releaseSettings = Seq(
   homepage := Some(url("https://zio.dev/zio-quill/")),
   licenses := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
   developers := List(
-    Developer("fwbrasil", "Flavio W. Brasil", "", url("http://github.com/fwbrasil")),
+    Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
     Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
   ),
   scmInfo := Some(
@@ -963,11 +963,11 @@ lazy val docs = project
          |</p>
          |""".stripMargin,
     readmeAcknowledgement :=
-      """|The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
+      """|The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](https://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
          |
-         |* [A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
-         |* [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
-         |* [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)""".stripMargin,
+         |* [A Practical Theory of Language-Integrated Query](https://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
+         |* [Everything old is new again: Quoted Domain Specific Languages](https://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
+         |* [The Flatter, the Better](https://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)""".stripMargin,
     readmeMaintainers :=
       """|- @deusaquilus (lead maintainer)
          |- @fwbrasil (creator)

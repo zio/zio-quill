@@ -1478,7 +1478,7 @@ This feature is disabled by default. To enable it, mix the `QueryProbing` trait 
 object myContext extends YourContextType with QueryProbing
 ```
 
-The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](http://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
+The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](https://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
 
 The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:
 
@@ -1971,7 +1971,7 @@ val a: IO[ctx.RunQueryResult[Person], Effect.Write with Effect.Read] =
   }
 ```
 
-This mechanism is useful to limit the kind of operations that can be performed. See this [blog post](http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html) as an example.
+This mechanism is useful to limit the kind of operations that can be performed. See this [blog post](https://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html) as an example.
 
 ## Implicit query
 

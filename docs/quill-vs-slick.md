@@ -15,7 +15,7 @@ Quill is referred as a Language Integrated Query library to match the available 
 
 ## QDSL versus EDSL ##
 
-Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the DSL counterparts at runtime. Example:
+Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](https://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the DSL counterparts at runtime. Example:
 
 **quill**
 ```scala
@@ -106,7 +106,7 @@ It is common to have to write plain SQL statements when a feature is not support
 
 ## Normalization ##
 
-Quill's normalization engine is based on the rules introduced by the paper ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query). They ensure that, given some fulfilled requirements, the normalization will always succeed. Quill verifies these requirements at compile-time.
+Quill's normalization engine is based on the rules introduced by the paper ["A practical theory of language-integrated query"](https://www.infoq.com/presentations/theory-language-integrated-query). They ensure that, given some fulfilled requirements, the normalization will always succeed. Quill verifies these requirements at compile-time.
 
 Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some additional transformations were added to the normalization engine for this reason.
 
