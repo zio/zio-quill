@@ -214,7 +214,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
             OnConflict.Update(assignmentsR)
           case _ => act
         }
-        trace"Completing OnConflict Repropogation: " andReturn
+        trace"Completing OnConflict Repropagation: " andReturn
           OnConflict(actionR, targetR, actR)
 
       case other => super.apply(other)
