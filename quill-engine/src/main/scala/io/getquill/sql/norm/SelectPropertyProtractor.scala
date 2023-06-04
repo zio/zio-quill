@@ -184,7 +184,7 @@ case class ProtractQuat(refersToEntity: Boolean) {
              *
              * This needs to be projected into:
              * SELECT g.mammid, g.mammood FROM                         -- (2) so their selection of sub-properties from here is correct
-             *    SELECT gim.mid AS mammid, gim.mood as mammood FROM g -- (1) for mamid and mammood need full quat path here...
+             *    SELECT gim.mid AS mammid, gim.mood as mammood FROM g -- (1) for mammid and mammood need full quat path here...
              *
              * (See examples of this in ExpandNestedQueries multiple embedding levels series of tests. Also note that since sub-selection
              * is typically done from tuples, paths typically start with _1,_2 etc...)
