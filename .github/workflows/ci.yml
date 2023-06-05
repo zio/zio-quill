@@ -57,7 +57,7 @@ jobs:
    name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
    steps:
-   - uses: actions/checkout@v2
+   - uses: actions/checkout@v3
    - name: Cache sbt
      uses: actions/cache@v2
      with:
@@ -115,7 +115,7 @@ jobs:
    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
    steps:
-   - uses: actions/checkout@v2
+   - uses: actions/checkout@v3
    - name: Cache sbt
      uses: actions/cache@v2
      with:
@@ -165,7 +165,7 @@ jobs:
     name: Publish ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache sbt
         uses: actions/cache@v2
         with:
