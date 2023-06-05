@@ -123,12 +123,12 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem
+        qschema
           .map(e => SimpleEnt(e.a + 1, e.b))
           .distinct
           .map(e => SimpleEnt2(e.a + 2, e.b))
@@ -141,12 +141,12 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem
+        qschema
           .map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
           .nested
           .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
@@ -160,12 +160,12 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem
+        qschema
           .map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
           .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
       }
@@ -213,49 +213,49 @@ class NestedDistinctSpec extends Spec {
         ctx.run(q).string mustEqual "SELECT e._1, e._2id AS id, e._2theName AS theName FROM (SELECT p.idP AS _1, p.id AS _2id, p.theName AS _2theName FROM Parent p) AS e"
       }
 
-      "can be propogated across query with naming intact and then used further" in {
+      "can be propagated across query with naming intact and then used further" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct.map(tup => (tup._1, tup._2)).distinct
         }
         ctx.run(q).string mustEqual "SELECT DISTINCT p._1theName AS _1, p._1id AS _2 FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
-      "can be propogated across query with naming intact and then used further - nested" in {
+      "can be propagated across query with naming intact and then used further - nested" in {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id)).nested.map(tup => (tup._1, tup._2)).nested
         }
         ctx.run(q).string mustEqual "SELECT x._1, x._2 FROM (SELECT tup._1, tup._2 FROM (SELECT e.theName AS _1, e.id AS _2 FROM (SELECT p.id, p.theName FROM Parent p) AS e) AS tup) AS x"
       }
 
-      "can be propogated across query with naming intact - returned as single property" in {
+      "can be propagated across query with naming intact - returned as single property" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name))
         }
         ctx.run(q).string mustEqual "SELECT p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
-      "can be propogated across query with naming intact - and the immediately returned" in {
+      "can be propagated across query with naming intact - and the immediately returned" in {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => e)
         }
         ctx.run(q).string mustEqual "SELECT x.id, x.theName FROM (SELECT p.id, p.theName FROM Parent p) AS x"
       }
 
-      "can be propogated across distinct with naming intact - and the immediately returned" in {
+      "can be propagated across distinct with naming intact - and the immediately returned" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => e)
         }
         ctx.run(q).string mustEqual "SELECT DISTINCT p.id, p.theName FROM Parent p"
       }
 
-      "can be propogated across query with naming intact and then re-wrapped in case class" in {
+      "can be propagated across query with naming intact and then re-wrapped in case class" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => Parent(1, e))
         }
         ctx.run(q).string mustEqual "SELECT 1 AS idP, p._1id AS id, p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
-      "can be propogated across query with naming intact and then re-wrapped in tuple" in {
+      "can be propagated across query with naming intact and then re-wrapped in tuple" in {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => Parent(1, e))
         }

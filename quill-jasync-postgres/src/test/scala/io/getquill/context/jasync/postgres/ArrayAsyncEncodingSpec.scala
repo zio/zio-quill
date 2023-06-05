@@ -47,7 +47,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
   }
 
   // Need to have an actual value in the table in order for the decoder to go off. Previously,
-  // there was guarenteed to be information there due to ordering of build artifacts but not anymore.
+  // there was guaranteed to be information there due to ordering of build artifacts but not anymore.
   "fail if found not an array" in {
     case class RealEncodingTestEntity(
       v1: String,

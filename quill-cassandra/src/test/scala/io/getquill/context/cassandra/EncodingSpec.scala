@@ -86,15 +86,15 @@ class EncodingSpec extends EncodingSpecHelper {
       val ctx = testSyncDB
       import ctx._
 
-      val epoh          = System.currentTimeMillis()
-      val epohDay       = epoh / 86400000L
-      val instant       = Instant.ofEpochMilli(epoh)
+      val epoch         = System.currentTimeMillis()
+      val epochDay      = epoch / 86400000L
+      val instant       = Instant.ofEpochMilli(epoch)
       val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault)
 
       val jq = quote(querySchema[Java8Types]("EncodingTestEntity"))
-      val j  = Java8Types(LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
+      val j  = Java8Types(LocalDate.ofEpochDay(epochDay), instant, Some(zonedDateTime))
       val cq = quote(querySchema[CasTypes]("EncodingTestEntity"))
-      val c  = CasTypes(LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh), Some(zonedDateTime))
+      val c  = CasTypes(LocalDate.ofEpochDay(epochDay), Instant.ofEpochMilli(epoch), Some(zonedDateTime))
 
       ctx.run(jq.delete)
       ctx.run(jq.insertValue(lift(j)))

@@ -21,7 +21,7 @@ object PackagingStrategy {
      * Use this strategy when you want a separate source code file (or string)
      * for every single table. Typically you'll want to use this when table
      * schemas are very large and you want to minimize the footprint of your
-     * imports (i.e. since each file is a seperate table you can be sure to just
+     * imports (i.e. since each file is a separate table you can be sure to just
      * imports the exact tables needed for every source file).
      */
     def TablePerFile(packagePrefix: String = "") =

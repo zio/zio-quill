@@ -79,7 +79,7 @@ class QuatSpec extends Spec {
     }
 
     "not propagating from transparent infixes where it is dynamic: query-ops function" in {
-      // I.e. can't propagate from a dynamic query since don't know the inside of the quat varaible
+      // I.e. can't propagate from a dynamic query since don't know the inside of the quat variable
       def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote((q: Q) => sql"$q APPEND FOO".pure.as[Q])
       val q                                           = quote(appendFooFun(query[MyPerson]))
       q.ast.quat mustEqual Quat.Unknown

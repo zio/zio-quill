@@ -3,19 +3,19 @@ id: quill-vs-slick
 title: "Quill vs. Slick"
 ---
 
-This document compares Quill to the [Typesafe Slick](http://slick.typesafe.com) library. This is an incomplete comparison, additions and corrections are welcome.
+This document compares Quill to the [Typesafe Slick](https://scala-slick.org) library. This is an incomplete comparison, additions and corrections are welcome.
 
 ## Abstraction level ##
 
 Quill and Slick have similar abstraction levels. They represent database rows as flat immutable structures (case classes without nested data) and provide a type-safe composable query DSL.
 
-Slick's documentation refers to this abstraction level as a [new paradigm called functional-relational mapping (FRM)](https://github.com/slick/slick/blob/3b3bd36c93c6d9c63b0471ff4d8409f913954b2b/slick/src/sphinx/introduction.rst#functional-relational-mapping). In fact, the approach is not new and was introduced in the late '90s by ["Kleisli􏰂, a Functional Query System"](https://www.comp.nus.edu.sg/~wongls/psZ/wls-jfp98-3.ps). It was also used by the [Links programming language](http://groups.inf.ed.ac.uk/links/papers/links-fmco06.pdf), and later on was popularized by [Microsoft LINQ](https://msdn.microsoft.com/en-us/library/bb425822.aspx) in a less functional manner.
+Slick's documentation refers to this abstraction level as a [new paradigm called functional-relational mapping (FRM)](https://github.com/slick/slick/blob/3b3bd36c93c6d9c63b0471ff4d8409f913954b2b/slick/src/sphinx/introduction.rst#functional-relational-mapping). In fact, the approach is not new and was introduced in the late '90s by ["Kleisli􏰂, a Functional Query System"](https://www.comp.nus.edu.sg/~wongls/psZ/wls-jfp98-3.ps). It was also used by the [Links programming language](https://web.archive.org/web/20120127183323/https://groups.inf.ed.ac.uk/links/papers/links-fmco06.pdf), and later on was popularized by [Microsoft LINQ](https://msdn.microsoft.com/en-us/library/bb425822.aspx) in a less functional manner.
 
 Quill is referred as a Language Integrated Query library to match the available publications on the subject. The paper ["Language-integrated query using comprehension syntax: state of the art, open problems, and work in progress"](http://research.microsoft.com/en-us/events/dcp2014/cheney.pdf) has an overview with some of the available implementations of language integrated queries.
 
 ## QDSL versus EDSL ##
 
-Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the DSL counterparts at runtime. Example:
+Quill's DSL is a macro-based quotation mechanism, allowing usage of Scala types and operators directly. Please refer to the paper ["Everything old is new again: Quoted Domain Specific Languages"](https://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf) for more details. On the other hand, Slick provides a DSL that requires lifting of types and operations to the DSL counterparts at runtime. Example:
 
 **quill**
 ```scala
@@ -88,7 +88,7 @@ val q =
     }
 ```
 
-Slick requires explicit type definition to map the database model to lifted values, which can be automatically generated and maintained by the [`slick-codegen`](http://slick.typesafe.com/doc/3.1.0/code-generation.html) tool. The query definition also requires special equality operators and usage of `Rep` for composable queries.
+Slick requires explicit type definition to map the database model to lifted values, which can be automatically generated and maintained by the [`slick-codegen`](https://scala-slick.org/doc/3.1.0/code-generation.html) tool. The query definition also requires special equality operators and usage of `Rep` for composable queries.
 
 ## Compile-time versus Runtime ##
 
@@ -106,7 +106,7 @@ It is common to have to write plain SQL statements when a feature is not support
 
 ## Normalization ##
 
-Quill's normalization engine is based on the rules introduced by the paper ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query). They ensure that, given some fulfilled requirements, the normalization will always succeed. Quill verifies these requirements at compile-time.
+Quill's normalization engine is based on the rules introduced by the paper ["A practical theory of language-integrated query"](https://www.infoq.com/presentations/theory-language-integrated-query). They ensure that, given some fulfilled requirements, the normalization will always succeed. Quill verifies these requirements at compile-time.
 
 Unfortunately, the paper doesn't cover all SQL features supported by Quill. Some additional transformations were added to the normalization engine for this reason.
 

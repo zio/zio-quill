@@ -259,7 +259,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
 
         // Note: In the future, in the GroupByMap case need to verify that columns used in aggregations are actually contained in the grouping
         //       we can use the list that comes out of flatGroupByAsts for reference for fields being grouped-by
-        //       (e.g. need to keep in mind embedded objects could be in them... so we might have to traverse mutliple levels
+        //       (e.g. need to keep in mind embedded objects could be in them... so we might have to traverse multiple levels
         //       of properties in order to verify)
 
         // Given a clause that looks like:
@@ -380,25 +380,25 @@ class SqlQueryApply(traceConfig: TraceConfig) {
               )(quat)
 
         case SortBy(q, Ident(alias, _), p, o) =>
-          val b         = base(q, alias, false)
-          val criterias = orderByCriterias(p, o, b.from)
+          val b        = base(q, alias, false)
+          val criteria = orderByCriteria(p, o, b.from)
           // If the sortBy body uses the filter alias, make sure it matches one of the aliases in the fromContexts
           if (
             b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from)
               .contains(alias))
           )
             trace"Flattening| SortBy(Ident) [Simple]" andReturn
-              b.copy(orderBy = criterias)(quat)
+              b.copy(orderBy = criteria)(quat)
           else
             trace"Flattening| SortBy(Ident) [Complex]" andReturn
               FlattenSqlQuery(
                 from = QueryContext(apply(q), alias) :: Nil,
-                orderBy = criterias,
+                orderBy = criteria,
                 select = select(alias, quat)
               )(quat)
 
         // TODO Finish describing
-        // Happens when you either have an aggrgation in the middle of a query
+        // Happens when you either have an aggregation in the middle of a query
         // ...
         // Or as the result of a map
         case Aggregation(op, q: Query) =>
@@ -468,7 +468,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
             // selects from an alias of an outer clause. For example, query[Person].map(p => Name(p.firstName, p.lastName)).distinctOn(_.name)
             // (Let's say Person(firstName, lastName, age), Name(first, last)) will turn into
             // SELECT DISTINCT ON (p.name), p.firstName AS first, p.lastName AS last, p.age FROM Person
-            // This doesn't work beause `name` in `p.name` doesn't exist yet. Therefore we have to nest this in a subquery:
+            // This doesn't work because `name` in `p.name` doesn't exist yet. Therefore we have to nest this in a subquery:
             // SELECT DISTINCT ON (p.name) FROM (SELECT p.firstName AS first, p.lastName AS last, p.age FROM Person p) AS p
             // The only exception to this is if we are directly selecting from an entity:
             // query[Person].distinctOn(_.firstName) which should be fine: SELECT (x.firstName), x.firstName, x.lastName, a.age FROM Person x
@@ -508,14 +508,14 @@ class SqlQueryApply(traceConfig: TraceConfig) {
       case other                     => QueryContext(apply(other), alias)
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =
+  private def orderByCriteria(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord, from))
+      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriteria(_, ord, from))
       case (Tuple(properties), TupleOrdering(ord)) =>
-        properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o, from) }
+        properties.zip(ord).flatMap { case (a, o) => orderByCriteria(a, o, from) }
       // if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
       case (id @ Ident(_, _: Quat.Product), ord) =>
-        new ExpandSelection(from).ofSubselect(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriterias(_, ord, from))
+        new ExpandSelection(from).ofSubselect(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriteria(_, ord, from))
       case (a, o: PropertyOrdering) => List(OrderByCriteria(a, o))
       case other                    => fail(s"Invalid order by criteria $ast")
     }

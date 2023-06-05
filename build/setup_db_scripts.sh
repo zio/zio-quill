@@ -133,7 +133,7 @@ function setup_sqlserver() {
     /opt/mssql-tools/bin/sqlcmd -S $1 -U SA -P "QuillRocks!" -d quill_test -i $2
 }
 
-# Do a simple necat poll to make sure the oracle database is ready.
+# Do a simple netcat poll to make sure the oracle database is ready.
 # All internal database creation and schema setup scripts are handled
 # by the container and docker-compose steps.
 

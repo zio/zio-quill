@@ -178,7 +178,7 @@ class Interpolator(
         case Some((output, indent)) =>
           // Even though we usually want to evaluate the command after the initial log was done
           // (so that future logs are nested under this one after the intro text but not
-          // before the return) but we cann't do that in this case because the switch indicating
+          // before the return) but we can't do that in this case because the switch indicating
           // whether to output anything or not is dependant on the return value.
           val result = command
 

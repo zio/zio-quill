@@ -132,8 +132,7 @@ sealed trait Insert[E] extends QAC[E, Nothing] with Action[E] {
    *   insert.onConflictUpdate(_.id)((t, e) => t.col -> (e.col + t.col))
    * }}}
    * If insert statement violates conflict target then the column `col` of row
-   * will be updated with sum of existing value and and proposed `col` in
-   * insert.
+   * will be updated with sum of existing value and proposed `col` in insert.
    */
   @compileTimeOnly(NonQuotedException.message)
   def onConflictUpdate(target: E => Any, targets: (E => Any)*)(

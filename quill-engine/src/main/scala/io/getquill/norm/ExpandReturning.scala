@@ -9,7 +9,7 @@ import io.getquill.{NamingStrategy, ReturnAction, IdiomContext}
 
 /**
  * Take the `.returning` part in a query that contains it and return the array
- * of columns representing of the returning seccovtion with any other operations
+ * of columns representing of the returning section with any other operations
  * etc... that they might contain.
  */
 object ExpandReturning {

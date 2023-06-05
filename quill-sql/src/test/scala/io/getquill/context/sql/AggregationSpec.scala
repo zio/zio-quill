@@ -27,7 +27,7 @@ class AggregationSpec extends Spec {
   // SELECT p.age FROM (SELECT x.age + 1 FROM Person x) AS p WHERE p.age = 123
   //   => SELECT p.age + 1 FROM (SELECT x.age FROM Person x) AS p WHERE (p.age + 1) = 123
   // Instead it should remain as the former query
-  "simple operation should not propogate from nested" in {
+  "simple operation should not propagate from nested" in {
     ctx.run {
       query[Person].map(p => p.age + 1).nested.filter(p => p == 123)
     }.string mustEqual "SELECT p.x FROM (SELECT p.age + 1 AS x FROM Person p) AS p WHERE p.x = 123"
@@ -44,7 +44,7 @@ class AggregationSpec extends Spec {
       "sum" in { ctx.run(query[Person].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) FROM Person p" }
     }
 
-    "work correctly with a filter cause that is BEFORE the aggreation" in {
+    "work correctly with a filter cause that is BEFORE the aggregation" in {
       val q = quote {
         query[Person].filter(p => p.name == "Joe").map(p => (p.id, max(p.name)))
       }
@@ -160,7 +160,7 @@ class AggregationSpec extends Spec {
         "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM Person p GROUP BY p.age) AS p WHERE p.x > 1000"
     }
 
-    // Disable thte apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
+    // Disable the apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
     // Infix has a special case already so want to not use that specifically.
     "work with a map(to-leaf).groupByMap.filter - no ApplyMap" in {
       implicit val d = new DisablePhase { override type Phase = OptionalPhase.ApplyMap :: HNil }

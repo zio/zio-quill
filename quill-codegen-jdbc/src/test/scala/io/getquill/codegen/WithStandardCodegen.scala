@@ -17,7 +17,7 @@ trait WithStandardCodegen {
     schemaConfig: SchemaConfig,
     tableFilter: RawSchema[JdbcTableMeta, JdbcColumnMeta] => Boolean = _ => true,
     entityNamingStrategy: NameParser = LiteralNames,
-    entityNamespacer: Namespacer[JdbcTableMeta] = ts => ts.tableSchem.getOrElse(defaultNamespace),
+    entityNamespacer: Namespacer[JdbcTableMeta] = ts => ts.tableSchema.getOrElse(defaultNamespace),
     entityMemberNamer: JdbcQuerySchemaNaming = ts => ts.tableName.snakeToLowerCamel
   ) =
     new JdbcGeneratorBase(() => {

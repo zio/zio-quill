@@ -21,9 +21,9 @@ case class BatchActionReturningMirrorGeneric[T, PrepareRow, Extractor[_]](
  * This is supposed to emulate how Row retrieval works in JDBC Int JDBC,
  * ResultSet won't ever actually have Option values inside, so the actual
  * option-decoder needs to understand that fact e.g.
- * `Deocder[Option[Int]](java.sql.ResultSet(foo:1, etc)).getInt(1)`* and wrap it
+ * `Decoder[Option[Int]](java.sql.ResultSet(foo:1, etc)).getInt(1)`* and wrap it
  * into a Optional value for the equivalent row implementation:
- * `Deocder[Option[Int]](Row(foo:1, etc)).apply(1)`. (*note that
+ * `Decoder[Option[Int]](Row(foo:1, etc)).apply(1)`. (*note that
  * java.sql.ResultSet actually doesn't have this syntax because it isn't a
  * product). Similarly, when doing `ResultSet(foo:null /*Expecting an int*/,
  * etc).getInt(1)` the result will be 0 as opposed to throwing a NPE as would be
