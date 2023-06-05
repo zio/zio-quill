@@ -496,7 +496,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.3.6" % "provided",
+        "org.postgresql" % "postgresql" % "42.6.0" % "provided",
         "dev.zio"       %% "zio-json"   % "0.5.0"
       ),
       Test / testGrouping := {
@@ -735,10 +735,10 @@ commands += Command.command("checkUnformattedFiles") { st =>
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "3.4.5",
-    "mysql"                   % "mysql-connector-java"    % "8.0.29"     % Test,
+    "mysql"                   % "mysql-connector-java"    % "8.0.33"     % Test,
     "com.h2database"          % "h2"                      % "2.1.212"    % Test,
-    "org.postgresql"          % "postgresql"              % "42.3.6"     % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.39.3.0"   % Test,
+    "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.0"   % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.2.2.jre8" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"   % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"    % Test
@@ -806,7 +806,7 @@ val scala_v_30 = "3.3.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.11" % Test
+    "ch.qos.logback"  % "logback-classic" % "1.3.7" % Test
   )
 )
 
