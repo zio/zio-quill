@@ -1,9 +1,8 @@
 package io.getquill.context.jasync.postgres
 
-import java.time.{ LocalDate, LocalDateTime, ZonedDateTime }
+import java.time.{LocalDate, LocalDateTime}
 
 import io.getquill.context.sql.EncodingSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
@@ -20,8 +19,8 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
   "encodes and decodes types" in {
     val r =
       for {
-        _ <- testContext.run(delete)
-        _ <- testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
+        _      <- testContext.run(delete)
+        _      <- testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
         result <- testContext.run(query[EncodingTestEntity])
       } yield result
 
@@ -32,15 +31,18 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     case class EncodingUUIDTestEntity(v1: UUID)
     val testUUID = UUID.fromString("e5240c08-6ee7-474a-b5e4-91f79c48338f")
 
-    //delete old values
-    val q0 = quote(query[EncodingUUIDTestEntity].delete)
+    // delete old values
+    val q0   = quote(query[EncodingUUIDTestEntity].delete)
     val rez0 = Await.result(testContext.run(q0), Duration.Inf)
 
-    //insert new uuid
-    val rez1 = Await.result(testContext.run(query[EncodingUUIDTestEntity].insert(lift(EncodingUUIDTestEntity(testUUID)))), Duration.Inf)
+    // insert new uuid
+    val rez1 = Await.result(
+      testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))),
+      Duration.Inf
+    )
 
-    //verify you can get the uuid back from the db
-    val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
+    // verify you can get the uuid back from the db
+    val q2   = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
     val rez2 = Await.result(testContext.run(q2), Duration.Inf)
 
     rez2 mustEqual List(testUUID)
@@ -64,14 +66,13 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
   }
 
   "encodes sets" in {
-    val q = quote {
-      (set: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    val q = quote { (set: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     val fut =
       for {
         _ <- testContext.run(query[EncodingTestEntity].delete)
-        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- testContext.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         r <- testContext.run(q(liftQuery(insertValues.map(_.v6))))
       } yield {
         r
@@ -81,7 +82,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "returning UUID" in {
     val success = for {
-      uuid <- Await.result(testContext.run(insertBarCode(lift(barCodeEntry))), Duration.Inf)
+      uuid    <- Await.result(testContext.run(insertBarCode(lift(barCodeEntry))), Duration.Inf)
       barCode <- Await.result(testContext.run(findBarCodeByUuid(uuid)), Duration.Inf).headOption
     } yield {
       verifyBarcode(barCode)
@@ -89,23 +90,12 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     success must not be empty
   }
 
-  "decodes joda DateTime, LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: JodaLocalDate, v2: JodaLocalDateTime, v3: JodaDateTime)
-    val entity = DateEncodingTestEntity(JodaLocalDate.now, JodaLocalDateTime.now, JodaDateTime.now)
+  "decodes LocalDate and LocalDateTime types" in {
+    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
     val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
-      result <- testContext.run(query[DateEncodingTestEntity])
-    } yield result
-    Await.result(r, Duration.Inf) mustBe Seq(entity)
-  }
-
-  "decodes ZonedDateTime, LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: ZonedDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now, ZonedDateTime.now)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insert(lift(entity)))
+      _      <- testContext.run(query[DateEncodingTestEntity].delete)
+      _      <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     Await.result(r, Duration.Inf) mustBe Seq(entity)
@@ -116,8 +106,8 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
       def apply()(implicit c: TestContext) = {
         import c._
         for {
-          _ <- c.run(query[EncodingTestEntity].delete)
-          result <- c.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+          _      <- c.run(query[EncodingTestEntity].delete)
+          result <- c.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         } yield result
       }
     }

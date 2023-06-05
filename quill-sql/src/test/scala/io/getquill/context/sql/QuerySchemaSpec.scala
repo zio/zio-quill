@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Literal, PostgresDialect, Spec, SqlMirrorContext, TestEntities }
+import io.getquill.base.Spec
+import io.getquill.{Literal, PostgresDialect, SqlMirrorContext, TestEntities}
 
 class QuerySchemaSpec extends Spec {
 
@@ -14,7 +15,7 @@ class QuerySchemaSpec extends Spec {
     "querySchema" in {
       val q = quote {
         querySchema[Person]("thePerson", _.id -> "theId", _.name -> "theName")
-          .insert(lift(p))
+          .insertValue(lift(p))
           .onConflictUpdate(_.id)(_.name -> _.name)
       }
       ctx.run(q).string mustEqual "INSERT INTO thePerson AS t (theId,theName) VALUES (?, ?) ON CONFLICT (theId) DO UPDATE SET theName = EXCLUDED.theName"
@@ -24,7 +25,7 @@ class QuerySchemaSpec extends Spec {
       implicit val personSchemaMeta = schemaMeta[Person]("thePerson", _.id -> "theId", _.name -> "theName")
       val q = quote {
         query[Person]
-          .insert(lift(p))
+          .insertValue(lift(p))
           .onConflictUpdate(_.id)(_.name -> _.name)
       }
       ctx.run(q).string mustEqual "INSERT INTO thePerson AS t (theId,theName) VALUES (?, ?) ON CONFLICT (theId) DO UPDATE SET theName = EXCLUDED.theName"

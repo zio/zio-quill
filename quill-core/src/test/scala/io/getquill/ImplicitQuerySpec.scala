@@ -1,5 +1,7 @@
 package io.getquill
 
+import io.getquill.base.Spec
+
 object iqContext extends MirrorContext(MirrorIdiom, Literal) with ImplicitQuery with TestEntities
 
 object Test extends Function1[String, Test] {
@@ -7,8 +9,8 @@ object Test extends Function1[String, Test] {
 }
 
 class Test(val a: String) extends Product {
-  def canEqual(that: Any) = ???
-  def productArity: Int = ???
+  def canEqual(that: Any)    = ???
+  def productArity: Int      = ???
   def productElement(n: Int) = ???
 }
 
@@ -21,7 +23,7 @@ class ImplicitQuerySpec extends Spec {
       TestEntity.filter(t => t.s == "s")
     }
     iqContext.run(q).string mustEqual
-      """querySchema("TestEntity").filter(t => t.s == "s").map(t => (t.s, t.i, t.l, t.o, t.b))"""
+      """querySchema("TestEntity").filter(t => t.s == "s")"""
   }
 
   "fails if querying a non-case-class companion" in {

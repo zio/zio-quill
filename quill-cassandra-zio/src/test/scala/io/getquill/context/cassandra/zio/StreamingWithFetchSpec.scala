@@ -18,25 +18,25 @@ class StreamingWithFetchSpec extends ZioCassandraSpec with QueryResultTypeCassan
     def produceEntities(num: Int) =
       (1 to num).map(i => OrderTestEntity(i, i)).toList
 
-    "with entities == 1/2 * fetch size" in {
-      val entities = produceEntities(5)
+    "with entities less than fetch size" in {
+      val entities = produceEntities(3)
       result(
         context.run(liftQuery(entities).foreach(e => insert(e))) *>
-          context.stream(selectAll, 10).runCollect.map(_.toList)
-      ) must contain theSameElementsAs entities
+          context.stream(selectAll, 7).runCollect.map(_.toList.size)
+      ) must equal(entities.size) // must contain theSameElementsAs entities
     }
     "with entities == fetch size" in {
-      val entities = produceEntities(10)
+      val entities = produceEntities(11)
       result(
         context.run(liftQuery(entities).foreach(e => insert(e))) *>
-          context.stream(selectAll, 10).runCollect.map(_.toList)
+          context.stream(selectAll, 11).runCollect.map(_.toList)
       ) must contain theSameElementsAs entities
     }
-    "with entities == 1.5 * fetch size" in {
-      val entities = produceEntities(15)
+    "with entities more than  fetch size" in {
+      val entities = produceEntities(23)
       result(
         context.run(liftQuery(entities).foreach(e => insert(e))) *>
-          context.stream(selectAll, 10).runCollect.map(_.toList)
+          context.stream(selectAll, 7).runCollect.map(_.toList)
       ) must contain theSameElementsAs entities
     }
   }

@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.context.sql.ArrayOpsSpec
+import io.getquill.context.sql.base.ArrayOpsSpec
 
 class JdbcArrayOpsSpec extends ArrayOpsSpec {
   val ctx = testContext

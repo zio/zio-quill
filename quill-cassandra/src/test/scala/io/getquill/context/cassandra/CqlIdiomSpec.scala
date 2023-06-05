@@ -2,9 +2,11 @@ package io.getquill.context.cassandra
 
 import io.getquill._
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.ast.{ Action => AstAction, Query => _, _ }
+import io.getquill.ast.{Action => AstAction, Query => _, _}
 import io.getquill.idiom.StringToken
 import io.getquill.Query
+import io.getquill.base.Spec
+import io.getquill.context.ExecutionType
 import io.getquill.quat.Quat
 
 class CqlIdiomSpec extends Spec {
@@ -62,7 +64,7 @@ class CqlIdiomSpec extends Spec {
     }
 
     "distinct tuple" in {
-      val q = quote {
+      val q: Quoted[Query[(Index, Long)]] = quote {
         qr1.map(i => (i.i, i.l)).distinct
       }
       mirrorContext.run(q).string mustEqual
@@ -131,7 +133,7 @@ class CqlIdiomSpec extends Spec {
     }
     "function apply (not supported)" in {
       val q = quote {
-        qr1.filter(t => infix"f".as[Int => Boolean](t.i))
+        qr1.filter(t => sql"f".as[Int => Boolean](t.i))
       }
       "mirrorContext.run(q)" mustNot compile
     }
@@ -259,7 +261,7 @@ class CqlIdiomSpec extends Spec {
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("s", 1, 2L, None, true)))
+        qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true)))
       }
       mirrorContext.run(q).string mustEqual
         "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
@@ -267,14 +269,14 @@ class CqlIdiomSpec extends Spec {
     "update" - {
       "all" in {
         val q = quote {
-          qr1.update(lift(TestEntity("s", 1, 2L, None, true)))
+          qr1.updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "filtered" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).update(lift(TestEntity("s", 1, 2L, None, true)))
+          qr1.filter(t => t.i == 1).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
@@ -305,18 +307,18 @@ class CqlIdiomSpec extends Spec {
     }
   }
 
-  "infix" - {
+  "sql" - {
     "query" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean])
+          qr1.filter(t => sql"${t.i} = 1".as[Boolean])
         }
         mirrorContext.run(q).string mustEqual
           "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
       }
       "full" in {
         val q = quote {
-          infix"SELECT COUNT(1) FROM TestEntity ALLOW FILTERING".as[Query[Int]]
+          sql"SELECT COUNT(1) FROM TestEntity ALLOW FILTERING".as[Query[Int]]
         }
         mirrorContext.run(q).string mustEqual
           "SELECT COUNT(1) FROM TestEntity ALLOW FILTERING"
@@ -325,14 +327,14 @@ class CqlIdiomSpec extends Spec {
     "action" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update(lift(TestEntity("s", 1, 2L, None, true)))
+          qr1.filter(t => sql"${t.i} = 1".as[Boolean]).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
       }
       "full" in {
         val q = quote {
-          infix"TRUNCATE TestEntity".as[Query[Int]]
+          sql"TRUNCATE TestEntity".as[Query[Int]]
         }
         mirrorContext.run(q).string mustEqual
           "TRUNCATE TestEntity"
@@ -379,15 +381,23 @@ class CqlIdiomSpec extends Spec {
 
     "ident" in {
       val a: Ast = Ident("a")
-      translate(a) mustBe (a -> stmt"a")
+      translate(a, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe ((a, stmt"a", ExecutionType.Unknown))
     }
     "assignment" in {
       val a: Ast = Assignment(Ident("a"), Ident("b"), Ident("c"))
-      translate(a: Ast) mustBe (a -> stmt"b = c")
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe ((
+        a,
+        stmt"b = c",
+        ExecutionType.Unknown
+      ))
     }
     "assignmentDual" in {
       val a: Ast = AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))
-      translate(a: Ast) mustBe (a -> stmt"b = c")
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe ((
+        a,
+        stmt"b = c",
+        ExecutionType.Unknown
+      ))
     }
     "aggregation" in {
       val t = implicitly[Tokenizer[AggregationOperator]]
@@ -407,7 +417,7 @@ class CqlIdiomSpec extends Spec {
       implicitly[Tokenizer[Value]].token(Tuple(List(Ident("a")))) mustBe stmt"a"
     }
     "value in caseclass" in {
-      implicitly[Tokenizer[Value]].token(CaseClass(List(("value", Ident("a"))))) mustBe stmt"a"
+      implicitly[Tokenizer[Value]].token(CaseClass("CC", List(("value", Ident("a"))))) mustBe stmt"a"
     }
     "action" in {
       val t = implicitly[Tokenizer[AstAction]]

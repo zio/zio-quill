@@ -1,23 +1,22 @@
 package io.getquill.context.orientdb
 
-import java.util.Date
+import io.getquill.base.Spec
 
-import io.getquill.Spec
+import java.util.Date
 
 class SetsEncodingSpec extends Spec {
 
   case class SetsEntity(
-    id:         Int,
-    texts:      Set[String],
-    bools:      Set[Boolean],
-    ints:       Set[Int],
-    longs:      Set[Long],
-    doubles:    Set[Double],
+    id: Int,
+    texts: Set[String],
+    bools: Set[Boolean],
+    ints: Set[Int],
+    longs: Set[Long],
+    doubles: Set[Double],
     timestamps: Set[Date]
   )
 
-  val e = SetsEntity(1, Set("c"), Set(true), Set(1), Set(2),
-    Set(5.5d), Set(new Date()))
+  val e = SetsEntity(1, Set("c"), Set(true), Set(1), Set(2), Set(5.5d), Set(new Date()))
 
   private def verify(expected: SetsEntity, actual: SetsEntity): Boolean = {
     expected.id mustEqual actual.id
@@ -33,7 +32,7 @@ class SetsEncodingSpec extends Spec {
     val ctx = orientdb.mirrorContext
     import ctx._
     val q = quote(query[SetsEntity])
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q)
   }
 
@@ -42,7 +41,7 @@ class SetsEncodingSpec extends Spec {
     import ctx._
     val q = quote(query[SetsEntity])
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     verify(e, ctx.run(q.filter(_.id == 1)).head)
   }
 
@@ -54,7 +53,7 @@ class SetsEncodingSpec extends Spec {
     val q = quote(querySchema[Entity]("ListEntity"))
 
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -66,9 +65,8 @@ class SetsEncodingSpec extends Spec {
     val q = quote(querySchema[BlobsEntity]("BlobsEntity"))
 
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
-    ctx.run(q.filter(_.id == 1))
-      .head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
+    ctx.run(q.insertValue(lift(e)))
+    ctx.run(q.filter(_.id == 1)).head.blobs.map(_.toList) mustBe e.blobs.map(_.toList)
   }
 
   "Set in where clause" in {
@@ -78,7 +76,7 @@ class SetsEncodingSpec extends Spec {
     val e = ListFrozen(List(1, 2))
     val q = quote(query[ListFrozen])
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(p => liftQuery(Set(1)).contains(p.id))) mustBe List(e)
     ctx.run(q.filter(_.id == lift(List(1)))) mustBe Nil
   }

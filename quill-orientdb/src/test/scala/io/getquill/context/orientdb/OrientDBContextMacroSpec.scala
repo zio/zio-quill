@@ -1,8 +1,8 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
-import io.getquill.Query
+import io.getquill.{Query, Quoted}
 
 class OrientDBContextMacroSpec extends Spec {
 

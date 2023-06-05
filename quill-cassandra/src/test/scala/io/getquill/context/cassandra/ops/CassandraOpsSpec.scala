@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.ops
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.cassandra.mirrorContext
 
 class CassandraOpsSpec extends Spec {
@@ -54,25 +55,38 @@ class CassandraOpsSpec extends Spec {
     "options" - {
       "timestamp" in {
         val q = quote {
-          query[TestEntity].usingTimestamp(99).update(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity].usingTimestamp(99).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TIMESTAMP 99 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "ttl" in {
         val q = quote {
-          query[TestEntity].usingTtl(1).update(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity].usingTtl(1).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TTL 1 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "both" in {
         val q = quote {
-          query[TestEntity].using(1, 2).update(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity].using(1, 2).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
           "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
+    }
+    "ifExists" in {
+      val q = quote {
+        query[TestEntity].filter(t => t.s == "a").update(t => t.s -> "b").ifExists
+      }
+      mirrorContext.run(q).string mustEqual
+        "UPDATE TestEntity SET s = 'b' WHERE s = 'a' IF EXISTS"
+
+      val q2 = quote {
+        query[TestEntity].update(t => t.s -> "b").ifExists
+      }
+      mirrorContext.run(q2).string mustEqual
+        "UPDATE TestEntity SET s = 'b' IF EXISTS"
     }
     "if" in {
 

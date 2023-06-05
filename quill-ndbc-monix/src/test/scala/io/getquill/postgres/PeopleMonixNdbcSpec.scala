@@ -1,6 +1,6 @@
 package io.getquill.postgres
 
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 import monix.execution.Scheduler
 import monix.reactive.Observable
 import org.scalatest.matchers.should.Matchers._
@@ -13,22 +13,21 @@ class PeopleMonixNdbcSpec extends PeopleSpec {
   import context._
 
   def collect[T](o: Observable[T]) =
-    o.foldLeft(List[T]())({ case (l, elem) => elem +: l })
+    o.foldLeft(List[T]()) { case (l, elem) => elem +: l }
       .firstL
       .runSyncUnsafe()
 
-  override def beforeAll = {
+  override def beforeAll =
     testContext.transaction {
       for {
         _ <- testContext.run(query[Couple].delete)
-        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.run(query[Person].delete)
         _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
         _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()
     }.runSyncUnsafe()
-  }
 
-  val `Ex 11 query` = quote(query[Person])
+  val `Ex 11 query`    = quote(query[Person])
   val `Ex 11 expected` = peopleEntries
 
   "Example 1 - differences" in {
@@ -36,7 +35,9 @@ class PeopleMonixNdbcSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`))).runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
+    testContext
+      .run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))
+      .runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
   }
 
   "Example 3 - satisfies" in {
@@ -48,7 +49,9 @@ class PeopleMonixNdbcSpec extends PeopleSpec {
   }
 
   "Example 5 - compose" in {
-    testContext.run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`))).runSyncUnsafe() mustEqual `Ex 5 expected result`
+    testContext
+      .run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`)))
+      .runSyncUnsafe() mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

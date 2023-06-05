@@ -10,7 +10,7 @@ class ArrayNdbcPostgresEncodingSpec extends ArrayEncodingBaseSpec {
   val q = quote(query[ArraysTestEntity])
 
   "Support all sql base types and `Traversable` implementers" in {
-    get(ctx.run(q.insert(lift(e))))
+    get(ctx.run(q.insertValue(lift(e))))
     val actual = get(ctx.run(q)).head
     actual mustEqual e
     baseEntityDeepCheck(actual, e)
@@ -18,7 +18,7 @@ class ArrayNdbcPostgresEncodingSpec extends ArrayEncodingBaseSpec {
 
   "Support Traversable encoding basing on MappedEncoding" in {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
-    get(ctx.run(wrapQ.insert(lift(wrapE))))
+    get(ctx.run(wrapQ.insertValue(lift(wrapE))))
     get(ctx.run(wrapQ)).head mustBe wrapE
   }
 

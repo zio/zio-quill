@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc.sqlserver
 
-import io.getquill.{ Literal, Spec, SqlServerJdbcContext }
+import io.getquill.base.Spec
+import io.getquill.{Literal, SqlServerJdbcContext}
 
 class JdbcContextSpec extends Spec {
 
@@ -47,21 +48,22 @@ class JdbcContextSpec extends Spec {
     }
     "prepare" in {
       ctx.prepareParams(
-        "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?",
+        (ps, session) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }
 
   "Insert with returning generated with single column table" in {
     val inserted = ctx.run {
-      qr4.insert(lift(TestEntity4(0))).returningGenerated(_.i)
+      qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
     }
     ctx.run(qr4.filter(_.i == lift(inserted))).head.i mustBe inserted
   }
 
   "Insert with returning generated with multiple columns and query embedded" in {
     val inserted = ctx.run {
-      qr4Emb.insert(lift(TestEntity4Emb(EmbSingle(0)))).returningGenerated(_.emb.i)
+      qr4Emb.insertValue(lift(TestEntity4Emb(EmbSingle(0)))).returningGenerated(_.emb.i)
     }
     ctx.run(qr4Emb.filter(_.emb.i == lift(inserted))).head.emb.i mustBe inserted
   }
@@ -70,7 +72,7 @@ class JdbcContextSpec extends Spec {
     "with multiple columns" in {
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
+        qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe inserted
     }
@@ -78,17 +80,18 @@ class JdbcContextSpec extends Spec {
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1
+          .insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true)))
+          .returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe inserted
     }
 
     "with multiple columns and query embedded" in {
       ctx.run(qr1Emb.delete)
-      ctx.run(qr1Emb.insert(lift(TestEntityEmb(Emb("one", 1), 18L, Some(123)))))
+      ctx.run(qr1Emb.insertValue(lift(TestEntityEmb(Emb("one", 1), 18L, Some(123)))))
       val inserted = ctx.run {
-        qr1Emb.insert(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r =>
-          (r.emb.i, r.o))
+        qr1Emb.insertValue(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
       }
       (2, Some(123)) mustBe inserted
     }
@@ -97,7 +100,7 @@ class JdbcContextSpec extends Spec {
       case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insert(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
+        qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe inserted
     }
@@ -106,30 +109,32 @@ class JdbcContextSpec extends Spec {
   "update returning" - {
     "with multiple columns" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
+      ctx.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe updated
     }
 
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
+      ctx.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1
+          .updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true)))
+          .returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe updated
     }
 
     "with multiple columns and query embedded" in {
       ctx.run(qr1Emb.delete)
-      ctx.run(qr1Emb.insert(lift(TestEntityEmb(Emb("one", 1), 42L, Some(456)))))
+      ctx.run(qr1Emb.insertValue(lift(TestEntityEmb(Emb("one", 1), 42L, Some(456)))))
 
       val updated = ctx.run {
-        qr1Emb.update(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
+        qr1Emb.updateValue(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
       }
       (2, Some(123)) mustBe updated
     }
@@ -137,10 +142,10 @@ class JdbcContextSpec extends Spec {
     "with multiple columns - case class" in {
       case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("baz", 6, 42L, Some(456), true))))
+      ctx.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe updated
     }
@@ -149,7 +154,7 @@ class JdbcContextSpec extends Spec {
   "delete returning" - {
     "with multiple columns" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 42L, Some(123), true))))
+      ctx.run(qr1.insertValue(lift(TestEntity("foo", 1, 42L, Some(123), true))))
 
       val deleted = ctx.run {
         qr1.delete.returning(r => (r.i, r.s, r.o))
@@ -159,7 +164,7 @@ class JdbcContextSpec extends Spec {
 
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("foo", 1, 42L, Some(123), true))))
+      ctx.run(qr1.insertValue(lift(TestEntity("foo", 1, 42L, Some(123), true))))
 
       val deleted = ctx.run {
         qr1.delete.returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
@@ -169,7 +174,7 @@ class JdbcContextSpec extends Spec {
 
     "with multiple columns and query embedded" in {
       ctx.run(qr1Emb.delete)
-      ctx.run(qr1Emb.insert(lift(TestEntityEmb(Emb("one", 1), 42L, Some(333)))))
+      ctx.run(qr1Emb.insertValue(lift(TestEntityEmb(Emb("one", 1), 42L, Some(333)))))
 
       val deleted = ctx.run {
         qr1Emb.delete.returning(r => (r.emb.i, r.o))
@@ -180,7 +185,7 @@ class JdbcContextSpec extends Spec {
     "with multiple columns - case class" in {
       case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
-      ctx.run(qr1.insert(lift(TestEntity("foo", 2, 42L, Some(222), true))))
+      ctx.run(qr1.insertValue(lift(TestEntity("foo", 2, 42L, Some(222), true))))
 
       val deleted = ctx.run {
         qr1.delete.returning(r => Return(r.i, r.s, r.o))

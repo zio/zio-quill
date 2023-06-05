@@ -1,8 +1,8 @@
 package io.getquill.context.ndbc
 
+import io.getquill.base.Spec
 import scala.concurrent.duration.Duration
-import io.getquill.Spec
-import io.trane.future.scala.{ Await, Future, Promise }
+import io.trane.future.scala.{Await, Future, Promise}
 
 import scala.util.Try
 
@@ -19,7 +19,7 @@ class NdbcContextEffectSpec extends Spec {
 
   "evaluates asynchronous values" in {
     get(wrapAsync[String] { doComplete =>
-      Future { Thread.sleep(100) }.onComplete { _ =>
+      Future(Thread.sleep(100)).onComplete { _ =>
         doComplete(Try("hello"))
         ()
       }
@@ -36,7 +36,7 @@ class NdbcContextEffectSpec extends Spec {
   }
 
   "executes effects in sequence" in {
-    get(wrap(2).flatMap { prev => wrap(prev + 3) }) mustEqual 5
+    get(wrap(2).flatMap(prev => wrap(prev + 3))) mustEqual 5
   }
 
   "converts a sequence correctly" in {

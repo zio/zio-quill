@@ -1,16 +1,16 @@
 package io.getquill.context.orientdb
 
-import java.util.Date
+import io.getquill.base.Spec
 
-import io.getquill.Spec
+import java.util.Date
 
 class MapsEncodingSpec extends Spec {
 
   case class MapsEntity(
-    id:         Int,
+    id: Int,
     longDouble: Map[Long, Double],
-    intDouble:  Map[Int, Double],
-    boolDate:   Map[Boolean, Date]
+    intDouble: Map[Int, Double],
+    boolDate: Map[Boolean, Date]
   )
   val e = MapsEntity(1, Map(1L -> 1.1), Map(1 -> 1.1d), Map(true -> new Date()))
 
@@ -26,7 +26,7 @@ class MapsEncodingSpec extends Spec {
     val ctx = orientdb.mirrorContext
     import ctx._
     val q = quote(query[MapsEntity])
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q)
   }
 
@@ -35,7 +35,7 @@ class MapsEncodingSpec extends Spec {
     import ctx._
     val q = quote(query[MapsEntity])
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     verify(e, ctx.run(q.filter(_.id == 1)).head)
   }
 
@@ -43,15 +43,15 @@ class MapsEncodingSpec extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     case class Entity(
-      id:         Int,
-      intDouble:  Option[Map[Int, Double]],
+      id: Int,
+      intDouble: Option[Map[Int, Double]],
       longDouble: Option[Map[Long, Double]]
     )
     val e = Entity(1, None, None)
     val q = quote(querySchema[Entity]("MapEntity"))
 
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
+    ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(_.id == 1)).head mustBe e
   }
 
@@ -62,8 +62,17 @@ class MapsEncodingSpec extends Spec {
     val e = MapFrozen(Map(1 -> true))
     val q = quote(query[MapFrozen])
     ctx.run(q.delete)
-    ctx.run(q.insert(lift(e)))
-    ctx.run(q.filter(p => liftQuery(Set(1))
-      .contains(p.id))).head.id.head._2 mustBe e.id.head._2
+    ctx.run(q.insertValue(lift(e)))
+    ctx
+      .run(
+        q.filter(p =>
+          liftQuery(Set(1))
+            .contains(p.id)
+        )
+      )
+      .head
+      .id
+      .head
+      ._2 mustBe e.id.head._2
   }
 }

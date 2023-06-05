@@ -11,25 +11,25 @@ then
     echo "No Artifact Specified"
 fi
 
-SBT_2_11="sbt ++2.11.12 -Dquill.macro.log=false -Dquill.scala.version=2.11.12"
-SBT_2_12="sbt ++2.12.6 -Dquill.macro.log=false -Dquill.scala.version=2.12.6"
-SBT_2_13="sbt ++2.13.2 -Dquill.macro.log=false -Dquill.scala.version=2.13.2"
+SBT_2_12="sbt ++2.12.17 -Dquill.macro.log=false -Dquill.scala.version=2.12.17"
+SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
+SBT_3_2="sbt ++3.2.2 -Dquill.macro.log=false -Dquill.scala.version=3.2.2"
 
-if [[ $VERSION -eq 211 ]]
-then
-    SBT_VER=$SBT_2_11
-elif [[ $VERSION -eq 212 ]]
+if [[ $VERSION -eq 212 ]]
 then
     SBT_VER=$SBT_2_12
 elif [[ $VERSION -eq 213 ]]
 then
     SBT_VER=$SBT_2_13
+elif [[ $VERSION -eq 32 ]]
+then
+    SBT_VER=$SBT_3_2
 else
     echo "No Valid SBT Version Entered"
     exit 1
 fi
 
-echo $SBT_CMD
+echo "$SBT_VER"
 if [[ $PULL_REQUEST == "false" ]]
 then
     echo "Export secring"
@@ -121,12 +121,13 @@ then
         if [[ $ARTIFACT == "async" ]]; then   $SBT_VER -Dmodules=async publish; fi
         if [[ $ARTIFACT == "codegen" ]]; then $SBT_VER -Dmodules=codegen publish; fi
         if [[ $ARTIFACT == "bigdata" ]]; then $SBT_VER -Dmodules=bigdata publish; fi
+        if [[ $ARTIFACT == "docs" ]]; then    $SBT_VER -Dmodules=docs publish; fi
 
         # No-Op Publish
         if [[ $ARTIFACT == "publish" ]]; then echo "No-Op Publish for Non Release Snapshot Branch"; fi
     else
         VERSION_FILE=$(cat version.sbt)
-        echo "Github actions branch was: ${$BRANCH} and version file is $VERSION_FILE. Not Sure what to do."
+        echo "Github actions branch was: ${BRANCH} and version file is $VERSION_FILE. Not Sure what to do."
     fi
 else
   echo "PULL_REQUEST is not 'false' ($PULL_REQUEST). Not doing a release."

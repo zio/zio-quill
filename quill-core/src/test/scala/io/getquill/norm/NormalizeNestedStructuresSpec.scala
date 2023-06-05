@@ -1,11 +1,11 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.testContext.implicitOrd
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts.testContext.implicitOrd
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qr2
+import io.getquill.MirrorContexts.testContext.quote
+import io.getquill.MirrorContexts.testContext.unquote
 
 class NormalizeNestedStructuresSpec extends Spec {
 
@@ -16,6 +16,8 @@ class NormalizeNestedStructuresSpec extends Spec {
   val normalized = quote {
     qr1.take(1).map(x => x.i).size
   }
+
+  val NormalizeNestedStructures = new NormalizeNestedStructures(new Normalize(TranspileConfig.Empty))
 
   "returns Some if a nested structure changes" - {
     "flatMap" in {
