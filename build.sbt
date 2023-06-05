@@ -734,7 +734,7 @@ commands += Command.command("checkUnformattedFiles") { st =>
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "3.4.5",
+    "com.zaxxer"              % "HikariCP"                % "4.0.3" exclude ("org.slf4j", "*"),
     "mysql"                   % "mysql-connector-java"    % "8.0.33"     % Test,
     "com.h2database"          % "h2"                      % "2.1.212"    % Test,
     "org.postgresql"          % "postgresql"              % "42.3.8"     % Test,
