@@ -78,12 +78,6 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jasync-zio-postgres`
 )
 
-lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-ndbc`,
-  `quill-ndbc-postgres`,
-  `quill-ndbc-monix`
-) ++ jasyncModules
-
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-codegen`,
   `quill-codegen-jdbc`,
@@ -100,7 +94,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules ++ docsModules
+  baseModules ++ jsModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
 
 lazy val scala213Modules =
   baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -159,13 +153,13 @@ lazy val filteredModules = {
         dbModules
       case "async" =>
         println("SBT =:> Compiling Async Database Modules")
-        asyncModules
+        jasyncModules
       case "codegen" =>
         println("SBT =:> Compiling Code Generator Modules")
         codegenModules
       case "nocodegen" =>
         println("Compiling Not-Code Generator Modules")
-        baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
+        baseModules ++ jsModules ++ dbModules ++ jasyncModules ++ bigdataModules
       case "bigdata" =>
         println("SBT =:> Compiling Big Data Modules")
         bigdataModules
@@ -523,18 +517,6 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-ndbc-monix` =
-  (project in file("quill-ndbc-monix"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true
-    )
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
-    .dependsOn(`quill-ndbc-postgres` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
 lazy val `quill-spark` =
   (project in file("quill-spark"))
     .settings(commonNoLogSettings: _*)
@@ -609,32 +591,6 @@ lazy val `quill-jasync-zio-postgres` =
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-ndbc` =
-  (project in file("quill-ndbc"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala" % "0.3.2",
-        "io.trane" % "ndbc-core"    % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-ndbc-postgres` =
-  (project in file("quill-ndbc-postgres"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala"         % "0.3.2",
-        "io.trane" % "ndbc-postgres-netty4" % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra` =
