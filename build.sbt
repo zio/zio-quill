@@ -599,7 +599,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.15.0",
+        "com.datastax.oss" % "java-driver-core" % "4.16.0",
         (CrossVersion.partialVersion(scalaVersion.value) match {
           case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
           case _             => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
@@ -762,7 +762,7 @@ val scala_v_30 = "3.3.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"  % "logback-classic" % "1.3.7" % Test
+    "ch.qos.logback" % "logback-classic" % "1.3.7" % Test
   )
 )
 
