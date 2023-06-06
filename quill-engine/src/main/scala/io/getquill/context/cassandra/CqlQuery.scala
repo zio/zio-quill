@@ -48,7 +48,7 @@ object CqlQuery {
   private def apply(q: Query, limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
       case SortBy(q: Query, x, p, o) =>
-        apply(q, orderByCriterias(p, o), limit, select, distinct)
+        apply(q, orderByCriteria(p, o), limit, select, distinct)
       case other =>
         apply(q, List(), limit, select, distinct)
     }
@@ -101,11 +101,11 @@ object CqlQuery {
       case other                => fail(s"Cql supports only properties as select elements. Found: $other")
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =
+  private def orderByCriteria(ast: Ast, ordering: Ast): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord))
+      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriteria(_, ord))
       case (Tuple(properties), TupleOrdering(ord)) =>
-        properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o) }
+        properties.zip(ord).flatMap { case (a, o) => orderByCriteria(a, o) }
       case (a: Property, o: PropertyOrdering) => List(OrderByCriteria(a, o))
       case other                              => fail(s"Invalid order by criteria $ast")
     }

@@ -136,7 +136,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
-    // In this case, instead of catching the error inside the observable, let it propogate to the top
+    // In this case, instead of catching the error inside the observable, let it propagate to the top
     // and make sure that the connection is closed anyhow
     val results =
       Try {

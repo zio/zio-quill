@@ -181,13 +181,13 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
        */
       case GroupByMap(query, eg, by, e, LeafQuat(body)) =>
         val innerState = query match {
-          // If it's an infix inside e.g. Grp(i:Infix,..)(e,by) the higher-level apply should have changed it approporately
+          // If it's an infix inside e.g. Grp(i:Infix,..)(e,by) the higher-level apply should have changed it appropriately
           // by adding an extra Map step inside which has a CaseClass that holds a new attribute that we will pass around
           // e.g. from GrpTo(leaf,e,e)(e,Agg(e)) should have changed to GrpTo(M(leaf,e,CC(i->e)),e,e.i)(e,Agg(M(e->e.i)))
           case infix: io.getquill.ast.Infix =>
             val newId = Ident("i", infix.quat)
             Some((Map(infix, newId, CaseClass.Single("i" -> newId)), Some("i")))
-          // If it's a query inside e.g. Grp(qry:Query,..)(e,by) the higher-level apply should have changed it approporately
+          // If it's a query inside e.g. Grp(qry:Query,..)(e,by) the higher-level apply should have changed it appropriately
           // e.g. from GrpTo(ent,e,e.v)(e,Agg(e)) should have changed to GrpTo(ent,e,CC(v->e.v))(e,Agg(M(e->e.v))
           case _: Query =>
             val (q, s) = apply(query)
@@ -223,13 +223,13 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
       // Typically the body of a groupBy.map is an aggregation.
       case Map(grpBy @ GroupBy(LeafQuat(query), eg, LeafQuat(by)), e, LeafQuat(body)) =>
         val innerState = query match {
-          // If it's an infix inside e.g. Map(Grp(i:Infix),e,by) the higher-level apply should have changed it approporately
+          // If it's an infix inside e.g. Map(Grp(i:Infix),e,by) the higher-level apply should have changed it appropriately
           // by adding an extra Map step inside which has a CaseClass that holds a new attribute that we will pass around
           // e.g. from Map(Grp(leaf,e,e),e,Agg(e)) should have changed to Map(Grp(M(leaf,e,CC(i->e)),e,e.i),e,Agg(M(e->e.i)))
           case infix: io.getquill.ast.Infix =>
             val newId = Ident("i", infix.quat)
             Some((Map(infix, newId, CaseClass.Single("i" -> newId)), Some("i")))
-          // If it's a query inside e.g. Map(Grp(qry:Query),e,by) the higher-level apply should have changed it approporately
+          // If it's a query inside e.g. Map(Grp(qry:Query),e,by) the higher-level apply should have changed it appropriately
           // e.g. from Map(Grp(M(ent,e,e.v),e,e),e,Agg(e)) should have changed to Map(Grp(M(ent,e,CC(v->e.v)),e,e.v),e,Agg(M(e->e.v)))
           case _: Query =>
             val (q, s) = apply(query)

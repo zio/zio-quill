@@ -20,7 +20,7 @@ object Rebind {
     }
 
     def toIdent(s: Symbol) =
-      // Casing there is needed because scala doesn't undestand c.universe.Type =:= infer.c.universe.Type
+      // Casing there is needed because scala doesn't understand c.universe.Type =:= infer.c.universe.Type
       // alternatively, we could wrap this entire clause (starting with 'apply') in a class and extend inferQuat
       Ident(
         s.name.decodedName.toString,

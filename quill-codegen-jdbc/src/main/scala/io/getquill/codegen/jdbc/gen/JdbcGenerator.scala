@@ -28,11 +28,11 @@ trait JdbcGenerator extends Generator { this: JdbcCodeGeneratorComponents with J
   override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
     databaseType match {
       case MySql => !tc.table.tableCat.existsInSetNocase(defaultExcludedSchemas.toList: _*)
-      case _     => !tc.table.tableSchem.existsInSetNocase(defaultExcludedSchemas.toList: _*)
+      case _     => !tc.table.tableSchema.existsInSetNocase(defaultExcludedSchemas.toList: _*)
     }
 
   override def namespacer: Namespacer[TableMeta] = databaseType match {
     case MySql | SqlServer => tm => tm.tableCat.map(_.snakeToLowerCamel).getOrElse(defaultNamespace)
-    case _                 => tm => tm.tableSchem.orElse(tm.tableCat).map(_.snakeToLowerCamel).getOrElse(defaultNamespace)
+    case _                 => tm => tm.tableSchema.orElse(tm.tableCat).map(_.snakeToLowerCamel).getOrElse(defaultNamespace)
   }
 }

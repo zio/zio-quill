@@ -15,7 +15,7 @@ import io.getquill.context.sql.{
   TableContext,
   UnaryOperationSqlQuery
 }
-import io.getquill.norm.PropertyMatroshka
+import io.getquill.norm.PropertyMatryoshka
 import io.getquill.quat.Quat
 
 import scala.collection.mutable
@@ -53,7 +53,7 @@ object RemoveUnusedSelects {
         // Since we first need to replace select values from super queries onto sub queries,
         // take the newly filtered selects instead of the ones in the query which are pre-filtered
         // ... unless we are on the top level query. Since in the top level query 'references'
-        // will always be empty we need to copy through the entire select caluse
+        // will always be empty we need to copy through the entire select clause
         val asts = gatherAsts(q, if (doSelectFiltration) newSelect else q.select)
 
         // recurse into the from clause with ExpandContext
@@ -65,7 +65,7 @@ object RemoveUnusedSelects {
           q.copy(from = fromContexts, select = newSelect)(q.quat)
         } else {
           // If we are on the top level, the list of aliases being used by clauses outer to 'us'
-          // don't exist since we are the outermost level of the sql. Therefore no filteration
+          // don't exist since we are the outermost level of the sql. Therefore no filtration
           // should happen in that case.
           q.copy(from = fromContexts)(q.quat)
         }
@@ -77,7 +77,7 @@ object RemoveUnusedSelects {
     }
 
   private def filterUnused(select: List[SelectValue], references: Set[Property]): List[SelectValue] = {
-    val usedAliases = references.map { case PropertyMatroshka(_, list, _) =>
+    val usedAliases = references.map { case PropertyMatryoshka(_, list, _) =>
       list.mkString
     }.toSet
     select.filter(sv =>

@@ -35,7 +35,7 @@ case class Activity(
   org: User
 )
 
-object GithubExample extends App {
+object GitHubExample extends App {
 
   val files =
     for {

@@ -37,7 +37,7 @@ class SqlQueryMacroSpec extends Spec {
         mirror.string mustEqual "SELECT x.s, x.i, x.l, x.o FROM TestEntity t, TestEntity2 x"
       }
     }
-    "with bindigns" - {
+    "with bindings" - {
       "one" in {
         val q = quote {
           qr1.filter(t => t.s != lift("s"))

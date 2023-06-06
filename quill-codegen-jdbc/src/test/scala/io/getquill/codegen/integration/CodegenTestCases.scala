@@ -251,7 +251,7 @@ object CodegenTestCases {
       case H2 =>
         tc.table.tableCat.exists(_.toLowerCase startsWith "codegen_test")
       case Postgres =>
-        tc.table.tableSchem.existsInSetNocase("public", "alpha", "bravo")
+        tc.table.tableSchema.existsInSetNocase("public", "alpha", "bravo")
       case SqlServer =>
         tc.table.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo")
     }
@@ -260,7 +260,7 @@ object CodegenTestCases {
     dbPrefix match {
       // SQLite does not support user-defined schemas. It has the ability to use multiple files
       // but does not show what table belongs to what file in any JDBC call. This makes multi-schema
-      // stereotyping untenable so the respective tests are not not included.
+      // stereotyping untenable so the respective tests are not included.
       case TestSqliteDB =>
         List(
           `1-simple-snake`,

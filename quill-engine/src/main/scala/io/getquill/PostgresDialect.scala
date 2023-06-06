@@ -200,7 +200,7 @@ trait PostgresDialect
             ReplaceLiftings.of(clause)(batchAlias, List())
 
           // Choose table alias based on how assignments clauses were realized. Batch-Alias should mean the same thing as when NormalizeFilteredActionAliases was run in Idiom should the
-          // value should be the same thing as the cluases that were realiased.
+          // value should be the same thing as the clauses that were realiased.
           if (valuesLifts.nonEmpty) {
             val tableAlias       = NormalizeFilteredActionAliases.chooseAlias(table.name, Some(batchAlias))
             val colsId           = batchAlias

@@ -8,7 +8,7 @@ import io.getquill.quat.Quat
 
 class BetaReductionSpec extends Spec {
 
-  "simplifies the ast by applying functons" - {
+  "simplifies the ast by applying functions" - {
     "tuple field" in {
       val ast: Ast = Property(Tuple(List(Ident("a"))), "_1")
       BetaReduction(ast) mustEqual Ident("a")

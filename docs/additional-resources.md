@@ -38,13 +38,13 @@ Please refer to [CASSANDRA.md](https://github.com/getquill/quill/blob/master/CAS
 
 ### Blog posts
 
-- **[Intro]** Haoyi's Programming Blog - [Working with Databases using Scala and Quill](http://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)
+- **[Intro]** Haoyi's Programming Blog - [Working with Databases using Scala and Quill](https://www.lihaoyi.com/post/WorkingwithDatabasesusingScalaandQuill.html)
 - Juliano Alves's Blog - [Streaming all the way with ZIO, Doobie, Quill, http4s and fs2](https://juliano-alves.com/2020/06/15/streaming-all-the-way-zio-doobie-quill-http4s-fs2/)
 - Juliano Alves's Blog - [Quill: Translating Boolean Literals](https://juliano-alves.com/2020/09/14/quill-translating-boolean-literals/)
 - Juliano Alves's Blog - [Quill NDBC Postgres: A New Async Module](https://juliano-alves.com/2019/11/29/quill-ndbc-postgres-a-new-async-module/)
 - Juliano Alves's Blog - [Contributing to Quill, a Pairing Session](https://juliano-alves.com/2019/11/18/contributing-to-quill-a-pairing-session/)
 - Medium @ Fwbrasil - [quill-spark: A type-safe Scala API for Spark SQL](https://medium.com/@fwbrasil/quill-spark-a-type-safe-scala-api-for-spark-sql-2672e8582b0d)
-- Scalac.io blog - [Compile-time Queries with Quill](http://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
+- Scalac.io blog - [Compile-time Queries with Quill](https://web.archive.org/web/20170512003505/https://blog.scalac.io/2016/07/21/compile-time-queries-with-quill.html)
 
 ## Code of Conduct
 

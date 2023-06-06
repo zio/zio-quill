@@ -38,7 +38,7 @@ trait OrientDBIdiom extends Idiom {
   private def doTranslate(ast: Ast, cached: Boolean, executionType: ExecutionType, idiomContext: IdiomContext)(implicit
     naming: NamingStrategy
   ): (Ast, Statement, ExecutionType) = {
-    implicit val implcitIdiomContext: IdiomContext = idiomContext
+    implicit val implicitIdiomContext: IdiomContext = idiomContext
     val normalizedAst =
       if (cached)
         NormalizeCaching { ast: Ast => SqlNormalize(ast, idiomContext.config) }(ast)
@@ -209,9 +209,9 @@ trait OrientDBIdiom extends Idiom {
   }
 
   protected def tokenOrderBy(
-    criterias: List[OrderByCriteria]
+    criteria: List[OrderByCriteria]
   )(implicit strategy: NamingStrategy, idiomContext: IdiomContext) =
-    stmt"ORDER BY ${criterias.token}"
+    stmt"ORDER BY ${criteria.token}"
 
   implicit def sourceTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[FromContext] =
     Tokenizer[FromContext] {

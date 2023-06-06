@@ -249,7 +249,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
 
     "join" - {
-      "both sidess" in {
+      "both sides" in {
         val q = quote {
           e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
         }
@@ -346,7 +346,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
   }
 
-  "respects the schema definition for embeddeds" - {
+  "respects the schema definition for embedded" - {
     "query" - {
       "without schema" in {
         case class B(c: Int)
@@ -364,7 +364,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "SELECT x.bC FROM A x"
       }
     }
-    "query for Option embeddeds" - {
+    "query for Option embedded" - {
       "without schema" in {
         case class B(c1: Int, c2: Int)
         case class A(b: Option[B])

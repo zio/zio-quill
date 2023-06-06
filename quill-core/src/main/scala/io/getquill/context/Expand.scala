@@ -9,7 +9,7 @@ import io.getquill.quat.Quat
 object CanDoBatchedInsert {
   def apply(ast: Ast, idiom: Idiom, statement: Token, isReturning: Boolean, idiomContext: IdiomContext): Boolean = {
     // find any actions that could have a VALUES clause. Right now just ast.Insert,
-    // in the future might be Update and Dlete
+    // in the future might be Update and Delete
     val actions = CollectAst.byType[Action](ast)
     // only one action allowed per-query in general
     if (actions.length != 1)
@@ -141,7 +141,7 @@ case class ExpandWithInjectables[T, C <: Context[_, _]](
   naming: NamingStrategy,
   executionType: ExecutionType,
   subBatch: List[T],
-  inejctables: List[(String, T => ScalarLift)]
+  injectables: List[(String, T => ScalarLift)]
 ) {
 
   val (string, externals) =
@@ -151,7 +151,7 @@ case class ExpandWithInjectables[T, C <: Context[_, _]](
       statement,
       forProbing = false,
       subBatch,
-      inejctables
+      injectables
     )
 
   val liftings = externals.collect { case lift: ScalarLift =>

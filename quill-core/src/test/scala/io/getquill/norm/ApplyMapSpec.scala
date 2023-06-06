@@ -14,7 +14,7 @@ class ApplyMapSpec extends Spec {
 
   val ApplyMap = new ApplyMap(TraceConfig.Empty)
 
-  "avoids applying the intermmediate map after a groupBy" - {
+  "avoids applying the intermediate map after a groupBy" - {
     "flatMap" in {
       val q = quote {
         qr1.groupBy(t => t.s).map(y => y._1).flatMap(s => qr2.filter(z => z.s == s))

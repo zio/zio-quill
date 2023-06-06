@@ -26,7 +26,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   import c.universe.{Ident => _, Constant => _, Function => _, If => _, Block => _, _}
 
   // Variables that need to be sanitized out in various places due to internal conflicts with the way
-  // macros hard handeled in MetaDsl
+  // macros hard handled in MetaDsl
   private[getquill] val dangerousVariables: Set[IdentName] = Set(IdentName("v"))
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
@@ -476,7 +476,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   private def ident(x: TermName, quat: Quat): Ident = identClean(Ident(x.decodedName.toString, quat))
 
   /**
-   * In order to guarentee consistent behavior across multiple databases, we
+   * In order to guarantee consistent behavior across multiple databases, we
    * have begun to explicitly to null-check nullable columns that are wrapped
    * inside of `Option[T]` whenever a `Option.map`, `Option.flatMap`,
    * `Option.forall`, and `Option.exists` are used. However, we would like users
@@ -1025,7 +1025,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     }
 
   // (Query[Person]) example - query[Person] or query[Person].filter(p => p.name == "Jack")
-  // (Action[Person] example - (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123)
+  // (Action[Person] example - (Query[Person]).insert(_.name -> "Joe", _.age -> 123)
   val actionParser: Parser[Ast] = Parser[Ast] {
     // (Query[Person]).update(_.name -> "Joe", _.age > 123)
     case q"$query.$method(..$assignments)" if (method.decodedName.toString == "update") =>
@@ -1040,12 +1040,12 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$query.delete" =>
       Delete(astParser(query))
 
-    // Theory:  ( (Query[Perosn]).update(....) ).returning[T]
+    // Theory:  ( (Query[Person]).update(....) ).returning[T]
     // Example: ( query[Person].filter(p => p.name == "Joe").update(....) ).returning[Something]
     case q"$action.returning[$r]" =>
       c.fail(s"A 'returning' clause must have arguments.")
 
-    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returning(p => (p.id, p.age))
+    // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returning(p => (p.id, p.age))
     case q"$action.returning[$r](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
@@ -1053,7 +1053,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       idiomReturnCapability.foreach(_.verifyAst(bodyAst)) // Verify that the AST in the returning-body is valid
       Returning(astParser(action), ident, bodyAst)
 
-    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returningMany(p => (p.id, p.age))
+    // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returningMany(p => (p.id, p.age))
     case q"$action.returningMany[$r](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
@@ -1061,7 +1061,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       idiomReturnCapability.foreach(_.verifyAst(bodyAst)) // Verify that the AST in the returning-body is valid
       Returning(astParser(action), ident, bodyAst)
 
-    // ( (Query[Perosn]).insert(_.name -> "Joe", _.age -> 123) ).returningGenerated(p => (p.id, p.otherGeneratedProp))
+    // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returningGenerated(p => (p.id, p.otherGeneratedProp))
     case q"$action.returningGenerated[$r](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
@@ -1185,7 +1185,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   /**
    * Type-check two trees, if one of them has optionals, go into the optionals
    * to find the root types in each of them. Then compare the types that are
-   * inside. If they are not compareable, abort the build. Otherwise return type
+   * inside. If they are not comparable, abort the build. Otherwise return type
    * of which side (or both) has the optional. In order to do the actual
    * comparison, the 'weak conformance' operator is used and a subclass is
    * allowed on either side of the `==`. Weak conformance is necessary so that

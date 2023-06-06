@@ -21,7 +21,7 @@ class InterpolatorSpec extends Spec {
     trace"small object: $small and $small".generateString() mustEqual (("small object: Small(123) and Small(123) ", 0))
   }
 
-  "traces multiple small objects multline text" in {
+  "traces multiple small objects multiline text" in {
     trace"""small object: $small and foo
 and bar $small""".generateString() mustEqual (
       (
