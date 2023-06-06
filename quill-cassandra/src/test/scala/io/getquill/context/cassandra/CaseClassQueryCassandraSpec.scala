@@ -47,7 +47,7 @@ class CaseClassQueryCassandraSpec extends Spec {
     query[Contact].filter(p => p.id == filtrationObject.idFilter)
   }
 
-  val `Ex 3 Inline Record Usage exepected result` = List(
+  val `Ex 3 Inline Record Usage expected result` = List(
     new Contact(1, "Alex", "Jones", 60, 2, "foo")
   )
 
@@ -63,6 +63,6 @@ class CaseClassQueryCassandraSpec extends Spec {
   }
 
   "Example 2 - Inline Record as Filter" in {
-    testSyncDB.run(`Ex 3 Inline Record Usage`) mustEqual `Ex 3 Inline Record Usage exepected result`
+    testSyncDB.run(`Ex 3 Inline Record Usage`) mustEqual `Ex 3 Inline Record Usage expected result`
   }
 }

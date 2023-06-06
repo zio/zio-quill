@@ -137,7 +137,7 @@ class UdtEncodingMacro(val c: MacroContext) {
 
   private def encodeUdt[T](udtType: Type) = {
     // The `session` variable represents CassandraSession which will either be `this` (if it is CassandraClusterSessionContext)
-    // or it will be `CassanraZioSession` otherwise. Either way, it should have the `udtValueOf` method.
+    // or it will be `CassandraZioSession` otherwise. Either way, it should have the `udtValueOf` method.
     // It is passed in via the context.encoder (i.e. $prefix.encoder) variable
     val trees = ListBuffer[Tree](q"val udt = session.udtValueOf(meta.name, meta.keyspace)")
     val (typeDefs, params) = udtFields(udtType).map { case (name, field, tpe, mapper, absType, absTypeDef, tag) =>

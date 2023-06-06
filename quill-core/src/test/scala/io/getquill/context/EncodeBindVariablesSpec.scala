@@ -26,7 +26,7 @@ class EncodeBindVariablesSpec extends Spec {
     }
   }
 
-  "fails if there isn't an encoder for the binded value" in {
+  "fails if there isn't an encoder for the bound value" in {
     val q = quote { (i: Thread) =>
       qr1.map(t => i)
     }

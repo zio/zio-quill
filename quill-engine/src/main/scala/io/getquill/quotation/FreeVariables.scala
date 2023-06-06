@@ -89,7 +89,7 @@ case class FreeVariables(state: State) extends StatefulTransformer[State] {
       case q @ GroupBy(a, b, c)          => (q, free(a, b, c))
       case q @ GroupByMap(a, b, c, d, e) =>
         // First search for free variables in the groupBy's `by` clause, then search for them in the `to` clause
-        // if any were found int he `by` clause, propogate them forward to the to-clause
+        // if any were found int he `by` clause, propagate them forward to the to-clause
         val s1 = free(a, b, c)
         val s2 = new FreeVariables(s1.state).free(a, d, e)
         (q, s2)

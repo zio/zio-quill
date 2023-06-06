@@ -7,7 +7,7 @@ sidebar_label: "Getting Started"
 > ### [Scastie](https://scastie.scala-lang.org/) is a great tool to try out Quill without having to prepare a local environment. It works with [mirror contexts](contexts.md#mirror-context), see [this](https://scastie.scala-lang.org/QwOewNEiR3mFlKIM7v900A) snippet as an example.
 
 Quill has integrations with many libraries. If you are using a regular RDBMS e.g. PostgreSQL
-and want to use Quill to query it with an asychronous, non-blocking, reactive application, the easiest way to get
+and want to use Quill to query it with an asynchronous, non-blocking, reactive application, the easiest way to get
 started is by using an awesome library called ZIO.
 
 A simple ZIO + Quill application looks like this:
@@ -48,7 +48,7 @@ libraryDependencies ++= Seq(
 ```
 
 You can find this code (with some more examples) complete with a docker-provided Postgres database [here](https://github.com/deusaquilus/zio-quill-gettingstarted).
-A veriety of other examples using Quill with ZIO are available in the [examples](https://github.com/zio/zio-quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples) folder.
+A variety of other examples using Quill with ZIO are available in the [examples](https://github.com/zio/zio-quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples) folder.
 
 ## Choosing a Module
 

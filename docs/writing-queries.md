@@ -1478,7 +1478,7 @@ This feature is disabled by default. To enable it, mix the `QueryProbing` trait 
 object myContext extends YourContextType with QueryProbing
 ```
 
-The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](http://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
+The context must be created in a separate compilation unit in order to be loaded at compile time. Please use [this guide](https://www.scala-sbt.org/0.13/docs/Macro-Projects.html) that explains how to create a separate compilation unit for macros, that also serves to the purpose of defining a query-probing-capable context. `context` could be used instead of `macros` as the name of the separate compilation unit.
 
 The configurations correspondent to the config key must be available at compile time. You can achieve it by adding this line to your project settings:
 
@@ -1530,7 +1530,7 @@ ctx.run(a) //: List[Long] size = 2. Contains 1 @ positions, where row was insert
 
 Just as in regular queries use the extended insert/update syntaxes to achieve finer-grained control of the data being created/modified modified.
 For example, if the ID is a generated value you can skip ID insertion like this:
-(This can also be accomplied with an insert-meta).
+(This can also be accomplished with an insert-meta).
 ```scala
 // case class Person(id: Int, name: String, age: Int)
 val a = quote {
@@ -1725,7 +1725,7 @@ val a = quote {
 ## Batch Optimization
 
 When doing batch INSERT queries (as well as UPDATE, and DELETE), Quill mostly delegates the functionality to standard JDBC batching.
-This functionality works roughtly in the following way.
+This functionality works roughly in the following way.
 ```scala
 val ps: PreparedStatement = connection.prepareStatement("INSERT ... VALUES ...")
 // 1. Iterate over the rows
@@ -1801,7 +1801,7 @@ The server supports a maximum of 2100 parameters. Reduce the number of parameter
 This means that in SQL Server, for a batch-size of 100, you can only insert into a table of up to 21 columns.
 
 In the future, we hope to alleviate this issue by directly substituting variables into `?` variables before the query is executed
-however such functionality could potentially come at the risk of SQL-injection vunerabilities.
+however such functionality could potentially come at the risk of SQL-injection vulnerabilities.
 
 ## Printing Queries
 
@@ -1971,7 +1971,7 @@ val a: IO[ctx.RunQueryResult[Person], Effect.Write with Effect.Read] =
   }
 ```
 
-This mechanism is useful to limit the kind of operations that can be performed. See this [blog post](http://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html) as an example.
+This mechanism is useful to limit the kind of operations that can be performed. See this [blog post](https://danielwestheide.com/blog/2015/06/28/put-your-writes-where-your-master-is-compile-time-restriction-of-slick-effect-types.html) as an example.
 
 ## Implicit query
 
@@ -2362,5 +2362,5 @@ Normalization caching was introduced to improve the situation, which will speedu
 To disable dynamic normalization caching, pass following property to sbt during compile time
 
 ```
-sbt -Dquill.query.cacheDaynamic=false
+sbt -Dquill.query.cacheDynamic=false
 ```

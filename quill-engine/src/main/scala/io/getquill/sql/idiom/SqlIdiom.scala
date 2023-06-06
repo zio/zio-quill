@@ -77,7 +77,7 @@ trait SqlIdiom extends Idiom {
       }
 
     implicit val transpileContextImplicit: IdiomContext = idiomContext
-    implicit val tokernizer: Tokenizer[Ast]             = defaultTokenizer
+    implicit val tokenizer: Tokenizer[Ast]              = defaultTokenizer
     val interp                                          = new Interpolator(TraceType.SqlNormalizations, idiomContext.traceConfig, 1)
     import interp._
 
@@ -398,9 +398,9 @@ trait SqlIdiom extends Idiom {
     }
 
   protected def tokenOrderBy(
-    criterias: List[OrderByCriteria]
+    criteria: List[OrderByCriteria]
   )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
-    stmt"ORDER BY ${criterias.token}"
+    stmt"ORDER BY ${criteria.token}"
 
   implicit def sourceTokenizer(implicit
     astTokenizer: Tokenizer[Ast],

@@ -104,7 +104,7 @@ object DbHelper {
             (select table_catalog as _1, table_schema as _2, table_name as _3, table_type as _4 from bravo.information_schema.tables)
             """.as[Query[(String, String, String, String)]]
           )
-        tables.map { case (cat, schem, name, tpe) => JdbcTableMeta(Option(cat), Option(schem), name, Option(tpe)) }
+        tables.map { case (cat, schema, name, tpe) => JdbcTableMeta(Option(cat), Option(schema), name, Option(tpe)) }
       }
 
       case _ =>
@@ -113,8 +113,8 @@ object DbHelper {
 
     val getSchema: JdbcTableMeta => Option[String] = databaseType match {
       case MySql     => tm => tm.tableCat
-      case SqlServer => tm => tm.tableCat.flatMap(tc => tm.tableSchem.flatMap(ts => Some(s"${tc}.${ts}")))
-      case _         => tm => tm.tableSchem
+      case SqlServer => tm => tm.tableCat.flatMap(tc => tm.tableSchema.flatMap(ts => Some(s"${tc}.${ts}")))
+      case _         => tm => tm.tableSchema
     }
 
     val tables = allTables.filter { tm =>
@@ -122,18 +122,18 @@ object DbHelper {
         case MySql =>
           tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo")
         case SqlServer =>
-          tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo") && tm.tableSchem.exists(
+          tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo") && tm.tableSchema.exists(
             _.toLowerCase == "dbo"
           )
         case Oracle =>
-          tm.tableSchem.existsInSetNocase("codegen_test", "alpha", "bravo")
+          tm.tableSchema.existsInSetNocase("codegen_test", "alpha", "bravo")
         case Sqlite => // SQLite does not have individual schemas at all.
           true
         case Postgres =>
-          tm.tableSchem.existsInSetNocase("public", "alpha", "bravo")
+          tm.tableSchema.existsInSetNocase("public", "alpha", "bravo")
         case H2 =>
           tm.tableCat.exists(_.toLowerCase == "codegen_test.h2") &&
-          tm.tableSchem.exists(_.toLowerCase != "information_schema")
+          tm.tableSchema.exists(_.toLowerCase != "information_schema")
       }
     }
 

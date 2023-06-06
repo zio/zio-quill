@@ -838,7 +838,7 @@ class QuotationSpec extends Spec {
             }
             """ mustNot compile
           }
-          "comparing types with suclassing" - {
+          "comparing types with subclassing" - {
             case class Foo(id: Int)
             trait Foot
             case class Bar(id: Int)
@@ -1087,7 +1087,7 @@ class QuotationSpec extends Spec {
             }
             """ mustNot compile
           }
-          "comparing types with suclassing" - {
+          "comparing types with subclassing" - {
             case class Foo(id: Int)
             trait Foot
             case class Bar(id: Int)
@@ -1746,7 +1746,7 @@ class QuotationSpec extends Spec {
         val q: Quoted[Int] = quote(i + 1)
         quote(unquote(q)).ast mustEqual BinaryOperation(Constant.auto(1), NumericOperator.`+`, Constant.auto(1))
       }
-      "abritrary tree" in {
+      "arbitrary tree" in {
         object test {
           def a = quote("a")
         }
@@ -1838,7 +1838,7 @@ class QuotationSpec extends Spec {
         l.value mustEqual t.a
         l.encoder mustEqual stringEncoder
       }
-      "abritrary" in {
+      "arbitrary" in {
         class A { def x = 1 }
         val q = quote(lift(new A().x))
         q.liftings.`new A().x`.value mustEqual new A().x

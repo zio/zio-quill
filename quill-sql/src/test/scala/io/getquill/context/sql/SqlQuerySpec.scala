@@ -588,7 +588,7 @@ class SqlQuerySpec extends Spec {
           "SELECT 1 FROM (SELECT DISTINCT t.i AS _1 FROM TestEntity t) AS t" // hel
       }
 
-      "with map uppsercase" in {
+      "with map uppercase" in {
         import testContextUpper._
         val q = quote {
           qr1.map(t => t.i).distinct.map(t => 1)

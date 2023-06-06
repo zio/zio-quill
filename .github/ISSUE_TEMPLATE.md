@@ -10,7 +10,7 @@ This template isn't a strict requirement to open issues, but please try to provi
 
 ### Steps to reproduce the behavior
 
-If the issue can be reproduced using a [mirror context](http://zio.dev/zio-quill/contexts#mirror-context), please provide a scastie snippet that reproduces it. See https://scastie.scala-lang.org/fwbrasil/Z2CeR2qHQJK6EyQWUBhANA as an example. Remember to select the correct Quill version in the left menu.
+If the issue can be reproduced using a [mirror context](https://zio.dev/zio-quill/contexts#mirror-context), please provide a scastie snippet that reproduces it. See https://scastie.scala-lang.org/fwbrasil/Z2CeR2qHQJK6EyQWUBhANA as an example. Remember to select the correct Quill version in the left menu.
 
 ### Workaround
 

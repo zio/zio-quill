@@ -43,6 +43,6 @@ class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {
   "Example 3 - Inline Record as Filter" in {
     testContext.run(
       `Ex 3 Inline Record Usage`
-    ) should contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
+    ) should contain theSameElementsAs `Ex 3 Inline Record Usage expected result`
   }
 }

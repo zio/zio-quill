@@ -387,7 +387,7 @@ trait DynamicQueryDsl {
 
     type DynamicAssignment[U] = ((Quoted[T] => Quoted[U]), U)
 
-    private[this] def assignemnts[S](
+    private[this] def assignments[S](
       l: List[DynamicSet[S, _]]
     ): List[Assignment] =
       l.collect { case s: DynamicSetValue[_, _] =>
@@ -397,7 +397,7 @@ trait DynamicQueryDsl {
 
     def insert(l: DynamicSet[T, _]*): DynamicInsert[T] =
       DynamicInsert(
-        splice(Insert(DynamicEntityQuery.this.q.ast, assignemnts(l.toList)))
+        splice(Insert(DynamicEntityQuery.this.q.ast, assignments(l.toList)))
       )
 
     def updateValue(value: T): DynamicUpdate[T] = macro DynamicQueryDslMacro.updateValue
@@ -405,7 +405,7 @@ trait DynamicQueryDsl {
     def update(sets: DynamicSet[T, _]*): DynamicUpdate[T] =
       DynamicUpdate(
         splice[Update[T]](
-          Update(DynamicEntityQuery.this.q.ast, assignemnts(sets.toList))
+          Update(DynamicEntityQuery.this.q.ast, assignments(sets.toList))
         )
       )
 

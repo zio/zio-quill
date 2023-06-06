@@ -56,7 +56,7 @@ object TopHashtagsExample extends App {
         .map(_.toLowerCase)          // normalize hashtags     (Dataset)
         .groupBy($"value")           // group by each hashtag  (Dataframe)
         .agg(fcount("*") as "count") // aggregate the count    (Dataframe)
-        .orderBy($"count" desc)      // order                  (Datafeame)
+        .orderBy($"count" desc)      // order                  (Dataframe)
         .limit(n)                    // limit to top results   (Dataframe)
         .as[(String, BigInt)]        // set the type again     (Dataset)
   }
@@ -64,7 +64,7 @@ object TopHashtagsExample extends App {
   object quill {
     def topHashtags(tweets: Dataset[Tweet], n: Int): Dataset[(String, Long)] =
       run {                             // produce a dataset from the Quill query
-        liftQuery(tweets)               // trasform the dataset into a Quill query
+        liftQuery(tweets)               // transform the dataset into a Quill query
           .concatMap(_.text.split(" ")) // split into words and unnest results
           .filter(_.startsWith("#"))    // filter hashtag words
           .map(_.toLowerCase)           // normalize hashtags

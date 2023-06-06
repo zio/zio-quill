@@ -7,7 +7,7 @@ import io.getquill.ast._
 import io.getquill.context.sql.SelectValue
 
 /**
- * The challenge with appeneding infixes (that have not been used but are still
+ * The challenge with appending infixes (that have not been used but are still
  * needed) back into the query, is that they could be inside of
  * tuples/case-classes that have already been selected, or inside of sibling
  * elements which have been selected. Take for instance a query that looks like

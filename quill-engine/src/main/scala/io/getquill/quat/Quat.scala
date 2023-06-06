@@ -153,7 +153,7 @@ sealed trait Quat {
       }
     case (Quat.Generic, fieldName) =>
       io.getquill.util.Messages.trace(
-        s"The field '${fieldName}' was looked up from from a Generic Quat. Assuming it will also be Quat.Generic",
+        s"The field '${fieldName}' was looked up from a Generic Quat. Assuming it will also be Quat.Generic",
         traceType = TraceType.Warning
       )
       Quat.Unknown
