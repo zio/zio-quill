@@ -26,7 +26,7 @@ class QuestionMarkSpec extends Spec {
     testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))
   }
 
-  "simple variable usage must work in the middle of a stirng" in {
+  "simple variable usage must work in the middle of a string" in {
     val newContact      = Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
     val extraPeopleList = peopleList :+ newContact
 

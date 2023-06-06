@@ -184,7 +184,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
             case OnConflict.Properties(props) =>
               val propsR = props.map {
                 // Recreate the assignment with new idents but only if we need to repropagate
-                case prop @ PropertyMatroshka(ident: Ident, _, _) =>
+                case prop @ PropertyMatryoshka(ident: Ident, _, _) =>
                   trace"Repropagate OnConflict.Properties Quat ${oca.quat.suppress(msg)} from $oca into:" andReturn
                     BetaReduction(prop, RWR, ident -> ident.retypeQuatFrom(oca.quat)).asInstanceOf[Property]
                 case other =>
@@ -214,7 +214,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
             OnConflict.Update(assignmentsR)
           case _ => act
         }
-        trace"Completing OnConflict Repropogation: " andReturn
+        trace"Completing OnConflict Repropagation: " andReturn
           OnConflict(actionR, targetR, actR)
 
       case other => super.apply(other)

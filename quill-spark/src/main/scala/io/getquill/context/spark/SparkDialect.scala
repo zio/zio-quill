@@ -54,7 +54,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, idiomContext.config))
 
     implicit val implicitIdiomContext: IdiomContext = idiomContext
-    implicit val tokernizer                         = defaultTokenizer
+    implicit val tokenizer                          = defaultTokenizer
 
     val token =
       normalizedAst match {
@@ -125,7 +125,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
         // it is an ident but somehow it's type is not known
         case List(SelectValue(Ident(a, Quat.Placeholder(_)), _, _)) =>
           stmt"${a.token}.*"
-        // It is an ident but actually it repsents a single sql-level value
+        // It is an ident but actually it represents a single sql-level value
         case List(SelectValue(Ident(a, _: Quat.Primitive), _, _)) =>
           stmt"${a.token}.*"
         // If the selection is a single value e.g. SelectValue(prop.value), SelectValue(Constant) return it right here as a SingleValuePrimitive

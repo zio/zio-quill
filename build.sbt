@@ -78,12 +78,6 @@ lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jasync-zio-postgres`
 )
 
-lazy val asyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-ndbc`,
-  `quill-ndbc-postgres`,
-  `quill-ndbc-monix`
-) ++ jasyncModules
-
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-codegen`,
   `quill-codegen-jdbc`,
@@ -100,7 +94,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ jsModules ++ dbModules ++ asyncModules ++ codegenModules ++ bigdataModules ++ docsModules
+  baseModules ++ jsModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
 
 lazy val scala213Modules =
   baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -159,13 +153,13 @@ lazy val filteredModules = {
         dbModules
       case "async" =>
         println("SBT =:> Compiling Async Database Modules")
-        asyncModules
+        jasyncModules
       case "codegen" =>
         println("SBT =:> Compiling Code Generator Modules")
         codegenModules
       case "nocodegen" =>
         println("Compiling Not-Code Generator Modules")
-        baseModules ++ jsModules ++ dbModules ++ asyncModules ++ bigdataModules
+        baseModules ++ jsModules ++ dbModules ++ jasyncModules ++ bigdataModules
       case "bigdata" =>
         println("SBT =:> Compiling Big Data Modules")
         bigdataModules
@@ -496,7 +490,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.3.8" % "provided",
+        "org.postgresql" % "postgresql" % "42.6.0" % "provided",
         "dev.zio"       %% "zio-json"   % "0.5.0"
       ),
       Test / testGrouping := {
@@ -521,18 +515,6 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-ndbc-monix` =
-  (project in file("quill-ndbc-monix"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true
-    )
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
-    .dependsOn(`quill-ndbc-postgres` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-spark` =
@@ -609,32 +591,6 @@ lazy val `quill-jasync-zio-postgres` =
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-ndbc` =
-  (project in file("quill-ndbc"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala" % "0.3.2",
-        "io.trane" % "ndbc-core"    % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-ndbc-postgres` =
-  (project in file("quill-ndbc-postgres"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "io.trane" % "future-scala"         % "0.3.2",
-        "io.trane" % "ndbc-postgres-netty4" % "0.1.3"
-      )
-    )
-    .dependsOn(`quill-ndbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra` =
@@ -734,11 +690,11 @@ commands += Command.command("checkUnformattedFiles") { st =>
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "3.4.5",
+    "com.zaxxer"              % "HikariCP"                % "4.0.3" exclude ("org.slf4j", "*"),
     "mysql"                   % "mysql-connector-java"    % "8.0.33"     % Test,
     "com.h2database"          % "h2"                      % "2.1.212"    % Test,
-    "org.postgresql"          % "postgresql"              % "42.3.8"     % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.39.4.1"   % Test,
+    "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.0"   % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.2.2.jre8" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"   % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"    % Test
@@ -802,11 +758,11 @@ def excludePaths(paths: Seq[String]) = {
 
 val scala_v_12 = "2.12.17"
 val scala_v_13 = "2.13.10"
-val scala_v_30 = "3.2.2"
+val scala_v_30 = "3.3.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.12" % Test
+    "ch.qos.logback"  % "logback-classic" % "1.3.7" % Test
   )
 )
 
@@ -931,7 +887,7 @@ lazy val releaseSettings = Seq(
   homepage := Some(url("https://zio.dev/zio-quill/")),
   licenses := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
   developers := List(
-    Developer("fwbrasil", "Flavio W. Brasil", "", url("http://github.com/fwbrasil")),
+    Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
     Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
   ),
   scmInfo := Some(
@@ -963,11 +919,11 @@ lazy val docs = project
          |</p>
          |""".stripMargin,
     readmeAcknowledgement :=
-      """|The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](http://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
+      """|The project was created having Philip Wadler's talk ["A practical theory of language-integrated query"](https://www.infoq.com/presentations/theory-language-integrated-query) as its initial inspiration. The development was heavily influenced by the following papers:
          |
-         |* [A Practical Theory of Language-Integrated Query](http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
-         |* [Everything old is new again: Quoted Domain Specific Languages](http://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
-         |* [The Flatter, the Better](http://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)""".stripMargin,
+         |* [A Practical Theory of Language-Integrated Query](https://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf)
+         |* [Everything old is new again: Quoted Domain Specific Languages](https://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)
+         |* [The Flatter, the Better](https://db.inf.uni-tuebingen.de/staticfiles/publications/the-flatter-the-better.pdf)""".stripMargin,
     readmeMaintainers :=
       """|- @deusaquilus (lead maintainer)
          |- @fwbrasil (creator)

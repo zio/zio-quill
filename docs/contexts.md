@@ -279,7 +279,7 @@ The transformations are applied from left to right.
 
 ### Configuration
 
-The string passed to the context is used as the key in order to obtain configurations using the [typesafe config](http://github.com/typesafehub/config) library.
+The string passed to the context is used as the key in order to obtain configurations using the [typesafe config](https://github.com/typesafehub/config) library.
 
 Additionally, the contexts provide multiple constructors. For instance, with `JdbcContext` it's possible to specify a `DataSource` directly, without using the configuration:
 
@@ -1777,7 +1777,7 @@ libraryDependencies ++= Seq(
 lazy val ctx = new OrientDBSyncContext(SnakeCase, "ctx")
 ```
 
-The configurations are set using [`OPartitionedDatabasePool`](http://orientdb.com/javadoc/latest/com/orientechnologies/orient/core/db/OPartitionedDatabasePool.html) which creates a pool of DB connections from which an instance of connection can be acquired. It is possible to set DB credentials using the parameter called `username` and `password`.
+The configurations are set using [`OPartitionedDatabasePool`](https://orientdb.com/javadoc/latest/com/orientechnologies/orient/core/db/OPartitionedDatabasePool.html) which creates a pool of DB connections from which an instance of connection can be acquired. It is possible to set DB credentials using the parameter called `username` and `password`.
 
 #### application.properties
 ```

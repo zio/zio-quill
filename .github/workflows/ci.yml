@@ -24,7 +24,7 @@ jobs:
    strategy:
      fail-fast: false
      matrix:
-       scala: [2.12.x, 2.13.x, 3.2.x]
+       scala: [2.12.x, 2.13.x, 3.3.x]
        module: [base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.12.x
@@ -33,20 +33,20 @@ jobs:
          - scala: 2.13.x
            scala_short: 213
            scala_short_dot: 2.13
-         - scala: 3.2.x
-           scala_short: 32
-           scala_short_dot: 3.2
+         - scala: 3.3.x
+           scala_short: 33
+           scala_short_dot: 3.3
        exclude:
          # For now, only do the `base` build for Scala 3
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: db
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: js
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: async
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: codegen
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: bigdata
          # For other modules, `base` build is already included
          - scala: 2.12.x
@@ -57,9 +57,9 @@ jobs:
    name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
    steps:
-   - uses: actions/checkout@v2
+   - uses: actions/checkout@v3
    - name: Cache sbt
-     uses: actions/cache@v2
+     uses: actions/cache@v3
      with:
        path: |
          ~/.cache/coursier
@@ -88,7 +88,7 @@ jobs:
    strategy:
      fail-fast: false
      matrix:
-       scala: [2.12.x, 2.13.x, 3.2.x]
+       scala: [2.12.x, 2.13.x, 3.3.x]
        module: [docs, base, db, js, async, codegen, bigdata]
        include:
          - scala: 2.12.x
@@ -97,27 +97,27 @@ jobs:
          - scala: 2.13.x
            scala_short: 213
            scala_short_dot: 2.13
-         - scala: 3.2.x
-           scala_short: 32
-           scala_short_dot: 3.2
+         - scala: 3.3.x
+           scala_short: 33
+           scala_short_dot: 3.3
        exclude:
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: db
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: js
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: async
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: codegen
-         - scala: 3.2.x
+         - scala: 3.3.x
            module: bigdata
 
    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
    steps:
-   - uses: actions/checkout@v2
+   - uses: actions/checkout@v3
    - name: Cache sbt
-     uses: actions/cache@v2
+     uses: actions/cache@v3
      with:
        path: |
          ~/.cache/coursier
@@ -165,9 +165,9 @@ jobs:
     name: Publish ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache sbt
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cache/coursier

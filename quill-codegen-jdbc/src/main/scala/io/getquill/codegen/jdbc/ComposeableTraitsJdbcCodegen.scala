@@ -43,8 +43,8 @@ import javax.sql.DataSource
  * <code>Common</code> object.
  *
  * <pre> class MyStereotypingGen(...) extends ComposeableTraitsGen(...) {
- * override def namespacer: Namespacer = ts=> if(ts.tableSchem == "alpha" ||
- * ts.tableSchem == "bravo") "common" else ts.tableSchem
+ * override def namespacer: Namespacer = ts=> if(ts.tableSchema == "alpha" ||
+ * ts.tableSchema == "bravo") "common" else ts.tableSchema
  *
  * override def memberNamer: MemberNamer = ts => ts.tableName.snakeToLowerCamel
  * } </pre>
@@ -105,7 +105,7 @@ import javax.sql.DataSource
  * // Since PersonDao is inside MyCustomContext.alpha and MyCustomContext.bravo
  * as opposed to MyCustomContext // there will be no collision. object
  * MyCustomContext extends SqlMirrorContext[H2Dialect, Literal](H2Dialect,
- * Literal) with AlphaExtnsions[H2Dialect, Literal] with
+ * Literal) with AlphaExtensions[H2Dialect, Literal] with
  * BravoExtensions[H2Dialect, Literal] </pre>
  */
 

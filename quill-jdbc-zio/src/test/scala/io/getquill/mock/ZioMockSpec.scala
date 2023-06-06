@@ -175,7 +175,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._
 
-    // In this case, instead of catching the error inside the observable, let it propogate to the top
+    // In this case, instead of catching the error inside the observable, let it propagate to the top
     // and make sure that the connection is closed anyhow
     val resultMsg = Unsafe.unsafe { implicit u =>
       zio.Runtime.default.unsafe.run {

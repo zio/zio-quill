@@ -392,7 +392,7 @@ class RenamePropertiesSpec extends Spec {
     }
   }
 
-  "respects the schema definition for embeddeds" - {
+  "respects the schema definition for embedded" - {
     "query" - {
       "without schema" in {
         case class B(c: Int)
@@ -410,7 +410,7 @@ class RenamePropertiesSpec extends Spec {
           "SELECT x.bC FROM A x"
       }
     }
-    "query for Option embeddeds" - {
+    "query for Option embedded" - {
       "without schema" in {
         case class B(c1: Int, c2: Int)
         case class A(b: Option[B])

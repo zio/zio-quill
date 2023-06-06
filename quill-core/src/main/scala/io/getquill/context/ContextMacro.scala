@@ -114,7 +114,7 @@ trait ContextMacro extends Quotation {
     val liftQuat: Liftable[Quat] = liftUnlift.quatLiftable
     val transpileConfig          = summonTranspileConfig()
     val transpileConfigExpr      = ConfigLiftables.transpileConfigLiftable(transpileConfig)
-    // Compile-time AST might have Dynamic parts, we need those resoved (i.e. at runtime to be able to get the query type)
+    // Compile-time AST might have Dynamic parts, we need those resolved (i.e. at runtime to be able to get the query type)
     val queryTypeExpr = q"_root_.io.getquill.IdiomContext.QueryType.discoverFromAst($ast, $batchAlias)"
     c.info("Dynamic query")
     val translateMethod = if (io.getquill.util.Messages.cacheDynamicQueries) {

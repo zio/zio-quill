@@ -173,7 +173,7 @@ case class ConcatMap(query: Ast, alias: Ident, body: Ast) extends Query {
   def bestQuat: Quat = body.bestQuat
 }
 
-case class SortBy(query: Ast, alias: Ident, criterias: Ast, ordering: Ast) extends Query {
+case class SortBy(query: Ast, alias: Ident, criteria: Ast, ordering: Ast) extends Query {
   def quat           = query.quat
   def bestQuat: Quat = query.bestQuat
 }
@@ -332,7 +332,7 @@ final class Ident private (val name: String)(theQuat: => Quat)(val visibility: V
   override def withQuat(quat: => Quat): Ident =
     Ident.Opinionated(this.name, quat, this.visibility)
 
-  // need to define a copy which will propogate current value of visibility into the copy
+  // need to define a copy which will propagate current value of visibility into the copy
   def copy(name: String = this.name, quat: => Quat = this.quat): Ident =
     Ident.Opinionated(name, quat, this.visibility)
 }
@@ -379,7 +379,7 @@ final class ExternalIdent private (val name: String)(theQuat: => Quat)(val renam
 
   override def hashCode = id.hashCode()
 
-  // need to define a copy which will propogate current value of visibility into the copy
+  // need to define a copy which will propagate current value of visibility into the copy
   def copy(name: String = this.name, quat: => Quat = this.quat): ExternalIdent =
     ExternalIdent.Opinionated(name, quat, this.renameable)
 }
@@ -696,7 +696,7 @@ case class Val(name: Ident, body: Ast) extends Ast {
 
 sealed trait Action extends Ast
 
-// Note, technically return type of Actions for most Actions is a Int value but Quat here is used for Retruning Quat types
+// Note, technically return type of Actions for most Actions is a Int value but Quat here is used for Returning Quat types
 case class Update(query: Ast, assignments: List[Assignment]) extends Action {
   def quat = query.quat; def bestQuat = query.bestQuat
 }

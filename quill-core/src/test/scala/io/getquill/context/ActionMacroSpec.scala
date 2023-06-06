@@ -34,7 +34,7 @@ class ActionMacroSpec extends Spec {
       r.string mustEqual """querySchema("TestEntity").insert(v => v.s -> ?, v => v.i -> ?, v => v.l -> ?, v => v.o -> ?, v => v.b -> ?)"""
       r.prepareRow mustEqual Row("s", 1, 2L, None, true)
     }
-    "nexted case class lifting" in {
+    "nested case class lifting" in {
       val q = quote { t: TestEntity =>
         qr1.insertValue(t)
       }

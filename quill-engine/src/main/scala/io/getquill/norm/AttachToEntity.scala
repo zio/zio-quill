@@ -34,7 +34,7 @@ import io.getquill.ast._
  *   FlatMap(A, a, Filter(Entity(C), {dangerous_tmp}, If(a == x, foo, bar))
  * }}}
  *
- * If `{dangerious_tmp}` is the Ident 'a' then the following happens: (I have
+ * If `{dangerous_tmp}` is the Ident 'a' then the following happens: (I have
  * added curly braces {} around this Ident just to distinguish it)
  * {{{
  *   FlatMap(A, a, Filter(Entity(C), {a}, If(b == x, foo, bar))
