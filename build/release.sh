@@ -12,7 +12,7 @@ then
 fi
 
 SBT_2_12="sbt ++2.12.17 -Dquill.macro.log=false -Dquill.scala.version=2.12.17"
-SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
+SBT_2_13="sbt ++2.13.11 -Dquill.macro.log=false -Dquill.scala.version=2.13.11"
 SBT_3_3="sbt ++3.3.0 -Dquill.macro.log=false -Dquill.scala.version=3.3.0"
 
 if [[ $VERSION -eq 212 ]]
