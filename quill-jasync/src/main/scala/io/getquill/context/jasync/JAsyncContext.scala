@@ -1,20 +1,20 @@
 package io.getquill.context.jasync
 
 import com.github.jasync.sql.db.pool.ConnectionPool
-import com.github.jasync.sql.db.{ ConcreteConnection, Connection, QueryResult, RowData }
+import com.github.jasync.sql.db.{ConcreteConnection, Connection, QueryResult, RowData}
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.{ Context, ContextVerbTranslate, ExecutionInfo }
+import io.getquill.context.{Context, ContextVerbTranslate, ExecutionInfo}
 import io.getquill.monad.ScalaFutureIOMonad
 import io.getquill.util.ContextLogger
-import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.{NamingStrategy, ReturnAction}
 import kotlin.jvm.functions.Function1
 
 import java.time.ZoneId
 import java.util.concurrent.CompletableFuture
 import scala.compat.java8.FutureConverters
 import scala.concurrent.duration.Duration
-import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 import scala.util.Try
@@ -86,9 +86,10 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
   def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
     ec match {
       case tec: TransactionalExecutionContext => toCompletableFuture(f(tec))
-      case _ => pool.inTransaction { (c: Connection) =>
-        toCompletableFuture(f(TransactionalExecutionContext(ec, c)))
-      }
+      case _ =>
+        pool.inTransaction { (c: Connection) =>
+          toCompletableFuture(f(TransactionalExecutionContext(ec, c)))
+        }
     }
 
   override def performIO[T](io: IO[T, _], transactional: Boolean = false)(implicit ec: ExecutionContext): Result[T] =
