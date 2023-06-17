@@ -784,7 +784,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
       )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.10.0")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0")
   },
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
