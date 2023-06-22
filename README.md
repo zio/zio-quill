@@ -5,7 +5,7 @@
   <img src="https://raw.githubusercontent.com/getquill/quill/master/quill.png">
 </p>
 
-# ZIO Quill
+# What is Quill?
 
 Quill provides a Quoted Domain Specific Language ([QDSL](https://homepages.inf.ed.ac.uk/wadler/papers/qdsl/qdsl.pdf)) to express queries in Scala and execute them in a target language. 
 
