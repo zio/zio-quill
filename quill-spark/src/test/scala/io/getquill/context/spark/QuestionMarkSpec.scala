@@ -26,13 +26,14 @@ class QuestionMarkSpec extends Spec {
     testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))
   }
 
-  "simple variable usage must work in the middle of a stirng" in {
-    val newContact = Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
+  "simple variable usage must work in the middle of a string" in {
+    val newContact      = Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
     val extraPeopleList = peopleList :+ newContact
 
     val q = quote {
       for {
-        p <- liftQuery(extraPeopleList.toDS()) if p.extraInfo == "Something ? Something ? Else" && p.firstName == lift("Moe")
+        p <- liftQuery(extraPeopleList.toDS())
+        if p.extraInfo == "Something ? Something ? Else" && p.firstName == lift("Moe")
       } yield p
     }
     testContext.run(q).collect() should contain theSameElementsAs Seq(newContact)

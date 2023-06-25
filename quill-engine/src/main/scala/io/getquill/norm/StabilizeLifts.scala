@@ -1,29 +1,27 @@
 package io.getquill.norm
 
 import io.getquill.ast._
-import scala.collection.immutable.{ Map => IMap }
+import scala.collection.immutable.{Map => IMap}
 
-private[getquill] object StablizeLifts {
+private[getquill] object StabilizeLifts {
 
-  def stablize(ast: Ast): (Ast, State) = {
-    val (a, t) = StubLiftValus(State(IMap.empty, Token(0))).apply(ast)
+  def stabilize(ast: Ast): (Ast, State) = {
+    val (a, t) = StubLiftValues(State(IMap.empty, Token(0))).apply(ast)
     (a, t.state)
   }
 
-  def revert(ast: Ast, state: State): Ast = {
+  def revert(ast: Ast, state: State): Ast =
     RevertLiftValues(state).apply(ast)
-  }
 
   case class State(
     replaceTable: IMap[Token, Any],
-    nextToken:    Token
+    nextToken: Token
   ) {
-    def addReplace(t: Token, value: Any): State = {
+    def addReplace(t: Token, value: Any): State =
       this.copy(
         replaceTable = replaceTable + (t -> value),
         nextToken = Token(t.id + 1)
       )
-    }
   }
 
   case class Token(id: Long)
@@ -51,32 +49,32 @@ private[getquill] object StablizeLifts {
     }
   }
 
-  case class StubLiftValus(state: State) extends StatefulTransformer[State] {
+  case class StubLiftValues(state: State) extends StatefulTransformer[State] {
     override def apply(e: Ast): (Ast, StatefulTransformer[State]) = e match {
       case l: Lift =>
         val (ast, ss) = applyLift(l)
-        (ast, StubLiftValus(ss))
+        (ast, StubLiftValues(ss))
       case others =>
         super.apply(others)
     }
 
     private def applyLift(ast: Lift): (Ast, State) = ast match {
       case l: ScalarValueLift =>
-        val stub = state.nextToken
-        val stablized = l.copy(value = stub)
-        stablized -> state.addReplace(stub, l.value)
+        val stub       = state.nextToken
+        val stabilized = l.copy(value = stub)
+        stabilized -> state.addReplace(stub, l.value)
       case l: ScalarQueryLift =>
-        val stub = state.nextToken
-        val stablized = l.copy(value = stub)
-        stablized -> state.addReplace(stub, l.value)
+        val stub       = state.nextToken
+        val stabilized = l.copy(value = stub)
+        stabilized -> state.addReplace(stub, l.value)
       case l: CaseClassValueLift =>
-        val stub = state.nextToken
-        val stablized = l.copy(value = stub)
-        stablized -> state.addReplace(stub, l.value)
+        val stub       = state.nextToken
+        val stabilized = l.copy(value = stub)
+        stabilized -> state.addReplace(stub, l.value)
       case l: CaseClassQueryLift =>
-        val stub = state.nextToken
-        val stablized = l.copy(value = stub)
-        stablized -> state.addReplace(stub, l.value)
+        val stub       = state.nextToken
+        val stabilized = l.copy(value = stub)
+        stabilized -> state.addReplace(stub, l.value)
     }
   }
 }

@@ -15,7 +15,7 @@ object Show {
     def show = shower.show(v)
   }
 
-  implicit def listShow[T](implicit shower: Show[T]): Show[List[T]] = Show[List[T]] {
-    case list => list.map(_.show).mkString(", ")
+  implicit def listShow[T](implicit shower: Show[T]): Show[List[T]] = Show[List[T]] { case list =>
+    list.map(_.show).mkString(", ")
   }
 }

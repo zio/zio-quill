@@ -10,17 +10,22 @@ import io.getquill.util.Messages.fail
 trait OnConflictSupport {
   self: SqlIdiom =>
 
-  implicit def conflictTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[OnConflict] = {
+  implicit def conflictTokenizer(implicit
+    astTokenizer: Tokenizer[Ast],
+    strategy: NamingStrategy,
+    idiomContext: IdiomContext
+  ): Tokenizer[OnConflict] = {
 
-    val customEntityTokenizer = Tokenizer[Entity] {
-      case Entity.Opinionated(name, _, _, renameable) => stmt"INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)} AS t"
+    val customEntityTokenizer = Tokenizer[Entity] { case Entity.Opinionated(name, _, _, renameable) =>
+      stmt"INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)} AS t"
     }
 
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](self.astTokenizer(_, strategy, idiomContext)) {
         case _: OnConflict.Excluded => stmt"EXCLUDED"
         case OnConflict.Existing(a) => stmt"${a.token}"
-        case a: Action              => self.actionTokenizer(customEntityTokenizer)(actionAstTokenizer, strategy, idiomContext).token(a)
+        case a: Action =>
+          self.actionTokenizer(customEntityTokenizer)(actionAstTokenizer, strategy, idiomContext).token(a)
       }
 
     import OnConflict._
@@ -36,8 +41,8 @@ trait OnConflictSupport {
     def doNothingStmt(i: Ast, t: Token) = stmt"${i.token} ON CONFLICT $t DO NOTHING"
 
     implicit val conflictTargetPropsTokenizer: Tokenizer[Properties] =
-      Tokenizer[Properties] {
-        case OnConflict.Properties(props) => stmt"(${props.map(n => n.renameable.fixedOr(n.name)(strategy.column(n.name))).mkStmt(",")})"
+      Tokenizer[Properties] { case OnConflict.Properties(props) =>
+        stmt"(${props.map(n => n.renameable.fixedOr(n.name)(strategy.column(n.name))).mkStmt(",")})"
       }
 
     def tokenizer(implicit astTokenizer: Tokenizer[Ast]): Tokenizer[OnConflict] =
@@ -45,8 +50,8 @@ trait OnConflictSupport {
         case OnConflict(_, NoTarget, _: Update)      => fail("'DO UPDATE' statement requires explicit conflict target")
         case OnConflict(i, p: Properties, u: Update) => doUpdateStmt(i.token, p.token, u)
 
-        case OnConflict(i, NoTarget, Ignore)         => stmt"${astTokenizer.token(i)} ON CONFLICT DO NOTHING"
-        case OnConflict(i, p: Properties, Ignore)    => doNothingStmt(i, p.token)
+        case OnConflict(i, NoTarget, Ignore)      => stmt"${astTokenizer.token(i)} ON CONFLICT DO NOTHING"
+        case OnConflict(i, p: Properties, Ignore) => doNothingStmt(i, p.token)
       }
 
     tokenizer(customAstTokenizer)

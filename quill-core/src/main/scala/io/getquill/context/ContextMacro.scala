@@ -1,11 +1,11 @@
 package io.getquill.context
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.ast.{ Ast, Dynamic, Lift, Tag }
-import io.getquill.quotation.{ IsDynamic, LiftUnlift, Quotation }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
+import io.getquill.ast.{Ast, Dynamic, Lift, Tag}
+import io.getquill.quotation.{IsDynamic, LiftUnlift, Quotation}
 import io.getquill.util.LoadObject
 import io.getquill.util.MacroContextExt._
-import io.getquill.{ IdiomContext, NamingStrategy }
+import io.getquill.{IdiomContext, NamingStrategy}
 import io.getquill.idiom._
 import io.getquill.quat.Quat
 import scala.util.Failure
@@ -13,7 +13,7 @@ import scala.util.Success
 
 trait ContextMacro extends Quotation {
   val c: MacroContext
-  import c.universe.{ Function => _, Ident => _, _ }
+  import c.universe.{Function => _, Ident => _, _}
 
   protected def expand(ast: Ast, topLevelQuat: Quat): Tree = {
     summonPhaseDisable()
@@ -24,13 +24,12 @@ trait ContextMacro extends Quotation {
     """
   }
 
-  protected def extractAst[T](quoted: Tree): Ast = {
+  protected def extractAst[T](quoted: Tree): Ast =
     unquote[Ast](c.typecheck(q"quote($quoted)"))
       .map(VerifyFreeVariables(c))
       .getOrElse {
         Dynamic(quoted)
       }
-  }
 
   def translate(ast: Ast, topLevelQuat: Quat, batchAlias: Option[String]): Tree =
     IsDynamic(ast) match {
@@ -39,10 +38,10 @@ trait ContextMacro extends Quotation {
     }
 
   abstract class TokenLift(numQuatFields: Int) extends LiftUnlift(numQuatFields) {
-    import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, _ }
+    import mctx.universe.{Ident => _, Constant => _, Function => _, If => _, _}
 
-    implicit val statementLiftable: Liftable[Statement] = Liftable[Statement] {
-      case Statement(tokens) => q"io.getquill.idiom.Statement(scala.List(..$tokens))"
+    implicit val statementLiftable: Liftable[Statement] = Liftable[Statement] { case Statement(tokens) =>
+      q"io.getquill.idiom.Statement(scala.List(..$tokens))"
     }
 
     implicit val tokenLiftable: Liftable[Token] = Liftable[Token] {
@@ -56,17 +55,24 @@ trait ContextMacro extends Quotation {
     }
   }
 
-  protected def tryTranslateStatic(ast: Ast, topLevelQuat: Quat, batchAlias: Option[String]): Either[String, (Ast, Token, ExecutionType, IdiomContext, String, Idiom)] = {
+  protected def tryTranslateStatic(
+    ast: Ast,
+    topLevelQuat: Quat,
+    batchAlias: Option[String]
+  ): Either[String, (Ast, Token, ExecutionType, IdiomContext, String, Idiom)] = {
     val transpileConfig = summonTranspileConfig()
-    val queryType = IdiomContext.QueryType.discoverFromAst(ast, batchAlias)
-    val idiomContext = IdiomContext(transpileConfig, queryType)
+    val queryType       = IdiomContext.QueryType.discoverFromAst(ast, batchAlias)
+    val idiomContext    = IdiomContext(transpileConfig, queryType)
 
     idiomAndNamingStatic match {
       case Failure(_) =>
-        Left(s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point.")
+        Left(
+          s"Can't translate query at compile time because the idiom and/or the naming strategy aren't known at this point."
+        )
       case Success((idiom, naming)) =>
         try {
-          val (normalizedAst, statement, _) = idiom.translate(ast, topLevelQuat, ExecutionType.Static, idiomContext)(naming)
+          val (normalizedAst, statement, _) =
+            idiom.translate(ast, topLevelQuat, ExecutionType.Static, idiomContext)(naming)
 
           val (string, _) =
             ReifyStatement(
@@ -78,7 +84,9 @@ trait ContextMacro extends Quotation {
 
           ProbeStatement(idiom.prepareForProbing(string), c)
           c.query(string, idiom)
-          Right((normalizedAst, statement: Token, io.getquill.context.ExecutionType.Static, idiomContext, string, idiom))
+          Right(
+            (normalizedAst, statement: Token, io.getquill.context.ExecutionType.Static, idiomContext, string, idiom)
+          )
         } catch {
           case e: Exception =>
             c.fail(s"Query compilation failed. ${e.getMessage}")
@@ -104,9 +112,9 @@ trait ContextMacro extends Quotation {
     val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
     import liftUnlift._
     val liftQuat: Liftable[Quat] = liftUnlift.quatLiftable
-    val transpileConfig = summonTranspileConfig()
-    val transpileConfigExpr = ConfigLiftables.transpileConfigLiftable(transpileConfig)
-    // Compile-time AST might have Dynamic parts, we need those resoved (i.e. at runtime to be able to get the query type)
+    val transpileConfig          = summonTranspileConfig()
+    val transpileConfigExpr      = ConfigLiftables.transpileConfigLiftable(transpileConfig)
+    // Compile-time AST might have Dynamic parts, we need those resolved (i.e. at runtime to be able to get the query type)
     val queryTypeExpr = q"_root_.io.getquill.IdiomContext.QueryType.discoverFromAst($ast, $batchAlias)"
     c.info("Dynamic query")
     val translateMethod = if (io.getquill.util.Messages.cacheDynamicQueries) {
@@ -117,7 +125,9 @@ trait ContextMacro extends Quotation {
       val (idiom, naming) = ${idiomAndNamingDynamic}
       val traceConfig = ${ConfigLiftables.traceConfigLiftable(transpileConfig.traceConfig)}
       val idiomContext = _root_.io.getquill.IdiomContext($transpileConfigExpr, $queryTypeExpr)
-      val (ast, statement, executionType) = $translateMethod(new _root_.io.getquill.norm.RepropagateQuats(traceConfig)($ast), ${liftQuat(topLevelQuat)}, io.getquill.context.ExecutionType.Dynamic, idiomContext)(naming)
+      val (ast, statement, executionType) = $translateMethod(new _root_.io.getquill.norm.RepropagateQuats(traceConfig)($ast), ${liftQuat(
+        topLevelQuat
+      )}, io.getquill.context.ExecutionType.Dynamic, idiomContext)(naming)
       (ast, statement, executionType, idiomContext)
     """
   }
@@ -136,7 +146,7 @@ trait ContextMacro extends Quotation {
   private def idiomAndNamingStatic = {
     val (idiom, naming) = idiomAndNaming
     for {
-      idiom <- LoadObject[Idiom](c)(idiom)
+      idiom  <- LoadObject[Idiom](c)(idiom)
       naming <- LoadNaming.static(c)(naming)
     } yield {
       (idiom, naming)

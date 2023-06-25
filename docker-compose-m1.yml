@@ -30,7 +30,7 @@ services:
     environment:
       - MAX_HEAP_SIZE=256m
       - HEAP_NEWSIZE=64m
-      - JVM_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
+      - JAVA_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
 
   orientdb:
     image: orientdb:3.0.11

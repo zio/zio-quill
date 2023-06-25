@@ -34,4 +34,3 @@ class OnConflictJAsyncSpec extends OnConflictSpec {
     await(ctx.run(testQuery4)) mustEqual res4
   }
 }
-

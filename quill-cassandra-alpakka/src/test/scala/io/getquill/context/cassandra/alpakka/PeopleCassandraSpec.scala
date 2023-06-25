@@ -27,8 +27,8 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
     ()
   }
 
-  val qByIds = quote {
-    (ids: Query[Int]) => query[Person].filter(p => ids.contains(p.id))
+  val qByIds = quote { (ids: Query[Int]) =>
+    query[Person].filter(p => ids.contains(p.id))
   }
 
   val q = quote {
@@ -49,7 +49,7 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
     }
 
     val evenEntries = entries.filter(e => e.id % 2 == 0).toSet
-    val evenIds = evenEntries.map(_.id)
+    val evenIds     = evenEntries.map(_.id)
 
     "query" in {
       await {
@@ -62,7 +62,11 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
         testDB.stream(qByIds(liftQuery(evenIds))).runWith(Sink.seq).map(res => res.toSet mustEqual evenEntries)
       }
       await {
-        testDB.stream(q).filter(e => evenIds.contains(e.id)).runWith(Sink.seq).map(res => res.toSet mustEqual evenEntries)
+        testDB
+          .stream(q)
+          .filter(e => evenIds.contains(e.id))
+          .runWith(Sink.seq)
+          .map(res => res.toSet mustEqual evenEntries)
       }
     }
   }

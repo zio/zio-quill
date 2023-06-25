@@ -3,7 +3,7 @@ id: quill-vs-cassandra
 title: "Quill vs. Cassandra"
 ---
 
-This document compares Quill to the [Datastax Java](https://github.com/datastax/java-driver) driver and the [Phantom](http://websudos.github.io/phantom/) library. This is an incomplete comparison, additions and corrections are welcome.
+This document compares Quill to the [Datastax Java](https://github.com/datastax/java-driver) driver and the [Phantom](https://web.archive.org/web/20141229171448/http://websudos.github.io:80/phantom) library. This is an incomplete comparison, additions and corrections are welcome.
 
 All examples have been properly tested, and they should work out of the box.
 

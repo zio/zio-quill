@@ -48,7 +48,7 @@ class CaseClassQueryOrientSpec extends Spec {
     query[Contact].filter(p => p.id == filtrationObject.idFilter)
   }
 
-  val `Ex 3 Inline Record Usage exepected result` = List(
+  val `Ex 3 Inline Record Usage expected result` = List(
     new Contact(1, "Alex", "Jones", 60, 2, "foo")
   )
 
@@ -60,10 +60,14 @@ class CaseClassQueryOrientSpec extends Spec {
   }
 
   "Example 1 - Single Case Class Mapping" in {
-    testSyncDB.run(`Ex 1 CaseClass Record Output`) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    testSyncDB.run(
+      `Ex 1 CaseClass Record Output`
+    ) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
 
   "Example 2 - Inline Record as Filter" in {
-    testSyncDB.run(`Ex 3 Inline Record Usage`) must contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
+    testSyncDB.run(
+      `Ex 3 Inline Record Usage`
+    ) must contain theSameElementsAs `Ex 3 Inline Record Usage expected result`
   }
 }

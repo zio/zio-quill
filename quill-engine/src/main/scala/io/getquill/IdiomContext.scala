@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.ast.{ Ast, CollectAst }
+import io.getquill.ast.{Ast, CollectAst}
 import io.getquill.norm.TranspileConfig
 import io.getquill.ast
 
@@ -24,7 +24,7 @@ object IdiomContext {
     case class BatchUpdate(foreachAlias: String) extends Batch { val batchAlias = Some(foreachAlias) }
 
     sealed trait Regular extends QueryType { val isBatch = false; val batchAlias = None }
-    sealed trait Batch extends QueryType { val isBatch = true }
+    sealed trait Batch   extends QueryType { val isBatch = true                         }
 
     object Regular {
       def unapply(qt: QueryType): Boolean =

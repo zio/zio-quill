@@ -1,6 +1,6 @@
 package io.getquill.context
 
-import io.getquill.{ NamingStrategy, Query, Quoted }
+import io.getquill.{NamingStrategy, Query, Quoted}
 
 import scala.language.higherKinds
 import scala.language.experimental.macros
