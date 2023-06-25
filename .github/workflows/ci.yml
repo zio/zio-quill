@@ -15,12 +15,11 @@ on:
 jobs:
   build:
    runs-on: ubuntu-latest
-
+   name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
    env:
      SCALA_VERSION: ${{ matrix.scala }}
      POSTGRES_PASSWORD: postgres
      MYSQL_PASSWORD: root
-
    strategy:
      fail-fast: false
      matrix:
@@ -53,9 +52,6 @@ jobs:
            module: base
          - scala: 2.13.x
            module: base
-
-   name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
-
    steps:
    - uses: actions/checkout@v3
    - name: Cache sbt
@@ -81,10 +77,11 @@ jobs:
 
   release:
    if: ${{github.event_name != 'pull_request'}}
-   runs-on: ubuntu-latest
-
    needs: build
-
+   runs-on: ubuntu-latest
+   name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
+   env:
+     JAVA_OPTS: -XX:+PrintCommandLineFlags -Xms6G -Xmx6G -Xss4M -XX:+UseG1GC
    strategy:
      fail-fast: false
      matrix:
@@ -111,9 +108,6 @@ jobs:
            module: codegen
          - scala: 3.3.x
            module: bigdata
-
-   name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
-
    steps:
    - uses: actions/checkout@v3
    - name: Cache sbt
@@ -148,10 +142,9 @@ jobs:
 
   publish:
     if: ${{github.event_name != 'pull_request'}}
-    runs-on: ubuntu-latest
-
     needs: release
-
+    runs-on: ubuntu-latest
+    name: Publish ${{matrix.scala_short_dot}} - ${{matrix.module}}
     strategy:
       fail-fast: false
       matrix:
@@ -161,9 +154,8 @@ jobs:
           - scala: 2.13.x
             scala_short: 213
             scala_short_dot: 2.13
-
-    name: Publish ${{matrix.scala_short_dot}} - ${{matrix.module}}
-
+    env:
+      JAVA_OPTS: -XX:+PrintCommandLineFlags -Xms6G -Xmx6G -Xss4M -XX:+UseG1GC
     steps:
       - uses: actions/checkout@v3
       - name: Cache sbt
