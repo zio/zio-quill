@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.monix
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class DecodeNullSpec extends Spec {
 
@@ -12,8 +13,8 @@ class DecodeNullSpec extends Spec {
 
       val result =
         for {
-          _ <- testMonixDB.run(writeEntities.delete)
-          _ <- testMonixDB.run(writeEntities.insertValue(lift(insertValue)))
+          _      <- testMonixDB.run(writeEntities.delete)
+          _      <- testMonixDB.run(writeEntities.insertValue(lift(insertValue)))
           result <- testMonixDB.run(query[DecodeNullTestEntity])
         } yield {
           result

@@ -3,7 +3,7 @@ package io.getquill.context.cassandra.cluster
 import com.datastax.oss.driver.api.core.CqlIdentifier
 
 import com.typesafe.config.ConfigFactory
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 import java.util
 import scala.jdk.CollectionConverters._
@@ -25,8 +25,12 @@ class SessionBuilderSpec extends Spec {
           |}
           |""".stripMargin
       val sessionBuilder = SessionBuilder(ConfigFactory.parseString(cfgString).resolve())
-      val session = sessionBuilder.build()
-      val sessionConfig = session.getContext.getConfig.getDefaultProfile.entrySet().asScala.map(entry => entry.getKey -> entry.getValue).toMap
+      val session        = sessionBuilder.build()
+      val sessionConfig = session.getContext.getConfig.getDefaultProfile
+        .entrySet()
+        .asScala
+        .map(entry => entry.getKey -> entry.getValue)
+        .toMap
       session.isClosed must equal(false)
       session.getKeyspace.isPresent must equal(false)
       sessionConfig("basic.load-balancing-policy.local-datacenter") must equal("dc1")
@@ -45,8 +49,12 @@ class SessionBuilderSpec extends Spec {
           |}
           |""".stripMargin
       val sessionBuilder = SessionBuilder(ConfigFactory.parseString(cfgString).resolve())
-      val session = sessionBuilder.build()
-      val sessionConfig = session.getContext.getConfig.getDefaultProfile.entrySet().asScala.map(entry => entry.getKey -> entry.getValue).toMap
+      val session        = sessionBuilder.build()
+      val sessionConfig = session.getContext.getConfig.getDefaultProfile
+        .entrySet()
+        .asScala
+        .map(entry => entry.getKey -> entry.getValue)
+        .toMap
       session.isClosed must equal(false)
       session.getKeyspace.isPresent must equal(false)
       sessionConfig("basic.load-balancing-policy.local-datacenter") must equal("dc1")
@@ -63,12 +71,18 @@ class SessionBuilderSpec extends Spec {
           |}
           |""".stripMargin
       val sessionBuilder = SessionBuilder(ConfigFactory.parseString(cfgString).resolve())
-      val session = sessionBuilder.build()
-      val sessionConfig = session.getContext.getConfig.getDefaultProfile.entrySet().asScala.map(entry => entry.getKey -> entry.getValue).toMap
+      val session        = sessionBuilder.build()
+      val sessionConfig = session.getContext.getConfig.getDefaultProfile
+        .entrySet()
+        .asScala
+        .map(entry => entry.getKey -> entry.getValue)
+        .toMap
       session.isClosed must equal(false)
       session.getKeyspace.get must equal(CqlIdentifier.fromCql("test"))
       sessionConfig("basic.load-balancing-policy.local-datacenter") must equal("dc1")
-      sessionConfig("basic.contact-points") must equal(new util.ArrayList(List(envAddress, "127.0.0.1:9042", "127.0.0.2:9042").asJava))
+      sessionConfig("basic.contact-points") must equal(
+        new util.ArrayList(List(envAddress, "127.0.0.1:9042", "127.0.0.2:9042").asJava)
+      )
     }
 
   }

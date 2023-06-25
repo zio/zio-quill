@@ -1,5 +1,7 @@
 package io.getquill
 
+import io.getquill.base.Spec
+
 object iqContext extends MirrorContext(MirrorIdiom, Literal) with ImplicitQuery with TestEntities
 
 object Test extends Function1[String, Test] {
@@ -7,8 +9,8 @@ object Test extends Function1[String, Test] {
 }
 
 class Test(val a: String) extends Product {
-  def canEqual(that: Any) = ???
-  def productArity: Int = ???
+  def canEqual(that: Any)    = ???
+  def productArity: Int      = ???
   def productElement(n: Int) = ???
 }
 

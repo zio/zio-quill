@@ -1,9 +1,9 @@
 package io.getquill.sql.norm
 
 import io.getquill.ast.Implicits.AstOpsExt
-import io.getquill.ast.{ BooleanOperator, _ }
-import io.getquill.quat.QuatOps.{ HasBooleanQuat, HasBooleanValueQuat }
-import io.getquill.quat.Quat.{ BooleanExpression, BooleanValue }
+import io.getquill.ast.{BooleanOperator, _}
+import io.getquill.quat.QuatOps.{HasBooleanQuat, HasBooleanValueQuat}
+import io.getquill.quat.Quat.{BooleanExpression, BooleanValue}
 
 object VendorizeBooleans extends StatelessTransformer {
 
@@ -12,8 +12,8 @@ object VendorizeBooleans extends StatelessTransformer {
       // Map clauses need values e.g. map(n=>n.status==true) => map(n=>if(n.status==true) 1 else 0)
       case Map(q, alias, body) =>
         Map(apply(q), alias, valuefyExpression(apply(body)))
-      case CaseClass(values) =>
-        CaseClass(values.map { case (name, value) => (name, valuefyExpression(apply(value))) })
+      case CaseClass(n, values) =>
+        CaseClass(n, values.map { case (name, value) => (name, valuefyExpression(apply(value))) })
       case Tuple(values) =>
         Tuple(values.map(value => valuefyExpression(apply(value))))
 
@@ -46,7 +46,7 @@ object VendorizeBooleans extends StatelessTransformer {
     def unapply(op: BinaryOperator) =
       op match {
         case `<` | `>` | `<=` | `>=` | EqualityOperator.`_==` | EqualityOperator.`_!=` => Some(op)
-        case _ => None
+        case _                                                                         => None
       }
   }
 
@@ -56,7 +56,7 @@ object VendorizeBooleans extends StatelessTransformer {
     def unapply(op: UnaryOperation) =
       op.operator match {
         case `toUpperCase` | `toLowerCase` | `toLong` | `toInt` => Some(op)
-        case _ => None
+        case _                                                  => None
       }
   }
 

@@ -73,18 +73,19 @@ trait StatelessTransformer {
 
   def apply(e: Query): Query =
     e match {
-      case e: Entity          => e
-      case Filter(a, b, c)    => Filter(apply(a), applyIdent(b), apply(c))
-      case Map(a, b, c)       => Map(apply(a), applyIdent(b), apply(c))
-      case FlatMap(a, b, c)   => FlatMap(apply(a), applyIdent(b), apply(c))
-      case ConcatMap(a, b, c) => ConcatMap(apply(a), applyIdent(b), apply(c))
-      case SortBy(a, b, c, d) => SortBy(apply(a), applyIdent(b), apply(c), d)
-      case GroupBy(a, b, c)   => GroupBy(apply(a), applyIdent(b), apply(c))
-      case Aggregation(o, a)  => Aggregation(o, apply(a))
-      case Take(a, b)         => Take(apply(a), apply(b))
-      case Drop(a, b)         => Drop(apply(a), apply(b))
-      case Union(a, b)        => Union(apply(a), apply(b))
-      case UnionAll(a, b)     => UnionAll(apply(a), apply(b))
+      case e: Entity                 => e
+      case Filter(a, b, c)           => Filter(apply(a), applyIdent(b), apply(c))
+      case Map(a, b, c)              => Map(apply(a), applyIdent(b), apply(c))
+      case FlatMap(a, b, c)          => FlatMap(apply(a), applyIdent(b), apply(c))
+      case ConcatMap(a, b, c)        => ConcatMap(apply(a), applyIdent(b), apply(c))
+      case SortBy(a, b, c, d)        => SortBy(apply(a), applyIdent(b), apply(c), d)
+      case GroupBy(a, b, c)          => GroupBy(apply(a), applyIdent(b), apply(c))
+      case GroupByMap(a, b, c, d, e) => GroupByMap(apply(a), applyIdent(b), apply(c), applyIdent(d), apply(e))
+      case Aggregation(o, a)         => Aggregation(o, apply(a))
+      case Take(a, b)                => Take(apply(a), apply(b))
+      case Drop(a, b)                => Drop(apply(a), apply(b))
+      case Union(a, b)               => Union(apply(a), apply(b))
+      case UnionAll(a, b)            => UnionAll(apply(a), apply(b))
       case Join(t, a, b, iA, iB, on) =>
         Join(t, apply(a), apply(b), applyIdent(iA), applyIdent(iB), apply(on))
       case FlatJoin(t, a, iA, on) =>
@@ -106,7 +107,8 @@ trait StatelessTransformer {
 
   def apply(e: Property): Property =
     e match {
-      case Property.Opinionated(a, name, renameable, visibility) => Property.Opinionated(apply(a), name, renameable, visibility)
+      case Property.Opinionated(a, name, renameable, visibility) =>
+        Property.Opinionated(apply(a), name, renameable, visibility)
     }
 
   def apply(e: Operation): Operation =
@@ -121,21 +123,22 @@ trait StatelessTransformer {
       case e: Constant   => e
       case NullValue     => NullValue
       case Tuple(values) => Tuple(values.map(apply))
-      case CaseClass(tuples) => {
+      case CaseClass(n, tuples) => {
         val (keys, values) = tuples.unzip
-        CaseClass(keys.zip(values.map(apply)))
+        CaseClass(n, keys.zip(values.map(apply)))
       }
     }
 
   def apply(e: Action): Action =
     e match {
-      case Update(query, assignments)                 => Update(apply(query), assignments.map(apply))
-      case Insert(query, assignments)                 => Insert(apply(query), assignments.map(apply))
-      case Delete(query)                              => Delete(apply(query))
-      case Returning(query, alias, property)          => Returning(apply(query), applyIdent(alias), apply(property))
-      case ReturningGenerated(query, alias, property) => ReturningGenerated(apply(query), applyIdent(alias), apply(property))
-      case Foreach(query, alias, body)                => Foreach(apply(query), applyIdent(alias), apply(body))
-      case OnConflict(query, target, action)          => OnConflict(apply(query), apply(target), apply(action))
+      case Update(query, assignments)        => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments)        => Insert(apply(query), assignments.map(apply))
+      case Delete(query)                     => Delete(apply(query))
+      case Returning(query, alias, property) => Returning(apply(query), applyIdent(alias), apply(property))
+      case ReturningGenerated(query, alias, property) =>
+        ReturningGenerated(apply(query), applyIdent(alias), apply(property))
+      case Foreach(query, alias, body)       => Foreach(apply(query), applyIdent(alias), apply(body))
+      case OnConflict(query, target, action) => OnConflict(apply(query), apply(target), apply(action))
     }
 
   def apply(e: OnConflict.Target): OnConflict.Target =

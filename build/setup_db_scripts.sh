@@ -133,7 +133,7 @@ function setup_sqlserver() {
     /opt/mssql-tools/bin/sqlcmd -S $1 -U SA -P "QuillRocks!" -d quill_test -i $2
 }
 
-# Do a simple necat poll to make sure the oracle database is ready.
+# Do a simple netcat poll to make sure the oracle database is ready.
 # All internal database creation and schema setup scripts are handled
 # by the container and docker-compose steps.
 
@@ -149,6 +149,13 @@ function setup_oracle() {
       -u 'jdbc:oracle:thin:@oracle:1521:xe' \
       -n quill_test -p 'QuillRocks!' \
       -f "$ORACLE_SCRIPT" \
+      --showWarnings=false
+
+    echo "Extending Oracle Expirations"
+    java -cp '/sqlline/sqlline.jar:/sqlline/ojdbc.jar' 'sqlline.SqlLine' \
+      -u 'jdbc:oracle:thin:@oracle:1521:xe' \
+      -n quill_test -p 'QuillRocks!' \
+      -e "alter profile DEFAULT limit PASSWORD_REUSE_TIME unlimited; alter profile DEFAULT limit PASSWORD_LIFE_TIME  unlimited; alter profile DEFAULT limit PASSWORD_GRACE_TIME unlimited;" \
       --showWarnings=false
 
     echo "Connected to Oracle"

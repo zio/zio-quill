@@ -1,12 +1,11 @@
 package io.getquill.context.jasync.postgres
 
-import java.util.concurrent.ConcurrentLinkedQueue
+import io.getquill.context.sql.base.QueryResultTypeSpec
 
+import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.math.BigDecimal.int2bigDecimal
-
-import io.getquill.context.sql.QueryResultTypeSpec
 
 class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
 
@@ -18,8 +17,8 @@ class QueryResultTypePostgresAsyncSpec extends QueryResultTypeSpec {
   override def beforeAll = {
     await(testContext.run(deleteAll))
     val ids = await(testContext.run(liftQuery(productEntries).foreach(e => productInsert(e))))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()

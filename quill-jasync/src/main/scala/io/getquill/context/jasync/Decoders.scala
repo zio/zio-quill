@@ -1,12 +1,12 @@
 package io.getquill.context.jasync
 
-import java.math.{ BigDecimal => JavaBigDecimal }
+import java.math.{BigDecimal => JavaBigDecimal}
 import java.time._
 import java.util.Date
 
 import io.getquill.util.Messages.fail
 
-import scala.reflect.{ ClassTag, classTag }
+import scala.reflect.{ClassTag, classTag}
 
 trait Decoders {
   this: JAsyncContext[_, _, _] =>
@@ -15,18 +15,17 @@ trait Decoders {
 
   type DecoderSqlType = SqlTypes.SqlTypes
 
-  case class AsyncDecoder[T](sqlType: DecoderSqlType)(implicit decoder: BaseDecoder[T])
-    extends BaseDecoder[T] {
+  case class AsyncDecoder[T](sqlType: DecoderSqlType)(implicit decoder: BaseDecoder[T]) extends BaseDecoder[T] {
     override def apply(index: Index, row: ResultRow, session: Session) =
       decoder(index, row, session)
   }
 
   def decoder[T: ClassTag](
-    f:       PartialFunction[Any, T] = PartialFunction.empty,
+    f: PartialFunction[Any, T] = PartialFunction.empty,
     sqlType: DecoderSqlType
   ): Decoder[T] =
     AsyncDecoder[T](sqlType)(new BaseDecoder[T] {
-      def apply(index: Index, row: ResultRow, session: Session) = {
+      def apply(index: Index, row: ResultRow, session: Session) =
         row.get(index) match {
           case value: T                      => value
           case value if f.isDefinedAt(value) => f(value)
@@ -35,7 +34,6 @@ trait Decoders {
               s"Value '$value' at index $index can't be decoded to '${classTag[T].runtimeClass}'"
             )
         }
-      }
     })
 
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
@@ -46,7 +44,7 @@ trait Decoders {
 
   trait NumericDecoder[T] extends BaseDecoder[T] {
 
-    def apply(index: Index, row: ResultRow, session: Session) = {
+    def apply(index: Index, row: ResultRow, session: Session) =
       (row.get(index): Any) match {
         case v: Byte           => decode(v)
         case v: Short          => decode(v)
@@ -58,19 +56,17 @@ trait Decoders {
         case other =>
           fail(s"Value $other is not numeric, type: ${other.getClass.getCanonicalName}")
       }
-    }
 
     def decode[U](v: U)(implicit n: Numeric[U]): T
   }
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     AsyncDecoder(d.sqlType)(new BaseDecoder[Option[T]] {
-      def apply(index: Index, row: ResultRow, session: Session) = {
+      def apply(index: Index, row: ResultRow, session: Session) =
         row.get(index) match {
           case null  => None
           case value => Some(d(index, row, session))
         }
-      }
     })
 
   implicit val stringDecoder: Decoder[String] = decoder[String](PartialFunction.empty, SqlTypes.VARCHAR)
@@ -82,22 +78,31 @@ trait Decoders {
     })
 
   implicit val booleanDecoder: Decoder[Boolean] =
-    decoder[Boolean]({
-      case v: Byte  => v == (1: Byte)
-      case v: Short => v == (1: Short)
-      case v: Int   => v == 1
-      case v: Long  => v == 1L
-    }, SqlTypes.BOOLEAN)
+    decoder[Boolean](
+      {
+        case v: Byte  => v == (1: Byte)
+        case v: Short => v == (1: Short)
+        case v: Int   => v == 1
+        case v: Long  => v == 1L
+      },
+      SqlTypes.BOOLEAN
+    )
 
   implicit val byteDecoder: Decoder[Byte] =
-    decoder[Byte]({
-      case v: Short => v.toByte
-    }, SqlTypes.TINYINT)
+    decoder[Byte](
+      { case v: Short =>
+        v.toByte
+      },
+      SqlTypes.TINYINT
+    )
 
   implicit val shortDecoder: Decoder[Short] =
-    decoder[Short]({
-      case v: Byte => v.toShort
-    }, SqlTypes.SMALLINT)
+    decoder[Short](
+      { case v: Byte =>
+        v.toShort
+      },
+      SqlTypes.SMALLINT
+    )
 
   implicit val intDecoder: Decoder[Int] =
     AsyncDecoder(SqlTypes.INTEGER)(new NumericDecoder[Int] {
@@ -125,10 +130,14 @@ trait Decoders {
 
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]](PartialFunction.empty, SqlTypes.TINYINT)
 
-  implicit val dateDecoder: Decoder[Date] = decoder[Date]({
-    case date: LocalDateTime => Date.from(date.atZone(dateTimeZone).toInstant)
-    case date: LocalDate     => Date.from(date.atStartOfDay.atZone(dateTimeZone).toInstant)
-  }, SqlTypes.TIMESTAMP)
+  implicit val dateDecoder: Decoder[Date] = decoder[Date](
+    {
+      case date: LocalDateTime => Date.from(date.atZone(dateTimeZone).toInstant)
+      case date: LocalDate     => Date.from(date.atStartOfDay.atZone(dateTimeZone).toInstant)
+    },
+    SqlTypes.TIMESTAMP
+  )
   implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate](PartialFunction.empty, SqlTypes.DATE)
-  implicit val localDateTimeDecoder: Decoder[LocalDateTime] = decoder[LocalDateTime](PartialFunction.empty, SqlTypes.TIMESTAMP)
+  implicit val localDateTimeDecoder: Decoder[LocalDateTime] =
+    decoder[LocalDateTime](PartialFunction.empty, SqlTypes.TIMESTAMP)
 }

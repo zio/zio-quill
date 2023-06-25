@@ -1,8 +1,10 @@
 package io.getquill.monad
 
+import io.getquill.MirrorContexts
+
 class SyncIOMonadSpec extends IOMonadSpec {
 
-  override val ctx = io.getquill.testContext
+  override val ctx = MirrorContexts.testContext
   import ctx._
 
   override def eval[T](io: IO[T, _]) =

@@ -1,5 +1,7 @@
 package io.getquill
 
+import io.getquill.base.Spec
+
 class QueryProbingSpec extends Spec {
 
   "fails if the context can't be resolved at compile time" in {
