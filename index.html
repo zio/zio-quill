@@ -84,7 +84,7 @@
     Flatdoc.run({
       fetcher: function(callback) {
         fetch(function(err, markdown) {
-          callback(err, markdown.split("What is Quill?")[1])
+          callback(err, markdown.split("ZIO Quill")[1])
         });
       }
     });
