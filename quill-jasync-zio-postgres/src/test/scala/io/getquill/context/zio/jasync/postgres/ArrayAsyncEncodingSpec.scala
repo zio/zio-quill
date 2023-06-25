@@ -1,7 +1,7 @@
 package io.getquill.context.zio.jasync.postgres
 
-import java.time.{ LocalDate, LocalDateTime }
-import java.util.{ Date, UUID }
+import java.time.{LocalDate, LocalDateTime}
+import java.util.{Date, UUID}
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
 import zio.FiberFailure
@@ -44,32 +44,32 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
   }
 
   // Need to have an actual value in the table in order for the decoder to go off. Previously,
-  // there was guarenteed to be information there due to ordering of build artifacts but not anymore.
+  // there was guaranteed to be information there due to ordering of build artifacts but not anymore.
   "fail if found not an array" in {
     case class RealEncodingTestEntity(
-      v1:  String,
-      v2:  BigDecimal,
-      v3:  Boolean,
-      v4:  Byte,
-      v5:  Short,
-      v6:  Int,
-      v7:  Long,
-      v8:  Float,
-      v9:  Double,
+      v1: String,
+      v2: BigDecimal,
+      v3: Boolean,
+      v4: Byte,
+      v5: Short,
+      v6: Int,
+      v7: Long,
+      v8: Float,
+      v9: Double,
       v10: Array[Byte],
       v11: Date,
       v12: EncodingTestType,
       v13: LocalDate,
       v14: UUID,
-      o1:  Option[String],
-      o2:  Option[BigDecimal],
-      o3:  Option[Boolean],
-      o4:  Option[Byte],
-      o5:  Option[Short],
-      o6:  Option[Int],
-      o7:  Option[Long],
-      o8:  Option[Float],
-      o9:  Option[Double],
+      o1: Option[String],
+      o2: Option[BigDecimal],
+      o3: Option[Boolean],
+      o4: Option[Byte],
+      o5: Option[Short],
+      o6: Option[Int],
+      o7: Option[Long],
+      o8: Option[Float],
+      o9: Option[Double],
       o10: Option[Array[Byte]],
       o11: Option[Date],
       o12: Option[EncodingTestType],

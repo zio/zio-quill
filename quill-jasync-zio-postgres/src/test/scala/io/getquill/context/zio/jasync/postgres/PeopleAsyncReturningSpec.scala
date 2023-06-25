@@ -1,6 +1,6 @@
 package io.getquill.context.zio.jasync.postgres
 
-import io.getquill.context.sql.PeopleReturningSpec
+import io.getquill.context.sql.base.PeopleReturningSpec
 
 class PeopleAsyncReturningSpec extends PeopleReturningSpec with ZioSpec {
 
@@ -22,7 +22,7 @@ class PeopleAsyncReturningSpec extends PeopleReturningSpec with ZioSpec {
   "Ex 0 insert.returning(_.generatedColumn) mod" in {
     import `Ex 0 insert.returning(_.generatedColumn) mod`._
     runSyncUnsafe(for {
-      id <- testContext.run(op)
+      id     <- testContext.run(op)
       output <- testContext.run(get)
     } yield (output.toSet mustEqual result(id).toSet))
   }
@@ -31,14 +31,14 @@ class PeopleAsyncReturningSpec extends PeopleReturningSpec with ZioSpec {
     import `Ex 0.5 insert.returning(wholeRecord) mod`._
     runSyncUnsafe(for {
       product <- testContext.run(op)
-      output <- testContext.run(get)
+      output  <- testContext.run(get)
     } yield (output mustEqual result(product)))
   }
 
   "Ex 1 insert.returningMany(_.generatedColumn) mod" in {
     import `Ex 1 insert.returningMany(_.generatedColumn) mod`._
     runSyncUnsafe(for {
-      id <- testContext.run(op)
+      id     <- testContext.run(op)
       output <- testContext.run(get)
     } yield (output mustEqual result(id.head)))
   }
@@ -47,8 +47,8 @@ class PeopleAsyncReturningSpec extends PeopleReturningSpec with ZioSpec {
     import `Ex 2 update.returningMany(_.singleColumn) mod`._
     runSyncUnsafe(for {
       opResult <- testContext.run(op)
-      _ = opResult.toSet mustEqual expect.toSet
-      output <- testContext.run(get)
+      _         = opResult.toSet mustEqual expect.toSet
+      output   <- testContext.run(get)
     } yield (output.toSet mustEqual result.toSet))
   }
 
@@ -56,8 +56,8 @@ class PeopleAsyncReturningSpec extends PeopleReturningSpec with ZioSpec {
     import `Ex 3 delete.returningMany(wholeRecord)`._
     runSyncUnsafe(for {
       opResult <- testContext.run(op)
-      _ = opResult.toSet mustEqual expect.toSet
-      output <- testContext.run(get)
+      _         = opResult.toSet mustEqual expect.toSet
+      output   <- testContext.run(get)
     } yield (output.toSet mustEqual result.toSet))
   }
 
@@ -65,8 +65,8 @@ class PeopleAsyncReturningSpec extends PeopleReturningSpec with ZioSpec {
     import `Ex 4 update.returningMany(query)`._
     runSyncUnsafe(for {
       opResult <- testContext.run(op)
-      _ = opResult.toSet mustEqual expect.toSet
-      output <- testContext.run(get)
+      _         = opResult.toSet mustEqual expect.toSet
+      output   <- testContext.run(get)
     } yield (output.toSet mustEqual result.toSet))
   }
 }

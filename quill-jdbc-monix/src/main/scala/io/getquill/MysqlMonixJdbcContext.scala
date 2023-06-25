@@ -9,12 +9,13 @@ import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
-class MysqlMonixJdbcContext[N <: NamingStrategy](
-  val naming:     N,
+class MysqlMonixJdbcContext[+N <: NamingStrategy](
+  val naming: N,
   val dataSource: DataSource with Closeable,
-  runner:         EffectWrapper
+  runner: EffectWrapper
 ) extends MonixJdbcContext[MySQLDialect, N](dataSource, runner)
-  with MysqlJdbcContextBase[N] {
+    with MysqlJdbcContextBase[MySQLDialect, N] {
+  val idiom: MySQLDialect = MySQLDialect
 
   def this(naming: N, config: JdbcContextConfig, runner: EffectWrapper) = this(naming, config.dataSource, runner)
   def this(naming: N, config: Config, runner: EffectWrapper) = this(naming, JdbcContextConfig(config), runner)

@@ -1,12 +1,13 @@
 package io.getquill.context.sql.norm
 
 import io.getquill.ast.Constant
-import io.getquill.context.sql.{ FlattenSqlQuery, SqlQuery, _ }
+import io.getquill.context.sql.{FlattenSqlQuery, SqlQuery, _}
 
 /**
- * In SQL Server, `Order By` clauses are only allowed in sub-queries if the sub-query has a `TOP` or `OFFSET`
- * modifier. Otherwise an exception will be thrown. This transformation adds a 'dummy' `OFFSET 0` in this
- * scenario (if an `Offset` clause does not exist already).
+ * In SQL Server, `Order By` clauses are only allowed in sub-queries if the
+ * sub-query has a `TOP` or `OFFSET` modifier. Otherwise an exception will be
+ * thrown. This transformation adds a 'dummy' `OFFSET 0` in this scenario (if an
+ * `Offset` clause does not exist already).
  */
 object AddDropToNestedOrderBy {
 

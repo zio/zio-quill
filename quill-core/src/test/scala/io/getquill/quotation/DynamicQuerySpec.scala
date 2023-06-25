@@ -2,6 +2,7 @@ package io.getquill.quotation
 
 import io.getquill._
 import io.getquill.ast.Entity
+import io.getquill.base.Spec
 import io.getquill.dsl.DynamicQueryDsl
 import io.getquill.quat.Quat
 
@@ -64,7 +65,7 @@ class DynamicQuerySpec extends Spec {
   }
 
   // Need to put here so an summon TypeTag for these
-  case class S(v: String) extends Embedded
+  case class S(v: String)
   case class E(s: S)
   case class Person2(firstName: String, lastName: String)
 
@@ -634,7 +635,7 @@ class DynamicQuerySpec extends Spec {
     }
     "filterOpt" in {
       val o = Some(1)
-      val q = dynamicQuery[TestEntity].filterOpt(o) { (t, i) => quote(t.i == i) }
+      val q = dynamicQuery[TestEntity].filterOpt(o)((t, i) => quote(t.i == i))
       testContext.run(q).string mustEqual ("""querySchema("TestEntity").filter(v0 => v0.i == ?)""")
     }
     "update" in {

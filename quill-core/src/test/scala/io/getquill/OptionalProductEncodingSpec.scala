@@ -1,6 +1,7 @@
 package io.getquill
 
-import io.getquill.context.mirror.{ MirrorSession, Row }
+import io.getquill.base.Spec
+import io.getquill.context.mirror.{MirrorSession, Row}
 
 class OptionalProductEncodingSpec extends Spec {
 
@@ -8,7 +9,7 @@ class OptionalProductEncodingSpec extends Spec {
   import ctx._
 
   "optional product with optional embedded row" in {
-    case class Name(first: String, last: Int) extends Embedded
+    case class Name(first: String, last: Int)
     case class Person(id: Int, name: Option[Name], age: Int)
     case class Address(owner: Int, street: String)
 
@@ -44,8 +45,8 @@ class OptionalProductEncodingSpec extends Spec {
   }
 
   "optional product with multiple nested optional embeds" in {
-    case class InnerName(title: Int, last: String) extends Embedded
-    case class Name(first: String, last: Option[InnerName]) extends Embedded
+    case class InnerName(title: Int, last: String)
+    case class Name(first: String, last: Option[InnerName])
     case class Address(owner: Int, street: String)
     case class Person(id: Int, name: Option[Name])
 
@@ -68,7 +69,7 @@ class OptionalProductEncodingSpec extends Spec {
   }
 
   "optional product with nested optional with optional leaf" in {
-    case class Name(first: String, last: Option[Int]) extends Embedded
+    case class Name(first: String, last: Option[Int])
     case class Address(owner: Int, street: String)
     case class Person(id: Int, name: Option[Name], age: Int)
 

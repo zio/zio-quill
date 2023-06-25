@@ -1,10 +1,10 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
 import io.getquill.Literal
 import io.getquill.SqlMirrorContext
 import io.getquill.TestEntities
 import io.getquill.MySQLDialect
+import io.getquill.base.Spec
 import scala.util.Try
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {
@@ -18,7 +18,7 @@ class OffsetWithoutLimitWorkaroundSpec extends Spec {
   }
   import ctx._
 
-  "creates a synthectic limit" in {
+  "creates a synthetic limit" in {
     val q = quote {
       qr1.drop(1)
     }

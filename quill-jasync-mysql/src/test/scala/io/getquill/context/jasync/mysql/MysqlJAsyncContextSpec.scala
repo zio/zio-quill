@@ -1,10 +1,11 @@
 package io.getquill.context.jasync.mysql
 
-import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
+import com.github.jasync.sql.db.{QueryResult, ResultSetKt}
 import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.base.Spec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import io.getquill.{ Literal, MysqlJAsyncContext, ReturnAction, Spec }
+import io.getquill.{Literal, MysqlJAsyncContext, ReturnAction}
 
 class MysqlJAsyncContextSpec extends Spec {
 
@@ -21,8 +22,7 @@ class MysqlJAsyncContextSpec extends Spec {
     val inserted: Long = await(testContext.run {
       qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
     })
-    await(testContext.run(qr4.filter(_.i == lift(inserted))))
-      .head.i mustBe inserted
+    await(testContext.run(qr4.filter(_.i == lift(inserted)))).head.i mustBe inserted
   }
 
   "performIO" in {
@@ -38,13 +38,15 @@ class MysqlJAsyncContextSpec extends Spec {
       override def handleSingleResult[T](sql: String, list: List[T]) = super.handleSingleResult(sql, list)
 
       override def extractActionResult[O](
-        returningAction:    ReturnAction,
+        returningAction: ReturnAction,
         returningExtractor: ctx.Extractor[O]
       )(result: QueryResult) =
         super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET))
+      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(
+        new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET)
+      )
       ctx.handleSingleResult("<not used>", v)
     }
     ctx.close

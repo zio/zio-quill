@@ -1,7 +1,7 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
 import io.getquill.Ord
+import io.getquill.base.Spec
 
 class QueryResultTypeOrientDBSync extends Spec {
 
@@ -17,7 +17,7 @@ class QueryResultTypeOrientDBSync extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     ctx.run(quote(query[OrderTestEntity].delete))
-    entries.foreach(e => ctx.run(quote { query[OrderTestEntity].insertValue(lift(e)) }))
+    entries.foreach(e => ctx.run(quote(query[OrderTestEntity].insertValue(lift(e)))))
   }
 
   "return list" - {
@@ -68,7 +68,7 @@ class QueryResultTypeOrientDBSync extends Spec {
     "paramlize size" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      ctx.run(quote { query[OrderTestEntity].filter(_.id == lift(0)).size }) mustEqual 0
+      ctx.run(quote(query[OrderTestEntity].filter(_.id == lift(0)).size)) mustEqual 0
     }
   }
 }

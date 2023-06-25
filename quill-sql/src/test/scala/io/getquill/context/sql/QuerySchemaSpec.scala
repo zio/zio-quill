@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Literal, PostgresDialect, Spec, SqlMirrorContext, TestEntities }
+import io.getquill.base.Spec
+import io.getquill.{Literal, PostgresDialect, SqlMirrorContext, TestEntities}
 
 class QuerySchemaSpec extends Spec {
 
