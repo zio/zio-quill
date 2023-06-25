@@ -284,7 +284,7 @@ lazy val `quill-engine` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi"            %%% "pprint"                  % "0.6.6",
+        "com.lihaoyi"            %%% "pprint"                  % "0.8.1",
         "io.github.cquiroz"      %%% "scala-java-time"         % "2.5.0",
         "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
         "io.suzaku"              %%% "boopickle"               % "1.4.0"
@@ -314,7 +314,7 @@ lazy val `quill-core` =
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % "0.6.6"
+        "com.lihaoyi" %%% "pprint" % "0.8.1"
       ),
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages         := ".*"
@@ -534,7 +534,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.1.24",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.0",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -547,7 +547,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.1.24"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.0"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -559,7 +559,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.1.24"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.2.0"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -571,7 +571,7 @@ lazy val `quill-jasync-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.1.24",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.0",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
         "dev.zio"                %% "zio"                % Version.zio,
         "dev.zio"                %% "zio-streams"        % Version.zio
@@ -587,7 +587,7 @@ lazy val `quill-jasync-zio-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.1.24"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.0"
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
@@ -599,7 +599,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.15.0",
+        "com.datastax.oss" % "java-driver-core" % "4.16.0",
         (CrossVersion.partialVersion(scalaVersion.value) match {
           case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
           case _             => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
@@ -671,7 +671,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.19"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.20"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -762,7 +762,7 @@ val scala_v_30 = "3.3.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback"  % "logback-classic" % "1.3.7" % Test
+    "ch.qos.logback" % "logback-classic" % "1.3.8" % Test
   )
 )
 
@@ -772,7 +772,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "com.lihaoyi"             %% "pprint"    % "0.6.6",
+    "com.lihaoyi"             %% "pprint"    % "0.8.1",
     "org.scalatest"          %%% "scalatest" % "3.2.16" % Test,
     "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
@@ -784,7 +784,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
       )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.10.0")
+    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0")
   },
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
