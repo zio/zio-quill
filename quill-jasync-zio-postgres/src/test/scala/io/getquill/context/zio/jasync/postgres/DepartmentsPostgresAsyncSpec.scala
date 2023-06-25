@@ -1,6 +1,6 @@
 package io.getquill.context.zio.jasync.postgres
 
-import io.getquill.context.sql.DepartmentsSpec
+import io.getquill.context.sql.base.DepartmentsSpec
 
 class DepartmentsPostgresAsyncSpec extends DepartmentsSpec with ZioSpec {
 
@@ -22,7 +22,9 @@ class DepartmentsPostgresAsyncSpec extends DepartmentsSpec with ZioSpec {
     }
 
   "Example 8 - nested naive" in {
-    runSyncUnsafe(testContext.run(`Example 8 expertise naive`(lift(`Example 8 param`)))) mustEqual `Example 8 expected result`
+    runSyncUnsafe(
+      testContext.run(`Example 8 expertise naive`(lift(`Example 8 param`)))
+    ) mustEqual `Example 8 expected result`
   }
 
   "Example 9 - nested db" in {

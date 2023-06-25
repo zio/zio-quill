@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc.sqlserver
 
-import io.getquill.{ Literal, Spec, SqlServerJdbcContext }
+import io.getquill.base.Spec
+import io.getquill.{Literal, SqlServerJdbcContext}
 
 class JdbcContextSpec extends Spec {
 
@@ -47,7 +48,8 @@ class JdbcContextSpec extends Spec {
     }
     "prepare" in {
       ctx.prepareParams(
-        "select * from Person where name=? and age > ?", (ps, session) => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?",
+        (ps, session) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }
@@ -78,7 +80,9 @@ class JdbcContextSpec extends Spec {
     "with multiple columns and operations" in {
       ctx.run(qr1.delete)
       val inserted = ctx.run {
-        qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1
+          .insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true)))
+          .returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe inserted
     }
@@ -87,8 +91,7 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1Emb.delete)
       ctx.run(qr1Emb.insertValue(lift(TestEntityEmb(Emb("one", 1), 18L, Some(123)))))
       val inserted = ctx.run {
-        qr1Emb.insertValue(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r =>
-          (r.emb.i, r.o))
+        qr1Emb.insertValue(lift(TestEntityEmb(Emb("two", 2), 18L, Some(123)))).returning(r => (r.emb.i, r.o))
       }
       (2, Some(123)) mustBe inserted
     }
@@ -119,7 +122,9 @@ class JdbcContextSpec extends Spec {
       ctx.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = ctx.run {
-        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
+        qr1
+          .updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true)))
+          .returning(r => (r.i + 100, r.s, r.o.map(_ + 100)))
       }
       (1 + 100, "foo", Some(123 + 100)) mustBe updated
     }

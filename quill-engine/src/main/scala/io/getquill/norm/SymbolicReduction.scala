@@ -1,17 +1,20 @@
 package io.getquill.norm
 
-import io.getquill.ast.{ Filter, FlatMap, Query, Union, UnionAll }
+import io.getquill.ast.{Filter, FlatMap, Query, Union, UnionAll}
+import io.getquill.util.TraceConfig
 
 /**
- * This stage represents Normalization Stage1: Symbolic Reduction in Philip Wadler's Paper
- * "A Practical Theory of Language Integrated Query", given in Figure 11.
- * http://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf
+ * This stage represents Normalization Stage1: Symbolic Reduction in Philip
+ * Wadler's Paper "A Practical Theory of Language Integrated Query", given in
+ * Figure 11.
+ * https://homepages.inf.ed.ac.uk/slindley/papers/practical-theory-of-linq.pdf
  *
- * It represents foundational normalizations done to sequences that represents queries.
- * In Wadler's paper, he characterizes them as `for x in P ...`` whereas in Quill they are
- * characterized as list comprehensions i.e. `P.flatMap(x => ...)`.
+ * It represents foundational normalizations done to sequences that represents
+ * queries. In Wadler's paper, he characterizes them as `for x in P ...``
+ * whereas in Quill they are characterized as list comprehensions i.e.
+ * `P.flatMap(x => ...)`.
  */
-object SymbolicReduction {
+class SymbolicReduction(traceConfig: TraceConfig) {
 
   def unapply(q: Query) =
     q match {
@@ -41,7 +44,7 @@ object SymbolicReduction {
         val er = AttachToEntity(Filter(_, _, cr))(e)
         Some(FlatMap(a, d, er))
 
-      // This transformation does not have an analogue in Wadler's paper, it represents the fundemental nature of the Monadic 'bind' function
+      // This transformation does not have an analogue in Wadler's paper, it represents the fundamental nature of the Monadic 'bind' function
       // that A.flatMap(a => B).flatMap(b => C) is isomorphic to A.flatMap(a => B.flatMap(b => C)).
       //
       // a.flatMap(b => c).flatMap(d => e) =>

@@ -1,17 +1,20 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.testContext.TestEntity
-import io.getquill.testContext.implicitOrd
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts.testContext.TestEntity
+import io.getquill.MirrorContexts.testContext.implicitOrd
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qr2
+import io.getquill.MirrorContexts.testContext.query
+import io.getquill.MirrorContexts.testContext.quote
+import io.getquill.MirrorContexts.testContext.unquote
+import io.getquill.util.TraceConfig
 
 class ApplyMapSpec extends Spec {
 
-  "avoids applying the intermmediate map after a groupBy" - {
+  val ApplyMap = new ApplyMap(TraceConfig.Empty)
+
+  "avoids applying the intermediate map after a groupBy" - {
     "flatMap" in {
       val q = quote {
         qr1.groupBy(t => t.s).map(y => y._1).flatMap(s => qr2.filter(z => z.s == s))
@@ -177,10 +180,16 @@ class ApplyMapSpec extends Spec {
       val q = quote {
         qr1.map(y => y.s).nested
       }
-      val n = quote {
-        qr1.nested.map(y => y.s)
-      }
-      ApplyMap.unapply(q.ast) mustEqual Some(n.ast)
+      // I.e. apply-map should not change anything in a nested query. The original structure should be preserved
+      // since nesting a query should isolate everything inside the nesting.
+      // For example this:
+      //   ApplyMap(query[Person].nested.map(p => p.age + 1)
+      // Should NOT reduce to this:
+      //   ApplyMap(query[Person].map(p => p.age + 1).nested
+      // The original query should remain unaltered.
+      // That is the semantic meaning of `nested` and things like impure-infixes rely on that.
+      // (e.g. if the impure-infix is a partition-by it needs to remain as-is and not be moved around the query).
+      ApplyMap.unapply(q.ast) mustEqual None
     }
     "mapped join" - {
       "left" in {

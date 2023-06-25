@@ -2,9 +2,11 @@
 target
 null
 .classpath
+null/
 .project
 .settings
 .bsp
+.history
 .cache*
 .jvmopts
 queries.sql
@@ -43,3 +45,4 @@ project/.bloop/
 .jvmopts
 .DS_Store
 .vscode
+.history

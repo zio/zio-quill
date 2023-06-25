@@ -1,13 +1,11 @@
 package io.getquill.sqlserver
 
 import io.getquill.PeopleZioSpec
-import io.getquill.Prefix
+
 import org.scalatest.matchers.should.Matchers._
-import io.getquill.context.ZioJdbc._
 
 class PeopleZioJdbcSpec extends PeopleZioSpec {
 
-  override def prefix: Prefix = Prefix("testSqlServerDB")
   val context = testContext
   import testContext._
 
@@ -16,7 +14,7 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
     testContext.transaction {
       for {
         _ <- testContext.run(query[Couple].delete)
-        _ <- testContext.run(query[Person].filter(_.age > 0).delete)
+        _ <- testContext.run(query[Person].delete)
         _ <- testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
         _ <- testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
       } yield ()
@@ -28,7 +26,9 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
   }
 
   "Example 2 - range simple" in {
-    testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`))).runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
+    testContext
+      .run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))
+      .runSyncUnsafe() should contain theSameElementsAs `Ex 2 expected result`
   }
 
   "Example 3 - satisfies" in {
@@ -40,7 +40,9 @@ class PeopleZioJdbcSpec extends PeopleZioSpec {
   }
 
   "Example 5 - compose" in {
-    testContext.run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`))).runSyncUnsafe() mustEqual `Ex 5 expected result`
+    testContext
+      .run(`Ex 5 compose`(lift(`Ex 5 param 1`), lift(`Ex 5 param 2`)))
+      .runSyncUnsafe() mustEqual `Ex 5 expected result`
   }
 
   "Example 6 - predicate 0" in {

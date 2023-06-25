@@ -1,9 +1,9 @@
 package io.getquill.context
 
-import io.getquill.Spec
-import io.getquill.context.mirror.{ MirrorSession, Row }
-import io.getquill.testContext
-import io.getquill.testContext._
+import io.getquill.base.Spec
+import io.getquill.context.mirror.{MirrorSession, Row}
+import io.getquill.MirrorContexts.testContext
+import io.getquill.MirrorContexts.testContext._
 
 case class ValueClass(value: Int) extends AnyVal
 

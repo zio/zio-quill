@@ -9,12 +9,13 @@ import io.getquill.context.monix.MonixJdbcContext
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
-class SqliteMonixJdbcContext[N <: NamingStrategy](
-  val naming:     N,
+class SqliteMonixJdbcContext[+N <: NamingStrategy](
+  val naming: N,
   val dataSource: DataSource with Closeable,
-  runner:         EffectWrapper
+  runner: EffectWrapper
 ) extends MonixJdbcContext[SqliteDialect, N](dataSource, runner)
-  with SqliteJdbcContextBase[N] {
+    with SqliteJdbcContextBase[SqliteDialect, N] {
+  val idiom: SqliteDialect = SqliteDialect
 
   def this(naming: N, config: JdbcContextConfig, runner: EffectWrapper) = this(naming, config.dataSource, runner)
   def this(naming: N, config: Config, runner: EffectWrapper) = this(naming, JdbcContextConfig(config), runner)

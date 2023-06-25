@@ -1,6 +1,6 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import scala.util.Success
 
 class QuillSparkContextSpec extends Spec {
@@ -32,7 +32,7 @@ class QuillSparkContextSpec extends Spec {
     }
     "mapped decoder" in {
       implicit val m = MappedEncoding[String, Int](_.toInt)
-      val d = mappedDecoder[String, Int]
+      val d          = mappedDecoder[String, Int]
       intercept[IllegalStateException] {
         d(0, {}, ())
       }

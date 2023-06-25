@@ -1,6 +1,6 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class DecodeNullSpec extends Spec {
 

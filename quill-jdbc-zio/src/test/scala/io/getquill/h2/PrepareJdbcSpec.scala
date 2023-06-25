@@ -1,22 +1,22 @@
 package io.getquill.h2
 
-import java.sql.{ Connection, ResultSet }
+import java.sql.{Connection, ResultSet}
 import io.getquill.PrepareZioJdbcSpecBase
-import io.getquill.Prefix
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import org.scalatest.BeforeAndAfter
 
 class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
 
-  def prefix = Prefix("testH2DB")
-  val context = testContext
+  val context = testContext.underlying
   import context._
+  implicit val implicitPool = Implicit(pool)
 
   before {
     testContext.run(query[Product].delete).runSyncUnsafe()
   }
 
   def productExtractor = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
-  val prepareQuery = prepare(query[Product])
+  val prepareQuery     = prepare(query[Product])
 
   "single" in {
     val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))

@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.mysql
 
-import io.getquill.context.sql.OnConflictSpec
+import io.getquill.context.sql.base.OnConflictSpec
 
 class OnConflictJdbcSpec extends OnConflictSpec {
   val ctx = testContext
