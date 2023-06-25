@@ -1,8 +1,7 @@
 package io.getquill.context.zio.jasync.postgres
 
-import java.time.{ LocalDate, LocalDateTime, ZonedDateTime }
+import java.time.{LocalDate, LocalDateTime, ZonedDateTime}
 import io.getquill.context.sql.EncodingSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 
 import java.util.Date
 import java.util.UUID
@@ -16,8 +15,8 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
   "encodes and decodes types" in {
     val r =
       for {
-        _ <- context.run(delete)
-        _ <- context.run(liftQuery(insertValues).foreach(e => insert(e)))
+        _      <- context.run(delete)
+        _      <- context.run(liftQuery(insertValues).foreach(e => insert(e)))
         result <- context.run(query[EncodingTestEntity])
       } yield result
 
@@ -28,15 +27,16 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
     case class EncodingUUIDTestEntity(v1: UUID)
     val testUUID = UUID.fromString("e5240c08-6ee7-474a-b5e4-91f79c48338f")
 
-    //delete old values
-    val q0 = quote(query[EncodingUUIDTestEntity].delete)
+    // delete old values
+    val q0   = quote(query[EncodingUUIDTestEntity].delete)
     val rez0 = runSyncUnsafe(testContext.run(q0))
 
-    //insert new uuid
-    val rez1 = runSyncUnsafe(testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
+    // insert new uuid
+    val rez1 =
+      runSyncUnsafe(testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
 
-    //verify you can get the uuid back from the db
-    val q2 = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
+    // verify you can get the uuid back from the db
+    val q2   = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
     val rez2 = runSyncUnsafe(testContext.run(q2))
 
     rez2 mustEqual List(testUUID)
@@ -46,23 +46,22 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
     "numeric" in {
       runSyncUnsafe(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
       case class EncodingTestEntity(v1: Int)
-      val e = intercept[FiberFailure] {
+      val e = intercept[IllegalStateException] {
         runSyncUnsafe(testContext.run(query[EncodingTestEntity]))
       }
     }
     "non-numeric" in {
       runSyncUnsafe(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
       case class EncodingTestEntity(v1: Date)
-      val e = intercept[FiberFailure] {
+      val e = intercept[IllegalStateException] {
         runSyncUnsafe(testContext.run(query[EncodingTestEntity]))
       }
     }
   }
 
   "encodes sets" in {
-    val q = quote {
-      (set: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => set.contains(t.v6))
+    val q = quote { (set: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => set.contains(t.v6))
     }
     val fut =
       for {
@@ -75,7 +74,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
 
   "returning UUID" in {
     val success = for {
-      uuid <- runSyncUnsafe(testContext.run(insertBarCode(lift(barCodeEntry))))
+      uuid    <- runSyncUnsafe(testContext.run(insertBarCode(lift(barCodeEntry))))
       barCode <- runSyncUnsafe(testContext.run(findBarCodeByUuid(uuid))).headOption
     } yield {
       verifyBarcode(barCode)
@@ -83,23 +82,12 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
     success must not be empty
   }
 
-  "decodes joda DateTime, LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: JodaLocalDate, v2: JodaLocalDateTime, v3: JodaDateTime)
-    val entity = DateEncodingTestEntity(JodaLocalDate.now, JodaLocalDateTime.now, JodaDateTime.now)
+  "decodes LocalDate and LocalDateTime types" in {
+    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
     val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
-      result <- testContext.run(query[DateEncodingTestEntity])
-    } yield result
-    runSyncUnsafe(r) mustBe Seq(entity)
-  }
-
-  "decodes ZonedDateTime, LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: ZonedDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now, ZonedDateTime.now)
-    val r = for {
-      _ <- testContext.run(query[DateEncodingTestEntity].delete)
-      _ <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
+      _      <- testContext.run(query[DateEncodingTestEntity].delete)
+      _      <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
       result <- testContext.run(query[DateEncodingTestEntity])
     } yield result
     runSyncUnsafe(r) mustBe Seq(entity)
@@ -110,7 +98,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
       def apply()(implicit c: TestContext) = {
         import c._
         for {
-          _ <- c.run(query[EncodingTestEntity].delete)
+          _      <- c.run(query[EncodingTestEntity].delete)
           result <- c.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         } yield result
       }

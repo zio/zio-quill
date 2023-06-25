@@ -1,14 +1,15 @@
 package io.getquill.util
 
+import io.getquill.base.Spec
 import io.getquill.util.Messages.LogToFile
-import io.getquill.Spec
 import scala.io.Source
 
 class LogToFileSpec extends Spec {
 
-  "logs a query to file when enabled" in {
+  // TODO temporarily ignore this test, will release ZIO2 RC1 without query logging support
+  "logs a query to file when enabled" ignore {
     val queryLogName = "./LogToFileSpecQuery.sql"
-    val mockLogger = new QueryLogger(LogToFile(queryLogName))
+    val mockLogger   = new QueryLogger(LogToFile(queryLogName))
 
     val mockQuery = "SELECT * from foo_bar where id = ?"
 
@@ -17,7 +18,7 @@ class LogToFileSpec extends Spec {
     Thread.sleep(1000) // Give the async log a chance to finish up
 
     val queryFile = Source.fromFile(queryLogName)
-    val contents = queryFile.mkString.trim
+    val contents  = queryFile.mkString.trim
     queryFile.close()
 
     contents must not be empty

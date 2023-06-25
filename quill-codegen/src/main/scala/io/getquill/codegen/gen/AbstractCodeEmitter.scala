@@ -1,12 +1,12 @@
 package io.getquill.codegen.gen
 
 import io.getquill.codegen.model._
-import io.getquill.codegen.util.StringUtil.{ indent, _ }
+import io.getquill.codegen.util.StringUtil.{indent, _}
 
 case class EmitterSettings[TableMeta, ColumnMeta](
-  caseClassTables:   Seq[TableStereotype[TableMeta, ColumnMeta]],
+  caseClassTables: Seq[TableStereotype[TableMeta, ColumnMeta]],
   querySchemaTables: Seq[TableStereotype[TableMeta, ColumnMeta]],
-  codeWrapper:       CodeWrapper
+  codeWrapper: CodeWrapper
 )
 
 abstract class AbstractCodeEmitter {
@@ -80,8 +80,9 @@ trait PackageGen {
     codeWrapper match {
       case NoWrapper => innerCode
       case PackageHeader(packageName) => {
-        val out = if (packagePrefix.trim != "") s"package ${packagePrefix}.${packageName}\n\n"
-        else ""
+        val out =
+          if (packagePrefix.trim != "") s"package ${packagePrefix}.${packageName}\n\n"
+          else ""
         out + innerCode
       }
 

@@ -1,15 +1,14 @@
 package io.getquill.util
 
+import io.getquill.base.Spec
+
 import java.io.Closeable
-
 import scala.concurrent.duration.DurationInt
-
-import io.getquill.Spec
 
 class CacheSpec extends Spec {
 
   class Value extends Closeable {
-    var closes = 0
+    var closes         = 0
     override def close = closes += 1
   }
 

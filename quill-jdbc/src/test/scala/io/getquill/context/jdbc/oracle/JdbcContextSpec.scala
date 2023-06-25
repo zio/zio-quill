@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.oracle
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class JdbcContextSpec extends Spec {
 
@@ -50,7 +50,8 @@ class JdbcContextSpec extends Spec {
     }
     "prepare" in {
       testContext.prepareParams(
-        "select * from Person where name=? and age > ?", (ps, _) => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?",
+        (ps, _) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }

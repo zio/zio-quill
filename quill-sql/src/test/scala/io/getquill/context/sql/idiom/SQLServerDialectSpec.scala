@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.idiom.StringToken
 
 class SQLServerDialectSpec extends Spec {
@@ -25,7 +26,7 @@ class SQLServerDialectSpec extends Spec {
       qr1.take(15).map(t => t.i)
     }
     ctx.run(q).string mustEqual
-      "SELECT TOP 15 t.i FROM TestEntity t"
+      "SELECT TOP (15) t.i FROM TestEntity t"
   }
 
   "literal booleans" - {
@@ -72,7 +73,10 @@ class SQLServerDialectSpec extends Spec {
       "nested conditions" - {
         "inside then" in {
           val q = quote {
-            qr1.map(t => if (true) { if (false) true else false } else true)
+            qr1.map(t =>
+              if (true) { if (false) true else false }
+              else true
+            )
           }
           ctx.run(q).string mustEqual
             "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END ELSE 1 END FROM TestEntity t"
@@ -86,7 +90,10 @@ class SQLServerDialectSpec extends Spec {
         }
         "inside both" in {
           val q = quote {
-            qr1.map(t => if (true) { if (false) true else false } else { if (true) false else true })
+            qr1.map(t =>
+              if (true) { if (false) true else false }
+              else { if (true) false else true }
+            )
           }
           ctx.run(q).string mustEqual
             "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END WHEN 1 = 1 THEN 0 ELSE 1 END FROM TestEntity t"
@@ -101,7 +108,7 @@ class SQLServerDialectSpec extends Spec {
       qr1.sortBy(t => t.i)(Ord.desc).map(_.s)
     }
 
-    def offset[T](q: Quoted[Query[T]]) = quote(q.drop(1))
+    def offset[T](q: Quoted[Query[T]])      = quote(q.drop(1))
     def offsetFetch[T](q: Quoted[Query[T]]) = quote(q.drop(2).take(3))
 
     "offset" in {
@@ -196,5 +203,12 @@ class SQLServerDialectSpec extends Spec {
         """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 0L, Some(3)))).returningGenerated(r => query[TestEntity].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
+  }
+
+  case class Document(filename: String)
+  "Like operator should generate proper SQL" in {
+    val documents = quote(querySchema[Document]("document"))
+    ctx.run(documents.filter(d => d.filename like "A%")).string mustEqual
+      "SELECT d.filename FROM document d WHERE d.filename like 'A%'"
   }
 }

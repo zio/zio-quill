@@ -1,10 +1,11 @@
 package io.getquill.context.zio.jasync.postgres
 
-import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
+import com.github.jasync.sql.db.{QueryResult, ResultSetKt}
 import io.getquill.ReturnAction.ReturnColumns
+import io.getquill.base.Spec
 import io.getquill.context.zio.PostgresZioJAsyncContext
 
-import io.getquill.{ Literal, ReturnAction, Spec }
+import io.getquill.{Literal, ReturnAction}
 
 class PostgresJAsyncContextSpec extends Spec with ZioSpec {
 
@@ -21,8 +22,7 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
     val inserted: Long = runSyncUnsafe(testContext.run {
       qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
     })
-    runSyncUnsafe(testContext.run(qr4.filter(_.i == lift(inserted))))
-      .head.i mustBe inserted
+    runSyncUnsafe(testContext.run(qr4.filter(_.i == lift(inserted)))).head.i mustBe inserted
   }
   "Insert with returning with multiple columns" in {
     runSyncUnsafe(testContext.run(qr1.delete))
@@ -42,22 +42,28 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
 
   "cannot extract" in {
     object ctx extends PostgresZioJAsyncContext(Literal) {
+      override def handleSingleResult[T](sql: String, list: List[T]) = super.handleSingleResult(sql, list)
+
       override def extractActionResult[O](
-        returningAction:    ReturnAction,
+        returningAction: ReturnAction,
         returningExtractor: ctx.Extractor[O]
       )(result: QueryResult) =
         super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET))
+      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(
+        new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET)
+      )
+      ctx.handleSingleResult("<not used>", v)
     }
     ctx.close
   }
 
   "prepare" in {
-    testContext.prepareParams("", { (ps, session) =>
-      (Nil, ps ++ List("Sarah", 127))
-    }) mustEqual List("'Sarah'", "127")
+    testContext.prepareParams(
+      "",
+      (ps, session) => (Nil, ps ++ List("Sarah", 127))
+    ) mustEqual List("'Sarah'", "127")
   }
 
   override protected def beforeAll(): Unit = {

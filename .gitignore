@@ -2,6 +2,7 @@
 target
 null
 .classpath
+null/
 .project
 .settings
 .bsp
@@ -44,3 +45,4 @@ project/.bloop/
 .jvmopts
 .DS_Store
 .vscode
+.history

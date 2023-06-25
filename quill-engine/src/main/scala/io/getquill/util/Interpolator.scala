@@ -10,17 +10,26 @@ import io.getquill.util.IndentUtil._
 import scala.collection.mutable
 import scala.util.matching.Regex
 
+case class TraceConfig(enabledTraces: List[TraceType])
+object TraceConfig {
+  val Empty = new TraceConfig(List())
+}
+
 class Interpolator(
-  traceType:     TraceType,
-  defaultIndent: Int                    = 0,
-  color:         Boolean                = Messages.traceColors,
-  qprint:        AstPrinter             = Messages.qprint,
-  out:           PrintStream            = System.out,
-  tracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
+  traceType: TraceType,
+  traceConfig: TraceConfig,
+  defaultIndent: Int = 0,
+  color: Boolean = Messages.traceColors,
+  qprint: AstPrinter = Messages.qprint,
+  out: PrintStream = System.out,
+  globalTracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
 ) {
   implicit class InterpolatorExt(sc: StringContext) {
     def trace(elements: Any*) = new Traceable(sc, elements)
   }
+
+  def tracesEnabled(traceType: TraceType) =
+    traceConfig.enabledTraces.contains(traceType) || globalTracesEnabled(traceType)
 
   class Traceable(sc: StringContext, elementsSeq: Seq[Any]) {
 
@@ -28,13 +37,13 @@ class Interpolator(
 
     private sealed trait PrintElement
     private case class Str(str: String, first: Boolean) extends PrintElement
-    private case class Elem(value: String) extends PrintElement
-    private case class Simple(value: String) extends PrintElement
-    private case object Separator extends PrintElement
+    private case class Elem(value: String)              extends PrintElement
+    private case class Simple(value: String)            extends PrintElement
+    private case object Separator                       extends PrintElement
 
     private def generateStringForCommand(value: Any, indent: Int) = {
       val objectString = qprint(value).string(color)
-      val oneLine = objectString.fitsOnOneLine
+      val oneLine      = objectString.fitsOnOneLine
       oneLine match {
         case true => s"${indent.prefix}> ${objectString}"
         case false =>
@@ -52,17 +61,17 @@ class Interpolator(
     sealed trait Splice { def value: String }
     object Splice {
       case class Simple(value: String) extends Splice // Simple splice into the string, don't indent etc...
-      case class Show(value: String) extends Splice // Indent, colorize the element etc...
+      case class Show(value: String)   extends Splice // Indent, colorize the element etc...
     }
 
     private def readBuffers() = {
       def orZero(i: Int): Int = if (i < 0) 0 else i
 
       val parts = sc.parts.iterator.toList
-      val elements = elementsSeq.toList.map(elem => {
+      val elements = elementsSeq.toList.map { elem =>
         if (elem.isInstanceOf[String]) Splice.Simple(elem.asInstanceOf[String])
         else Splice.Show(qprint(elem).string(color))
-      })
+      }
 
       val (firstStr, explicitIndent) = readFirst(parts.head)
       val indent =
@@ -150,7 +159,7 @@ class Interpolator(
       command
     }
 
-    def andReturn[T](command: => T) = {
+    def andReturn[T](command: => T) =
       logIfEnabled() match {
         case Some((output, indent)) =>
           // do the initial log
@@ -163,6 +172,25 @@ class Interpolator(
         case None =>
           command
       }
-    }
+
+    def andReturnIf[T](command: => T)(showIf: T => Boolean) =
+      logIfEnabled() match {
+        case Some((output, indent)) =>
+          // Even though we usually want to evaluate the command after the initial log was done
+          // (so that future logs are nested under this one after the intro text but not
+          // before the return) but we can't do that in this case because the switch indicating
+          // whether to output anything or not is dependant on the return value.
+          val result = command
+
+          if (showIf(result))
+            out.println(output)
+
+          if (showIf(result))
+            out.println(generateStringForCommand(result, indent))
+
+          result
+        case None =>
+          command
+      }
   }
 }

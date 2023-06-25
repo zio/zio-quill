@@ -50,7 +50,7 @@ trait StatefulTransformerWithStack[T] {
         val (ct, ctt) = btt.apply(c)(History(e))
         (If(at, bt, ct), ctt)
 
-      case l: Dynamic  => (l, this)
+      case l: Dynamic => (l, this)
 
       case l: External => (l, this)
 
@@ -135,6 +135,10 @@ trait StatefulTransformerWithStack[T] {
       case OptionGetOrNull(a) =>
         val (at, att) = apply(a)(History(o))
         (OptionGetOrNull(at), att)
+      case FilterIfDefined(a, b, c) =>
+        val (at, att) = apply(a)(History(o))
+        val (ct, ctt) = att.apply(c)(History(o))
+        (FilterIfDefined(at, b, ct), ctt)
       case OptionNone(_) => (o, this)
     }
 
@@ -154,70 +158,75 @@ trait StatefulTransformerWithStack[T] {
         (ListContains(at, ct), ctt)
     }
 
-  def apply(e: Query)(implicit parent: History): (Query, StatefulTransformerWithStack[T]) =
-    e match {
+  def apply(eq: Query)(implicit parent: History): (Query, StatefulTransformerWithStack[T]) =
+    eq match {
       case e: Entity => (e, this)
       case Filter(a, b, c) =>
-        val (at, att) = apply(a)(History(e))
-        val (ct, ctt) = att.apply(c)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
         (Filter(at, b, ct), ctt)
       case Map(a, b, c) =>
-        val (at, att) = apply(a)(History(e))
-        val (ct, ctt) = att.apply(c)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
         (Map(at, b, ct), ctt)
       case FlatMap(a, b, c) =>
-        val (at, att) = apply(a)(History(e))
-        val (ct, ctt) = att.apply(c)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
         (FlatMap(at, b, ct), ctt)
       case ConcatMap(a, b, c) =>
-        val (at, att) = apply(a)(History(e))
-        val (ct, ctt) = att.apply(c)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
         (ConcatMap(at, b, ct), ctt)
       case SortBy(a, b, c, d) =>
-        val (at, att) = apply(a)(History(e))
-        val (ct, ctt) = att.apply(c)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
         (SortBy(at, b, ct, d), ctt)
       case GroupBy(a, b, c) =>
-        val (at, att) = apply(a)(History(e))
-        val (ct, ctt) = att.apply(c)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
         (GroupBy(at, b, ct), ctt)
+      case GroupByMap(a, b, c, d, e) =>
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
+        val (et, ett) = ctt.apply(e)(History(eq))
+        (GroupByMap(at, b, ct, d, et), ett)
       case Aggregation(o, a) =>
-        val (at, att) = apply(a)(History(e))
+        val (at, att) = apply(a)(History(eq))
         (Aggregation(o, at), att)
       case Take(a, b) =>
-        val (at, att) = apply(a)(History(e))
-        val (bt, btt) = att.apply(b)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (bt, btt) = att.apply(b)(History(eq))
         (Take(at, bt), btt)
       case Drop(a, b) =>
-        val (at, att) = apply(a)(History(e))
-        val (bt, btt) = att.apply(b)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (bt, btt) = att.apply(b)(History(eq))
         (Drop(at, bt), btt)
       case Union(a, b) =>
-        val (at, att) = apply(a)(History(e))
-        val (bt, btt) = att.apply(b)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (bt, btt) = att.apply(b)(History(eq))
         (Union(at, bt), btt)
       case UnionAll(a, b) =>
-        val (at, att) = apply(a)(History(e))
-        val (bt, btt) = att.apply(b)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (bt, btt) = att.apply(b)(History(eq))
         (UnionAll(at, bt), btt)
       case Join(t, a, b, iA, iB, on) =>
-        val (at, att) = apply(a)(History(e))
-        val (bt, btt) = att.apply(b)(History(e))
-        val (ont, ontt) = btt.apply(on)(History(e))
+        val (at, att)   = apply(a)(History(eq))
+        val (bt, btt)   = att.apply(b)(History(eq))
+        val (ont, ontt) = btt.apply(on)(History(eq))
         (Join(t, at, bt, iA, iB, ont), ontt)
       case FlatJoin(t, a, iA, on) =>
-        val (at, att) = apply(a)(History(e))
-        val (ont, ontt) = att.apply(on)(History(e))
+        val (at, att)   = apply(a)(History(eq))
+        val (ont, ontt) = att.apply(on)(History(eq))
         (FlatJoin(t, at, iA, ont), ontt)
       case Distinct(a) =>
-        val (at, att) = apply(a)(History(e))
+        val (at, att) = apply(a)(History(eq))
         (Distinct(at), att)
       case DistinctOn(a, b, c) =>
-        val (at, att) = apply(a)(History(e))
-        val (ct, ctt) = att.apply(c)(History(e))
+        val (at, att) = apply(a)(History(eq))
+        val (ct, ctt) = att.apply(c)(History(eq))
         (DistinctOn(at, b, ct), ctt)
       case Nested(a) =>
-        val (at, att) = apply(a)(History(e))
+        val (at, att) = apply(a)(History(eq))
         (Nested(at), att)
     }
 
@@ -266,10 +275,10 @@ trait StatefulTransformerWithStack[T] {
       case Tuple(a) =>
         val (at, att) = apply(a)(s => (u => s.apply(u)(History(e))))
         (Tuple(at), att)
-      case CaseClass(a) =>
+      case CaseClass(n, a) =>
         val (keys, values) = a.unzip
-        val (at, att) = apply(values)(s => (u => s.apply(u)(History(e))))
-        (CaseClass(keys.zip(at)), att)
+        val (at, att)      = apply(values)(s => (u => s.apply(u)(History(e))))
+        (CaseClass(n, keys.zip(at)), att)
     }
 
   def apply(e: Action)(implicit parent: History): (Action, StatefulTransformerWithStack[T]) =
@@ -320,10 +329,11 @@ trait StatefulTransformerWithStack[T] {
         (OnConflict.Update(at), att)
     }
 
-  def apply[U, R](list: List[U])(f: StatefulTransformerWithStack[T] => U => (R, StatefulTransformerWithStack[T]))(implicit parent: History) =
-    list.foldLeft((List[R](), this)) {
-      case ((values, t), v) =>
-        val (vt, vtt) = f(t)(v)
-        (values :+ vt, vtt)
+  def apply[U, R](list: List[U])(f: StatefulTransformerWithStack[T] => U => (R, StatefulTransformerWithStack[T]))(
+    implicit parent: History
+  ) =
+    list.foldLeft((List[R](), this)) { case ((values, t), v) =>
+      val (vt, vtt) = f(t)(v)
+      (values :+ vt, vtt)
     }
 }

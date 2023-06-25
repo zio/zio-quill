@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
-import io.getquill.{ Literal, MirrorSqlDialect, Spec, SqlMirrorContext }
+import io.getquill.base.Spec
+import io.getquill.{Literal, MirrorSqlDialect, SqlMirrorContext}
 import io.getquill.context.sql.util.StringOps._
 
 class NestedDistinctSpec extends Spec {
@@ -12,13 +13,12 @@ class NestedDistinctSpec extends Spec {
     import ctx._
 
     "first operation" - {
-      case class MyEmb(name: String) extends Embedded
+      case class MyEmb(name: String)
       case class MyParent(myEmb: MyEmb)
 
       "first operation nesting with filter" in {
         val q = quote {
-          query[MyParent]
-            .distinct
+          query[MyParent].distinct
             .filter(_.myEmb.name == "test")
         }
 
@@ -27,8 +27,7 @@ class NestedDistinctSpec extends Spec {
 
       "first operation nesting with filter and outer nesting" in {
         val q = quote {
-          query[MyParent]
-            .distinct
+          query[MyParent].distinct
             .filter(f => f.myEmb.name == "test")
             .nested
         }
@@ -47,8 +46,8 @@ class NestedDistinctSpec extends Spec {
         ctx.run(q).string mustEqual "SELECT x3.myEmbname AS name FROM (SELECT DISTINCT x2.name AS myEmbname FROM MyParent x2 WHERE x2.name = 'firstTest') AS x3 WHERE x3.myEmbname = 'test'"
       }
 
-      "first operation nesting with filter before and after - groupBy" in { //hello
-        case class MyEmb(name: Int) extends Embedded
+      "first operation nesting with filter before and after - groupBy" in { // hello
+        case class MyEmb(name: Int)
         case class MyParent(myEmb: MyEmb)
 
         val q = quote {
@@ -101,8 +100,7 @@ class NestedDistinctSpec extends Spec {
 
       "first operation nesting with filter - nested" in {
         val q = quote {
-          query[MyParent]
-            .nested
+          query[MyParent].nested
             .filter(_.myEmb.name == "test")
         }
 
@@ -125,12 +123,13 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem.map(e => SimpleEnt(e.a + 1, e.b))
+        qschema
+          .map(e => SimpleEnt(e.a + 1, e.b))
           .distinct
           .map(e => SimpleEnt2(e.a + 2, e.b))
           .distinct
@@ -142,14 +141,15 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem.map(e => (e.a + 1, infix"foo(${e.b})".as[String]))
+        qschema
+          .map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
           .nested
-          .map(e => (e._1 + 2, infix"bar(${e._2})".as[String]))
+          .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
           .nested
       }
 
@@ -160,21 +160,22 @@ class NestedDistinctSpec extends Spec {
       case class SimpleEnt(a: Int, b: String)
       case class SimpleEnt2(aa: Int, bb: String)
 
-      val qschem = quote {
+      val qschema = quote {
         querySchema[SimpleEnt]("CustomEnt", _.a -> "field_a")
       }
 
       val q = quote {
-        qschem
-          .map(e => (e.a + 1, infix"foo(${e.b})".as[String]))
-          .map(e => (e._1 + 2, infix"bar(${e._2})".as[String]))
+        qschema
+          .map(e => (e.a + 1, sql"foo(${e.b})".as[String]))
+          .map(e => (e._1 + 2, sql"bar(${e._2})".as[String]))
       }
 
-      ctx.run(q).string mustEqual "SELECT e._1, e._2 FROM (SELECT e._1 + 2 AS _1, bar(e._2) AS _2 FROM (SELECT e.field_a + 1 AS _1, foo(e.b) AS _2 FROM CustomEnt e) AS e) AS e"
+      ctx.run(q).string mustEqual
+        "SELECT e._1 + 2 AS _1, bar(e._2) AS _2 FROM (SELECT e.field_a + 1 AS _1, foo(e.b) AS _2 FROM CustomEnt e) AS e"
     }
 
     "embedded entity from parent" - {
-      case class Emb(id: Int, name: String) extends Embedded
+      case class Emb(id: Int, name: String)
       case class Parent(idP: Int, emb: Emb)
       implicit val parentMeta = schemaMeta[Parent]("Parent", _.emb.name -> "theName")
 
@@ -200,191 +201,229 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id))
         }
-        ctx.run(q).string mustEqual "SELECT p.embtheName AS _1, p.embid AS _2 FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
+        ctx
+          .run(q)
+          .string mustEqual "SELECT e.theName AS _1, e.id AS _2 FROM (SELECT p.id, p.theName FROM Parent p) AS e"
       }
 
-      "can be propogated across query with naming intact and then used further" in {
+      "can be propagated across query with naming intact - embedded and column" in {
+        val q = quote {
+          query[Parent].map(p => (p.idP, p.emb)).nested.map(e => (e._1, e._2))
+        }
+        ctx.run(q).string mustEqual "SELECT e._1, e._2id AS id, e._2theName AS theName FROM (SELECT p.idP AS _1, p.id AS _2id, p.theName AS _2theName FROM Parent p) AS e"
+      }
+
+      "can be propagated across query with naming intact and then used further" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct.map(tup => (tup._1, tup._2)).distinct
         }
-        ctx.run(q).string mustEqual "SELECT DISTINCT e.theName AS _1, e.id AS _2 FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx.run(q).string mustEqual "SELECT DISTINCT p._1theName AS _1, p._1id AS _2 FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
-      "can be propogated across query with naming intact and then used further - nested" in {
+      "can be propagated across query with naming intact and then used further - nested" in {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id)).nested.map(tup => (tup._1, tup._2)).nested
         }
-        ctx.run(q).string mustEqual "SELECT p.embtheName AS _1, p.embid AS _2 FROM (SELECT x.embid, x.embtheName FROM (SELECT x.embid, x.embtheName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS x) AS x) AS p"
+        ctx.run(q).string mustEqual "SELECT x._1, x._2 FROM (SELECT tup._1, tup._2 FROM (SELECT e.theName AS _1, e.id AS _2 FROM (SELECT p.id, p.theName FROM Parent p) AS e) AS tup) AS x"
       }
 
-      "can be propogated across query with naming intact - returned as single property" in {
+      "can be propagated across query with naming intact - returned as single property" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name))
         }
-        ctx.run(q).string mustEqual "SELECT e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx.run(q).string mustEqual "SELECT p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
-      "can be propogated across query with naming intact - and the immediately returned" in {
+      "can be propagated across query with naming intact - and the immediately returned" in {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => e)
         }
-        ctx.run(q).string mustEqual "SELECT p.embid AS id, p.embtheName AS theName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT x.id, x.theName FROM (SELECT p.id, p.theName FROM Parent p) AS x"
       }
 
-      "can be propogated across distinct with naming intact - and the immediately returned" in {
+      "can be propagated across distinct with naming intact - and the immediately returned" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => e)
         }
         ctx.run(q).string mustEqual "SELECT DISTINCT p.id, p.theName FROM Parent p"
       }
 
-      "can be propogated across query with naming intact and then re-wrapped in case class" in {
+      "can be propagated across query with naming intact and then re-wrapped in case class" in {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => Parent(1, e))
         }
-        ctx.run(q).string mustEqual "SELECT 1 AS idP, e.id, e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
+        ctx.run(q).string mustEqual "SELECT 1 AS idP, p._1id AS id, p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
       }
 
-      "can be propogated across query with naming intact and then re-wrapped in tuple" in {
+      "can be propagated across query with naming intact and then re-wrapped in tuple" in {
         val q = quote {
           query[Parent].map(p => p.emb).nested.map(e => Parent(1, e))
         }
-        ctx.run(q).string mustEqual "SELECT 1 AS idP, p.embid AS id, p.embtheName AS theName FROM (SELECT x.id AS embid, x.theName AS embtheName FROM Parent x) AS p"
+        ctx.run(q).string mustEqual "SELECT 1 AS idP, e.id, e.theName FROM (SELECT p.id, p.theName FROM Parent p) AS e"
       }
     }
 
     "double embedded entity from parent" - {
-      case class Emb(id: Int, name: String) extends Embedded
-      case class Parent(id: Int, name: String, emb: Emb) extends Embedded
+      case class Emb(id: Int, name: String)
+      case class Parent(id: Int, name: String, emb: Emb)
       case class GrandParent(id: Int, par: Parent)
-      implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+      implicit val parentMeta =
+        schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
 
       "fully unwrapped name propagates" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => p.emb).map(p => p.name).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => p.emb)
+            .map(p => p.name)
+            .distinct
         }
-        ctx.run(q).string mustEqual "SELECT DISTINCT p.embtheName AS theName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
+        ctx.run(q).string mustEqual "SELECT DISTINCT g._1embtheName AS theName FROM (SELECT DISTINCT g.id AS _1id, g.theParentName AS _1theParentName, g.id AS _1embid, g.theName AS _1embtheName FROM GrandParent g) AS g"
       }
 
       "fully unwrapped name propagates with side property" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => (p.name, p.emb)).distinct
-            .map(tup => (tup._1, tup._2)).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => (p.name, p.emb))
+            .distinct
+            .map(tup => (tup._1, tup._2))
+            .distinct
         }
         ctx.run(q).string mustEqual
-          "SELECT DISTINCT p.theParentName AS _1, p.embid AS id, p.embtheName AS theName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
+          "SELECT DISTINCT g._1theParentName AS _1, g._1embid AS id, g._1embtheName AS theName FROM (SELECT DISTINCT g.id AS _1id, g.theParentName AS _1theParentName, g.id AS _1embid, g.theName AS _1embtheName FROM GrandParent g) AS g"
       }
 
       "fully unwrapped name propagates with side property - nested" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).nested
-            .map(p => (p.name, p.emb)).nested
-            .map(tup => (tup._1, tup._2)).nested
+            .map(g => g.par)
+            .nested
+            .map(p => (p.name, p.emb))
+            .nested
+            .map(tup => (tup._1, tup._2))
+            .nested
         }
+        println(ctx.run(q).string(true))
         ctx.run(q).string(true).collapseSpace mustEqual
           """
             |SELECT
-            |  g.partheParentName AS _1,
-            |  g.parembid AS id,
-            |  g.parembtheName AS theName
+            |  x._1,
+            |  x._2id AS id,
+            |  x._2theName AS theName
             |FROM
             |  (
             |    SELECT
-            |      x.partheParentName,
-            |      x.parembid,
-            |      x.parembtheName
+            |      tup._1,
+            |      tup._2id,
+            |      tup._2theName
             |    FROM
             |      (
             |        SELECT
-            |          x.partheParentName,
-            |          x.parembid,
-            |          x.parembtheName
+            |          p.theParentName AS _1,
+            |          p.embid AS _2id,
+            |          p.embtheName AS _2theName
             |        FROM
             |          (
             |            SELECT
-            |              x.theParentName AS partheParentName,
-            |              x.id AS parembid,
-            |              x.theName AS parembtheName
+            |              g.theParentName,
+            |              g.id AS embid,
+            |              g.theName AS embtheName
             |            FROM
-            |              GrandParent x
-            |          ) AS x
-            |      ) AS x
-            |  ) AS g
+            |              GrandParent g
+            |          ) AS p
+            |      ) AS tup
+            |  ) AS x
             |""".collapseSpace
       }
 
       "fully unwrapped name propagates with un-renamed properties" in {
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => (p.name, p.emb, p.id, p.emb.id)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => (p.name, p.emb, p.id, p.emb.id))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4))
+            .distinct
         }
-        ctx.run(q).string(true).collapseSpace mustEqual
+        ctx.run(q).string(true).collapseSpace mustEqual //
           """
             |SELECT
-            |  DISTINCT p.theParentName AS _1,
-            |  p.embid AS id,
-            |  p.embtheName AS theName,
-            |  p.id AS _3,
-            |  p.embid AS _4
+            |  DISTINCT g._1theParentName AS _1,
+            |  g._1embid AS id,
+            |  g._1embtheName AS theName,
+            |  g._1id AS _3,
+            |  g._1embid AS _4
             |FROM
             |  (
             |    SELECT
-            |      DISTINCT g.id,
-            |      g.theParentName,
-            |      g.id AS embid,
-            |      g.theName AS embtheName
+            |      DISTINCT g.id AS _1id,
+            |      g.theParentName AS _1theParentName,
+            |      g.id AS _1embid,
+            |      g.theName AS _1embtheName
             |    FROM
             |      GrandParent g
-            |  ) AS p
+            |  ) AS g
             |""".collapseSpace
       }
 
       "fully unwrapped name propagates with un-renamed properties - with one property renamed" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.id -> "gId", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+        implicit val parentMeta = schemaMeta[GrandParent](
+          "GrandParent",
+          _.id           -> "gId",
+          _.par.emb.name -> "theName",
+          _.par.name     -> "theParentName"
+        )
         val q = quote {
           query[GrandParent]
-            .map(g => g.par).distinct
-            .map(p => (p.name, p.emb, p.id, p.emb.id)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4)).distinct
+            .map(g => g.par)
+            .distinct
+            .map(p => (p.name, p.emb, p.id, p.emb.id))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4))
+            .distinct
         }
         ctx.run(q).string(true).collapseSpace mustEqual
           """
             |SELECT
-            |  DISTINCT p.theParentName AS _1,
-            |  p.embid AS id,
-            |  p.embtheName AS theName,
-            |  p.id AS _3,
-            |  p.embid AS _4
+            |  DISTINCT g._1theParentName AS _1,
+            |  g._1embid AS id,
+            |  g._1embtheName AS theName,
+            |  g._1id AS _3,
+            |  g._1embid AS _4
             |FROM
             |  (
             |    SELECT
-            |      DISTINCT g.id,
-            |      g.theParentName,
-            |      g.id AS embid,
-            |      g.theName AS embtheName
+            |      DISTINCT g.id AS _1id,
+            |      g.theParentName AS _1theParentName,
+            |      g.id AS _1embid,
+            |      g.theName AS _1embtheName
             |    FROM
             |      GrandParent g
-            |  ) AS p
+            |  ) AS g
             |""".collapseSpace
       }
 
       "fully unwrapped and fully re-wrapped" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+        implicit val parentMeta =
+          schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
         val q = quote {
           query[GrandParent]
-            .map(g => (g.id, g.par)).distinct
-            .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).distinct
-            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).distinct
+            .map(g => (g.id, g.par))
+            .distinct
+            .map(p => (p._1, p._2.id, p._2.name, p._2.emb))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5)))
+            .distinct
+            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4)))
+            .distinct
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
@@ -447,64 +486,192 @@ class NestedDistinctSpec extends Spec {
       }
 
       "fully unwrapped and fully re-wrapped - nested" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+        implicit val parentMeta =
+          schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
         val q = quote {
           query[GrandParent]
-            .map(g => (g.id, g.par)).nested
-            .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).nested
-            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).nested
-            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).nested
-            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).nested
-            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).nested
+            .map(g => (g.id, g.par))
+            .nested
+            .map(p => (p._1, p._2.id, p._2.name, p._2.emb))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5)))
+            .nested
+            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4)))
+            .nested
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
-        ctx.run(q).string.collapseSpace mustEqual
-          """SELECT g.id, g.parid AS id, g.partheParentName AS name, g.parembid AS id, g.parembtheName AS name FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.parid, x.partheParentName, x.parembid, x.parembtheName FROM (SELECT x.id, x.id AS parid, x.theParentName AS partheParentName, x.id AS parembid, x.theName AS parembtheName FROM GrandParent x) AS x) AS x) AS x) AS x) AS x) AS g""".collapseSpace
+        println(ctx.run(q).string(true))
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """|SELECT
+             |  tup._1 AS id,
+             |  tup._2id AS id,
+             |  tup._2name AS name,
+             |  tup._2embid AS id,
+             |  tup._2embname AS name
+             |FROM
+             |  (
+             |    SELECT
+             |      tup._1,
+             |      tup._2 AS _2id,
+             |      tup._3 AS _2name,
+             |      tup._4id AS _2embid,
+             |      tup._4name AS _2embname
+             |    FROM
+             |      (
+             |        SELECT
+             |          tup._1,
+             |          tup._2,
+             |          tup._3,
+             |          tup._4 AS _4id,
+             |          tup._5 AS _4name
+             |        FROM
+             |          (
+             |            SELECT
+             |              tup._1,
+             |              tup._2,
+             |              tup._3,
+             |              tup._4,
+             |              tup._5
+             |            FROM
+             |              (
+             |                SELECT
+             |                  tup._1,
+             |                  tup._2,
+             |                  tup._3,
+             |                  tup._4id AS _4,
+             |                  tup._4theName AS _5
+             |                FROM
+             |                  (
+             |                    SELECT
+             |                      p._1,
+             |                      p._2id AS _2,
+             |                      p._2theParentName AS _3,
+             |                      p._2embid AS _4id,
+             |                      p._2embtheName AS _4theName
+             |                    FROM
+             |                      (
+             |                        SELECT
+             |                          g.id AS _1,
+             |                          g.id AS _2id,
+             |                          g.theParentName AS _2theParentName,
+             |                          g.id AS _2embid,
+             |                          g.theName AS _2embtheName
+             |                        FROM
+             |                          GrandParent g
+             |                      ) AS p
+             |                  ) AS tup
+             |              ) AS tup
+             |          ) AS tup
+             |      ) AS tup
+             |  ) AS tup
+             |""".collapseSpace
       }
 
       "fully unwrapped and fully re-wrapped - nested and distinct" in {
-        implicit val parentMeta = schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
+        implicit val parentMeta =
+          schemaMeta[GrandParent]("GrandParent", _.par.emb.name -> "theName", _.par.name -> "theParentName")
         val q = quote {
           query[GrandParent]
-            .map(g => (g.id, g.par)).nested
-            .map(p => (p._1, p._2.id, p._2.name, p._2.emb)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name)).nested
-            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5)).distinct
-            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5))).nested
-            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4))).distinct
+            .map(g => (g.id, g.par /*_2id, _2theParentName, _2embid, _2embtheName*/ ))
+            .nested
+            .map(p => (p._1, p._2.id, p._2.name, p._2.emb /*_4id, _4theName*/ ))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, tup._4.id, tup._4.name))
+            .nested
+            .map(tup => (tup._1, tup._2, tup._3, tup._4, tup._5))
+            .distinct
+            .map(tup => (tup._1, tup._2, tup._3, Emb(tup._4, tup._5) /*_4id, _4name*/ ))
+            .nested
+            .map(tup => (tup._1, Parent(tup._2, tup._3, tup._4) /* _2id, _2name, _2embid, _2embname */ ))
+            .distinct
             .map(tup => GrandParent(tup._1, tup._2))
 
         }
-        ctx.run(q).string.collapseSpace mustEqual
-          """SELECT tup._1 AS id, tup._2id AS id, tup._2name AS name, tup._2embid AS id, tup._2embname AS name
-            |FROM (SELECT DISTINCT tup._1, tup._2 AS _2id, tup._3 AS _2name, tup._4 AS _2embid, tup._5 AS _2embname
-            |      FROM (SELECT DISTINCT tup._1, tup._2, tup._3, tup._4id AS _4, tup._4theName AS _5
-            |            FROM (SELECT DISTINCT g.id               AS _1,
-            |                                  g.parid            AS _2,
-            |                                  g.partheParentName AS _3,
-            |                                  g.parembid         AS _4id,
-            |                                  g.parembtheName    AS _4theName
-            |                  FROM (SELECT x.id,
-            |                               x.id            AS parid,
-            |                               x.theParentName AS partheParentName,
-            |                               x.id            AS parembid,
-            |                               x.theName       AS parembtheName
-            |                        FROM GrandParent x) AS g) AS tup) AS tup) AS tup
-          """.stripMargin.collapseSpace
+        println(ctx.run(q).string(true))
+        ctx.run(q).string(true).collapseSpace mustEqual
+          """|SELECT
+             |  tup._1 AS id,
+             |  tup._2id AS id,
+             |  tup._2name AS name,
+             |  tup._2embid AS id,
+             |  tup._2embname AS name
+             |FROM
+             |  (
+             |    SELECT
+             |      DISTINCT tup._1,
+             |      tup._2 AS _2id,
+             |      tup._3 AS _2name,
+             |      tup._4id AS _2embid,
+             |      tup._4name AS _2embname
+             |    FROM
+             |      (
+             |        SELECT
+             |          tup._1,
+             |          tup._2,
+             |          tup._3,
+             |          tup._4 AS _4id,
+             |          tup._5 AS _4name
+             |        FROM
+             |          (
+             |            SELECT
+             |              DISTINCT tup._1,
+             |              tup._2,
+             |              tup._3,
+             |              tup._4,
+             |              tup._5
+             |            FROM
+             |              (
+             |                SELECT
+             |                  tup._1,
+             |                  tup._2,
+             |                  tup._3,
+             |                  tup._4id AS _4,
+             |                  tup._4theName AS _5
+             |                FROM
+             |                  (
+             |                    SELECT
+             |                      DISTINCT p._1,
+             |                      p._2id AS _2,
+             |                      p._2theParentName AS _3,
+             |                      p._2embid AS _4id,
+             |                      p._2embtheName AS _4theName
+             |                    FROM
+             |                      (
+             |                        SELECT
+             |                          g.id AS _1,
+             |                          g.id AS _2id,
+             |                          g.theParentName AS _2theParentName,
+             |                          g.id AS _2embid,
+             |                          g.theName AS _2embtheName
+             |                        FROM
+             |                          GrandParent g
+             |                      ) AS p
+             |                  ) AS tup
+             |              ) AS tup
+             |          ) AS tup
+             |      ) AS tup
+             |  ) AS tup
+          """.collapseSpace
       }
     }
 
     "adversarial tests" - {
       "should correctly rename the right property when multiple nesting layers have the same one" in {
-        case class Emb(name: String, id: Int) extends Embedded
+        case class Emb(name: String, id: Int)
         case class Parent(name: String, emb1: Emb, emb2: Emb)
         case class GrandParent(name: String, par: Parent)
 
         val norm = quote(query[Emb])
-        val mod = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val mod  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
         val q = quote {
-          norm.join(mod).on((norm, mod) => norm.name == mod.name)
+          norm
+            .join(mod)
+            .on((norm, mod) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -532,9 +699,11 @@ class NestedDistinctSpec extends Spec {
 
         val q = quote {
           query[Foo]
-            .join(query[Ent]).on((f, e) => f.fame == e.name) // (Foo, Ent)
+            .join(query[Ent])
+            .on((f, e) => f.fame == e.name) // (Foo, Ent)
             .distinct
-            .join(query[Bar]).on((fe, b) => (fe._1.fame == b.bame)) // ((Foo, Ent), Bar)
+            .join(query[Bar])
+            .on((fe, b) => (fe._1.fame == b.bame)) // ((Foo, Ent), Bar)
             .distinct
             .map(feb => (feb._1._2, feb._2)) // feb: ((Foo, Ent), Bar)
             .distinct
@@ -580,9 +749,11 @@ class NestedDistinctSpec extends Spec {
 
         val q = quote {
           query[WrongEnt]
-            .join(query[Ent]).on((f, e) => f.name == e.name) // (WrongEnt, Ent)
+            .join(query[Ent])
+            .on((f, e) => f.name == e.name) // (WrongEnt, Ent)
             .distinct
-            .join(query[Bar]).on((we, b) => (we._1.name == b.bame)) // ((WrongEnt, Ent), Bar)
+            .join(query[Bar])
+            .on((we, b) => (we._1.name == b.bame)) // ((WrongEnt, Ent), Bar)
             .distinct
             .map(web => ((web._1._2, web._1._1), web._2)) // web: ((WrongEnt, Ent), Bar) -> ((Ent, WrongEnt), Bar)
             .distinct
@@ -623,7 +794,7 @@ class NestedDistinctSpec extends Spec {
     }
 
     "query with single embedded element" - {
-      case class Emb(a: Int, b: Int) extends Embedded
+      case class Emb(a: Int, b: Int)
       case class Parent(id: Int, emb1: Emb)
       case class Parent2(emb1: Emb, id: Int)
 
@@ -679,12 +850,12 @@ class NestedDistinctSpec extends Spec {
     }
 
     "query with multiple embedded elements with same names" - {
-      case class Emb(name: String, id: Int) extends Embedded
+      case class Emb(name: String, id: Int)
       case class Parent(name: String, emb1: Emb, emb2: Emb)
       case class GrandParent(name: String, par: Parent)
 
-      case class One(name: String, id: Int) extends Embedded
-      case class Two(name: String, id: Int) extends Embedded
+      case class One(name: String, id: Int)
+      case class Two(name: String, id: Int)
       case class Dual(one: One, two: Two)
 
       // Try parent and embedded children with same name, schema on parent
@@ -713,12 +884,14 @@ class NestedDistinctSpec extends Spec {
         ctx.run(q).string mustEqual "SELECT e.emb1theName AS theName, e.emb1id AS id FROM (SELECT DISTINCT 'Joe' AS name, e.theName AS emb1theName, e.id AS emb1id, e.theName AS emb2theName, e.id AS emb2id FROM ChildEnt e) AS e"
       }
 
-      //Try parent and embedded children with same name, schema on one of children
+      // Try parent and embedded children with same name, schema on one of children
       "schema on one of children should not override the other child or the parent" in {
         val norms = quote(query[Emb])
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
         val q = quote {
-          norms.join(mods).on((norm, mod) => norm.name == mod.name)
+          norms
+            .join(mods)
+            .on((norm, mod) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -739,9 +912,11 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on the other child
       "schema on the other one children should not override the other child or the parent" in {
         val norms = quote(query[Emb])
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
         val q = quote {
-          mods.join(norms).on((mod, norm) => norm.name == mod.name)
+          mods
+            .join(norms)
+            .on((mod, norm) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -762,9 +937,11 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on both of children - same schema
       "schema on both of the children can be the same" in {
         val norms = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
         val q = quote {
-          mods.join(norms).on((mod, norm) => norm.name == mod.name)
+          mods
+            .join(norms)
+            .on((mod, norm) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }
@@ -785,9 +962,11 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on both of children - different schemas
       "schema on both of the children can be different" in {
         val norms = quote(querySchema[Emb]("CustomEmb", _.name -> "theFirstName"))
-        val mods = quote(querySchema[Emb]("CustomEmb", _.name -> "theSecondName"))
+        val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theSecondName"))
         val q = quote {
-          mods.join(norms).on((mod, norm) => norm.name == mod.name)
+          mods
+            .join(norms)
+            .on((mod, norm) => norm.name == mod.name)
             .map(joined => Parent("Joe", joined._1, joined._2))
             .distinct
         }

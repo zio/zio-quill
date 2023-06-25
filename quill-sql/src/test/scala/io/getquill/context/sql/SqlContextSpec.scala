@@ -1,15 +1,15 @@
 package io.getquill.context.sql
 
 import java.time.LocalDate
-import java.util.{ Date, UUID }
-
+import java.util.{Date, UUID}
 import io.getquill._
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.testContext._
 
 import scala.util.Try
-import io.getquill.context.{ CanReturnField, Context }
+import io.getquill.context.{CanReturnField, Context}
 import io.getquill.context.sql.idiom.ConcatSupport
 
 class SqlContextSpec extends Spec {
@@ -45,14 +45,20 @@ class SqlContextSpec extends Spec {
     }
     object testContext extends Context[MirrorSqlDialect, Literal] with SqlContext[MirrorSqlDialect, Literal] {
 
-      val idiom = MirrorSqlDialect
+      val idiom  = MirrorSqlDialect
       val naming = Literal
 
       override type PrepareRow = List[Any]
-      override type ResultRow = List[Any]
+      override type ResultRow  = List[Any]
 
       type Encoder[T] = BaseEncoder[T]
       type Decoder[T] = BaseDecoder[T]
+
+      override type NullChecker = LocalNullChecker
+      class LocalNullChecker extends BaseNullChecker {
+        override def apply(index: Index, row: List[Any]): Boolean = row(index) == null
+      }
+      implicit val nullChecker: NullChecker = new LocalNullChecker()
 
       override def close = ()
 
@@ -64,35 +70,35 @@ class SqlContextSpec extends Spec {
 
       implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] = encoder[Option[T]]
 
-      implicit val stringEncoder: Encoder[String] = encoder[String]
+      implicit val stringEncoder: Encoder[String]         = encoder[String]
       implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder[BigDecimal]
-      implicit val booleanEncoder: Encoder[Boolean] = encoder[Boolean]
-      implicit val byteEncoder: Encoder[Byte] = encoder[Byte]
-      implicit val shortEncoder: Encoder[Short] = encoder[Short]
-      implicit val intEncoder: Encoder[Int] = encoder[Int]
-      implicit val longEncoder: Encoder[Long] = encoder[Long]
-      implicit val floatEncoder: Encoder[Float] = encoder[Float]
-      implicit val doubleEncoder: Encoder[Double] = encoder[Double]
+      implicit val booleanEncoder: Encoder[Boolean]       = encoder[Boolean]
+      implicit val byteEncoder: Encoder[Byte]             = encoder[Byte]
+      implicit val shortEncoder: Encoder[Short]           = encoder[Short]
+      implicit val intEncoder: Encoder[Int]               = encoder[Int]
+      implicit val longEncoder: Encoder[Long]             = encoder[Long]
+      implicit val floatEncoder: Encoder[Float]           = encoder[Float]
+      implicit val doubleEncoder: Encoder[Double]         = encoder[Double]
       implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder[Array[Byte]]
-      implicit val dateEncoder: Encoder[Date] = encoder[Date]
-      implicit val localDateEncoder: Encoder[LocalDate] = encoder[LocalDate]
-      implicit val uuidEncoder: Encoder[UUID] = encoder[UUID]
+      implicit val dateEncoder: Encoder[Date]             = encoder[Date]
+      implicit val localDateEncoder: Encoder[LocalDate]   = encoder[LocalDate]
+      implicit val uuidEncoder: Encoder[UUID]             = encoder[UUID]
 
       implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] = decoder[Option[T]]
 
-      implicit val stringDecoder: Decoder[String] = decoder[String]
+      implicit val stringDecoder: Decoder[String]         = decoder[String]
       implicit val bigDecimalDecoder: Decoder[BigDecimal] = decoder[BigDecimal]
-      implicit val booleanDecoder: Decoder[Boolean] = decoder[Boolean]
-      implicit val byteDecoder: Decoder[Byte] = decoder[Byte]
-      implicit val shortDecoder: Decoder[Short] = decoder[Short]
-      implicit val intDecoder: Decoder[Int] = decoder[Int]
-      implicit val longDecoder: Decoder[Long] = decoder[Long]
-      implicit val floatDecoder: Decoder[Float] = decoder[Float]
-      implicit val doubleDecoder: Decoder[Double] = decoder[Double]
+      implicit val booleanDecoder: Decoder[Boolean]       = decoder[Boolean]
+      implicit val byteDecoder: Decoder[Byte]             = decoder[Byte]
+      implicit val shortDecoder: Decoder[Short]           = decoder[Short]
+      implicit val intDecoder: Decoder[Int]               = decoder[Int]
+      implicit val longDecoder: Decoder[Long]             = decoder[Long]
+      implicit val floatDecoder: Decoder[Float]           = decoder[Float]
+      implicit val doubleDecoder: Decoder[Double]         = decoder[Double]
       implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder[Array[Byte]]
-      implicit val localDateDecoder: Decoder[LocalDate] = decoder[LocalDate]
-      implicit val dateDecoder: Decoder[Date] = decoder[Date]
-      implicit val uuidDecoder: Decoder[UUID] = decoder[UUID]
+      implicit val localDateDecoder: Decoder[LocalDate]   = decoder[LocalDate]
+      implicit val dateDecoder: Decoder[Date]             = decoder[Date]
+      implicit val uuidDecoder: Decoder[UUID]             = decoder[UUID]
 
       implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
         encoder[I]

@@ -1,7 +1,7 @@
 package io.getquill.context.sql
-import io.getquill.Spec
 import io.getquill.context.sql.testContext._
 import io.getquill.Literal
+import io.getquill.base.Spec
 
 class OrderBySpec extends Spec {
 
@@ -22,7 +22,7 @@ class OrderBySpec extends Spec {
   }
 
   "order by case class with rename" in {
-    implicit val citySchema = schemaMeta[City]("theCity", _.countryId -> "theCityCode")
+    implicit val citySchema    = schemaMeta[City]("theCity", _.countryId -> "theCityCode")
     implicit val countrySchema = schemaMeta[Country]("theCountry", _.id -> "theCountryCode")
 
     val q = quote(

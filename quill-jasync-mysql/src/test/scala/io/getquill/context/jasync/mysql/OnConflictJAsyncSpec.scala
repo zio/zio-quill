@@ -1,7 +1,6 @@
 package io.getquill.context.jasync.mysql
 
-import io.getquill.context.sql.OnConflictSpec
-
+import io.getquill.context.sql.base.OnConflictSpec
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class OnConflictJAsyncSpec extends OnConflictSpec {
@@ -35,4 +34,3 @@ class OnConflictJAsyncSpec extends OnConflictSpec {
     await(ctx.run(testQuery4)) mustEqual res4
   }
 }
-

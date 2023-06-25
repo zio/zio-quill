@@ -1,51 +1,77 @@
 package io.getquill
 
-import io.getquill.util.LoadConfig
+import io.getquill.base.Spec
+import io.getquill.context.qzio.ImplicitSyntax._
 import org.scalatest.BeforeAndAfterAll
-import zio.{ Has, Runtime, ZIO }
-import zio.stream.{ Sink, ZStream }
+import zio.stream.{ZSink, ZStream}
+import zio.{Runtime, Tag, Unsafe, ZEnvironment, ZIO, ZLayer}
 
-import java.io.Closeable
 import java.sql.Connection
 import javax.sql.DataSource
 
-case class Prefix(name: String)
+object ZioSpec {
+  def runLayerUnsafe[T: Tag](layer: ZLayer[Any, Throwable, T]): T =
+    zio.Unsafe.unsafe { implicit u =>
+      zio.Runtime.default.unsafe.run(zio.Scope.global.extend(layer.build)).getOrThrow()
+    }.get
+}
 
 trait ZioSpec extends Spec with BeforeAndAfterAll {
-  def prefix: Prefix
 
-  var pool: DataSource with Closeable = _
+  def accumulate[T](stream: ZStream[Any, Throwable, T]): ZIO[Any, Throwable, List[T]] =
+    stream.run(ZSink.collectAll).map(_.toList)
 
-  override def beforeAll = {
-    super.beforeAll()
-    pool = JdbcContextConfig(LoadConfig(prefix.name)).dataSource
-  }
+  def collect[T](stream: ZStream[Any, Throwable, T]): List[T] =
+    Unsafe.unsafe { implicit u =>
+      zio.Runtime.default.unsafe.run(stream.run(ZSink.collectAll).map(_.toList)).getOrThrow()
+    }
 
-  override def afterAll(): Unit = {
-    pool.close()
-  }
+  def collect[T](qzio: ZIO[Any, Throwable, T]): T =
+    Unsafe.unsafe { implicit u =>
+      zio.Runtime.default.unsafe.run(qzio).getOrThrow()
+    }
 
-  def accumulateDS[T](stream: ZStream[Has[DataSource], Throwable, T]): ZIO[Has[DataSource], Throwable, List[T]] =
-    stream.run(Sink.collectAll).map(_.toList)
-
-  def accumulate[T](stream: ZStream[Has[Connection], Throwable, T]): ZIO[Has[Connection], Throwable, List[T]] =
-    stream.run(Sink.collectAll).map(_.toList)
-
-  def collect[T](stream: ZStream[Has[DataSource], Throwable, T]): List[T] =
-    Runtime.default.unsafeRun(stream.run(Sink.collectAll).map(_.toList).provide(Has(pool)))
-
-  def collect[T](qzio: ZIO[Has[DataSource], Throwable, T]): T =
-    Runtime.default.unsafeRun(qzio.provide(Has(pool)))
-
-  implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
-    def runSyncUnsafe() = Runtime.default.unsafeRun(qzio)
-  }
-
-  implicit class ZStreamTestExt[T](stream: ZStream[Has[DataSource], Throwable, T]) {
+  implicit class ZStreamTestExt[T](stream: ZStream[Any, Throwable, T]) {
     def runSyncUnsafe() = collect[T](stream)
   }
 
-  implicit class ZioTestExt[T](qzio: ZIO[Has[DataSource], Throwable, T]) {
+  implicit class ZioTestExt[T](qzio: ZIO[Any, Throwable, T]) {
+    def runSyncUnsafe() = collect[T](qzio)
+  }
+}
+
+trait ZioProxySpec extends Spec with BeforeAndAfterAll {
+
+  def accumulateDS[T](stream: ZStream[DataSource, Throwable, T]): ZIO[DataSource, Throwable, List[T]] =
+    stream.run(ZSink.collectAll).map(_.toList)
+
+  def accumulate[T](stream: ZStream[Connection, Throwable, T]): ZIO[Connection, Throwable, List[T]] =
+    stream.run(ZSink.collectAll).map(_.toList)
+
+  def collect[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]): List[T] =
+    Unsafe.unsafe { implicit u =>
+      zio.Runtime.default.unsafe
+        .run(stream.run(ZSink.collectAll).map(_.toList).provideEnvironment(ZEnvironment(runtime.env)))
+        .getOrThrow()
+    }
+
+  def collect[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]): T =
+    Unsafe.unsafe { implicit u =>
+      zio.Runtime.default.unsafe.run(qzio.provideEnvironment(ZEnvironment(runtime.env))).getOrThrow()
+    }
+
+  implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
+    def runSyncUnsafe() =
+      Unsafe.unsafe { implicit u =>
+        Runtime.default.unsafe.run(qzio).getOrThrow()
+      }
+  }
+
+  implicit class ZStreamTestExt[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]) {
+    def runSyncUnsafe() = collect[T](stream)
+  }
+
+  implicit class ZioTestExt[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]) {
     def runSyncUnsafe() = collect[T](qzio)
   }
 }

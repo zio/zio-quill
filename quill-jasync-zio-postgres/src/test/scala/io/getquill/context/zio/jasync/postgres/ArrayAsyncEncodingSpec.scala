@@ -1,10 +1,9 @@
 package io.getquill.context.zio.jasync.postgres
 
-import java.time.{ LocalDate, LocalDateTime }
-import java.util.{ Date, UUID }
+import java.time.{LocalDate, LocalDateTime}
+import java.util.{Date, UUID}
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
-import org.joda.time.{ DateTime => JodaDateTime, LocalDate => JodaLocalDate, LocalDateTime => JodaLocalDateTime }
 import zio.FiberFailure
 
 class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
@@ -17,25 +16,6 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     val actual = runSyncUnsafe(context.run(q)).head
     actual mustEqual e
     baseEntityDeepCheck(actual, e)
-  }
-
-  "Joda times" in {
-    case class JodaTimes(timestamps: Seq[JodaLocalDateTime], dates: Seq[JodaLocalDate])
-    val jE = JodaTimes(Seq(JodaLocalDateTime.now()), Seq(JodaLocalDate.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
-    val actual = runSyncUnsafe(context.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
-    actual.dates mustBe jE.dates
-  }
-
-  "Joda times 2" in {
-    case class JodaTimes(timestamps: Seq[JodaDateTime])
-    val jE = JodaTimes(Seq(JodaDateTime.now()))
-    val jQ = quote(querySchema[JodaTimes]("ArraysTestEntity"))
-    runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
-    val actual = runSyncUnsafe(context.run(jQ)).head
-    actual.timestamps mustBe jE.timestamps
   }
 
   "Java8 times" in {
@@ -54,20 +34,6 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     runSyncUnsafe(context.run(wrapQ)).head mustBe wrapE
   }
 
-  "Catch invalid decoders" in {
-    val newCtx = new TestContext {
-      // avoid transforming from org.joda.time.LocalDate to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
-        arrayDecoder[LocalDate, LocalDate, Col](identity)
-    }
-    import newCtx._
-    runSyncUnsafe(newCtx.run(query[ArraysTestEntity].insertValue(lift(e))))
-    intercept[FiberFailure] {
-      runSyncUnsafe(newCtx.run(query[ArraysTestEntity])).head mustBe e
-    }
-    newCtx.close()
-  }
-
   "Arrays in where clause" in {
     runSyncUnsafe(context.run(q.insertValue(lift(e))))
     val actual1 = runSyncUnsafe(context.run(q.filter(_.texts == lift(List("test")))))
@@ -78,32 +44,32 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
   }
 
   // Need to have an actual value in the table in order for the decoder to go off. Previously,
-  // there was guarenteed to be information there due to ordering of build artifacts but not anymore.
+  // there was guaranteed to be information there due to ordering of build artifacts but not anymore.
   "fail if found not an array" in {
     case class RealEncodingTestEntity(
-      v1:  String,
-      v2:  BigDecimal,
-      v3:  Boolean,
-      v4:  Byte,
-      v5:  Short,
-      v6:  Int,
-      v7:  Long,
-      v8:  Float,
-      v9:  Double,
+      v1: String,
+      v2: BigDecimal,
+      v3: Boolean,
+      v4: Byte,
+      v5: Short,
+      v6: Int,
+      v7: Long,
+      v8: Float,
+      v9: Double,
       v10: Array[Byte],
       v11: Date,
       v12: EncodingTestType,
       v13: LocalDate,
       v14: UUID,
-      o1:  Option[String],
-      o2:  Option[BigDecimal],
-      o3:  Option[Boolean],
-      o4:  Option[Byte],
-      o5:  Option[Short],
-      o6:  Option[Int],
-      o7:  Option[Long],
-      o8:  Option[Float],
-      o9:  Option[Double],
+      o1: Option[String],
+      o2: Option[BigDecimal],
+      o3: Option[Boolean],
+      o4: Option[Byte],
+      o5: Option[Short],
+      o6: Option[Int],
+      o7: Option[Long],
+      o8: Option[Float],
+      o9: Option[Double],
       o10: Option[Array[Byte]],
       o11: Option[Date],
       o12: Option[EncodingTestType],
@@ -151,7 +117,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     runSyncUnsafe(context.run(realEntity.insertValue(lift(insertValue))))
 
     case class EncodingTestEntity(v1: List[String])
-    intercept[FiberFailure](runSyncUnsafe(context.run(query[EncodingTestEntity])))
+    intercept[IllegalStateException](runSyncUnsafe(context.run(query[EncodingTestEntity])))
   }
 
   override protected def beforeEach(): Unit = {

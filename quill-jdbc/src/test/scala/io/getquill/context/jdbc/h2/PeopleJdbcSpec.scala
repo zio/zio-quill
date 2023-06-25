@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.h2
 
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleJdbcSpec extends PeopleSpec {
 
@@ -10,7 +10,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   override def beforeAll = {
     testContext.transaction {
       testContext.run(query[Couple].delete)
-      testContext.run(query[Person].filter(_.age > 0).delete)
+      testContext.run(query[Person].delete)
       testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
       testContext.run(liftQuery(couplesEntries).foreach(p => couplesInsert(p)))
     }
@@ -65,6 +65,8 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   "Example 12 - filtered update co-related" in {
     testContext.run(`Ex 12 filtered update co-related`)
-    testContext.run(`Ex 12 filtered update co-related get`) must contain theSameElementsAs `Ex 12 filtered update co-related expected`
+    testContext.run(
+      `Ex 12 filtered update co-related get`
+    ) must contain theSameElementsAs `Ex 12 filtered update co-related expected`
   }
 }
