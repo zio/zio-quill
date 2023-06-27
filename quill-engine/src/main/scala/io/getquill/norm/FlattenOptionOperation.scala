@@ -87,14 +87,30 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
       case OptionGetOrElse(ast, body) =>
         apply(If(IsNotNullCheck(ast), ast, body))
 
+      case OptionOrElse(ast, body) =>
+        apply(If(IsNotNullCheck(ast), ast, body))
+
       case OptionFlatMap(ast, alias, body) =>
         uncheckedReduction(ast, alias, body, containsNonFallthroughElement)
 
       case OptionMap(ast, alias, body) =>
         uncheckedReduction(ast, alias, body, containsNonFallthroughElement)
 
+      case OptionForall(OptionOrElse(a, b), alias, body) =>
+        val reducedA = BetaReduction(body, alias -> a)
+        val reducedB = BetaReduction(body, alias -> b)
+        val isNullA  = IsNullCheck(a)
+        val isNullB  = IsNullCheck(b)
+
+        apply(reducedA) +||+ apply((isNullA +&&+ reducedB): Ast) +||+ apply((isNullA +&&+ isNullB): Ast)
+
       case OptionForall(ast, alias, body) =>
         uncheckedForall(ast, alias, body, containsNonFallthroughElement)
+
+      case OptionExists(OptionOrElse(a, b), alias, body) =>
+        val reducedA = BetaReduction(body, alias -> a)
+        val reducedB = BetaReduction(body, alias -> b)
+        apply((reducedA +&&+ IsNotNullCheck(a)): Ast) +||+ apply((reducedB +&&+ IsNotNullCheck(b)): Ast)
 
       case OptionExists(ast, alias, body) =>
         validateContainsOrElse(
