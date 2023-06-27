@@ -44,6 +44,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.OptionTableForall.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"  => OptionTableForall(a, b, c)
     case q"$pack.OptionFlatten.apply(${a: Ast})"                              => OptionFlatten(a)
     case q"$pack.OptionGetOrElse.apply(${a: Ast}, ${b: Ast})"                 => OptionGetOrElse(a, b)
+    case q"$pack.OptionOrElse.apply(${a: Ast}, ${b: Ast})"                    => OptionOrElse(a, b)
     case q"$pack.OptionFlatMap.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"      => OptionFlatMap(a, b, c)
     case q"$pack.OptionMap.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"          => OptionMap(a, b, c)
     case q"$pack.OptionForall.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"       => OptionForall(a, b, c)

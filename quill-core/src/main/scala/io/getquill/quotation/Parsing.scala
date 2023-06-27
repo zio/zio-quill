@@ -14,7 +14,7 @@ import scala.collection.immutable.StringOps
 import scala.reflect.macros.TypecheckException
 import io.getquill.ast.Implicits._
 import io.getquill.ast.Renameable.Fixed
-import io.getquill.ast.Visibility.{Hidden, Visible}
+import io.getquill.ast.Visibility.Visible
 import io.getquill.quat._
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.{Interleave, Interpolator, Messages}
@@ -588,6 +588,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       OptionFlatten(astParser(o))
     case q"$o.getOrElse[$t]($body)" if is[Option[Any]](o) =>
       OptionGetOrElse(astParser(o), astParser(body))
+    case q"$o.orElse[$t]($body)" if is[Option[Any]](o) =>
+      OptionOrElse(astParser(o), astParser(body))
     case q"$o.contains[$t]($body)" if is[Option[Any]](o) =>
       OptionContains(astParser(o), astParser(body))
     case q"$o.isEmpty" if is[Option[Any]](o) =>
