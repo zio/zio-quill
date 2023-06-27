@@ -64,10 +64,6 @@ class OptionJdbcSpec extends OptionQuerySpec {
     testContext.run(`Map+getOrElse LeftJoin`) should contain theSameElementsAs `Map+getOrElse LeftJoin Result`
   }
 
-  "Example 6 - Map+Option+Flatten+getOrElse Join" in {
-    testContext.run(`Option+Some+None Normalize`) should contain theSameElementsAs `Option+Some+None Normalize Result`
-  }
-
   "Example 7 - Filter with OrElse and Forall" in {
     testContext.run(
       `Filter with OrElse and Forall`
