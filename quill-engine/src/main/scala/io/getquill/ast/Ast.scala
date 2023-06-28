@@ -502,6 +502,9 @@ case class OptionFlatten(ast: Ast) extends OptionOperation { def quat = ast.quat
 case class OptionGetOrElse(ast: Ast, body: Ast) extends OptionOperation {
   def quat = body.quat; def bestQuat = body.bestQuat
 }
+case class OptionOrElse(ast: Ast, body: Ast) extends OptionOperation {
+  def quat = body.quat; def bestQuat = body.bestQuat
+}
 case class OptionFlatMap(ast: Ast, alias: Ident, body: Ast) extends OptionOperation {
   def quat = body.quat; def bestQuat = body.bestQuat
 }
