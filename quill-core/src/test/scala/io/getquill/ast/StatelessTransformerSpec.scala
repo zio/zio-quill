@@ -284,6 +284,11 @@ class StatelessTransformerSpec extends Spec {
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           OptionGetOrElse(Ident("a'"), Ident("b'"))
       }
+      "orElse" in {
+        val ast: Ast = OptionOrElse(Ident("a"), Ident("b"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+          OptionOrElse(Ident("a'"), Ident("b'"))
+      }
       "flatMap - Unchecked" in {
         val ast: Ast = OptionTableFlatMap(Ident("a"), Ident("b"), Ident("c"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual

@@ -163,6 +163,7 @@ trait MirrorIdiomBase extends Idiom {
       case OptionTableForall(ast, alias, body)  => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
       case OptionFlatten(ast)                   => stmt"${ast.token}.flatten"
       case OptionGetOrElse(ast, body)           => stmt"${ast.token}.getOrElse(${body.token})"
+      case OptionOrElse(ast, body)              => stmt"${ast.token}.orElse(${body.token})"
       case OptionFlatMap(ast, alias, body)      => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
       case OptionMap(ast, alias, body)          => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
       case OptionForall(ast, alias, body)       => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"

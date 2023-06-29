@@ -13,144 +13,162 @@ on:
       - master
 
 jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      secrets: ${{ steps.secrets.outputs.secrets }}
+    steps:
+      - name: secrets
+        id: secrets
+        env:
+          HAS_PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE != '' }}
+          HAS_ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD != '' }}
+        shell: bash
+        if: env.HAS_PGP_PASSPHRASE == 'true' && env.HAS_ENCRYPTION_PASSWORD == 'true'
+        run: echo ::set-output name=secrets::true
   build:
-   runs-on: ubuntu-latest
-
-   env:
-     SCALA_VERSION: ${{ matrix.scala }}
-     POSTGRES_PASSWORD: postgres
-     MYSQL_PASSWORD: root
-
-   strategy:
-     fail-fast: false
-     matrix:
-       scala: [2.12.x, 2.13.x, 3.3.x]
-       module: [base, db, js, async, codegen, bigdata]
-       include:
-         - scala: 2.12.x
-           scala_short: 212
-           scala_short_dot: 2.12
-         - scala: 2.13.x
-           scala_short: 213
-           scala_short_dot: 2.13
-         - scala: 3.3.x
-           scala_short: 33
-           scala_short_dot: 3.3
-       exclude:
-         # For now, only do the `base` build for Scala 3
-         - scala: 3.3.x
-           module: db
-         - scala: 3.3.x
-           module: js
-         - scala: 3.3.x
-           module: async
-         - scala: 3.3.x
-           module: codegen
-         - scala: 3.3.x
-           module: bigdata
-         # For other modules, `base` build is already included
-         - scala: 2.12.x
-           module: base
-         - scala: 2.13.x
-           module: base
-
-   name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
-
-   steps:
-   - uses: actions/checkout@v3
-   - name: Cache sbt
-     uses: actions/cache@v3
-     with:
-       path: |
-         ~/.cache/coursier
-         ~/.sbt
-       key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
-
-   - name: Setup Java and Scala
-     uses: actions/setup-java@v3.10.0
-     with:
-       distribution: temurin
-       java-version: '8'
-       check-latest: true
-
-   - name: Build modules
-     run: |
-       export SCALA_VERSION=${{ matrix.scala }}
-       echo "SCALA_VERSION='$SCALA_VERSION'"
-       ./build/build.sh ${{ matrix.module }}
-
-  release:
-   if: ${{github.event_name != 'pull_request'}}
-   runs-on: ubuntu-latest
-
-   needs: build
-
-   strategy:
-     fail-fast: false
-     matrix:
-       scala: [2.12.x, 2.13.x, 3.3.x]
-       module: [docs, base, db, js, async, codegen, bigdata]
-       include:
-         - scala: 2.12.x
-           scala_short: 212
-           scala_short_dot: 2.12
-         - scala: 2.13.x
-           scala_short: 213
-           scala_short_dot: 2.13
-         - scala: 3.3.x
-           scala_short: 33
-           scala_short_dot: 3.3
-       exclude:
-         - scala: 3.3.x
-           module: db
-         - scala: 3.3.x
-           module: js
-         - scala: 3.3.x
-           module: async
-         - scala: 3.3.x
-           module: codegen
-         - scala: 3.3.x
-           module: bigdata
-
-   name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
-
-   steps:
-   - uses: actions/checkout@v3
-   - name: Cache sbt
-     uses: actions/cache@v3
-     with:
-       path: |
-         ~/.cache/coursier
-         ~/.sbt
-       key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
-
-   - name: Setup Java and Scala
-     uses: actions/setup-java@v3.10.0
-     with:
-       distribution: temurin
-       java-version: '8'
-       check-latest: true
-
-   - name: Release
-     run: |
-       export SCALA_VERSION=${{ matrix.scala }}
-       echo "SCALA_VERSION='$SCALA_VERSION'"
-       export PGP_PASSPHRASE=${{ secrets.PGP_PASSPHRASE }}
-       export PULL_REQUEST=${{ !!github.event.pull_request }}
-       echo "PULL_REQUEST='$PULL_REQUEST'"
-       export GITHUB_REF=${{ github.ref }}
-       echo "GITHUB_REF='$GITHUB_REF'"
-       export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
-       echo "BRANCH='$BRANCH'"
-       ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
-     env:
-       ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
-
-  publish:
-    if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
 
-    needs: release
+    env:
+      SCALA_VERSION: ${{ matrix.scala }}
+      POSTGRES_PASSWORD: postgres
+      MYSQL_PASSWORD: root
+
+    strategy:
+      fail-fast: false
+      matrix:
+        scala: [2.12.x, 2.13.x, 3.3.x]
+        module: [base, db, js, async, codegen, bigdata]
+        include:
+          - scala: 2.12.x
+            scala_short: 212
+            scala_short_dot: 2.12
+          - scala: 2.13.x
+            scala_short: 213
+            scala_short_dot: 2.13
+          - scala: 3.3.x
+            scala_short: 33
+            scala_short_dot: 3.3
+        exclude:
+          # For now, only do the `base` build for Scala 3
+          - scala: 3.3.x
+            module: db
+          - scala: 3.3.x
+            module: js
+          - scala: 3.3.x
+            module: async
+          - scala: 3.3.x
+            module: codegen
+          - scala: 3.3.x
+            module: bigdata
+          # For other modules, `base` build is already included
+          - scala: 2.12.x
+            module: base
+          - scala: 2.13.x
+            module: base
+
+    name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Cache sbt
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/coursier
+          ~/.sbt
+        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
+
+    - name: Setup Java and Scala
+      uses: actions/setup-java@v3.10.0
+      with:
+        distribution: temurin
+        java-version: '8'
+        check-latest: true
+
+    - name: Build modules
+      run: |
+        echo "SCALA_VERSION='$SCALA_VERSION'"
+        ./build/build.sh ${{ matrix.module }}
+      env:
+        SCALA_VERSION: ${{ matrix.scala }}
+
+  release:
+    if: ${{github.event_name != 'pull_request' && needs.secrets.outputs.secrets }}
+    runs-on: ubuntu-latest
+
+    needs:
+    - build
+    - secrets
+
+    strategy:
+      fail-fast: false
+      matrix:
+        scala: [2.12.x, 2.13.x, 3.3.x]
+        module: [docs, base, db, js, async, codegen, bigdata]
+        include:
+          - scala: 2.12.x
+            scala_short: 212
+            scala_short_dot: 2.12
+          - scala: 2.13.x
+            scala_short: 213
+            scala_short_dot: 2.13
+          - scala: 3.3.x
+            scala_short: 33
+            scala_short_dot: 3.3
+        exclude:
+          - scala: 3.3.x
+            module: db
+          - scala: 3.3.x
+            module: js
+          - scala: 3.3.x
+            module: async
+          - scala: 3.3.x
+            module: codegen
+          - scala: 3.3.x
+            module: bigdata
+
+    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Cache sbt
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/coursier
+          ~/.sbt
+        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
+
+    - name: Setup Java and Scala
+      uses: actions/setup-java@v3.10.0
+      with:
+        distribution: temurin
+        java-version: '8'
+        check-latest: true
+
+    - name: Release
+      run: |
+        echo "SCALA_VERSION='$SCALA_VERSION'"
+        echo "PULL_REQUEST='$PULL_REQUEST'"
+        echo "GITHUB_REF='$GITHUB_REF'"
+        export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
+        echo "BRANCH='$BRANCH'"
+        ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
+      env:
+        ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
+        GITHUB_REF: ${{ github.ref }}
+        PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+        PULL_REQUEST: ${{ !!github.event.pull_request }}
+        SCALA_VERSION: ${{ matrix.scala }}
+
+  publish:
+    if: ${{github.event_name != 'pull_request' && needs.secrets.outputs.secrets }}
+    runs-on: ubuntu-latest
+
+    needs:
+    - release
+    - secrets
 
     strategy:
       fail-fast: false
@@ -183,15 +201,15 @@ jobs:
 
       - name: Release
         run: |
-          export SCALA_VERSION=${{ matrix.scala }}
           echo "SCALA_VERSION='$SCALA_VERSION'"
-          export PGP_PASSPHRASE=${{ secrets.PGP_PASSPHRASE }}
-          export PULL_REQUEST=${{ !!github.event.pull_request }}
           echo "PULL_REQUEST='$PULL_REQUEST'"
-          export GITHUB_REF=${{ github.ref }}
           echo "GITHUB_REF='$GITHUB_REF'"
           export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
           echo "BRANCH='$BRANCH'"
           ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
         env:
           ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
+          GITHUB_REF: ${{ github.ref }}
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PULL_REQUEST: ${{ !!github.event.pull_request }}
+          SCALA_VERSION: ${{ matrix.scala }}
