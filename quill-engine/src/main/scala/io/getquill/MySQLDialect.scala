@@ -71,8 +71,7 @@ trait MySQLDialect
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](MySQLDialect.this.astTokenizer(_, strategy, idiomContext)) {
         case Property.Opinionated(Excluded(_), name, renameable, _) =>
-          renameable.fixedOr(name.token)(stmt"VALUES(${strategy.column(name).token})")
-
+          stmt"VALUES(${renameable.fixedOr(name.token)(strategy.column(name).token)})"
         case Property.Opinionated(_, name, renameable, _) =>
           renameable.fixedOr(name.token)(strategy.column(name).token)
       }
