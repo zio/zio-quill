@@ -52,10 +52,10 @@ import scala.collection.immutable.Set
  * of the form x[0-9]+. Since `AvoidAliasConflict` typically runs not on the
  * entire Ast but the sub-parts of it used by normalizations, making temporary
  * aliases permanent cannot be done in these sub-parts because the 'state' of
- * this transformation is not fully know
- * i.e. because aliases of outer clauses may not be present. For this reason,
- * this transformation is specifically called once from the top-level inside
- * `SqlNormalize` at the very end of the transformation pipeline.
+ * this transformation is not fully know i.e. because aliases of outer clauses
+ * may not be present. For this reason, this transformation is specifically
+ * called once from the top-level inside `SqlNormalize` at the very end of the
+ * transformation pipeline.
  */
 private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: Boolean, traceConfig: TraceConfig)
     extends StatefulTransformer[Set[IdentName]] {
