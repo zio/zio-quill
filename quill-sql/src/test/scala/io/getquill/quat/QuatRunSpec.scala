@@ -34,9 +34,9 @@ class QuatRunSpec extends Spec {
       result.string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
     }
 
-    "should support query-ops function - multile var" in {
-      def appendFooFun[Q <: Query[_]] = quote { (q: Q, i: Int) => sql"$q APPEND $i FOO".transparent.pure.as[Q] }
-      val q = quote(appendFooFun(query[MyPerson], 123))
+    "should support query-ops function - multiple var" in {
+      def appendFooFun[Q <: Query[_]] = quote((q: Q, i: Int) => sql"$q APPEND $i FOO".transparent.pure.as[Q])
+      val q                           = quote(appendFooFun(query[MyPerson], 123))
       q.ast.quat mustEqual Quat.Generic // Is it unknown, how should the reducing work from an infix with multiple vars?
       val result = testContext.run(q)
       result.info.topLevelQuat mustEqual MyPersonQuat
@@ -44,8 +44,8 @@ class QuatRunSpec extends Spec {
     }
 
     "should support query-ops function - dynamic function" in {
-      def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote { (q: Q) => sql"$q APPEND FOO".pure.as[Q] }
-      val q = quote(appendFooFun(query[MyPerson]))
+      def appendFooFun[Q <: Query[_]]: Quoted[Q => Q] = quote((q: Q) => sql"$q APPEND FOO".pure.as[Q])
+      val q                                           = quote(appendFooFun(query[MyPerson]))
       q.ast.quat mustEqual Quat.Unknown
       testContext.run(q).string mustEqual "SELECT x.name, x.age FROM MyPerson x APPEND FOO"
     }

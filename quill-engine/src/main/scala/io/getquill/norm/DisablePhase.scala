@@ -12,7 +12,7 @@ object TranspileConfig {
 sealed trait OptionalPhase
 object OptionalPhase {
   sealed trait ApplyMap extends OptionalPhase
-  case object ApplyMap extends ApplyMap
+  case object ApplyMap  extends ApplyMap
 
   val all = List(ApplyMap)
 }

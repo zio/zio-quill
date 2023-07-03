@@ -1,7 +1,7 @@
 package io.getquill.context.sql.norm
 
 import io.getquill.MirrorSqlDialectWithReturnClause
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
 import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
 import io.getquill.Query
@@ -345,19 +345,21 @@ class RenamePropertiesSpec extends Spec {
         val q = quote {
           for {
             t3 <- query[Table3]
-            c <- table2Schema.join(ct => ct.id == t3.configurationId)
+            c  <- table2Schema.join(ct => ct.id == t3.configurationId)
           } yield (t3, c)
         }
 
-        testContext.run(q).string mustEqual "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
+        testContext
+          .run(q)
+          .string mustEqual "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
       }
     }
 
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContext.run(q).string mustEqual
@@ -390,7 +392,7 @@ class RenamePropertiesSpec extends Spec {
     }
   }
 
-  "respects the schema definition for embeddeds" - {
+  "respects the schema definition for embedded" - {
     "query" - {
       "without schema" in {
         case class B(c: Int)
@@ -408,7 +410,7 @@ class RenamePropertiesSpec extends Spec {
           "SELECT x.bC FROM A x"
       }
     }
-    "query for Option embeddeds" - {
+    "query for Option embedded" - {
       "without schema" in {
         case class B(c1: Int, c2: Int)
         case class A(b: Option[B])

@@ -1,10 +1,10 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
 import io.getquill.base.Spec
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted }
+import io.getquill.{EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted}
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -249,7 +249,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
 
     "join" - {
-      "both sidess" in {
+      "both sides" in {
         val q = quote {
           e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
         }
@@ -312,8 +312,8 @@ class RenamePropertiesOverrideSpec extends Spec {
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContextUpper.run(q).string mustEqual
@@ -346,7 +346,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
   }
 
-  "respects the schema definition for embeddeds" - {
+  "respects the schema definition for embedded" - {
     "query" - {
       "without schema" in {
         case class B(c: Int)
@@ -364,7 +364,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "SELECT x.bC FROM A x"
       }
     }
-    "query for Option embeddeds" - {
+    "query for Option embedded" - {
       "without schema" in {
         case class B(c1: Int, c2: Int)
         case class A(b: Option[B])

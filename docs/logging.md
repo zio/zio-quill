@@ -9,9 +9,9 @@ To write compile-time queries to a log, use the `-Dquill.log.file=queries.sql` a
 the file to be written (e.g. `queries.sql`). The path is based on the build root (i.e. the current-working-directory of the Java build).
 
 When using SBT, this parameter can be set either in your SBT_OPTS, the project-specific .sbtopts file or directly passed to the SBT command.
-In Intellij this can be set under settings -> sbt -> VM Parameters.
+In IntelliJ this can be set under settings -> sbt -> VM Parameters.
 
-(Also make sure that `use for: "Builds"` is selected otherwise Intellij will not use SBT for the build in the first place.)
+(Also make sure that `use for: "Builds"` is selected otherwise IntelliJ will not use SBT for the build in the first place.)
 
 ![Screenshot from 2022-04-14 23-28-47](https://user-images.githubusercontent.com/1369480/163513653-b5266cd6-1bff-4792-b0d2-936d24b7e0f1.png)
 
@@ -76,6 +76,10 @@ It also logs the list of parameters that are bound into a prepared statement if 
 To enable that use `quill.binds.log` option:
 ```
 java -Dquill.binds.log=true -jar myapp.jar
+```
+The option `quill.query.tooLong` restricts the maximum length of logged SQL statements:
+```
+java -Dquill.binds.log=true -Dquill.query.tooLong=10000 -jar myapp.jar
 ```
 
 ## Pretty Printing

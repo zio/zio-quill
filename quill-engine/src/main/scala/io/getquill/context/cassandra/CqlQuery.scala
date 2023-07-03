@@ -4,11 +4,11 @@ import io.getquill.ast._
 import io.getquill.util.Messages.fail
 
 case class CqlQuery(
-  entity:   Entity,
-  filter:   Option[Ast],
-  orderBy:  List[OrderByCriteria],
-  limit:    Option[Ast],
-  select:   List[Ast],
+  entity: Entity,
+  filter: Option[Ast],
+  orderBy: List[OrderByCriteria],
+  limit: Option[Ast],
+  select: List[Ast],
   distinct: Boolean
 )
 
@@ -48,12 +48,18 @@ object CqlQuery {
   private def apply(q: Query, limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
     q match {
       case SortBy(q: Query, x, p, o) =>
-        apply(q, orderByCriterias(p, o), limit, select, distinct)
+        apply(q, orderByCriteria(p, o), limit, select, distinct)
       case other =>
         apply(q, List(), limit, select, distinct)
     }
 
-  private def apply(q: Query, orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
+  private def apply(
+    q: Query,
+    orderBy: List[OrderByCriteria],
+    limit: Option[Ast],
+    select: List[Ast],
+    distinct: Boolean
+  ): CqlQuery =
     q match {
       case Filter(q: Query, x, p) =>
         apply(q, Some(p), orderBy, limit, select, distinct)
@@ -61,7 +67,14 @@ object CqlQuery {
         apply(q, None, orderBy, limit, select, distinct)
     }
 
-  private def apply(q: Query, filter: Option[Ast], orderBy: List[OrderByCriteria], limit: Option[Ast], select: List[Ast], distinct: Boolean): CqlQuery =
+  private def apply(
+    q: Query,
+    filter: Option[Ast],
+    orderBy: List[OrderByCriteria],
+    limit: Option[Ast],
+    select: List[Ast],
+    distinct: Boolean
+  ): CqlQuery =
     q match {
       case q: Entity =>
         new CqlQuery(q, filter, orderBy, limit, select, distinct)
@@ -88,11 +101,12 @@ object CqlQuery {
       case other                => fail(s"Cql supports only properties as select elements. Found: $other")
     }
 
-  private def orderByCriterias(ast: Ast, ordering: Ast): List[OrderByCriteria] =
+  private def orderByCriteria(ast: Ast, ordering: Ast): List[OrderByCriteria] =
     (ast, ordering) match {
-      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriterias(_, ord))
-      case (Tuple(properties), TupleOrdering(ord))    => properties.zip(ord).flatMap { case (a, o) => orderByCriterias(a, o) }
-      case (a: Property, o: PropertyOrdering)         => List(OrderByCriteria(a, o))
-      case other                                      => fail(s"Invalid order by criteria $ast")
+      case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriteria(_, ord))
+      case (Tuple(properties), TupleOrdering(ord)) =>
+        properties.zip(ord).flatMap { case (a, o) => orderByCriteria(a, o) }
+      case (a: Property, o: PropertyOrdering) => List(OrderByCriteria(a, o))
+      case other                              => fail(s"Invalid order by criteria $ast")
     }
 }

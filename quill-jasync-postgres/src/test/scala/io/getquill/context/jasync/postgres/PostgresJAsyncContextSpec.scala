@@ -1,11 +1,12 @@
 package io.getquill.context.jasync.postgres
 
-import com.github.jasync.sql.db.{ QueryResult, ResultSetKt }
+import com.github.jasync.sql.db.{QueryResult, ResultSetKt}
 import io.getquill.ReturnAction.ReturnColumns
 import io.getquill.base.Spec
-import scala.concurrent.ExecutionContext.Implicits.global
+import io.getquill.{Literal, PostgresJAsyncContext, ReturnAction}
 
-import io.getquill.{ Literal, PostgresJAsyncContext, ReturnAction }
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class PostgresJAsyncContextSpec extends Spec {
 
@@ -22,8 +23,7 @@ class PostgresJAsyncContextSpec extends Spec {
     val inserted: Long = await(testContext.run {
       qr4.insertValue(lift(TestEntity4(0))).returningGenerated(_.i)
     })
-    await(testContext.run(qr4.filter(_.i == lift(inserted))))
-      .head.i mustBe inserted
+    await(testContext.run(qr4.filter(_.i == lift(inserted)))).head.i mustBe inserted
   }
   "Insert with returning with multiple columns" in {
     await(testContext.run(qr1.delete))
@@ -46,22 +46,74 @@ class PostgresJAsyncContextSpec extends Spec {
       override def handleSingleResult[T](sql: String, list: List[T]) = super.handleSingleResult(sql, list)
 
       override def extractActionResult[O](
-        returningAction:    ReturnAction,
+        returningAction: ReturnAction,
         returningExtractor: ctx.Extractor[O]
       )(result: QueryResult) =
         super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET))
+      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(
+        new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET)
+      )
       ctx.handleSingleResult("<not used>", v)
     }
     ctx.close
   }
 
   "prepare" in {
-    testContext.prepareParams("", { (ps, session) =>
-      (Nil, ps ++ List("Sarah", 127))
-    }) mustEqual List("'Sarah'", "127")
+    testContext.prepareParams(
+      "",
+      (ps, session) => (Nil, ps ++ List("Sarah", 127))
+    ) mustEqual List("'Sarah'", "127")
+  }
+
+  "provides transaction support" - {
+    "success" in {
+      await(for {
+        _ <- testContext.run(qr4.delete)
+        _ <- testContext.transaction { implicit ec =>
+               testContext.run(qr4.insert(_.i -> 33))
+             }
+        r <- testContext.run(qr4)
+      } yield r).map(_.i) mustEqual List(33)
+    }
+    "failure" in {
+      await(for {
+        _ <- testContext.run(qr4.delete)
+        e <- testContext.transaction { implicit ec =>
+               Future.sequence(
+                 Seq(
+                   testContext.run(qr4.insert(_.i -> 18)),
+                   Future(throw new IllegalStateException)
+                 )
+               )
+             }.recoverWith { case e: Exception =>
+               Future(e.getClass.getSimpleName)
+             }
+        r <- testContext.run(qr4)
+      } yield (e, r.isEmpty)) mustEqual (("CompletionException", true))
+    }
+    "nested" in {
+      await(for {
+        _ <- testContext.run(qr4.delete)
+        _ <- testContext.transaction { implicit ec =>
+               testContext.transaction { implicit ec =>
+                 testContext.run(qr4.insert(_.i -> 33))
+               }
+             }
+        r <- testContext.run(qr4)
+      } yield r).map(_.i) mustEqual List(33)
+    }
+    "nested transactions use the same connection" in {
+      await(for {
+        e <- testContext.transaction { implicit ec =>
+               val externalConn = ec.conn
+               testContext.transaction { implicit ec =>
+                 Future(externalConn == ec.conn)
+               }
+             }
+      } yield e) mustEqual true
+    }
   }
 
   override protected def beforeAll(): Unit = {

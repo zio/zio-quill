@@ -8,7 +8,7 @@ import io.getquill.MirrorContexts.testContext.quote
 import io.getquill.MirrorContexts.testContext.unquote
 import io.getquill.util.TraceConfig
 
-class SymbolicReductionSpec extends Spec { //hello
+class SymbolicReductionSpec extends Spec { // hello
 
   def symbolicReduction = (new SymbolicReduction(TraceConfig.Empty).unapply _).andThen(o => o.map(replaceTempIdent(_)))
 

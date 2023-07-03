@@ -1,6 +1,6 @@
 --
 -- The sample data used in the world database is Copyright Statistics
--- Finland, http://www.stat.fi/worldinfigures.
+-- Finland, https://www.stat.fi/worldinfigures.
 --
 
 CREATE TABLE IF NOT EXISTS city (

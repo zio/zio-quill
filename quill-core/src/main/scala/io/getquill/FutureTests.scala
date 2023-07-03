@@ -1,6 +1,6 @@
 package io.getquill
 
-import io.getquill.context.mirror.{ MirrorSession, Row }
+import io.getquill.context.mirror.{MirrorSession, Row}
 import io.getquill.util.PrintMac
 
 import scala.reflect.ClassTag
@@ -30,7 +30,7 @@ object FutureTests {
   val ctx = new MirrorContext(PostgresDialect, Literal)
   import ctx._
 
-  //case class Person(id: Int, name: Option[String], age: Int)
+  // case class Person(id: Int, name: Option[String], age: Int)
 
   //  object SimpleCase {
   //    case class Person(id: Int, name: String)

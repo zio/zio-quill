@@ -10,11 +10,11 @@ import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
 class PostgresMonixJdbcContext[+N <: NamingStrategy](
-  val naming:     N,
+  val naming: N,
   val dataSource: DataSource with Closeable,
-  runner:         EffectWrapper
+  runner: EffectWrapper
 ) extends MonixJdbcContext[PostgresDialect, N](dataSource, runner)
-  with PostgresJdbcContextBase[PostgresDialect, N] {
+    with PostgresJdbcContextBase[PostgresDialect, N] {
   val idiom: PostgresDialect = PostgresDialect
 
   def this(naming: N, config: JdbcContextConfig, runner: EffectWrapper) = this(naming, config.dataSource, runner)

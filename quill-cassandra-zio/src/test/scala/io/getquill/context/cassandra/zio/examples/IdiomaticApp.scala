@@ -3,7 +3,7 @@ package io.getquill.context.cassandra.zio.examples
 import io.getquill._
 import io.getquill.cassandrazio.Quill
 import zio.Console.printLine
-import zio.{ ZIO, ZIOAppDefault, ZLayer }
+import zio.{ZIO, ZIOAppDefault, ZLayer}
 
 object IdiomaticApp extends ZIOAppDefault {
 
@@ -15,8 +15,8 @@ object IdiomaticApp extends ZIOAppDefault {
       query[Person]
     }
 
-    def peopleByName = quote {
-      (name: String) => people.filter(p => p.name == name).allowFiltering
+    def peopleByName = quote { (name: String) =>
+      people.filter(p => p.name == name).allowFiltering
     }
   }
   object QueryService {
@@ -28,7 +28,8 @@ object IdiomaticApp extends ZIOAppDefault {
     import queryService.quill._
     import queryService.quill
     def getPeople(): ZIO[Any, Throwable, List[Person]] = quill.run(queryService.people)
-    def getPeopleByName(name: String): ZIO[Any, Throwable, List[Person]] = quill.run(queryService.peopleByName(lift(name)))
+    def getPeopleByName(name: String): ZIO[Any, Throwable, List[Person]] =
+      quill.run(queryService.peopleByName(lift(name)))
   }
 
   object DataService {
@@ -41,12 +42,12 @@ object IdiomaticApp extends ZIOAppDefault {
       ZLayer.fromFunction(DataService(_))
   }
 
-  override def run = {
+  override def run =
     (for {
       people <- DataService.getPeople()
-      _ <- printLine(s"People: ${people}")
-      joes <- DataService.getPeopleByName("Joe")
-      _ <- printLine(s"Joes: ${joes}")
+      _      <- printLine(s"People: ${people}")
+      joes   <- DataService.getPeopleByName("Joe")
+      _      <- printLine(s"Joes: ${joes}")
     } yield ())
       .provide(
         Quill.CassandraZioSession.fromPrefix("testStreamDB"),
@@ -56,5 +57,4 @@ object IdiomaticApp extends ZIOAppDefault {
       )
       .tapError(e => ZIO.succeed(println(s"Error Occurred: ${e}")))
       .exitCode
-  }
 }

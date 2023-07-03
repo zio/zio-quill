@@ -83,7 +83,7 @@ class BooleanLiteralSupportSpec extends Spec {
 
       "map-clause" in {
         val q = quote {
-          query[Ent].map(e => sql"${e.i} > 123".asCondition) //hello
+          query[Ent].map(e => sql"${e.i} > 123".asCondition) // hello
         }
         ctx.run(q).string mustEqual
           "SELECT CASE WHEN e.i > 123 THEN 1 ELSE 0 END FROM Ent e"
@@ -249,13 +249,17 @@ class BooleanLiteralSupportSpec extends Spec {
         "SELECT a.i AS _1, CASE WHEN b.i > 20 THEN 0 ELSE 1 END AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
     }
 
-    "join + map (with conditional comparison lifted)" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
-      import ctx._
-      val q = quote {
-        qr1.leftJoin(qr2).on((a, b) => true).map(t => (t._1.i, if (t._2.exists(_.i > 20)) lift(false) else lift(true)))
-      }
-      ctx.run(q).string mustEqual
-        "SELECT a.i AS _1, CASE WHEN b.i > 20 THEN ? ELSE ? END AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
+    "join + map (with conditional comparison lifted)" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) {
+      ctx =>
+        import ctx._
+        val q = quote {
+          qr1
+            .leftJoin(qr2)
+            .on((a, b) => true)
+            .map(t => (t._1.i, if (t._2.exists(_.i > 20)) lift(false) else lift(true)))
+        }
+        ctx.run(q).string mustEqual
+          "SELECT a.i AS _1, CASE WHEN b.i > 20 THEN ? ELSE ? END AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
     }
 
     "join + map + filter" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>

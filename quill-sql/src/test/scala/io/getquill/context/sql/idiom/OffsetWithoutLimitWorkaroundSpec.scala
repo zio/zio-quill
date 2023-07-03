@@ -18,7 +18,7 @@ class OffsetWithoutLimitWorkaroundSpec extends Spec {
   }
   import ctx._
 
-  "creates a synthectic limit" in {
+  "creates a synthetic limit" in {
     val q = quote {
       qr1.drop(1)
     }

@@ -20,14 +20,13 @@ import scala.util.Try
 object DbHelper {
   private val logger = Logger(LoggerFactory.getLogger(classOf[DbHelper]))
 
-  private def getDatabaseType(ds: DataSource): DatabaseType = {
+  private def getDatabaseType(ds: DataSource): DatabaseType =
     Manager { use =>
-      val conn = use(ds.getConnection)
-      val meta = conn.getMetaData
+      val conn        = use(ds.getConnection)
+      val meta        = conn.getMetaData
       val productType = meta.getDatabaseProductName
       DatabaseType.fromProductName(productType)
     }.flatten.orThrow
-  }
 
   def syncDbRun(rawSql: String, ds: DataSource): Try[Unit] = {
     val databaseType = getDatabaseType(ds)
@@ -69,7 +68,7 @@ object DbHelper {
     result.map(_ => ())
   }
 
-  private def appendSequence(conn: Connection, actions: List[String]) = {
+  private def appendSequence(conn: Connection, actions: List[String]) =
     actions.map { actStr =>
       logger.debug(s"Executing: ${actStr}")
       Manager { use =>
@@ -78,7 +77,6 @@ object DbHelper {
       }
 
     }
-  }
 
   def dropTables(ds: DataSource with Closeable) = {
 
@@ -88,8 +86,10 @@ object DbHelper {
       // For Oracle, need to connect to other schemas to get info
       case Oracle =>
         new DefaultJdbcSchemaReader(databaseType).extractTables(() => ds.getConnection) ++
-          new DefaultJdbcSchemaReader(databaseType) { override def schemaPattern(schema: String) = "ALPHA" }.extractTables(() => ds.getConnection) ++
-          new DefaultJdbcSchemaReader(databaseType) { override def schemaPattern(schema: String) = "BRAVO" }.extractTables(() => ds.getConnection)
+          new DefaultJdbcSchemaReader(databaseType) { override def schemaPattern(schema: String) = "ALPHA" }
+            .extractTables(() => ds.getConnection) ++
+          new DefaultJdbcSchemaReader(databaseType) { override def schemaPattern(schema: String) = "BRAVO" }
+            .extractTables(() => ds.getConnection)
 
       // For SQL Server need to run a manual query to get tables from alpha/bravo databases if they exist
       case SqlServer => {
@@ -104,7 +104,7 @@ object DbHelper {
             (select table_catalog as _1, table_schema as _2, table_name as _3, table_type as _4 from bravo.information_schema.tables)
             """.as[Query[(String, String, String, String)]]
           )
-        tables.map { case (cat, schem, name, tpe) => JdbcTableMeta(Option(cat), Option(schem), name, Option(tpe)) }
+        tables.map { case (cat, schema, name, tpe) => JdbcTableMeta(Option(cat), Option(schema), name, Option(tpe)) }
       }
 
       case _ =>
@@ -112,9 +112,9 @@ object DbHelper {
     }
 
     val getSchema: JdbcTableMeta => Option[String] = databaseType match {
-      case MySql => tm => tm.tableCat
-      case SqlServer => tm => tm.tableCat.flatMap(tc => tm.tableSchem.flatMap(ts => Some(s"${tc}.${ts}")))
-      case _ => tm => tm.tableSchem
+      case MySql     => tm => tm.tableCat
+      case SqlServer => tm => tm.tableCat.flatMap(tc => tm.tableSchema.flatMap(ts => Some(s"${tc}.${ts}")))
+      case _         => tm => tm.tableSchema
     }
 
     val tables = allTables.filter { tm =>
@@ -122,20 +122,24 @@ object DbHelper {
         case MySql =>
           tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo")
         case SqlServer =>
-          tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo") && tm.tableSchem.exists(_.toLowerCase == "dbo")
+          tm.tableCat.existsInSetNocase("codegen_test", "alpha", "bravo") && tm.tableSchema.exists(
+            _.toLowerCase == "dbo"
+          )
         case Oracle =>
-          tm.tableSchem.existsInSetNocase("codegen_test", "alpha", "bravo")
+          tm.tableSchema.existsInSetNocase("codegen_test", "alpha", "bravo")
         case Sqlite => // SQLite does not have individual schemas at all.
           true
         case Postgres =>
-          tm.tableSchem.existsInSetNocase("public", "alpha", "bravo")
+          tm.tableSchema.existsInSetNocase("public", "alpha", "bravo")
         case H2 =>
           tm.tableCat.exists(_.toLowerCase == "codegen_test.h2") &&
-            tm.tableSchem.exists(_.toLowerCase != "information_schema")
+          tm.tableSchema.exists(_.toLowerCase != "information_schema")
       }
     }
 
-    val query = tables.map(t => s"drop table ${getSchema(t).map(_ + ".").getOrElse("") + s""""${t.tableName}""""};").mkString("\n")
+    val query = tables
+      .map(t => s"drop table ${getSchema(t).map(_ + ".").getOrElse("") + s""""${t.tableName}""""};")
+      .mkString("\n")
 
     logger.info("Cleanup:\n" + query)
 
@@ -145,7 +149,13 @@ object DbHelper {
 
 class DbHelper(config: SchemaConfig, dbPrefix: ConfigPrefix, ds: DataSource) {
   def setup(): Unit = Option(config.content).andNotEmpty.foreach(setupScript =>
-    DbHelper.syncDbRun(setupScript, ds).orThrow(
-      new IllegalArgumentException(s"Database Setup Failed for ${dbPrefix}. Could not execute DB config ${config} command:\n${config.content}", _)
-    ))
+    DbHelper
+      .syncDbRun(setupScript, ds)
+      .orThrow(
+        new IllegalArgumentException(
+          s"Database Setup Failed for ${dbPrefix}. Could not execute DB config ${config} command:\n${config.content}",
+          _
+        )
+      )
+  )
 }

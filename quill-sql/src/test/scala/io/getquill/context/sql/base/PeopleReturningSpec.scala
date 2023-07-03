@@ -10,7 +10,13 @@ trait PeopleReturningSpec extends Spec with BeforeAndAfterEach {
 
   import context._
 
-  case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int = 0, extraInfo: Option[String] = None)
+  case class Contact(
+    firstName: String,
+    lastName: String,
+    age: Int,
+    addressFk: Int = 0,
+    extraInfo: Option[String] = None
+  )
 
   case class Product(id: Long, description: String, sku: Int)
 
@@ -50,7 +56,9 @@ trait PeopleReturningSpec extends Spec with BeforeAndAfterEach {
 
   object `Ex 1 insert.returningMany(_.generatedColumn) mod` {
     val op = quote {
-      query[Product].insert(_.description -> lift(product.description), _.sku -> lift(product.sku)).returningMany(p => p.id)
+      query[Product]
+        .insert(_.description -> lift(product.description), _.sku -> lift(product.sku))
+        .returningMany(p => p.id)
     }
     val get = quote {
       query[Product]
@@ -86,7 +94,13 @@ trait PeopleReturningSpec extends Spec with BeforeAndAfterEach {
       query[Contact]
         .filter(p => p.firstName == "Joe")
         .update(p => p.age -> (p.age + 1))
-        .returningMany(p => query[Contact].filter(cp => cp.firstName == p.firstName && cp.lastName == p.lastName).map(_.lastName).value.orNull)
+        .returningMany(p =>
+          query[Contact]
+            .filter(cp => cp.firstName == p.firstName && cp.lastName == p.lastName)
+            .map(_.lastName)
+            .value
+            .orNull
+        )
     }
     val expect = List("A", "B")
     val get = quote {

@@ -19,8 +19,7 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
   import cats.effect.unsafe.implicits.global
 
   // A transactor that always rolls back.
-  lazy val xa = Transactor
-    .after
+  lazy val xa = Transactor.after
     .set(
       Transactor.fromDriverManager[IO](
         "org.postgresql.Driver",
@@ -31,7 +30,7 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
       HC.commit
     )
 
-  val testContext = new DoobieContext.Postgres(Literal)
+  val testContext               = new DoobieContext.Postgres(Literal)
   val context: testContext.type = testContext
   import testContext._
 
@@ -46,7 +45,7 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
     import `Ex 0 insert.returning(_.generatedColumn) mod`._
     val (id, output) =
       (for {
-        id <- testContext.run(op)
+        id     <- testContext.run(op)
         output <- testContext.run(get)
       } yield (id, output)).transact(xa).unsafeRunSync()
 
@@ -58,7 +57,7 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
     val (product, output) =
       (for {
         product <- testContext.run(op)
-        output <- testContext.run(get)
+        output  <- testContext.run(get)
       } yield (product, output)).transact(xa).unsafeRunSync()
 
     output mustEqual result(product)
@@ -68,7 +67,7 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
     import `Ex 1 insert.returningMany(_.generatedColumn) mod`._
     val (id, output) =
       (for {
-        id <- testContext.run(op)
+        id     <- testContext.run(op)
         output <- testContext.run(get)
       } yield (id, output)).transact(xa).unsafeRunSync()
 
@@ -80,8 +79,8 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
     val output =
       (for {
         opResult <- testContext.run(op)
-        _ = opResult.toSet mustEqual expect.toSet
-        output <- testContext.run(get)
+        _         = opResult.toSet mustEqual expect.toSet
+        output   <- testContext.run(get)
       } yield output).transact(xa).unsafeRunSync()
 
     output.toSet mustEqual result.toSet
@@ -92,8 +91,8 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
     val output =
       (for {
         opResult <- testContext.run(op)
-        _ = opResult.toSet mustEqual expect.toSet
-        output <- testContext.run(get)
+        _         = opResult.toSet mustEqual expect.toSet
+        output   <- testContext.run(get)
       } yield output).transact(xa).unsafeRunSync()
 
     output.toSet mustEqual result.toSet
@@ -104,8 +103,8 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
     val output =
       (for {
         opResult <- testContext.run(op)
-        _ = opResult.toSet mustEqual expect.toSet
-        output <- testContext.run(get)
+        _         = opResult.toSet mustEqual expect.toSet
+        output   <- testContext.run(get)
       } yield output).transact(xa).unsafeRunSync()
 
     output.toSet mustEqual result.toSet

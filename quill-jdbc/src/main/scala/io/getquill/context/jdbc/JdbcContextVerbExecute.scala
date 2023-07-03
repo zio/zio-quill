@@ -1,23 +1,24 @@
 package io.getquill.context.jdbc
 
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnNothing, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
 import io.getquill.context.ExecutionInfo
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.ContextLogger
-import io.getquill.{ NamingStrategy, ReturnAction }
+import io.getquill.{NamingStrategy, ReturnAction}
 
-import java.sql.{ Connection, ResultSet, Statement }
+import java.sql.{Connection, ResultSet, Statement}
 
-trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] extends JdbcContextTypes[Dialect, Naming] {
+trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
+    extends JdbcContextTypes[Dialect, Naming] {
 
   // These type overrides are not required for JdbcRunContext in Scala2-Quill but it's a typing error. It only works
   // because executeQuery is not actually defined in Context.scala therefore typing doesn't have
   // to be correct on the base-level. Same issue with RunActionResult and others
-  override type RunQueryResult[T] = List[T]
-  override type RunQuerySingleResult[T] = T
-  override type RunActionResult = Long
-  override type RunActionReturningResult[T] = T
-  override type RunBatchActionResult = List[Long]
+  override type RunQueryResult[T]                = List[T]
+  override type RunQuerySingleResult[T]          = T
+  override type RunActionResult                  = Long
+  override type RunActionReturningResult[T]      = T
+  override type RunBatchActionResult             = List[Long]
   override type RunBatchActionReturningResult[T] = List[T]
 
   private val logger = ContextLogger(classOf[JdbcContextVerbExecute[_, _]])
@@ -37,7 +38,10 @@ trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] ex
       ps.executeUpdate().toLong
     }
 
-  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Result[List[T]] =
+  def executeQuery[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(
+    info: ExecutionInfo,
+    dc: Runner
+  ): Result[List[T]] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(conn.prepareStatement(sql), conn)
       logger.logQuery(sql, params)
@@ -45,13 +49,27 @@ trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] ex
       extractResult(rs, conn, extractor)
     }
 
-  def executeQuerySingle[T](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(info: ExecutionInfo, dc: Runner): Result[T] =
+  def executeQuerySingle[T](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[T] = identityExtractor
+  )(info: ExecutionInfo, dc: Runner): Result[T] =
     handleSingleWrappedResult(sql, executeQuery(sql, prepare, extractor)(info, dc))
 
-  def executeActionReturning[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[O] =
+  def executeActionReturning[O](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[O],
+    returningBehavior: ReturnAction
+  )(info: ExecutionInfo, dc: Runner): Result[O] =
     push(executeActionReturningMany(sql, prepare, extractor, returningBehavior)(info, dc))(handleSingleResult(sql, _))
 
-  def executeActionReturningMany[O](sql: String, prepare: Prepare = identityPrepare, extractor: Extractor[O], returningBehavior: ReturnAction)(info: ExecutionInfo, dc: Runner): Result[List[O]] =
+  def executeActionReturningMany[O](
+    sql: String,
+    prepare: Prepare = identityPrepare,
+    extractor: Extractor[O],
+    returningBehavior: ReturnAction
+  )(info: ExecutionInfo, dc: Runner): Result[List[O]] =
     withConnectionWrapped { conn =>
       val (params, ps) = prepare(prepareWithReturning(sql, conn, returningBehavior), conn)
       logger.logQuery(sql, params)
@@ -68,32 +86,33 @@ trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy] ex
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Result[List[Long]] =
     withConnectionWrapped { conn =>
-      groups.flatMap {
-        case BatchGroup(sql, prepare) =>
-          val ps = conn.prepareStatement(sql)
-          logger.underlying.debug("Batch: {}", sql)
-          prepare.foreach { f =>
-            val (params, _) = f(ps, conn)
-            logger.logBatchItem(sql, params)
-            ps.addBatch()
-          }
-          ps.executeBatch().map(_.toLong)
+      groups.flatMap { case BatchGroup(sql, prepare) =>
+        val ps = conn.prepareStatement(sql)
+        logger.underlying.debug("Batch: {}", sql)
+        prepare.foreach { f =>
+          val (params, _) = f(ps, conn)
+          logger.logBatchItem(sql, params)
+          ps.addBatch()
+        }
+        ps.executeBatch().map(_.toLong)
       }
     }
 
-  def executeBatchActionReturning[T](groups: List[BatchGroupReturning], extractor: Extractor[T])(info: ExecutionInfo, dc: Runner): Result[List[T]] =
+  def executeBatchActionReturning[T](
+    groups: List[BatchGroupReturning],
+    extractor: Extractor[T]
+  )(info: ExecutionInfo, dc: Runner): Result[List[T]] =
     withConnectionWrapped { conn =>
-      groups.flatMap {
-        case BatchGroupReturning(sql, returningBehavior, prepare) =>
-          val ps = prepareWithReturning(sql, conn, returningBehavior)
-          logger.underlying.debug("Batch: {}", sql)
-          prepare.foreach { f =>
-            val (params, _) = f(ps, conn)
-            logger.logBatchItem(sql, params)
-            ps.addBatch()
-          }
-          ps.executeBatch()
-          extractResult(ps.getGeneratedKeys, conn, extractor)
+      groups.flatMap { case BatchGroupReturning(sql, returningBehavior, prepare) =>
+        val ps = prepareWithReturning(sql, conn, returningBehavior)
+        logger.underlying.debug("Batch: {}", sql)
+        prepare.foreach { f =>
+          val (params, _) = f(ps, conn)
+          logger.logBatchItem(sql, params)
+          ps.addBatch()
+        }
+        ps.executeBatch()
+        extractResult(ps.getGeneratedKeys, conn, extractor)
       }
     }
 
