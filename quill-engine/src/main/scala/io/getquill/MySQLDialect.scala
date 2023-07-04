@@ -1,10 +1,10 @@
 package io.getquill
 
 import io.getquill.ast.{Ast, _}
-import io.getquill.context.{CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnField}
-import io.getquill.context.sql.OrderByCriteria
 import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom.{NoConcatSupport, QuestionMarkBindVariables, SqlIdiom}
+import io.getquill.context.sql.OrderByCriteria
+import io.getquill.context.{CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnField}
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{Statement, Token}
 import io.getquill.util.Messages.fail
@@ -108,3 +108,9 @@ trait MySQLDialect
 }
 
 object MySQLDialect extends MySQLDialect
+
+trait MySQL5Dialect extends MySQLDialect {
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
+}
+
+object MySQL5Dialect extends MySQL5Dialect
