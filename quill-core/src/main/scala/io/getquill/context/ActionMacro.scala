@@ -37,18 +37,25 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
     translateBatchQueryPrettyPrint(quoted, q"false")
 
   def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
-    expandBatchAction(quoted) { case (batch, param, expanded) =>
-      q"""
+    expandBatchActionNew(quoted, false) {
+      case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
+        q"""
           ..${EnableReflectiveCalls(c)}
+          val batches =
+            if ($canDoBatch) {
+              $batch.toList.grouped(1).toList
+            } else {
+              $batch.toList.map(element => List(element))
+            }
           ${c.prefix}.translateBatchQuery(
-            $batch.map { $param =>
-              val (idiomContext, expanded) = $expanded
+            batches.map { subBatch =>
+              val expanded = $expanded
               (expanded.string, expanded.prepare)
             }.groupBy(_._1).map {
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
             }.toList,
-            ${prettyPrint}
+            $prettyPrint
           )(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
@@ -332,30 +339,6 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
           io.getquill.util.Messages.fail(s"Can't find returning column. Ast: '$$ast'")
       })
     """
-
-  def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
-    BetaReduction(extractAst(quoted)) match {
-      case totalAst @ Foreach(lift: Lift, alias, body) =>
-        val batch         = lift.value.asInstanceOf[Tree]
-        val batchItemType = batch.tpe.typeArgs.head
-        c.typecheck(q"(value: $batchItemType) => value") match {
-          case q"($param) => $value" =>
-            val nestedLift =
-              lift match {
-                case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
-                  ScalarValueLift("value", External.Source.UnparsedProperty("value"), value, encoder, quat)
-                case CaseClassQueryLift(name, batch: Tree, quat) =>
-                  CaseClassValueLift("value", "value", value, quat)
-              }
-            val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
-            val expanded = expand(ast, Quat.Unknown)
-            c.untypecheck {
-              call(batch, param, expanded)
-            }
-        }
-      case other =>
-        c.fail(s"Batch actions must be static quotations. Found: '$other'")
-    }
 
   def prepareAction(quoted: Tree): Tree =
     c.untypecheck {
