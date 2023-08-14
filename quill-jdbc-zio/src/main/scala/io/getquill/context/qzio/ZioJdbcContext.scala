@@ -23,13 +23,13 @@ import zio.ZIO.blocking
  * java.sql.Connection as a resource dependency which can be provided later (see
  * `ZioJdbc` for helper methods that assist in doing this).
  *
- * The resource dependency itself is just a `Has[Connection]`. Since this is
+ * The resource dependency itself is just a `Connection`. Since this is
  * frequently used The type `QIO[T]` i.e. Quill-IO has been defined as an alias
- * for `ZIO[Has[Connection], SQLException, T]`.
+ * for `ZIO[Connection, SQLException, T]`.
  *
  * Since in most JDBC use-cases, a connection-pool datasource i.e. Hikari is
  * used it would actually be much more useful to interact with
- * `ZIO[Has[DataSource], SQLException, T]`. The extension method `.onDataSource`
+ * `ZIO[DataSource, SQLException, T]`. The extension method `.onDataSource`
  * in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
  * (for even more brevity use `onDS` which is an alias for this method). {{
  * import ZioJdbc._ val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
@@ -41,7 +41,7 @@ import zio.ZIO.blocking
  * }}
  *
  * Note however that the one exception to these cases are the `prepare` methods
- * where a `ZIO[Has[Connection], SQLException, PreparedStatement]` is being
+ * where a `ZIO[Connection, SQLException, PreparedStatement]` is being
  * returned. In those situations the acquire-action-release pattern does not
  * make any sense because the `PrepareStatement` is only held open while it's
  * host-connection exists.
@@ -179,9 +179,9 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
    * the database and return the contents of the Person table immediately after
    * that:
    * {{{
-   *   val a = run(query[Person].insert(Person(...)): ZIO[Has[DataSource], SQLException, Long]
-   *   val b = run(query[Person]): ZIO[Has[DataSource], SQLException, Person]
-   *   transaction(a *> b): ZIO[Has[DataSource], SQLException, Person]
+   *   val a = run(query[Person].insert(Person(...)): ZIO[DataSource, SQLException, Long]
+   *   val b = run(query[Person]): ZIO[DataSource, SQLException, Person]
+   *   transaction(a *> b): ZIO[DataSource, SQLException, Person]
    * }}}
    *
    * The order of operations run in the case that a new connection needs to be

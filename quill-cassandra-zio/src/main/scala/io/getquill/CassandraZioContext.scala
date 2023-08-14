@@ -26,7 +26,7 @@ object CassandraZioContext {
  * (see the `CassandraZioSession` object for helper methods that assist in doing
  * this).
  *
- * The resource dependency itself is just a Has[CassandraZioSession]
+ * The resource dependency itself is just a CassandraZioSession
  *
  * Various methods in the `io.getquill.CassandraZioSession` can assist in
  * simplifying it's creation, for example, you can provide a `Config` object
