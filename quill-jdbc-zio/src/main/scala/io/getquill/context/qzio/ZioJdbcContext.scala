@@ -28,11 +28,11 @@ import zio.ZIO.blocking
  * for `ZIO[Connection, SQLException, T]`.
  *
  * Since in most JDBC use-cases, a connection-pool datasource i.e. Hikari is
- * used it would actually be much more useful to interact with
- * `ZIO[DataSource, SQLException, T]`. The extension method `.onDataSource`
- * in `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion
- * (for even more brevity use `onDS` which is an alias for this method). {{
- * import ZioJdbc._ val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
+ * used it would actually be much more useful to interact with `ZIO[DataSource,
+ * SQLException, T]`. The extension method `.onDataSource` in
+ * `io.getquill.context.ZioJdbc.QuillZioExt` will perform this conversion (for
+ * even more brevity use `onDS` which is an alias for this method). {{ import
+ * ZioJdbc._ val zioDs = DataSourceLayer.fromPrefix("testPostgresDB")
  * MyZioContext.run(query[Person]).onDataSource.provideCustomLayer(zioDS) }}
  *
  * If you are using a Plain Scala app however, you will need to manually run it
@@ -41,9 +41,9 @@ import zio.ZIO.blocking
  * }}
  *
  * Note however that the one exception to these cases are the `prepare` methods
- * where a `ZIO[Connection, SQLException, PreparedStatement]` is being
- * returned. In those situations the acquire-action-release pattern does not
- * make any sense because the `PrepareStatement` is only held open while it's
+ * where a `ZIO[Connection, SQLException, PreparedStatement]` is being returned.
+ * In those situations the acquire-action-release pattern does not make any
+ * sense because the `PrepareStatement` is only held open while it's
  * host-connection exists.
  */
 abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
