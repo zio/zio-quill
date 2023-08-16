@@ -11,9 +11,9 @@ then
     echo "No Artifact Specified"
 fi
 
-SBT_2_12="sbt ++2.12.17 -Dquill.macro.log=false -Dquill.scala.version=2.12.17"
-SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
-SBT_3_3="sbt ++3.3.0 -Dquill.macro.log=false -Dquill.scala.version=3.3.0"
+SBT_2_12="sbt ++2.12.17 -Dquill.macro.log=false -Dquill.scala.version=2.12.17 -Xms4g -Xmx4g -Xss10m"
+SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10 -Xms4g -Xmx4g -Xss10m"
+SBT_3_3="sbt ++3.3.0 -Dquill.macro.log=false -Dquill.scala.version=3.3.0 -Xms4g -Xmx4g -Xss10m"
 
 if [[ $VERSION -eq 212 ]]
 then
