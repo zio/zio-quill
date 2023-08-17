@@ -790,7 +790,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
   scalacOptions ++= Seq(
-    "-target:jvm-1.8",
+    "-release:8",
     "-encoding",
     "UTF-8",
     "-feature",
