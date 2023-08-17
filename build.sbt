@@ -303,7 +303,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.2",
-        "dev.zio"                    %% "zio-logging"   % "2.1.13",
+        "dev.zio"                    %% "zio-logging"   % "2.1.14",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -491,7 +491,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.6.0" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.5.0"
+        "dev.zio"       %% "zio-json"   % "0.6.0"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -534,7 +534,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.0",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.3",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -547,7 +547,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.0"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.3"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -559,7 +559,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.2.0"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.2.3"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -571,7 +571,7 @@ lazy val `quill-jasync-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.0",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.3",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
         "dev.zio"                %% "zio"                % Version.zio,
         "dev.zio"                %% "zio-streams"        % Version.zio
@@ -587,7 +587,7 @@ lazy val `quill-jasync-zio-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.0"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.3"
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
@@ -599,7 +599,7 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.16.0",
+        "com.datastax.oss" % "java-driver-core" % "4.17.0",
         (CrossVersion.partialVersion(scalaVersion.value) match {
           case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
           case _             => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
@@ -691,7 +691,7 @@ commands += Command.command("checkUnformattedFiles") { st =>
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "4.0.3" exclude ("org.slf4j", "*"),
-    "mysql"                   % "mysql-connector-java"    % "8.0.33"     % Test,
+    "com.mysql"               % "mysql-connector-j"       % "8.1.0"      % Test,
     "com.h2database"          % "h2"                      % "2.1.212"    % Test,
     "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.42.0.0"   % Test,
@@ -762,7 +762,7 @@ val scala_v_30 = "3.3.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.3.8" % Test
+    "ch.qos.logback" % "logback-classic" % "1.3.11" % Test
   )
 )
 
@@ -799,7 +799,8 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",
     "-Ywarn-value-discard",
-    "-Ypatmat-exhaust-depth", "40"
+    "-Ypatmat-exhaust-depth",
+    "40"
   ),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {

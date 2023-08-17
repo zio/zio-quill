@@ -63,8 +63,7 @@ trait CodeGeneratorComponents extends HasBasicMeta with QuerySchemaNaming {
 
   /**
    * Take the schema of a table and convert it to something a object/package
-   * etc... can actually be named as
-   * i.e. a namespace.
+   * etc... can actually be named as i.e. a namespace.
    */
   def namespacer: Namespacer[TableMeta]
 }

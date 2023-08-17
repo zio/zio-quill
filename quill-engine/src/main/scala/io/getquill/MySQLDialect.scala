@@ -1,10 +1,10 @@
 package io.getquill
 
 import io.getquill.ast.{Ast, _}
-import io.getquill.context.{CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnField}
-import io.getquill.context.sql.OrderByCriteria
 import io.getquill.context.sql.idiom.SqlIdiom.ActionTableAliasBehavior
 import io.getquill.context.sql.idiom.{NoConcatSupport, QuestionMarkBindVariables, SqlIdiom}
+import io.getquill.context.sql.OrderByCriteria
+import io.getquill.context.{CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnField}
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.{Statement, Token}
 import io.getquill.util.Messages.fail
@@ -71,8 +71,7 @@ trait MySQLDialect
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](MySQLDialect.this.astTokenizer(_, strategy, idiomContext)) {
         case Property.Opinionated(Excluded(_), name, renameable, _) =>
-          renameable.fixedOr(name.token)(stmt"VALUES(${strategy.column(name).token})")
-
+          stmt"VALUES(${renameable.fixedOr(name.token)(strategy.column(name).token)})"
         case Property.Opinionated(_, name, renameable, _) =>
           renameable.fixedOr(name.token)(strategy.column(name).token)
       }
@@ -109,3 +108,9 @@ trait MySQLDialect
 }
 
 object MySQLDialect extends MySQLDialect
+
+trait MySQL5Dialect extends MySQLDialect {
+  override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
+}
+
+object MySQL5Dialect extends MySQL5Dialect

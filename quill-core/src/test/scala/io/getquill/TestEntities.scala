@@ -7,6 +7,22 @@ trait TestEntities {
   this: Context[_, _] =>
 
   case class TestEntity(s: String, i: Int, l: Long, o: Option[Int], b: Boolean)
+
+  lazy val testEntitySchemaMeta = schemaMeta[TestEntity](
+    "TestEntity",
+    _.s -> "s"
+  )
+
+  lazy val testEntityQuerySchema = quote(
+    querySchema[TestEntity](
+      "TestEntity",
+      _.s -> "s",
+      _.i -> "i",
+      _.l -> "l",
+      _.o -> "o",
+      _.b -> "b"
+    )
+  )
   case class Emb(s: String, i: Int)
   case class TestEntityEmb(emb: Emb, l: Long, o: Option[Int])
   case class TestEntity2(s: String, i: Int, l: Long, o: Option[Int])
