@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra
 
-import io.getquill.{ MappedEncoding, Spec }
+import io.getquill.MappedEncoding
+import io.getquill.base.Spec
 import org.scalatest.BeforeAndAfterEach
 
 trait CollectionsSpec extends Spec with BeforeAndAfterEach {

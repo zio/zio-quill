@@ -18,17 +18,25 @@ trait WithContext[Prefix <: ConfigPrefix, CTest <: CodegenTestCases] extends Sch
   }
 }
 
-abstract class WithContextBase[Prefix <: ConfigPrefix, CTest <: CodegenTestCases](val dbPrefix: Prefix, val ctest: CTest) extends WithContext[Prefix, CTest]
+abstract class WithContextBase[Prefix <: ConfigPrefix, CTest <: CodegenTestCases](
+  val dbPrefix: Prefix,
+  val ctest: CTest
+) extends WithContext[Prefix, CTest]
 
 // Cannot include WithOracleContext here since it is not being compiled in all builds
-object WithContext extends WithContextAux
-  with WithH2Context
-  with WithMysqlContext
-  with WithPostgresContext
-  with WithSqliteContext
-  with WithSqlServerContext
+object WithContext
+    extends WithContextAux
+    with WithH2Context
+    with WithMysqlContext
+    with WithPostgresContext
+    with WithSqliteContext
+    with WithSqlServerContext
 
 trait WithContextAux {
-  type Aux[Prefix <: ConfigPrefix, CTest <: CodegenTestCases, Ret] = WithContext[Prefix, CTest] { type QuillContext = Ret }
-  def apply[Prefix <: ConfigPrefix, CTest <: CodegenTestCases](implicit cft: WithContext[Prefix, CTest]): Aux[Prefix, CTest, cft.QuillContext] = cft
+  type Aux[Prefix <: ConfigPrefix, CTest <: CodegenTestCases, Ret] = WithContext[Prefix, CTest] {
+    type QuillContext = Ret
+  }
+  def apply[Prefix <: ConfigPrefix, CTest <: CodegenTestCases](implicit
+    cft: WithContext[Prefix, CTest]
+  ): Aux[Prefix, CTest, cft.QuillContext] = cft
 }

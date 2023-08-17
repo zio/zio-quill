@@ -1,17 +1,9 @@
 package io.getquill
 
-import io.getquill.Spec
-import io.getquill.ast._
-import io.getquill.EntityQuery
-import io.getquill.testContext.InfixInterpolator
-import io.getquill.Query
+import io.getquill.MirrorContexts.testContext._
+import io.getquill.ast.{Query => _, _}
+import io.getquill.base.Spec
 import io.getquill.quat._
-import io.getquill.testContext._
-import io.getquill.testContext.qr1
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
-import io.getquill.Quoted
 
 class OpsSpec extends Spec {
 
@@ -50,7 +42,7 @@ class OpsSpec extends Spec {
     "boolean values" - {
       "with `as`" in {
         val q = quote {
-          infix"true".as[Boolean]
+          sql"true".as[Boolean]
         }
         q.ast mustEqual Infix(List("true"), Nil, false, false, Quat.BooleanValue)
       }
@@ -58,20 +50,20 @@ class OpsSpec extends Spec {
     "other values" - {
       "with `as`" in {
         val q = quote {
-          infix"1".as[Int]
+          sql"1".as[Int]
         }
         q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
       }
       "without `as`" in {
         val q = quote {
-          infix"1"
+          sql"1"
         }
         q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
       }
     }
   }
 
-  "unquotes duble quotations" in {
+  "unquotes double quotations" in {
     val q: Quoted[EntityQuery[TestEntity]] = quote {
       quote(query[TestEntity])
     }
@@ -82,29 +74,25 @@ class OpsSpec extends Spec {
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
-    def allowFiltering = quote(infix"$q ALLOW FILTERING".as[Q])
+    def allowFiltering = quote(sql"$q ALLOW FILTERING".as[Q])
   }
 
   "unquotes quoted function bodies automatically" - {
     "one param" in {
-      val q: Quoted[Int => EntityQuery[TestEntity]] = quote {
-        (i: Int) =>
-          query[TestEntity].allowFiltering
+      val q: Quoted[Int => EntityQuery[TestEntity]] = quote { (i: Int) =>
+        query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n = quote { (i: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }
     "multiple params" in {
-      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote {
-        (i: Int, j: Int, k: Int) =>
-          query[TestEntity].allowFiltering
+      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote { (i: Int, j: Int, k: Int) =>
+        query[TestEntity].allowFiltering
       }
-      val n = quote {
-        (i: Int, j: Int, k: Int) =>
-          unquote(query[TestEntity].allowFiltering)
+      val n = quote { (i: Int, j: Int, k: Int) =>
+        unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }

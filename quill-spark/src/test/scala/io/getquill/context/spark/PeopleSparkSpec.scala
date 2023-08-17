@@ -1,6 +1,7 @@
 package io.getquill.context.spark
 
-import io.getquill.{ Query, Quoted, Spec }
+import io.getquill.base.Spec
+import io.getquill.{Query, Quoted}
 
 case class Person(name: String, age: Int)
 case class Couple(her: String, him: String)
@@ -62,13 +63,12 @@ class PeopleJdbcSpec extends Spec {
   }
 
   "Example 2 - range simple" in {
-    val rangeSimple = quote {
-      (a: Int, b: Int) =>
-        for {
-          u <- people if (a <= u.age && u.age < b)
-        } yield {
-          u
-        }
+    val rangeSimple = quote { (a: Int, b: Int) =>
+      for {
+        u <- people if (a <= u.age && u.age < b)
+      } yield {
+        u
+      }
     }
 
     testContext.run(rangeSimple(30, 40)).collect.toList mustEqual
@@ -76,13 +76,12 @@ class PeopleJdbcSpec extends Spec {
   }
 
   val satisfies =
-    quote {
-      (p: Int => Boolean) =>
-        for {
-          u <- people if (p(u.age))
-        } yield {
-          u
-        }
+    quote { (p: Int => Boolean) =>
+      for {
+        u <- people if (p(u.age))
+      } yield {
+        u
+      }
     }
 
   "Example 3 - satisfies" in {
@@ -97,31 +96,28 @@ class PeopleJdbcSpec extends Spec {
 
   "Example 5 - compose" in {
     val q = {
-      val range = quote {
-        (a: Int, b: Int) =>
-          for {
-            u <- people if (a <= u.age && u.age < b)
-          } yield {
-            u
-          }
+      val range = quote { (a: Int, b: Int) =>
+        for {
+          u <- people if (a <= u.age && u.age < b)
+        } yield {
+          u
+        }
       }
-      val ageFromName = quote {
-        (s: String) =>
-          for {
-            u <- people if (s == u.name)
-          } yield {
-            u.age
-          }
+      val ageFromName = quote { (s: String) =>
+        for {
+          u <- people if (s == u.name)
+        } yield {
+          u.age
+        }
       }
-      quote {
-        (s: String, t: String) =>
-          for {
-            a <- ageFromName(s)
-            b <- ageFromName(t)
-            r <- range(a, b)
-          } yield {
-            r
-          }
+      quote { (s: String, t: String) =>
+        for {
+          a <- ageFromName(s)
+          b <- ageFromName(t)
+          r <- range(a, b)
+        } yield {
+          r
+        }
       }
     }
     testContext.run(q("Drew", "Bert")).collect.toList mustEqual

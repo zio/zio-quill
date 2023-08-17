@@ -1,14 +1,14 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.qr3
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qr2
+import io.getquill.MirrorContexts.testContext.qr3
+import io.getquill.MirrorContexts.testContext.quote
+import io.getquill.MirrorContexts.testContext.unquote
 import io.getquill.util.TraceConfig
 
-class SymbolicReductionSpec extends Spec { //hello
+class SymbolicReductionSpec extends Spec { // hello
 
   def symbolicReduction = (new SymbolicReduction(TraceConfig.Empty).unapply _).andThen(o => o.map(replaceTempIdent(_)))
 

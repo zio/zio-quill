@@ -4,7 +4,7 @@ import io.getquill.codegen.jdbc.DatabaseTypes.DatabaseType
 import io.getquill.codegen.jdbc.model.JdbcTypes.JdbcConnectionMaker
 import io.getquill.util.Using.Manager
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 object DiscoverDatabaseType {
   def apply(

@@ -1,6 +1,6 @@
 package io.getquill.sql
 
-import io.getquill.ast.{ Aggregation, Ast, CollectAst, Infix }
+import io.getquill.ast.{Aggregation, Ast, CollectAst, Infix}
 
 object Common {
   object ContainsImpurities {

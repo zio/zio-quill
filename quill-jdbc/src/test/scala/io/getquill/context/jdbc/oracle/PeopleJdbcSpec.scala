@@ -1,7 +1,7 @@
 package io.getquill.context.jdbc.oracle
 
-import io.getquill.context.sql.PeopleSpec
 import io.getquill.Update
+import io.getquill.context.sql.base.PeopleSpec
 
 class PeopleJdbcSpec extends PeopleSpec {
 
@@ -10,7 +10,7 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   override def beforeAll = {
     testContext.transaction {
-      testContext.run(infix"alter session set current_schema=quill_test".as[Update[Unit]])
+      testContext.run(sql"alter session set current_schema=quill_test".as[Update[Unit]])
       testContext.run(query[Couple].delete)
       testContext.run(query[Person].delete)
       testContext.run(liftQuery(peopleEntries).foreach(p => peopleInsert(p)))
@@ -67,6 +67,8 @@ class PeopleJdbcSpec extends PeopleSpec {
 
   "Example 12 - filtered update co-related" in {
     testContext.run(`Ex 12 filtered update co-related`)
-    testContext.run(`Ex 12 filtered update co-related get`) must contain theSameElementsAs `Ex 12 filtered update co-related expected`
+    testContext.run(
+      `Ex 12 filtered update co-related get`
+    ) must contain theSameElementsAs `Ex 12 filtered update co-related expected`
   }
 }

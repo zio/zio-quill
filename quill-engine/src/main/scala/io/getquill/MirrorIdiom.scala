@@ -1,17 +1,18 @@
 package io.getquill
 
-import io.getquill.ast.Renameable.{ ByStrategy, Fixed }
+import io.getquill.ast.Renameable.{ByStrategy, Fixed}
 import io.getquill.ast.Visibility.Hidden
-import io.getquill.ast.{ Action => AstAction, Query => AstQuery, _ }
-import io.getquill.context.{ CanReturnClause, ExecutionType }
-import io.getquill.idiom.{ Idiom, SetContainsToken, Statement }
+import io.getquill.ast.{Action => AstAction, Query => AstQuery, _}
+import io.getquill.context.{CanReturnClause, ExecutionType}
+import io.getquill.idiom.{Idiom, SetContainsToken, Statement}
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.{ Normalize, NormalizeCaching, TranspileConfig }
+import io.getquill.norm.{Normalize, NormalizeCaching}
 import io.getquill.quat.Quat
 import io.getquill.util.Interleave
+import io.getquill.IdiomContext
 
 object MirrorIdiom extends MirrorIdiom
-class MirrorIdiom extends MirrorIdiomBase with CanReturnClause
+class MirrorIdiom  extends MirrorIdiomBase with CanReturnClause
 
 object MirrorIdiomPrinting extends MirrorIdiom {
   override def distinguishHidden: Boolean = true
@@ -25,14 +26,18 @@ trait MirrorIdiomBase extends Idiom {
 
   override def liftingPlaceholder(index: Int): String = "?"
 
-  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    val normalize = new Normalize(transpileConfig)
+  override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
+    implicit naming: NamingStrategy
+  ): (Ast, Statement, ExecutionType) = {
+    val normalize     = new Normalize(idiomContext.config)
     val normalizedAst = NormalizeCaching(normalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
 
-  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, transpileConfig: TranspileConfig)(implicit naming: NamingStrategy): (Ast, Statement, ExecutionType) = {
-    val normalize = new Normalize(transpileConfig)
+  override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
+    implicit naming: NamingStrategy
+  ): (Ast, Statement, ExecutionType) = {
+    val normalize     = new Normalize(idiomContext.config)
     val normalizedAst = normalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }
@@ -66,8 +71,8 @@ trait MirrorIdiomBase extends Idiom {
     case If(a, b, c) => stmt"if(${a.token}) ${b.token} else ${c.token}"
   }
 
-  implicit val dynamicTokenizer: Tokenizer[Dynamic] = Tokenizer[Dynamic] {
-    case Dynamic(tree, _) => stmt"${tree.toString.token}"
+  implicit val dynamicTokenizer: Tokenizer[Dynamic] = Tokenizer[Dynamic] { case Dynamic(tree, _) =>
+    stmt"${tree.toString.token}"
   }
 
   implicit def blockTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Block] = Tokenizer[Block] {
@@ -78,65 +83,67 @@ trait MirrorIdiomBase extends Idiom {
     case Val(name, body) => stmt"val ${name.token} = ${body.token}"
   }
 
-  implicit def queryTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[AstQuery] = Tokenizer[AstQuery] {
+  implicit def queryTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[AstQuery] =
+    Tokenizer[AstQuery] {
 
-    case Entity.Opinionated(name, Nil, _, renameable) => stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token})"
+      case Entity.Opinionated(name, Nil, _, renameable) =>
+        stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token})"
 
-    case Entity.Opinionated(name, prop, _, renameable) =>
-      val properties = prop.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
-      stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token}, ${properties.token})"
+      case Entity.Opinionated(name, prop, _, renameable) =>
+        val properties = prop.map(p => stmt"""_.${p.path.mkStmt(".")} -> "${p.alias.token}"""")
+        stmt"${tokenizeName("querySchema", renameable).token}(${s""""$name"""".token}, ${properties.token})"
 
-    case Filter(source, alias, body) =>
-      stmt"${source.token}.filter(${alias.token} => ${body.token})"
+      case Filter(source, alias, body) =>
+        stmt"${source.token}.filter(${alias.token} => ${body.token})"
 
-    case Map(source, alias, body) =>
-      stmt"${source.token}.map(${alias.token} => ${body.token})"
+      case Map(source, alias, body) =>
+        stmt"${source.token}.map(${alias.token} => ${body.token})"
 
-    case FlatMap(source, alias, body) =>
-      stmt"${source.token}.flatMap(${alias.token} => ${body.token})"
+      case FlatMap(source, alias, body) =>
+        stmt"${source.token}.flatMap(${alias.token} => ${body.token})"
 
-    case ConcatMap(source, alias, body) =>
-      stmt"${source.token}.concatMap(${alias.token} => ${body.token})"
+      case ConcatMap(source, alias, body) =>
+        stmt"${source.token}.concatMap(${alias.token} => ${body.token})"
 
-    case SortBy(source, alias, body, ordering) =>
-      stmt"${source.token}.sortBy(${alias.token} => ${body.token})(${ordering.token})"
+      case SortBy(source, alias, body, ordering) =>
+        stmt"${source.token}.sortBy(${alias.token} => ${body.token})(${ordering.token})"
 
-    case GroupBy(source, alias, body) =>
-      stmt"${source.token}.groupBy(${alias.token} => ${body.token})"
+      case GroupBy(source, alias, body) =>
+        stmt"${source.token}.groupBy(${alias.token} => ${body.token})"
 
-    case GroupByMap(source, byAlias, byBody, mapAlias, mapBody) =>
-      stmt"${source.token}.groupByMap(${byAlias.token} => ${byBody.token})(${mapAlias.token} => ${mapBody.token})"
+      case GroupByMap(source, byAlias, byBody, mapAlias, mapBody) =>
+        stmt"${source.token}.groupByMap(${byAlias.token} => ${byBody.token})(${mapAlias.token} => ${mapBody.token})"
 
-    case Aggregation(op, ast) =>
-      stmt"${scopedTokenizer(ast)}.${op.token}"
+      case Aggregation(op, ast) =>
+        stmt"${scopedTokenizer(ast)}.${op.token}"
 
-    case Take(source, n) =>
-      stmt"${source.token}.take(${n.token})"
+      case Take(source, n) =>
+        stmt"${source.token}.take(${n.token})"
 
-    case Drop(source, n) =>
-      stmt"${source.token}.drop(${n.token})"
+      case Drop(source, n) =>
+        stmt"${source.token}.drop(${n.token})"
 
-    case Union(a, b) =>
-      stmt"${a.token}.union(${b.token})"
+      case Union(a, b) =>
+        stmt"${a.token}.union(${b.token})"
 
-    case UnionAll(a, b) =>
-      stmt"${a.token}.unionAll(${b.token})"
+      case UnionAll(a, b) =>
+        stmt"${a.token}.unionAll(${b.token})"
 
-    case Join(t, a, b, iA, iB, on) =>
-      stmt"${a.token}.${t.token}(${b.token}).on((${iA.token}, ${iB.token}) => ${on.token})"
+      case Join(t, a, b, iA, iB, on) =>
+        stmt"${a.token}.${t.token}(${b.token}).on((${iA.token}, ${iB.token}) => ${on.token})"
 
-    case FlatJoin(t, a, iA, on) =>
-      stmt"${a.token}.${t.token}((${iA.token}) => ${on.token})"
+      case FlatJoin(t, a, iA, on) =>
+        stmt"${a.token}.${t.token}((${iA.token}) => ${on.token})"
 
-    case Distinct(a) =>
-      stmt"${a.token}.distinct"
+      case Distinct(a) =>
+        stmt"${a.token}.distinct"
 
-    case DistinctOn(source, alias, body) =>
-      stmt"${source.token}.distinctOn(${alias.token} => ${body.token})"
+      case DistinctOn(source, alias, body) =>
+        stmt"${source.token}.distinctOn(${alias.token} => ${body.token})"
 
-    case Nested(a) =>
-      stmt"${a.token}.nested"
-  }
+      case Nested(a) =>
+        stmt"${a.token}.nested"
+    }
 
   implicit val orderingTokenizer: Tokenizer[Ordering] = Tokenizer[Ordering] {
     case TupleOrdering(elems) => stmt"Ord(${elems.token})"
@@ -148,30 +155,34 @@ trait MirrorIdiomBase extends Idiom {
     case DescNullsLast        => stmt"Ord.descNullsLast"
   }
 
-  implicit def optionOperationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[OptionOperation] = Tokenizer[OptionOperation] {
-    case OptionTableFlatMap(ast, alias, body) => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
-    case OptionTableMap(ast, alias, body)     => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
-    case OptionTableExists(ast, alias, body)  => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
-    case OptionTableForall(ast, alias, body)  => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
-    case OptionFlatten(ast)                   => stmt"${ast.token}.flatten"
-    case OptionGetOrElse(ast, body)           => stmt"${ast.token}.getOrElse(${body.token})"
-    case OptionFlatMap(ast, alias, body)      => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
-    case OptionMap(ast, alias, body)          => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
-    case OptionForall(ast, alias, body)       => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
-    case OptionExists(ast, alias, body)       => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
-    case OptionContains(ast, body)            => stmt"${ast.token}.contains(${body.token})"
-    case OptionIsEmpty(ast)                   => stmt"${ast.token}.isEmpty"
-    case OptionNonEmpty(ast)                  => stmt"${ast.token}.nonEmpty"
-    case OptionIsDefined(ast)                 => stmt"${ast.token}.isDefined"
-    case OptionSome(ast)                      => stmt"Some(${ast.token})"
-    case OptionApply(ast)                     => stmt"Option(${ast.token})"
-    case OptionOrNull(ast)                    => stmt"${ast.token}.orNull"
-    case OptionGetOrNull(ast)                 => stmt"${ast.token}.getOrNull"
-    case OptionNone(_)                        => stmt"None"
-    case FilterIfDefined(ast, alias, body)    => stmt"${ast.token}.filterIfDefined((${alias.token}) => ${body.token})"
-  }
+  implicit def optionOperationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[OptionOperation] =
+    Tokenizer[OptionOperation] {
+      case OptionTableFlatMap(ast, alias, body) => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
+      case OptionTableMap(ast, alias, body)     => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
+      case OptionTableExists(ast, alias, body)  => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
+      case OptionTableForall(ast, alias, body)  => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
+      case OptionFlatten(ast)                   => stmt"${ast.token}.flatten"
+      case OptionGetOrElse(ast, body)           => stmt"${ast.token}.getOrElse(${body.token})"
+      case OptionOrElse(ast, body)              => stmt"${ast.token}.orElse(${body.token})"
+      case OptionFlatMap(ast, alias, body)      => stmt"${ast.token}.flatMap((${alias.token}) => ${body.token})"
+      case OptionMap(ast, alias, body)          => stmt"${ast.token}.map((${alias.token}) => ${body.token})"
+      case OptionForall(ast, alias, body)       => stmt"${ast.token}.forall((${alias.token}) => ${body.token})"
+      case OptionExists(ast, alias, body)       => stmt"${ast.token}.exists((${alias.token}) => ${body.token})"
+      case OptionContains(ast, body)            => stmt"${ast.token}.contains(${body.token})"
+      case OptionIsEmpty(ast)                   => stmt"${ast.token}.isEmpty"
+      case OptionNonEmpty(ast)                  => stmt"${ast.token}.nonEmpty"
+      case OptionIsDefined(ast)                 => stmt"${ast.token}.isDefined"
+      case OptionSome(ast)                      => stmt"Some(${ast.token})"
+      case OptionApply(ast)                     => stmt"Option(${ast.token})"
+      case OptionOrNull(ast)                    => stmt"${ast.token}.orNull"
+      case OptionGetOrNull(ast)                 => stmt"${ast.token}.getOrNull"
+      case OptionNone(_)                        => stmt"None"
+      case FilterIfDefined(ast, alias, body)    => stmt"${ast.token}.filterIfDefined((${alias.token}) => ${body.token})"
+    }
 
-  implicit def traversableOperationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[IterableOperation] = Tokenizer[IterableOperation] {
+  implicit def traversableOperationTokenizer(implicit
+    externalTokenizer: Tokenizer[External]
+  ): Tokenizer[IterableOperation] = Tokenizer[IterableOperation] {
     case MapContains(ast, body)  => stmt"${ast.token}.contains(${body.token})"
     case SetContains(ast, body)  => stmt"${ast.token}.contains(${body.token})"
     case ListContains(ast, body) => stmt"${ast.token}.contains(${body.token})"
@@ -184,17 +195,19 @@ trait MirrorIdiomBase extends Idiom {
     case FullJoin  => stmt"fullJoin"
   }
 
-  implicit def functionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Function] = Tokenizer[Function] {
-    case Function(params, body) => stmt"(${params.token}) => ${body.token}"
-  }
+  implicit def functionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Function] =
+    Tokenizer[Function] { case Function(params, body) =>
+      stmt"(${params.token}) => ${body.token}"
+    }
 
-  implicit def operationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Operation] = Tokenizer[Operation] {
-    case UnaryOperation(op: PrefixUnaryOperator, ast)       => stmt"${op.token}${scopedTokenizer(ast)}"
-    case UnaryOperation(op: PostfixUnaryOperator, ast)      => stmt"${scopedTokenizer(ast)}.${op.token}"
-    case BinaryOperation(a, op @ SetOperator.`contains`, b) => SetContainsToken(scopedTokenizer(b), op.token, a.token)
-    case BinaryOperation(a, op, b)                          => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
-    case FunctionApply(function, values)                    => stmt"${scopedTokenizer(function)}.apply(${values.token})"
-  }
+  implicit def operationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Operation] =
+    Tokenizer[Operation] {
+      case UnaryOperation(op: PrefixUnaryOperator, ast)       => stmt"${op.token}${scopedTokenizer(ast)}"
+      case UnaryOperation(op: PostfixUnaryOperator, ast)      => stmt"${scopedTokenizer(ast)}.${op.token}"
+      case BinaryOperation(a, op @ SetOperator.`contains`, b) => SetContainsToken(scopedTokenizer(b), op.token, a.token)
+      case BinaryOperation(a, op, b)                          => stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
+      case FunctionApply(function, values)                    => stmt"${scopedTokenizer(function)}.apply(${values.token})"
+    }
 
   implicit def operatorTokenizer[T <: Operator]: Tokenizer[T] = Tokenizer[T] {
     case EqualityOperator.`_!=` => stmt"!="
@@ -214,10 +227,13 @@ trait MirrorIdiomBase extends Idiom {
       case _              => name
     }
 
-  implicit def propertyTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Property] = Tokenizer[Property] {
-    case Property.Opinionated(ExternalIdent(_, _), name, renameable, visibility) => stmt"${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
-    case Property.Opinionated(ref, name, renameable, visibility)                 => stmt"${scopedTokenizer(ref)}.${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
-  }
+  implicit def propertyTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Property] =
+    Tokenizer[Property] {
+      case Property.Opinionated(ExternalIdent(_, _), name, renameable, visibility) =>
+        stmt"${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
+      case Property.Opinionated(ref, name, renameable, visibility) =>
+        stmt"${scopedTokenizer(ref)}.${bracketIfHidden(tokenizeName(name, renameable), visibility).token}"
+    }
 
   implicit val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String, _) => stmt""""${v.token}""""
@@ -225,15 +241,16 @@ trait MirrorIdiomBase extends Idiom {
     case Constant(v, _)         => stmt"${v.toString.token}"
     case NullValue              => stmt"null"
     case Tuple(values)          => stmt"(${values.token})"
-    case CaseClass(values)      => stmt"CaseClass(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
+    case CaseClass(name, values) =>
+      stmt"${name.token}(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
-  implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {
-    case Ident.Opinionated(name, quat, visibility) => stmt"${bracketIfHidden(name, visibility).token}"
+  implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] { case Ident.Opinionated(name, quat, visibility) =>
+    stmt"${bracketIfHidden(name, visibility).token}"
   }
 
-  implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] {
-    case e => stmt"${e.name.token}"
+  implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] { case e =>
+    stmt"${e.name.token}"
   }
 
   implicit val excludedTokenizer: Tokenizer[OnConflict.Excluded] = Tokenizer[OnConflict.Excluded] {
@@ -244,21 +261,25 @@ trait MirrorIdiomBase extends Idiom {
     case OnConflict.Existing(ident) => stmt"${ident.token}"
   }
 
-  implicit def actionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[AstAction] = Tokenizer[AstAction] {
-    case Update(query, assignments)             => stmt"${query.token}.update(${assignments.token})"
-    case Insert(query, assignments)             => stmt"${query.token}.insert(${assignments.token})"
-    case Delete(query)                          => stmt"${query.token}.delete"
-    case Returning(query, alias, body)          => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
-    case ReturningGenerated(query, alias, body) => stmt"${query.token}.returningGenerated((${alias.token}) => ${body.token})"
-    case Foreach(query, alias, body)            => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
-    case c: OnConflict                          => stmt"${c.token}"
-  }
+  implicit def actionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[AstAction] =
+    Tokenizer[AstAction] {
+      case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
+      case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
+      case Delete(query)                 => stmt"${query.token}.delete"
+      case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
+      case ReturningGenerated(query, alias, body) =>
+        stmt"${query.token}.returningGenerated((${alias.token}) => ${body.token})"
+      case Foreach(query, alias, body) => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"
+      case c: OnConflict               => stmt"${c.token}"
+    }
 
   implicit def conflictTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[OnConflict] = {
 
-    def targetProps(l: List[Property]) = l.map(p => Transform(p) {
-      case Ident(_, quat) => Ident("_", quat)
-    })
+    def targetProps(l: List[Property]) = l.map(p =>
+      Transform(p) { case Ident(_, quat) =>
+        Ident("_", quat)
+      }
+    )
 
     implicit val conflictTargetTokenizer: Tokenizer[OnConflict.Target] = Tokenizer[OnConflict.Target] {
       case OnConflict.NoTarget          => stmt""
@@ -279,17 +300,20 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   /**
-   * Technically, AssignmentDual is only used in OnConflict so we only need the updateAssignsTokenizer in conflictTokenizer but since
-   * there is a `case AssignmentDual` in `apply(ast: Ast)` we need to define a way to tokenize that case (otherwise compiler exhaustivity warnings will happen)
+   * Technically, AssignmentDual is only used in OnConflict so we only need the
+   * updateAssignsTokenizer in conflictTokenizer but since there is a `case
+   * AssignmentDual` in `apply(ast: Ast)` we need to define a way to tokenize
+   * that case (otherwise compiler exhaustivity warnings will happen)
    */
   implicit val assignmentTokenizer: Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] {
     case AssignmentDual(i, j, p, v) =>
       stmt"(${i.token}, ${j.token}) => ${p.token} -> ${v.token}"
   }
 
-  implicit def assignmentTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Assignment] = Tokenizer[Assignment] {
-    case Assignment(ident, property, value) => stmt"${ident.token} => ${property.token} -> ${value.token}"
-  }
+  implicit def assignmentTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Assignment] =
+    Tokenizer[Assignment] { case Assignment(ident, property, value) =>
+      stmt"${ident.token} => ${property.token} -> ${value.token}"
+    }
 
   implicit def infixTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Infix] = Tokenizer[Infix] {
     case Infix(parts, params, _, _, _) =>
@@ -299,10 +323,10 @@ trait MirrorIdiomBase extends Idiom {
           case other      => stmt"$${${ast.token}}"
         }
 
-      val pt = parts.map(_.token)
-      val pr = params.map(tokenParam)
+      val pt   = parts.map(_.token)
+      val pr   = params.map(tokenParam)
       val body = Statement(Interleave(pt, pr))
-      stmt"""infix"${body.token}""""
+      stmt"""sql"${body.token}""""
   }
 
   private def scopedTokenizer(ast: Ast)(implicit externalTokenizer: Tokenizer[External]) =

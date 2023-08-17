@@ -10,11 +10,12 @@ import io.getquill.util.LoadConfig
 import javax.sql.DataSource
 
 class H2MonixJdbcContext[+N <: NamingStrategy](
-  val naming:     N,
+  val naming: N,
   val dataSource: DataSource with Closeable,
-  runner:         EffectWrapper
+  runner: EffectWrapper
 ) extends MonixJdbcContext[H2Dialect, N](dataSource, runner)
-  with H2JdbcContextBase[N] {
+    with H2JdbcContextBase[H2Dialect, N] {
+  val idiom: H2Dialect = H2Dialect
 
   def this(naming: N, config: JdbcContextConfig, runner: EffectWrapper) = this(naming, config.dataSource, runner)
   def this(naming: N, config: Config, runner: EffectWrapper) = this(naming, JdbcContextConfig(config), runner)

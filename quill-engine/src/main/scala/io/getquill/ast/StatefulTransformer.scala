@@ -34,7 +34,7 @@ trait StatefulTransformer[T] {
         val (ct, ctt) = btt.apply(c)
         (If(at, bt, ct), ctt)
 
-      case l: Dynamic  => (l, this)
+      case l: Dynamic => (l, this)
 
       case l: External => (l, this)
 
@@ -78,6 +78,10 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
         (OptionGetOrElse(at, ct), ctt)
+      case OptionOrElse(a, c) =>
+        val (at, att) = apply(a)
+        val (ct, ctt) = att.apply(c)
+        (OptionOrElse(at, ct), ctt)
       case OptionFlatMap(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
@@ -194,12 +198,12 @@ trait StatefulTransformer[T] {
         val (bt, btt) = att.apply(b)
         (UnionAll(at, bt), btt)
       case Join(t, a, b, iA, iB, on) =>
-        val (at, att) = apply(a)
-        val (bt, btt) = att.apply(b)
+        val (at, att)   = apply(a)
+        val (bt, btt)   = att.apply(b)
         val (ont, ontt) = btt.apply(on)
         (Join(t, at, bt, iA, iB, ont), ontt)
       case FlatJoin(t, a, iA, on) =>
-        val (at, att) = apply(a)
+        val (at, att)   = apply(a)
         val (ont, ontt) = att.apply(on)
         (FlatJoin(t, at, iA, ont), ontt)
       case Distinct(a) =>
@@ -259,10 +263,10 @@ trait StatefulTransformer[T] {
       case Tuple(a) =>
         val (at, att) = apply(a)(_.apply)
         (Tuple(at), att)
-      case CaseClass(a) =>
+      case CaseClass(n, a) =>
         val (keys, values) = a.unzip
-        val (at, att) = apply(values)(_.apply)
-        (CaseClass(keys.zip(at)), att)
+        val (at, att)      = apply(values)(_.apply)
+        (CaseClass(n, keys.zip(at)), att)
     }
 
   def apply(e: Action): (Action, StatefulTransformer[T]) =
@@ -314,9 +318,8 @@ trait StatefulTransformer[T] {
     }
 
   def apply[U, R](list: List[U])(f: StatefulTransformer[T] => U => (R, StatefulTransformer[T])) =
-    list.foldLeft((List[R](), this)) {
-      case ((values, t), v) =>
-        val (vt, vtt) = f(t)(v)
-        (values :+ vt, vtt)
+    list.foldLeft((List[R](), this)) { case ((values, t), v) =>
+      val (vt, vtt) = f(t)(v)
+      (values :+ vt, vtt)
     }
 }

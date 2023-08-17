@@ -1,6 +1,7 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill._
+import io.getquill.base.Spec
 
 class OracleDialectSpec extends Spec {
 
@@ -74,9 +75,9 @@ class OracleDialectSpec extends Spec {
       qr1.map(t => t.s)
     }
 
-    def offset[T](q: Quoted[Query[T]]) = quote(q.drop(1))
+    def offset[T](q: Quoted[Query[T]])      = quote(q.drop(1))
     def offsetFetch[T](q: Quoted[Query[T]]) = quote(q.drop(2).take(3))
-    def fetch[T](q: Quoted[Query[T]]) = quote(q.take(3))
+    def fetch[T](q: Quoted[Query[T]])       = quote(q.take(3))
 
     "offset" in {
       ctx.run(offset(withOrd)).string mustEqual
@@ -104,7 +105,7 @@ class OracleDialectSpec extends Spec {
     }
 
     "Multi Scalar Select with Infix" in {
-      ctx.run("foo" + infix"""'bar'""".as[String]).string mustEqual "SELECT 'foo' || 'bar' FROM DUAL"
+      ctx.run("foo" + sql"""'bar'""".as[String]).string mustEqual "SELECT 'foo' || 'bar' FROM DUAL"
     }
   }
 
@@ -152,9 +153,11 @@ class OracleDialectSpec extends Spec {
       "nested conditions" - {
         "inside then" in {
           val q = quote {
-            qr1.map(t => if (true) {
-              if (false) true else false
-            } else true)
+            qr1.map(t =>
+              if (true) {
+                if (false) true else false
+              } else true
+            )
           }
           ctx.run(q).string mustEqual
             "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END ELSE 1 END FROM TestEntity t"
@@ -168,11 +171,13 @@ class OracleDialectSpec extends Spec {
         }
         "inside both" in {
           val q = quote {
-            qr1.map(t => if (true) {
-              if (false) true else false
-            } else {
-              if (true) false else true
-            })
+            qr1.map(t =>
+              if (true) {
+                if (false) true else false
+              } else {
+                if (true) false else true
+              }
+            )
           }
           ctx.run(q).string mustEqual
             "SELECT CASE WHEN 1 = 1 THEN CASE WHEN 1 = 0 THEN 1 ELSE 0 END WHEN 1 = 1 THEN 0 ELSE 1 END FROM TestEntity t"
@@ -183,7 +188,7 @@ class OracleDialectSpec extends Spec {
 
   case class Person(name: String, age: Int)
   "No 'AS' aliases" in {
-    ctx.run(infix"SELECT name, age FROM Person p".as[Query[Person]]).string mustEqual
+    ctx.run(sql"SELECT name, age FROM Person p".as[Query[Person]]).string mustEqual
       "SELECT x.name, x.age FROM (SELECT name, age FROM Person p) x"
   }
 

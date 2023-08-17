@@ -1,20 +1,20 @@
 package io.getquill.norm
 
-import io.getquill.Spec
-import io.getquill.testContext.TestEntity
-import io.getquill.testContext.implicitOrd
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qr2
-import io.getquill.testContext.query
-import io.getquill.testContext.quote
-import io.getquill.testContext.unquote
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts.testContext.TestEntity
+import io.getquill.MirrorContexts.testContext.implicitOrd
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qr2
+import io.getquill.MirrorContexts.testContext.query
+import io.getquill.MirrorContexts.testContext.quote
+import io.getquill.MirrorContexts.testContext.unquote
 import io.getquill.util.TraceConfig
 
 class ApplyMapSpec extends Spec {
 
   val ApplyMap = new ApplyMap(TraceConfig.Empty)
 
-  "avoids applying the intermmediate map after a groupBy" - {
+  "avoids applying the intermediate map after a groupBy" - {
     "flatMap" in {
       val q = quote {
         qr1.groupBy(t => t.s).map(y => y._1).flatMap(s => qr2.filter(z => z.s == s))

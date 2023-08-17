@@ -1,8 +1,8 @@
 package io.getquill.context.jasync.mysql
 
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
+import io.getquill.context.sql.base.PeopleSpec
 
-import io.getquill.context.sql.PeopleSpec
+import scala.concurrent.ExecutionContext.Implicits.{global => ec}
 
 class PeopleMysqlJAsyncSpec extends PeopleSpec {
 
@@ -26,7 +26,9 @@ class PeopleMysqlJAsyncSpec extends PeopleSpec {
   }
 
   "Example 2 - range simple" in {
-    await(testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))) mustEqual `Ex 2 expected result`
+    await(
+      testContext.run(`Ex 2 rangeSimple`(lift(`Ex 2 param 1`), lift(`Ex 2 param 2`)))
+    ) mustEqual `Ex 2 expected result`
   }
 
   "Examples 3 - satisfies" in {

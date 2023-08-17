@@ -1,6 +1,6 @@
 package io.getquill.context.jasync
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import scala.concurrent.ExecutionContext
 import scala.collection.mutable.ListBuffer
 

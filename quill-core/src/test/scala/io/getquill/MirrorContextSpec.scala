@@ -1,5 +1,7 @@
 package io.getquill
 
+import io.getquill.base.Spec
+
 class MirrorContextSpec extends Spec {
   val ctx = new MirrorContext(MirrorIdiom, Literal) with TestEntities
 
