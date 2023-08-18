@@ -116,7 +116,7 @@ then
     elif [[ $BRANCH != "master" ]]
     then
         echo "Branch build for $BRANCH - Artifact: '$ARTIFACT'"
-        echo "version in ThisBuild := \"$BRANCH-SNAPSHOT\"" > version.sbt
+        echo "ThisBuild / version := \"$BRANCH-SNAPSHOT\"" > version.sbt
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
         if [[ $ARTIFACT == "js" ]]; then      $SBT_VER -Dmodules=js publish; fi
