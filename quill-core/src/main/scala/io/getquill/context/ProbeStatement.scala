@@ -2,7 +2,7 @@ package io.getquill.context
 
 import scala.concurrent.duration.DurationInt
 import scala.reflect.api.Types
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import scala.util.Failure
 import scala.util.Success
 
@@ -17,7 +17,7 @@ object ProbeStatement {
   private val cache = new Cache[Types#Type, Context[Idiom, NamingStrategy]]
 
   def apply(statement: String, c: MacroContext) = {
-    import c.universe.{ Try => _, _ }
+    import c.universe.{Try => _, _}
 
     def resolveContext(tpe: Type) =
       tpe match {
@@ -29,7 +29,7 @@ object ProbeStatement {
               c.error(
                 s"Can't load the context of type '$tpe' for a compile-time query probing. " +
                   s"Make sure that context creation happens in a separate compilation unit. " +
-                  s"For more information please refer to the documentation http://getquill.io/#quotation-query-probing. " +
+                  s"For more information please refer to the documentation https://getquill.io/#quotation-query-probing. " +
                   s"Reason: '$ex'"
               )
               None

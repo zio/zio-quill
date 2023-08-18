@@ -6,16 +6,14 @@ import io.getquill.quat.Quat
 import io.getquill.quotation.ReifyLiftings
 import io.getquill.util.MacroContextExt._
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
-import io.getquill.util.{ EnableReflectiveCalls, OptionalTypecheck }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
+import io.getquill.util.{EnableReflectiveCalls, OptionalTypecheck}
 
 import java.util.UUID
 
-class ActionMacro(val c: MacroContext)
-  extends ContextMacro
-  with ReifyLiftings {
+class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
-  import c.universe.{ Function => _, Ident => _, _ }
+  import c.universe.{Function => _, Ident => _, _}
 
   def translateQuery(quoted: Tree): Tree =
     translateQueryPrettyPrint(quoted, q"false")
@@ -39,9 +37,8 @@ class ActionMacro(val c: MacroContext)
     translateBatchQueryPrettyPrint(quoted, q"false")
 
   def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
-    expandBatchAction(quoted) {
-      case (batch, param, expanded) =>
-        q"""
+    expandBatchAction(quoted) { case (batch, param, expanded) =>
+      q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.translateBatchQuery(
             $batch.map { $param =>
@@ -110,10 +107,9 @@ class ActionMacro(val c: MacroContext)
   def prepareBatchAction(quoted: Tree): Tree =
     batchAction(quoted, "prepareBatchAction")
 
-  def batchAction(quoted: Tree, method: String): Tree = {
+  def batchAction(quoted: Tree, method: String): Tree =
     // In the future, default num rows should be injected from a Messages variable
     batchActionRows(quoted, method, q"1")
-  }
 
   def batchActionRows(quoted: Tree, method: String, numRows: Tree): Tree =
     expandBatchActionNew(quoted, false) {
@@ -131,7 +127,7 @@ class ActionMacro(val c: MacroContext)
             val idiomContext = $idiomContext
             /* for liftQuery(people:List[Person]) `batch` is `people` */
             /* TODO Need secondary check to see if context is actually capable of batch-values insert */
-            /* If there is a INSERT ... VALUES clause this will be cnoded as ValuesClauseToken(lifts) which we need to duplicate */
+            /* If there is a INSERT ... VALUES clause this will be encoded as ValuesClauseToken(lifts) which we need to duplicate */
             /* batches: List[List[Person]] */
             val batches =
               if ($canDoBatch && $numRows != 1) {
@@ -167,9 +163,11 @@ class ActionMacro(val c: MacroContext)
     }
 
   // Called from: run(BatchAction)
-  def runBatchActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree = batchActionReturningRows(quoted, q"1")
+  def runBatchActionReturning[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    batchActionReturningRows(quoted, q"1")
   // Called from: run(BatchAction, 10)
-  def runBatchActionReturningRows[T](quoted: Tree, numRows: Tree)(implicit t: WeakTypeTag[T]): Tree = batchActionReturningRows(quoted, numRows)
+  def runBatchActionReturningRows[T](quoted: Tree, numRows: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    batchActionReturningRows(quoted, numRows)
 
   def batchActionReturningRows[T](quoted: Tree, numRows: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandBatchActionNew(quoted, true) {
@@ -200,7 +198,9 @@ class ActionMacro(val c: MacroContext)
         """
     }
 
-  def expandBatchActionNew(quoted: Tree, isReturning: Boolean)(call: (Tree, Tree, Tree, Tree, Tree, Tree, Tree) => Tree): Tree =
+  def expandBatchActionNew(quoted: Tree, isReturning: Boolean)(
+    call: (Tree, Tree, Tree, Tree, Tree, Tree, Tree) => Tree
+  ): Tree =
     BetaReduction(extractAst(quoted)) match {
       case totalAst @ Foreach(lift: Lift, alias, body) =>
         // for liftQuery(people:List[Person]) this is: `people`
@@ -239,14 +239,13 @@ class ActionMacro(val c: MacroContext)
             val (valuePluggingAst, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))
             // this is the ast with ScalarTag placeholders for the lifts
             val (ast, valuePlugList) = ExtractLiftings.of(valuePluggingAst)
-            val liftUnlift = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
+            val liftUnlift           = new { override val mctx: c.type = c } with TokenLift(ast.countQuatFields)
             // List(id1 -> ((p: Person) => CCV(p.name), id2 -> ((p: Person) => CCV(p.age), ...)
             // For regular lifts (e.g. liftQuery(people).foreach(p => query[Person].filter(pp => pp.name == lift("a regular lift").insert(...)))
             // we can just do (p: Person) => "a regular lift" and nothing will be done with `p`
             val injectableLiftListTrees =
-              valuePlugList.map {
-                case (id, valuePlugLift) =>
-                  q"($id, ($param) => ${liftUnlift.astLiftable(valuePlugLift)})"
+              valuePlugList.map { case (id, valuePlugLift) =>
+                q"($id, ($param) => ${liftUnlift.astLiftable(valuePlugLift)})"
               }
             val injectableLiftList = q"$injectableLiftListTrees"
 
@@ -273,9 +272,17 @@ class ActionMacro(val c: MacroContext)
               """
 
             val transpileContextExpr = ConfigLiftables.transpileContextLiftable(idiomContext)
-            val canDoBatchExpr = q"$canDoBatch"
+            val canDoBatchExpr       = q"$canDoBatch"
             c.untypecheck {
-              call(batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, transpileContextExpr, canDoBatchExpr)
+              call(
+                batch,
+                param,
+                expanded,
+                injectableLiftList,
+                idiomNamingOriginalAstVars,
+                transpileContextExpr,
+                canDoBatchExpr
+              )
             }
         }
       case other =>
@@ -288,7 +295,8 @@ class ActionMacro(val c: MacroContext)
       (outputAst, extracted.state.map { case (tag, lift) => (tag.uid, lift) })
     }
   }
-  case class ExtractLiftings(state: List[(ScalarTag, ScalarLift)]) extends StatefulTransformer[List[(ScalarTag, ScalarLift)]] {
+  case class ExtractLiftings(state: List[(ScalarTag, ScalarLift)])
+      extends StatefulTransformer[List[(ScalarTag, ScalarLift)]] {
 
     override def apply(e: Action): (Action, StatefulTransformer[List[(ScalarTag, ScalarLift)]]) =
       e match {
@@ -299,15 +307,15 @@ class ActionMacro(val c: MacroContext)
           super.apply(e)
       }
 
-    // Only extrace lifts that come from values-clauses:
+    // Only extract lifts that come from values-clauses:
     // liftQuery(people).foreach(ps => query[Person].filter(_.name == lift("not this")).insertValue(_.name -> <these!>, ...))
     override def apply(e: Ast): (Ast, StatefulTransformer[List[(ScalarTag, ScalarLift)]]) =
       e match {
         case rawLift @ ScalarValueLift(_, rawSource @ External.Source.UnparsedProperty(rawSourceName), _, _, _) =>
-          val uuid = UUID.randomUUID().toString
-          val source = External.Source.UnparsedProperty(rawSourceName.stripPrefix("value.").replace(".", "_"))
+          val uuid      = UUID.randomUUID().toString
+          val source    = External.Source.UnparsedProperty(rawSourceName.stripPrefix("value.").replace(".", "_"))
           val scalarTag = ScalarTag(uuid, source)
-          val lift = rawLift.copy(source = source)
+          val lift      = rawLift.copy(source = source)
           (scalarTag, ExtractLiftings((scalarTag -> lift) +: state))
         case _ => super.apply(e)
       }
@@ -328,7 +336,7 @@ class ActionMacro(val c: MacroContext)
   def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
     BetaReduction(extractAst(quoted)) match {
       case totalAst @ Foreach(lift: Lift, alias, body) =>
-        val batch = lift.value.asInstanceOf[Tree]
+        val batch         = lift.value.asInstanceOf[Tree]
         val batchItemType = batch.tpe.typeArgs.head
         c.typecheck(q"(value: $batchItemType) => value") match {
           case q"($param) => $value" =>
@@ -361,14 +369,13 @@ class ActionMacro(val c: MacroContext)
       """
     }
 
-  private def returningExtractor[T](implicit t: WeakTypeTag[T]) = {
+  private def returningExtractor[T](implicit t: WeakTypeTag[T]) =
     OptionalTypecheck(c)(q"implicitly[${c.prefix}.Decoder[$t]]") match {
       case Some(decoder) =>
         q"(row: ${c.prefix}.ResultRow, session: ${c.prefix}.Session) => $decoder.apply(0, row, session)"
       case None =>
         val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
-        val meta = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+        val meta    = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
         q"$meta.extract"
     }
-  }
 }

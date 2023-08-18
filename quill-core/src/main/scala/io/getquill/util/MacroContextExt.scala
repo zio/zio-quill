@@ -2,10 +2,10 @@ package io.getquill.util
 
 import io.getquill.idiom.Idiom
 import io.getquill.util.IndentUtil._
-import io.getquill.util.Messages.{ debugEnabled, errorPrefix, prettyPrint }
+import io.getquill.util.Messages.{debugEnabled, errorPrefix, prettyPrint}
 import io.getquill.quat.VerifyNoBranches
 
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 object MacroContextExt {
 
@@ -23,9 +23,11 @@ object MacroContextExt {
       c.warning(c.enclosingPosition, msg)
 
     def warn(verifyOutput: VerifyNoBranches.Output): Unit = {
-      val pos = c.enclosingPosition
+      val pos            = c.enclosingPosition
       val locationString = s"${pos.source.path}:${pos.line}:${pos.column}"
-      verifyOutput.messages.distinct.foreach(message => println(s"[WARNING] ${locationString} Questionable row-class found.\n${message.msg}"))
+      verifyOutput.messages.distinct.foreach(message =>
+        println(s"[WARNING] ${locationString} Questionable row-class found.\n${message.msg}")
+      )
     }
 
     def query(queryString: String, idiom: Idiom): Unit = {

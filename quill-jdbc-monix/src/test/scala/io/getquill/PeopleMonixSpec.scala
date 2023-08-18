@@ -14,10 +14,10 @@ trait PeopleMonixSpec extends PeopleSpec {
   import context._
 
   def collect[T](o: Observable[T]) =
-    o.foldLeft(List[T]())({ case (l, elem) => elem +: l })
+    o.foldLeft(List[T]()) { case (l, elem) => elem +: l }
       .firstL
       .runSyncUnsafe()
 
-  val `Ex 11 query` = quote(query[Person])
+  val `Ex 11 query`    = quote(query[Person])
   val `Ex 11 expected` = peopleEntries
 }

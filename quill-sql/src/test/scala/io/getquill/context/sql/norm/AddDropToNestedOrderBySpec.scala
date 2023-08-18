@@ -2,14 +2,14 @@ package io.getquill.context.sql.norm
 
 import io.getquill._
 import io.getquill.base.Spec
-import io.getquill.context.sql.{ TestDecoders, TestEncoders }
+import io.getquill.context.sql.{TestDecoders, TestEncoders}
 
 class AddDropToNestedOrderBySpec extends Spec {
 
   val ctx = new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities with TestEncoders with TestDecoders
 
   import ctx._
-  val q2Sorted = quote { qr2.sortBy(r => r.i) }
+  val q2Sorted = quote(qr2.sortBy(r => r.i))
 
   "adds drop(0) to nested order-by" - {
     "simple" in {

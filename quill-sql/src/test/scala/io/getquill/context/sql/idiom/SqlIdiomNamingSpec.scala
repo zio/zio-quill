@@ -35,7 +35,7 @@ class SqlIdiomNamingSpec extends Spec {
       db.run(query[SomeEntity]).string mustEqual
         "SELECT x.some_column AS someColumn FROM some_entity x"
     }
-    "mutiple transformations" in {
+    "multiple transformations" in {
       val db = new SqlMirrorContext(MirrorSqlDialect, NamingStrategy(SnakeCase, UpperCase, Escape))
       import db._
       db.run(query[SomeEntity]).string mustEqual

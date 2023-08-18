@@ -10,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
 class ResultSetIteratorSpec extends ZioProxySpec {
 
   implicit val pool = Implicit(io.getquill.postgres.pool)
-  val ctx = new PostgresZioJdbcContext(Literal)
+  val ctx           = new PostgresZioJdbcContext(Literal)
   import ctx._
 
   case class Person(name: String, age: Int)
@@ -36,28 +36,37 @@ class ResultSetIteratorSpec extends ZioProxySpec {
 
   "traverses correctly" in {
     val results =
-      ZIO.service[DataSource].mapAttempt(ds => ds.getConnection).acquireReleaseWithAuto { conn =>
-        ZIO.attempt {
-          val stmt = conn.prepareStatement("select * from person")
-          val rs = new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
-          val accum = ArrayBuffer[String]()
-          while (rs.hasNext) accum += rs.next()
-          accum
+      ZIO
+        .service[DataSource]
+        .mapAttempt(ds => ds.getConnection)
+        .acquireReleaseWithAuto { conn =>
+          ZIO.attempt {
+            val stmt = conn.prepareStatement("select * from person")
+            val rs =
+              new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+            val accum = ArrayBuffer[String]()
+            while (rs.hasNext) accum += rs.next()
+            accum
+          }
         }
-      }.runSyncUnsafe()
+        .runSyncUnsafe()
 
     results must contain theSameElementsAs (peopleEntries.map(_.name))
   }
 
   "can take head element" in {
     val result =
-      ZIO.service[DataSource].mapAttempt(ds => ds.getConnection).acquireReleaseWithAuto { conn =>
-        ZIO.attempt {
-          val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-          val rs = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
-          rs.head
+      ZIO
+        .service[DataSource]
+        .mapAttempt(ds => ds.getConnection)
+        .acquireReleaseWithAuto { conn =>
+          ZIO.attempt {
+            val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
+            val rs   = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+            rs.head
+          }
         }
-      }.runSyncUnsafe()
+        .runSyncUnsafe()
 
     result must equal("Alex")
   }

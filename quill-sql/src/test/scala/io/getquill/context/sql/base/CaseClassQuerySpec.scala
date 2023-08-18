@@ -77,7 +77,7 @@ trait CaseClassQuerySpec extends Spec {
     query[Contact].filter(p => p.firstName == person.firstName && person.lastName == person.lastName)
   }
 
-  val `Ex 3 Inline Record Usage exepected result` = List(
+  val `Ex 3 Inline Record Usage expected result` = List(
     new Contact("Alex", "Jones", 60, 2, "foo")
   )
 

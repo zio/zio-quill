@@ -21,9 +21,9 @@ object StringUtil {
           case Nil          => Nil
         }).toArray
       )
-    def unquote = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
+    def unquote   = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
     def trimFront = str.dropWhile(_ == '\n')
-    def notEmpty = if (str.trim == "") None else Some(str)
+    def notEmpty  = if (str.trim == "") None else Some(str)
     def inSetNocase(seq: String*) =
       seq.map(_.toLowerCase).toSeq.contains(str.toLowerCase)
   }

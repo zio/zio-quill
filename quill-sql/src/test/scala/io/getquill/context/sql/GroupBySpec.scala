@@ -8,7 +8,7 @@ import io.getquill.context.sql.util.StringOps._
 class GroupBySpec extends Spec {
   implicit val naming = new Literal {}
 
-  import io.getquill.norm.{ DisablePhase, OptionalPhase }
+  import io.getquill.norm.{DisablePhase, OptionalPhase}
   import io.getquill.norm.ConfigList._
 
   "groupBy table expansion" - {
@@ -21,21 +21,21 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => (country.name, citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, cityInCountry) => (country.name, cityInCountry.map(cICn => cICn._1)) }
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q).string mustEqual
         "SELECT x11.name AS _1, COUNT(x01.*) AS _2 FROM City x01 INNER JOIN Country x11 ON x01.countryId = x11.id GROUP BY x11.id, x11.name"
     }
     "with QuerySchema" in {
-      implicit val citySchema = schemaMeta[City]("theCity", _.name -> "theCityName")
+      implicit val citySchema    = schemaMeta[City]("theCity", _.name -> "theCityName")
       implicit val countrySchema = schemaMeta[Country]("theCountry", _.name -> "theCountryName")
       val q = quote(
         query[City]
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => (country.name, citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, cityInCountry) => (country.name, cityInCountry.map(cICn => cICn._1)) }
           .map { case (country, citiesInCountry) => (country, citiesInCountry.size) }
       )
       testContext.run(q).string mustEqual
@@ -54,7 +54,7 @@ class GroupBySpec extends Spec {
         "SELECT x010._2id AS id, x010._2name AS name, COUNT(x010.*) AS _2 FROM (SELECT x13.id AS _2id, x13.name AS _2name FROM City x09 INNER JOIN Country x13 ON x09.countryId = x13.id) AS x010 GROUP BY x010._2id, x010._2name"
     }
     "with QuerySchema nested" in {
-      implicit val citySchema = schemaMeta[City]("theCity", _.name -> "theCityName")
+      implicit val citySchema    = schemaMeta[City]("theCity", _.name -> "theCityName")
       implicit val countrySchema = schemaMeta[Country]("theCountry", _.name -> "theCountryName")
       val q = quote(
         query[City]
@@ -81,7 +81,9 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryCode == country.countryCode }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, cityInCountry) =>
+            ((country.countryCode, country.language), cityInCountry.map(cICn => cICn._1))
+          }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
       testContext.run(q).string.collapseSpace mustEqual
@@ -141,7 +143,9 @@ class GroupBySpec extends Spec {
           .join(query[Country])
           .on { case (city, country) => city.countryCode == country.countryCode }
           .groupBy { case (city, country) => country }
-          .map { case (country, citysInCountry) => ((country.countryCode, country.language), citysInCountry.map(cICn => cICn._1)) }
+          .map { case (country, cityInCountry) =>
+            ((country.countryCode, country.language), cityInCountry.map(cICn => cICn._1))
+          }
           .map { case (country, cityCountries) => (country, cityCountries.size) }
       )
       testContext.run(q).string(true).collapseSpace mustEqual
@@ -215,20 +219,37 @@ class GroupBySpec extends Spec {
     case class Person(id: Int, name: String, age: Int)
 
     "work with a groupBy(to-leaf).map.filter" in {
-      testContext.run { query[Person].groupBy(p => p.age).map { case (_, ageList) => ageList.map(_.age).max.getOrNull }.filter(a => a > 1000) }.string mustEqual
+      testContext.run {
+        query[Person]
+          .groupBy(p => p.age)
+          .map { case (_, ageList) => ageList.map(_.age).max.getOrNull }
+          .filter(a => a > 1000)
+      }.string mustEqual
         "SELECT p.* FROM (SELECT MAX(p.age) FROM Person p GROUP BY p.age) AS p WHERE p > 1000"
     }
 
     "work with a map(to-leaf).groupBy.map.filter - no ApplyMap" in {
-      testContext.run { query[Person].map(p => p.age).groupBy(p => p).map { case (_, ageList) => ageList.max.getOrNull }.filter(a => a > 1000) }.string mustEqual
+      testContext.run {
+        query[Person]
+          .map(p => p.age)
+          .groupBy(p => p)
+          .map { case (_, ageList) => ageList.max.getOrNull }
+          .filter(a => a > 1000)
+      }.string mustEqual
         "SELECT p.* FROM (SELECT MAX(p.age) FROM Person p GROUP BY p.age) AS p WHERE p > 1000"
     }
 
-    // Disable thte apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
+    // Disable the apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
     // Infix has a special case already so want to not use that specifically.
     "work with a map(to-leaf).groupByMap.map.filter - no ApplyMap" in {
       implicit val d = new DisablePhase { override type Phase = OptionalPhase.ApplyMap :: HNil }
-      testContext.run { query[Person].map(p => p.age).groupBy(p => p).map { case (_, ageList) => ageList.max.getOrNull }.filter(a => a > 1000) }.string mustEqual
+      testContext.run {
+        query[Person]
+          .map(p => p.age)
+          .groupBy(p => p)
+          .map { case (_, ageList) => ageList.max.getOrNull }
+          .filter(a => a > 1000)
+      }.string mustEqual
         "SELECT p.* FROM (SELECT MAX(p.age) FROM (SELECT p.age FROM Person p) AS p GROUP BY p.age) AS p WHERE p > 1000"
     }
   }
