@@ -60,6 +60,7 @@ object Messages {
   def logBinds = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
   def queryTooLongForLogs =
     cache("quill.query.tooLong", variable("quill.query.tooLong", "quill_query_tooLong", "200").toInt)
+  def errorPrefix = cache("quill.error.prefix", variable("quill.error.prefix", "quill_error_prefix", "false").toBoolean)
 
   sealed trait LogToFile
   object LogToFile {
