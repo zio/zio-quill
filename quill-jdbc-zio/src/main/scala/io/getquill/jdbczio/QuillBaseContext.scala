@@ -134,9 +134,9 @@ trait QuillBaseContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
    * the database and return the contents of the Person table immediately after
    * that:
    * {{{
-   *   val a = run(query[Person].insert(Person(...)): ZIO[Has[DataSource], SQLException, Long]
-   *   val b = run(query[Person]): ZIO[Has[DataSource], SQLException, Person]
-   *   transaction(a *> b): ZIO[Has[DataSource], SQLException, Person]
+   *   val a = run(query[Person].insert(Person(...)): ZIO[DataSource, SQLException, Long]
+   *   val b = run(query[Person]): ZIO[DataSource, SQLException, Person]
+   *   transaction(a *> b): ZIO[DataSource, SQLException, Person]
    * }}}
    */
   def transaction[R, A](op: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =

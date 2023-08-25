@@ -229,7 +229,7 @@ The `session` entry values and keys are described in the datastax documentation:
 The ZioCassandraSession constructors:
 
 ```scala
- val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+ val zioSessionLayer: ZLayer[Any, Throwable, CassandraZioSession] =
   CassandraZioSession.fromPrefix("MyCassandraDb")
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
@@ -237,7 +237,7 @@ run(query[Person])
 
 Additional parameters can be added programmatically:
 ```scala
- val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+ val zioSessionLayer: ZLayer[Any, Throwable, CassandraZioSession] =
   CassandraZioSession.fromContextConfig(LoadConfig("MyCassandraDb").withValue("keyspace", ConfigValueFactory.fromAnyRef("data")))
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
@@ -280,14 +280,14 @@ The type `Runner` needs to be used by ProtoQuill to define quill-context-specifi
 
 #### Migration Notes:
 
-All ZIO JDBC context `run` methods have now switched from have switched their dependency (i.e. `R`) from `Has[Connection]` to
-`Has[DataSource]`. This should clear up many innocent errors that have happened because how this `Has[Connection]` is supposed
+All ZIO JDBC context `run` methods have now switched from have switched their dependency (i.e. `R`) from `Connection` to
+`DataSource`. This should clear up many innocent errors that have happened because how this `Connection` is supposed
 to be provided was unclear. As I have come to understand, nearly all DAO service patterns involve grabbing a connection from a
 pooled DataSource, doing one single crud operation, and then returning the connection back to the pool. The new JDBC ZIO context
 memorialize this pattern.
 
-* The signature of `QIO[T]` has been changed from `ZIO[Has[Connection], SQLException, T]` to `ZIO[Has[DataSource], SQLException, T]`.
-  a new type-alias `QCIO[T]` (lit. Quill Connection IO) has been introduced that represents `ZIO[Has[Connection], SQLException, T]`.
+* The signature of `QIO[T]` has been changed from `ZIO[Connection, SQLException, T]` to `ZIO[DataSource, SQLException, T]`.
+  a new type-alias `QCIO[T]` (lit. Quill Connection IO) has been introduced that represents `ZIO[Connection, SQLException, T]`.
 
 * If you are using the `.onDataSource` command, migration should be fairly easy. Whereas previously, a usage of quill-jdbc-zio 3.10.0
   might have looked like this:
@@ -325,7 +325,7 @@ memorialize this pattern.
   def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
   def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
 
-  val zioConn: ZLayer[Any, Throwable, Has[Connection]] =
+  val zioConn: ZLayer[Any, Throwable, Connection] =
     Task(hikariDataSource).toLayer >>> DataSourceLayer.live
 
 
@@ -338,7 +338,7 @@ memorialize this pattern.
   def hikariConfig = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
   def hikariDataSource: DataSource with Closeable = new HikariDataSource(hikariConfig)
 
-  val zioDS: ZLayer[Any, Throwable, Has[DataSource]] =
+  val zioDS: ZLayer[Any, Throwable, DataSource] =
     Task(hikariDataSource).toLayer // Don't need `>>> DataSourceLayer.live` anymore!
 
   MyPostgresContext.run(people)
@@ -353,8 +353,8 @@ memorialize this pattern.
     .provide(zio.Has(conn: java.sql.Connection))
   ```
 
-* Also, when using an underlying context, you can still use `onDataSource` to go from a `Has[Connection]` dependency
-  back to a `Has[DataSource]` dependency (note that it no longer has to be `with Closable`).
+* Also, when using an underlying context, you can still use `onDataSource` to go from a `Connection` dependency
+  back to a `DataSource` dependency (note that it no longer has to be `with Closable`).
   ```
     object Ctx extends PostgresZioJdbcContext(Literal); import MyPostgresContext._
     Ctx.underlying.run(qr1)
@@ -362,8 +362,8 @@ memorialize this pattern.
       .provide(zio.Has(ds: java.sql.DataSource))
     ```
 
-* Finally, that the `prepare` methods have been unaffected by this change. They still require a `Has[Connection]`
-  and have the signature `ZIO[Has[Connection], SQLException, PreparedStatement]`. This is because in order to work
+* Finally, that the `prepare` methods have been unaffected by this change. They still require a `Connection`
+  and have the signature `ZIO[Connection, SQLException, PreparedStatement]`. This is because in order to work
   with the result of this value (i.e. to work with `PreparedStatement`), the connection that created it must
   still be open.
 
@@ -434,8 +434,8 @@ Again, if you are using MappedEncoders for all of your custom encoding needs, yo
 #### Migration Notes:
 The `quill-jdbc-zio` contexts' `.run` method was designed to work with ZIO in an idiomatic way. As such, the environment variable
 of their return type including the `zio.blocking.Blocking` dependency. This added a significant amount of complexity.
-Instead of `ZIO[Has[Connection], SQLException, T]`, the return type became `ZIO[Has[Connection] with Blocking, SQLException, T]`.
-Instead of `ZIO[Has[DataSource with Closeable], SQLException, T]`, the return type became `ZIO[Has[DataSource with Closeable] with Blocking, SQLException, T]`.
+Instead of `ZIO[Connection, SQLException, T]`, the return type became `ZIO[Connection with Blocking, SQLException, T]`.
+Instead of `ZIO[DataSource with Closeable, SQLException, T]`, the return type became `ZIO[DataSource with Closeable with Blocking, SQLException, T]`.
 Various types such as `QConnection` and `QDataSource` were created in order to encapsulate these concepts but this only led to additional confusion.
 Furthermore, actually supplying a `Connection` or `DataSource with Closeable` required first peeling off the `with Blocking` clause, calling a `.provide`,
 and then appending it back on. The fact that a Connection needs to be opened from a Data Source (which will typically be a Hikari connection pool)
@@ -443,17 +443,17 @@ further complicates the problem because this aforementioned process needs to be 
 construct has bad ergonomics. For this reason, the ZIO team has decided to drop the concept of `with Blocking` in ZIO 2 altogether.
 
 As a result of this, I have decided to drop the `with Blocking` construct in advance. Quill queries resulting from the `run(qry)` command and
-still run on the blocking pool but `with Blocking` is not included in the signature. This also means that and the need for `QConnection` and `QDataSource` disappears since they are now just `Has[Connection]` and `Has[Datasource with Closeable]`
+still run on the blocking pool but `with Blocking` is not included in the signature. This also means that and the need for `QConnection` and `QDataSource` disappears since they are now just `Connection` and `Datasource with Closeable`
 respectively. This also means that all the constructors on the corresponding objects e.g. `QDataSource.fromPrefix("myDB")` are not consistent with
 any actual construct in QIO, therefore they are not needed either.
 
 Instead, I have introduced a simple layer-constructor called `DataSourceLayer` which has a `.live` implementation which converts
-`ZIO[Has[Connection], SQLException, T]` to `ZIO[Has[DataSource with Closeable], SQLException, T]` by taking a connection from the
+`ZIO[Connection, SQLException, T]` to `ZIO[DataSource with Closeable, SQLException, T]` by taking a connection from the
 data-source and returning it immediately afterward, this is the analogue of what `QDataSource.toConnection` use to do.
 You can use it like this:
 ```scala
 def hikariDataSource: DataSource with Closeable = ...
-val zioConn: ZLayer[Any, Throwable, Has[Connection]] =
+val zioConn: ZLayer[Any, Throwable, Connection] =
   Task(hikariDataSource).toLayer >>> DataSourceLayer.live
 run(people)
   .provideCustomLayer(zioConn)
@@ -468,7 +468,7 @@ run(people)
 ```
 
 Also, constructor-methods `fromPrefix`, `fromConfig`, `fromJdbcConfig` and `fromDataSource` are available on
-`DataSourceLayer` to construct instances of `ZLayer[Has[DataSource with Closeable], SQLException, Has[Connection]]`.
+`DataSourceLayer` to construct instances of `ZLayer[DataSource with Closeable, SQLException, Connection]`.
 Combined with the `toDataSource` construct, these provide a simple way to construct various Hikari pools from
 a corresponding typesafe-config file `application.conf`.
 ```scala
@@ -483,8 +483,8 @@ have been added.
 
 #### Cassandra:
 
-Similar changes have been made in quill-cassandra-zio. `Has[CassandraZioSession] with Blocking` has been replaced
-with just `Has[CassandraZioSession]` so now this is much easier to provide:
+Similar changes have been made in quill-cassandra-zio. `CassandraZioSession with Blocking` has been replaced
+with just `CassandraZioSession` so now this is much easier to provide:
 
 ```scala
 val session: CassandraZioSession = _
@@ -495,7 +495,7 @@ run(people)
 The CassandraZioSession constructors however are all still fine to use:
 
 ```scala
- val zioSessionLayer: ZLayer[Any, Throwable, Has[CassandraZioSession]] =
+ val zioSessionLayer: ZLayer[Any, Throwable, CassandraZioSession] =
    CassandraZioSession.fromPrefix("testStreamDB")
 run(query[Person])
   .provideCustomLayer(zioSessionLayer)
@@ -539,7 +539,7 @@ Similarly for quill-cassandra-zio
 - This state was pulled out as separate classes e.g. `SyncCache`, `AsyncFutureCache` (the ZIO equivalent of which is `AsyncZioCache`).
 - Then a `CassandraZioSession` is created which extends these state-containers however, it is not directly a base-class of the `CassandraZioContext`.
 - Instead it is returned as a dependency from the CassandraZioContext run/prepare commands as part of the type
-  `ZIO[Has[CassandraZioSession] with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
+  `ZIO[CassandraZioSession with Blocking, Throwable, T]` (a.k.a `CIO[T]`). This allows the primary context CassandraZioContext to be stateless.
 
 # 3.6.1
 
