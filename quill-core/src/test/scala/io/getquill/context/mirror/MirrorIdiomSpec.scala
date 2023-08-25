@@ -522,6 +522,13 @@ class MirrorIdiomSpec extends Spec {
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"(o) => o.getOrElse(1)"
     }
+    "orElse" in {
+      val q = quote { (o: Option[Int]) =>
+        o.orElse(Option(1))
+      }
+      stmt"${(q.ast: Ast).token}" mustEqual
+        stmt"(o) => o.orElse(Option(1))"
+    }
     "flatten" in {
       val q = quote { (o: Option[Option[Int]]) =>
         o.flatten

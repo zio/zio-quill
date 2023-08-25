@@ -52,6 +52,7 @@ trait Liftables extends QuatLiftable {
     case OptionTableForall(a, b, c)  => q"$pack.OptionTableForall($a,$b,$c)"
     case OptionFlatten(a)            => q"$pack.OptionFlatten($a)"
     case OptionGetOrElse(a, b)       => q"$pack.OptionGetOrElse($a,$b)"
+    case OptionOrElse(a, b)          => q"$pack.OptionOrElse($a,$b)"
     case OptionFlatMap(a, b, c)      => q"$pack.OptionFlatMap($a,$b,$c)"
     case OptionMap(a, b, c)          => q"$pack.OptionMap($a,$b,$c)"
     case OptionForall(a, b, c)       => q"$pack.OptionForall($a,$b,$c)"
