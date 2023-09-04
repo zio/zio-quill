@@ -215,7 +215,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.1.2")
+        ("org.scalameta" %% "scalafmt-core" % "3.7.13")
           .excludeAll(
             (Seq(
               ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
@@ -491,7 +491,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.6.0" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.6.0"
+        "dev.zio"       %% "zio-json"   % "0.6.1"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
