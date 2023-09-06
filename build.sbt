@@ -215,23 +215,33 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.1.2")
+        ("org.scalameta" %% "scalafmt-core" % "3.7.13")
           .excludeAll(
-            (Seq(
-              ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
-              ExclusionRule(organization = "com.lihaoyi", name = "fansi_2.13"),
-              ExclusionRule(organization = "com.lihaoyi", name = "pprint_2.13")
-            ) ++ {
+            ({
               if (isScala3)
                 Seq(
-                  ExclusionRule(organization = "org.scala-lang.modules")
+                  ExclusionRule(organization = "org.scala-lang.modules", name = "scala-collection-compat_2.13"),
+                  ExclusionRule(organization = "org.scala-lang.modules", name = "scala-parallel-collections_2.13"),
+                  ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
+                  ExclusionRule(organization = "com.lihaoyi", name = "fansi_2.13")
                 )
               else
                 Seq()
             }): _*
           )
           .cross(CrossVersion.for3Use2_13)
-      )
+      ) ++ {
+        if (isScala3)
+          Seq(
+            // transitive dependencies of scalafmt-core
+            // update when updating scalafmt-core
+            "org.scala-lang.modules" %% "scala-collection-compat"    % scalaCollectionCompatVersion,
+            "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
+            "com.lihaoyi"            %% "sourcecode"                 % "0.3.0",
+            "com.lihaoyi"            %% "fansi"                      % "0.3.0"
+          )
+        else Seq()
+      }
     )
     .enablePlugins(MimaPlugin)
 
@@ -278,15 +288,15 @@ lazy val `quill-engine` =
         "com.typesafe"                % "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"  %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
-        "io.suzaku"                  %% "boopickle"     % "1.4.0"
+        "io.suzaku"                  %% "boopickle"     % "1.4.0",
+        "com.lihaoyi"               %%% "pprint"        % "0.8.1"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi"            %%% "pprint"                  % "0.8.1",
         "io.github.cquiroz"      %%% "scala-java-time"         % "2.5.0",
-        "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
+        "org.scala-lang.modules" %%% "scala-collection-compat" % scalaCollectionCompatVersion,
         "io.suzaku"              %%% "boopickle"               % "1.4.0"
       ),
       coverageExcludedPackages := ".*"
@@ -313,9 +323,6 @@ lazy val `quill-core` =
       Test / fork := true
     )
     .jsSettings(
-      libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % "0.8.1"
-      ),
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages         := ".*"
     )
@@ -760,6 +767,8 @@ val scala_v_12 = "2.12.17"
 val scala_v_13 = "2.13.10"
 val scala_v_30 = "3.3.0"
 
+val scalaCollectionCompatVersion = "2.11.0"
+
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback" % "logback-classic" % "1.3.11" % Test
@@ -772,7 +781,6 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "com.lihaoyi"             %% "pprint"    % "0.8.1",
     "org.scalatest"          %%% "scalatest" % "3.2.16" % Test,
     "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
@@ -784,7 +792,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
       )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0")
+    Seq("org.scala-lang.modules" %%% "scala-collection-compat" % scalaCollectionCompatVersion)
   },
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
