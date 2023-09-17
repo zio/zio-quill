@@ -10,6 +10,9 @@ on:
     # tags:
     #   - "**"
 
+env:
+  JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC # See https://stackoverflow.com/a/73708006
+
 jobs:
   build:
     runs-on: ubuntu-latest
