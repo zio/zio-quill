@@ -7,7 +7,7 @@ inThisBuild(
   List(
     organization := "io.getquill",
     homepage     := Some(url("https://zio.dev/zio-quill")),
-    licenses := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
+    licenses     := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
     developers := List(
       Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
       Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
@@ -17,7 +17,7 @@ inThisBuild(
     ),
     scalafmtCheck     := true,
     scalafmtSbtCheck  := true,
-    scalafmtOnCompile := !insideCI.value,
+    scalafmtOnCompile := !insideCI.value
   )
 )
 
@@ -186,11 +186,11 @@ lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
     .settings(
-      publishArtifact := false,
-      publish / skip := true,
-      publishLocal / skip := true,
+      publishArtifact      := false,
+      publish / skip       := true,
+      publishLocal / skip  := true,
       publishSigned / skip := true,
-      crossScalaVersions := Nil, // https://www.scala-sbt.org/1.x/docs/Cross-Build.html#Cross+building+a+project+statefully
+      crossScalaVersions   := Nil // https://www.scala-sbt.org/1.x/docs/Cross-Build.html#Cross+building+a+project+statefully
     )
     .aggregate(filteredModules.map(_.project).toSeq: _*)
 
