@@ -82,7 +82,7 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.scala }}
 
-  release_scala2:
+  release_scala:
     if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
     # needs: build     TODO: Put back
