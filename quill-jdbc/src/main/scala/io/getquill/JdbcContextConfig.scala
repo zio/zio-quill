@@ -22,6 +22,6 @@ case class JdbcContextConfig(config: Config) {
       new HikariDataSource(new HikariConfig(configProperties))
     catch {
       case NonFatal(ex) =>
-        throw new IllegalStateException(s"Failed to load data source for config: '$config'", ex)
+        throw new IllegalStateException("Failed to load data source", ex)
     }
 }
