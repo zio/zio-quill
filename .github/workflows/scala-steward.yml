@@ -1,0 +1,16 @@
+name: Scala Steward
+
+# This workflow will launch everyday at 00:00
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  scala-steward:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    name: Scala Steward
+    steps:
+      - name: Scala Steward
+        uses: scala-steward-org/scala-steward-action@v2.61.0
