@@ -89,6 +89,8 @@ jobs:
       fail-fast: false
       matrix:
         scala: [ 2.12.x, 2.13.x, 3.3.x ]
+    env:
+      CI_RELEASE: publishSigned # By default, sbt-ci-release uses the `+publishSigned` which is publishing for all the Scala versions configured, which is not what we want
     steps:
       - uses: actions/checkout@v4.0.0
       - name: Setup Java and Scala
