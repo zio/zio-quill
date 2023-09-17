@@ -97,7 +97,7 @@ jobs:
           distribution: temurin
           java-version: '8'
           check-latest: true
-      - run: sbt ++${{ matrix.scala }} ci-release
+      - run: sbt ++${{ matrix.scala }} "compile;ci-release"
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
