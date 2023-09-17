@@ -1,7 +1,3 @@
-import ReleaseTransformations._
-import sbtrelease.ReleasePlugin
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
-
 import java.io.{File => JFile}
 
 import scala.collection.immutable.ListSet
@@ -10,35 +6,19 @@ inThisBuild(
   List(
     organization := "io.getquill",
     homepage     := Some(url("https://zio.dev/zio-quill")),
+    licenses := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
+    developers := List(
+      Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
+      Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
+    ),
     scmInfo := Some(
-      ScmInfo(
-        homepage.value.get,
-        "scm:git:git@github.com:zio/zio-quill.git"
-      )
+      ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
     ),
     scalafmtCheck     := true,
     scalafmtSbtCheck  := true,
-    scalafmtOnCompile := !insideCI.value
+    scalafmtOnCompile := !insideCI.value,
   )
 )
-
-// During release cycles, GPG will expect passphrase user-input EVEN when --passphrase is specified
-// this should add --pinentry-loopback in order to disable that. See here for more info:
-// https://github.com/sbt/sbt-pgp/issues/178
-Global / useGpgPinentry := true
-
-// Do not strip the qualifier, want to keep that. If I set version.sbt to 1.2.3.foo.1 that's exactly what I want the version to be
-releaseVersion := { ver => ver }
-releaseNextVersion := { ver =>
-  val withoutLast = ver.reverse.dropWhile(_.isDigit).reverse
-  val last        = ver.reverse.takeWhile(_.isDigit).reverse
-  println(s"Detected original version: ${ver}. Which is ${withoutLast} + ${last}")
-  // see if the last group of chars are numeric, if they are, just increment
-  val actualLast = scala.util.Try(last.toInt).map(i => (i + 1).toString).getOrElse(last)
-  val newVer     = withoutLast + actualLast + "-SNAPSHOT"
-  println(s"Final computed version is: ${newVer}")
-  newVer
-}
 
 val CodegenTag = Tags.Tag("CodegenTag")
 (Global / concurrentRestrictions) += Tags.exclusive(CodegenTag)
@@ -684,17 +664,6 @@ lazy val `quill-orientdb` =
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-commands += Command.command("checkUnformattedFiles") { st =>
-  val vcs = Project.extract(st).get(releaseVcs).get
-  val modified =
-    vcs.cmd("ls-files", "--modified", "--exclude-standard").!!.trim.split('\n').filter(_.contains(".scala"))
-  if (modified.nonEmpty)
-    throw new IllegalStateException(
-      s"Please run `sbt scalafmtAll` and resubmit your pull request. Found unformatted files: ${modified.toList}"
-    )
-  st
-}
-
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "4.0.3" exclude ("org.slf4j", "*"),
@@ -832,78 +801,8 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scoverage.ScoverageKeys.coverageFailOnMinimum    := false
 )
 
-def doOnDefault(steps: ReleaseStep*): Seq[ReleaseStep] =
-  Seq[ReleaseStep](steps: _*)
-
-def doOnPush(steps: ReleaseStep*): Seq[ReleaseStep] =
-  if (skipPush)
-    Seq[ReleaseStep]()
-  else
-    Seq[ReleaseStep](steps: _*)
-
-lazy val commonNoLogSettings = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ releaseSettings
-lazy val commonSettings      = ReleasePlugin.extraReleaseCommands ++ basicSettings ++ loggingSettings ++ releaseSettings
-
-lazy val releaseSettings = Seq(
-  resolvers ++= Seq(
-    Resolver.mavenLocal,
-    "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
-  ),
-  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
-  publishMavenStyle             := true,
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases" at nexus + "service/local/staging/deploy/maven2")
-  },
-  pgpSecretRing                 := file("local.secring.gpg"),
-  pgpPublicRing                 := file("local.pubring.gpg"),
-  releaseVersionBump            := sbtrelease.Version.Bump.Nano,
-  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
-  releaseProcess := {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 12)) =>
-        doOnDefault(checkSnapshotDependencies) ++
-          doOnDefault(inquireVersions) ++
-          doOnDefault(runClean) ++
-          doOnPush(setReleaseVersion) ++
-          doOnPush(commitReleaseVersion) ++
-          doOnPush(tagRelease) ++
-          doOnDefault(publishArtifacts) ++
-          doOnPush(setNextVersion) ++
-          doOnPush(commitNextVersion) ++
-          // doOnPush(releaseStepCommand("sonatypeReleaseAll")) ++
-          doOnPush(pushChanges)
-      case Some((2, 13)) =>
-        doOnDefault(checkSnapshotDependencies) ++
-          doOnDefault(inquireVersions) ++
-          doOnDefault(runClean) ++
-          doOnPush(setReleaseVersion) ++
-          doOnDefault(publishArtifacts)
-      // doOnPush   ("sonatypeReleaseAll") ++
-      case Some((3, _)) =>
-        doOnDefault(checkSnapshotDependencies) ++
-          doOnDefault(inquireVersions) ++
-          doOnDefault(runClean) ++
-          doOnPush(setReleaseVersion) ++
-          doOnDefault(publishArtifacts)
-      // doOnPush   ("sonatypeReleaseAll") ++
-      case _ => Seq[ReleaseStep]()
-    }
-  },
-  homepage := Some(url("https://zio.dev/zio-quill/")),
-  licenses := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
-  developers := List(
-    Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
-    Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
-  ),
-  scmInfo := Some(
-    ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
-  )
-)
+lazy val commonNoLogSettings = basicSettings
+lazy val commonSettings      = basicSettings ++ loggingSettings
 
 lazy val docs = project
   .in(file("zio-quill-docs"))
