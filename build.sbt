@@ -777,6 +777,20 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     "-Ypatmat-exhaust-depth",
     "40"
   ),
+  // Only build scaladoc for Scala 2.13
+  Compile / doc / sources := {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) => (Compile / doc / sources).value
+      case _  => Seq.empty
+    }
+  },
+  // Only publish scaladoc for Scala 2.13
+  Compile / packageDoc / publishArtifact := {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) => (Compile / doc / publishArtifact).value
+      case _ => false
+    }
+  },
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) =>
