@@ -11,6 +11,8 @@ then
     echo "No Artifact Specified"
 fi
 
+export JAVA_OPTS="-Xms4g -Xmx4g -Xss10m"
+
 SBT_2_12="sbt ++2.12.18 -Dquill.macro.log=false -Dquill.scala.version=2.12.18"
 SBT_2_13="sbt ++2.13.10 -Dquill.macro.log=false -Dquill.scala.version=2.13.10"
 SBT_3_3="sbt ++3.3.0 -Dquill.macro.log=false -Dquill.scala.version=3.3.0"
@@ -114,7 +116,7 @@ then
     elif [[ $BRANCH != "master" ]]
     then
         echo "Branch build for $BRANCH - Artifact: '$ARTIFACT'"
-        echo "version in ThisBuild := \"$BRANCH-SNAPSHOT\"" > version.sbt
+        echo "ThisBuild / version := \"$BRANCH-SNAPSHOT\"" > version.sbt
         if [[ $ARTIFACT == "base" ]]; then    $SBT_VER -Dmodules=base publish; fi
         if [[ $ARTIFACT == "db" ]]; then      $SBT_VER -Dmodules=db publish; fi
         if [[ $ARTIFACT == "js" ]]; then      $SBT_VER -Dmodules=js publish; fi
