@@ -1,16 +1,13 @@
 name: CI
 
 on:
+  pull_request: {}
   push:
     branches:
-      - "**"
+      - master
     # Do not activate CI on tags for now. For releases, run the build the initial release build
     # tags:
     #   - "**"
-
-  pull_request:
-    branches:
-      - master
 
 jobs:
   secrets:
