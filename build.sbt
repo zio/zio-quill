@@ -215,23 +215,33 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.1.2")
+        ("org.scalameta" %% "scalafmt-core" % "3.7.13")
           .excludeAll(
-            (Seq(
-              ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
-              ExclusionRule(organization = "com.lihaoyi", name = "fansi_2.13"),
-              ExclusionRule(organization = "com.lihaoyi", name = "pprint_2.13")
-            ) ++ {
+            ({
               if (isScala3)
                 Seq(
-                  ExclusionRule(organization = "org.scala-lang.modules")
+                  ExclusionRule(organization = "org.scala-lang.modules", name = "scala-collection-compat_2.13"),
+                  ExclusionRule(organization = "org.scala-lang.modules", name = "scala-parallel-collections_2.13"),
+                  ExclusionRule(organization = "com.lihaoyi", name = "sourcecode_2.13"),
+                  ExclusionRule(organization = "com.lihaoyi", name = "fansi_2.13")
                 )
               else
                 Seq()
             }): _*
           )
           .cross(CrossVersion.for3Use2_13)
-      )
+      ) ++ {
+        if (isScala3)
+          Seq(
+            // transitive dependencies of scalafmt-core
+            // update when updating scalafmt-core
+            "org.scala-lang.modules" %% "scala-collection-compat"    % scalaCollectionCompatVersion,
+            "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
+            "com.lihaoyi"            %% "sourcecode"                 % "0.3.0",
+            "com.lihaoyi"            %% "fansi"                      % "0.3.0"
+          )
+        else Seq()
+      }
     )
     .enablePlugins(MimaPlugin)
 
@@ -278,15 +288,15 @@ lazy val `quill-engine` =
         "com.typesafe"                % "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"  %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
-        "io.suzaku"                  %% "boopickle"     % "1.4.0"
+        "io.suzaku"                  %% "boopickle"     % "1.4.0",
+        "com.lihaoyi"               %%% "pprint"        % "0.8.1"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
     .jsSettings(
       libraryDependencies ++= Seq(
-        "com.lihaoyi"            %%% "pprint"                  % "0.8.1",
         "io.github.cquiroz"      %%% "scala-java-time"         % "2.5.0",
-        "org.scala-lang.modules" %%% "scala-collection-compat" % "2.2.0",
+        "org.scala-lang.modules" %%% "scala-collection-compat" % scalaCollectionCompatVersion,
         "io.suzaku"              %%% "boopickle"               % "1.4.0"
       ),
       coverageExcludedPackages := ".*"
@@ -313,9 +323,6 @@ lazy val `quill-core` =
       Test / fork := true
     )
     .jsSettings(
-      libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "pprint" % "0.8.1"
-      ),
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages         := ".*"
     )
@@ -491,7 +498,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.6.0" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.6.0"
+        "dev.zio"       %% "zio-json"   % "0.6.1"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -534,7 +541,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.3",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.4",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -547,7 +554,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.3"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.4"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -559,7 +566,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.2.3"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.2.4"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -571,7 +578,7 @@ lazy val `quill-jasync-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.3",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.4",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
         "dev.zio"                %% "zio"                % Version.zio,
         "dev.zio"                %% "zio-streams"        % Version.zio
@@ -587,7 +594,7 @@ lazy val `quill-jasync-zio-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.3"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.4"
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
@@ -694,7 +701,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.mysql"               % "mysql-connector-j"       % "8.1.0"      % Test,
     "com.h2database"          % "h2"                      % "2.1.212"    % Test,
     "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.0"   % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"   % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.2.2.jre8" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"   % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"    % Test
@@ -760,6 +767,8 @@ val scala_v_12 = "2.12.17"
 val scala_v_13 = "2.13.10"
 val scala_v_30 = "3.3.0"
 
+val scalaCollectionCompatVersion = "2.11.0"
+
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
     "ch.qos.logback" % "logback-classic" % "1.3.11" % Test
@@ -772,8 +781,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "com.lihaoyi"             %% "pprint"    % "0.8.1",
-    "org.scalatest"          %%% "scalatest" % "3.2.16" % Test,
+    "org.scalatest"          %%% "scalatest" % "3.2.17" % Test,
     "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro && isScala2)
@@ -784,7 +792,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
       )
     else Seq()
   } ++ {
-    Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0")
+    Seq("org.scala-lang.modules" %%% "scala-collection-compat" % scalaCollectionCompatVersion)
   },
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
