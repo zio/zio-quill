@@ -11,6 +11,7 @@ on:
     #   - "**"
 
 env:
+  JAVA_OPTS: -Xms6G -Xmx6G -XX:+UseG1GC
   JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC # See https://stackoverflow.com/a/73708006
 
 jobs:
