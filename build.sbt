@@ -541,7 +541,7 @@ lazy val `quill-jasync` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.3",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.4",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
@@ -554,7 +554,7 @@ lazy val `quill-jasync-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.3"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.4"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -566,7 +566,7 @@ lazy val `quill-jasync-mysql` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.2.3"
+        "com.github.jasync-sql" % "jasync-mysql" % "2.2.4"
       )
     )
     .dependsOn(`quill-jasync` % "compile->compile;test->test")
@@ -578,7 +578,7 @@ lazy val `quill-jasync-zio` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.3",
+        "com.github.jasync-sql"   % "jasync-common"      % "2.2.4",
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
         "dev.zio"                %% "zio"                % Version.zio,
         "dev.zio"                %% "zio-streams"        % Version.zio
@@ -594,7 +594,7 @@ lazy val `quill-jasync-zio-postgres` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.3"
+        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.4"
       )
     )
     .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
@@ -781,7 +781,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "org.scalatest"          %%% "scalatest" % "3.2.16" % Test,
+    "org.scalatest"          %%% "scalatest" % "3.2.17" % Test,
     "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro && isScala2)
