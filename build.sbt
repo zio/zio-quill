@@ -75,10 +75,10 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ jsModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
+  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
 
 lazy val scala213Modules =
-  baseModules ++ jsModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
+  baseModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
     `quill-cassandra`,
     `quill-cassandra-alpakka`,
     `quill-cassandra-monix`,
@@ -279,6 +279,7 @@ lazy val `quill-engine` =
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
     .jsSettings(
+      publish / skip                   := true,
       libraryDependencies ++= Seq(
         "io.github.cquiroz"      %%% "scala-java-time"         % "2.5.0",
         "org.scala-lang.modules" %%% "scala-collection-compat" % scalaCollectionCompatVersion,
@@ -308,6 +309,7 @@ lazy val `quill-core` =
       Test / fork := true
     )
     .jsSettings(
+      publish / skip                   := true,
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
       coverageExcludedPackages         := ".*"
     )
@@ -323,6 +325,7 @@ lazy val `quill-sql` =
     .crossType(ultraPure)
     .settings(commonSettings: _*)
     .jsSettings(
+      publish / skip                   := true,
       scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       coverageExcludedPackages               := ".*",
       libraryDependencies += "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0"
