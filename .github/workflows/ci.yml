@@ -81,7 +81,7 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.scala }}
 
-  release:
+  release_scala2:
     if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
     # needs: build     TODO: Put back
@@ -97,7 +97,7 @@ jobs:
           distribution: temurin
           java-version: '8'
           check-latest: true
-      - run: sbt ++${{ matrix.scala }} "compile;ci-release"
+      - run: sbt ++${{ matrix.scala }} -Dquill.scala.version=${{ matrix.scala }} "compile;ci-release"
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
