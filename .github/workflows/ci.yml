@@ -82,6 +82,10 @@ jobs:
     if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
     # needs: build     TODO: Put back
+    strategy:
+      fail-fast: false
+      matrix:
+        scala: [ 2.12.x, 2.13.x, 3.3.x ]
     steps:
       - uses: actions/checkout@v4.0.0
       - name: Setup Java and Scala
@@ -90,7 +94,7 @@ jobs:
           distribution: temurin
           java-version: '8'
           check-latest: true
-      - run: sbt ci-release
+      - run: sbt ++${{ matrix.scala }} ci-release
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
