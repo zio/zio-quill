@@ -1,4 +1,7 @@
 import java.io.{File => JFile}
+import com.jsuereth.sbtpgp.PgpKeys.publishSigned
+
+import scala.collection.immutable.ListSet
 
 inThisBuild(
   List(
