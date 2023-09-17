@@ -81,7 +81,7 @@ jobs:
   release:
     if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
-    needs: build
+    # needs: build     TODO: Put back
     steps:
       - uses: actions/checkout@v4.0.0
       - name: Setup Java and Scala
