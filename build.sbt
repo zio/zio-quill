@@ -182,6 +182,9 @@ lazy val filteredModules = {
   selectedModules
 }
 
+// Adapted from https://github.com/sbt/sbt-ci-release#how-do-i-publish-cross-built-scalajs-projects
+val isScalaJSBuild: Boolean = Option(System.getenv("IS_SCALAJS_BUILD")).fold(ifEmpty = false)(_ == "true")
+
 lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
@@ -305,7 +308,8 @@ lazy val `quill-core` =
       )
     )
     .jvmSettings(
-      Test / fork := true
+      Test / fork := true,
+      publish / skip := isScalaJSBuild,
     )
     .jsSettings(
       unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
