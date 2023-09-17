@@ -358,6 +358,7 @@ lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
     .settings(commonSettings: _*)
     .settings(
+      publish / skip                         := true,
       libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       Test / fork                            := true,
       (Test / sourceGenerators) += Def.task {
@@ -781,14 +782,14 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   Compile / doc / sources := {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) => (Compile / doc / sources).value
-      case _  => Seq.empty
+      case _             => Seq.empty
     }
   },
   // Only publish scaladoc for Scala 2.13
   Compile / packageDoc / publishArtifact := {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) => (Compile / doc / publishArtifact).value
-      case _ => false
+      case _             => false
     }
   },
   scalacOptions ++= {
