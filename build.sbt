@@ -763,7 +763,7 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.17"
+val scala_v_12 = "2.12.18"
 val scala_v_13 = "2.13.10"
 val scala_v_30 = "3.3.1"
 
