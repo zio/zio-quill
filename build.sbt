@@ -1,7 +1,5 @@
 import java.io.{File => JFile}
 
-import scala.collection.immutable.ListSet
-
 inThisBuild(
   List(
     organization := "io.getquill",
@@ -184,10 +182,14 @@ lazy val filteredModules = {
 lazy val `quill` =
   (project in file("."))
     .settings(commonSettings: _*)
+    .settings(
+      publishArtifact := false,
+      publish / skip := true,
+      publishLocal / skip := true,
+      publishSigned / skip := true,
+      crossScalaVersions := Nil, // https://www.scala-sbt.org/1.x/docs/Cross-Build.html#Cross+building+a+project+statefully
+    )
     .aggregate(filteredModules.map(_.project).toSeq: _*)
-    .dependsOn(filteredModules.toSeq: _*)
-
-`quill` / publishArtifact := false
 
 lazy val `quill-util` =
   (project in file("quill-util"))
@@ -389,14 +391,8 @@ val excludeTests =
     case regex   => ExcludeTests.KeepSome(regex)
   }
 
-val skipPush =
-  sys.props.getOrElse("skipPush", "false").toBoolean
-
 val debugMacro =
   sys.props.getOrElse("debugMacro", "false").toBoolean
-
-val skipTag =
-  sys.props.getOrElse("skipTag", "false").toBoolean
 
 lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
@@ -746,7 +742,6 @@ lazy val loggingSettings = Seq(
 
 lazy val basicSettings = excludeFilterSettings ++ Seq(
   Test / testOptions += Tests.Argument("-oI"),
-  organization       := "io.getquill",
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
