@@ -6,6 +6,7 @@ on:
     branches:
       - master
       - sbt-ci-release
+      - sbt-ci-release_no_js
     # Do not activate CI on tags for now. For releases, run the build the initial release build
     # tags:
     #   - "**"
