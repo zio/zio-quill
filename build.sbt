@@ -215,7 +215,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.7.13")
+        ("org.scalameta" %% "scalafmt-core" % "3.7.14")
           .excludeAll(
             ({
               if (isScala3)
@@ -699,7 +699,7 @@ lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "4.0.3" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "8.1.0"      % Test,
-    "com.h2database"          % "h2"                      % "2.1.212"    % Test,
+    "com.h2database"          % "h2"                      % "2.1.214"    % Test,
     "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"   % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.2.2.jre8" % Test,
@@ -763,7 +763,7 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.17"
+val scala_v_12 = "2.12.18"
 val scala_v_13 = "2.13.12"
 val scala_v_30 = "3.3.1"
 
