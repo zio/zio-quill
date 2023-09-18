@@ -1,20 +1,17 @@
 package io.getquill.dsl
 
 import io.getquill.ast.Renameable.Fixed
-
-import scala.language.implicitConversions
-import scala.language.experimental.macros
-import io.getquill.ast.{External, _}
+import io.getquill.ast._
 import io.getquill.quat._
-
-import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.util.Messages._
-
-import scala.util.DynamicVariable
-import scala.reflect.ClassTag
 import io.getquill.{ActionReturning, Delete, EntityQuery, Insert, Ord, Query, Quoted, Update, Action => DslAction}
 
 import scala.annotation.tailrec
+import scala.language.experimental.macros
+import scala.language.implicitConversions
+import scala.reflect.macros.whitebox.{Context => MacroContext}
+import scala.reflect.runtime.{universe => u}
+import scala.util.DynamicVariable
 
 class DynamicQueryDslMacro(val c: MacroContext) {
   import c.universe._
@@ -35,6 +32,26 @@ class DynamicQueryDslMacro(val c: MacroContext) {
 
 trait DynamicQueryDsl {
   dsl: CoreDsl =>
+
+  val quatMaking = new TypeTaggedQuatMaking() {
+    import u.typeOf
+    override def quatValueTypes: List[u.Type] =
+      List(
+        typeOf[String],
+        typeOf[BigDecimal],
+        typeOf[Boolean],
+        typeOf[Byte],
+        typeOf[Short],
+        typeOf[Int],
+        typeOf[Long],
+        typeOf[Float],
+        typeOf[Double],
+        typeOf[Byte],
+        typeOf[java.sql.Date],
+        typeOf[java.time.LocalDate],
+        typeOf[java.util.UUID]
+      )
+  }
 
   implicit class ToDynamicQuery[T](q: Quoted[Query[T]]) {
     def dynamic: DynamicQuery[T] = DynamicQuery(q)
@@ -69,12 +86,14 @@ trait DynamicQueryDsl {
     q.q
   implicit def toQuoted[T <: DslAction[_]](q: DynamicAction[T]): Quoted[T] = q.q
 
-  def dynamicQuery[T](implicit t: ClassTag[T]): DynamicEntityQuery[T] =
+  def dynamicQuery[T](implicit t: u.TypeTag[T]): DynamicEntityQuery[T] = {
+    val quat = quatMaking.inferQuat(t.tpe).probit
     DynamicEntityQuery(
       splice[EntityQuery[T]](
-        Entity(t.runtimeClass.getSimpleName, Nil, RuntimeEntityQuat[T].probit)
+        Entity(quat.name, Nil, quat)
       )
     )
+  }
 
   case class DynamicAlias[T](property: Quoted[T] => Quoted[Any], name: String)
 
@@ -123,7 +142,7 @@ trait DynamicQueryDsl {
   def dynamicQuerySchema[T](
     entity: String,
     columns: DynamicAlias[T]*
-  )(implicit ct: ClassTag[T]): DynamicEntityQuery[T] = {
+  )(implicit t: u.TypeTag[T]): DynamicEntityQuery[T] = {
     val aliases =
       columns.map { alias =>
         @tailrec def path(ast: Ast, acc: List[String] = Nil): List[String] =
@@ -135,12 +154,12 @@ trait DynamicQueryDsl {
           }
 
         PropertyAlias(
-          path(alias.property(splice[T](Ident("v", RuntimeEntityQuat[T]))).ast),
+          path(alias.property(splice[T](Ident("v", quatMaking.inferQuat(t.tpe).probit))).ast),
           alias.name
         )
       }
     DynamicEntityQuery(
-      splice[EntityQuery[T]](Entity.Opinionated(entity, aliases.toList, RuntimeEntityQuat[T].probit, Fixed))
+      splice[EntityQuery[T]](Entity.Opinionated(entity, aliases.toList, quatMaking.inferQuat(t.tpe).probit, Fixed))
     )
   }
 

@@ -23,18 +23,11 @@ inThisBuild(
 
 val CodegenTag = Tags.Tag("CodegenTag")
 (Global / concurrentRestrictions) += Tags.exclusive(CodegenTag)
-(Global / concurrentRestrictions) += Tags.limit(ScalaJSTags.Link, 1)
-
-lazy val jsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-engine-js`,
-  `quill-core-js`,
-  `quill-sql-js`
-)
 
 lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-engine-jvm`,
-  `quill-core-jvm`,
-  `quill-sql-jvm`,
+  `quill-engine`,
+  `quill-core`,
+  `quill-sql`,
   `quill-monix`,
   `quill-zio`,
   `quill-util`
@@ -92,7 +85,7 @@ lazy val scala213Modules =
     `quill-spark`
   )
 
-lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine-jvm`, `quill-util`)
+lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine`, `quill-util`)
 
 def isScala213 = {
   val scalaVersion = sys.props.get("quill.scala.version")
@@ -126,9 +119,6 @@ lazy val filteredModules = {
       case "base" =>
         println("SBT =:> Compiling Base Modules")
         baseModules
-      case "js" =>
-        println("SBT =:> Compiling JavaScript Modules")
-        jsModules
       case "db" =>
         println("SBT =:> Compiling Database Modules")
         dbModules
@@ -140,7 +130,7 @@ lazy val filteredModules = {
         codegenModules
       case "nocodegen" =>
         println("Compiling Not-Code Generator Modules")
-        baseModules ++ jsModules ++ dbModules ++ jasyncModules ++ bigdataModules
+        baseModules ++ dbModules ++ jasyncModules ++ bigdataModules
       case "bigdata" =>
         println("SBT =:> Compiling Big Data Modules")
         bigdataModules
@@ -211,7 +201,7 @@ lazy val `quill-util` =
                   ExclusionRule(organization = "com.lihaoyi", name = "fansi_2.13")
                 )
               else
-                Seq()
+                Seq.empty
             }): _*
           )
           .cross(CrossVersion.for3Use2_13)
@@ -225,76 +215,28 @@ lazy val `quill-util` =
             "com.lihaoyi"            %% "sourcecode"                 % "0.3.0",
             "com.lihaoyi"            %% "fansi"                      % "0.3.0"
           )
-        else Seq()
+        else Seq.empty
       }
     )
     .enablePlugins(MimaPlugin)
 
-lazy val superPure = new sbtcrossproject.CrossType {
-  def projectDir(crossBase: File, projectType: String): File =
-    projectType match {
-      case "jvm" => crossBase / s"$projectType"
-      case "js"  => crossBase / s"$projectType"
-    }
-
-  def sharedSrcDir(projectBase: File, conf: String): Option[File] =
-    Some(projectBase.getParentFile / "src" / conf / "scala")
-
-  override def projectDir(crossBase: File, projectType: sbtcrossproject.Platform): File =
-    projectType match {
-      case JVMPlatform => crossBase / "jvm"
-      case JSPlatform  => crossBase / "js"
-    }
-}
-
-lazy val ultraPure = new sbtcrossproject.CrossType {
-  def projectDir(crossBase: File, projectType: String): File =
-    projectType match {
-      case "jvm" => crossBase
-      case "js"  => crossBase / s".$projectType"
-    }
-
-  def sharedSrcDir(projectBase: File, conf: String): Option[File] =
-    Some(projectBase.getParentFile / "src" / conf / "scala")
-
-  override def projectDir(crossBase: File, projectType: sbtcrossproject.Platform): File =
-    projectType match {
-      case JVMPlatform => crossBase
-      case JSPlatform  => crossBase / ".js"
-    }
-}
-
 lazy val `quill-engine` =
-  crossProject(JVMPlatform, JSPlatform)
-    .crossType(ultraPure)
+  project
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.2",
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-        ("com.github.takayahilton"  %%% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
+        ("com.github.takayahilton"   %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                  %% "boopickle"     % "1.4.0",
-        "com.lihaoyi"               %%% "pprint"        % "0.8.1"
+        "com.lihaoyi"                %% "pprint"        % "0.8.1"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
-    .jsSettings(
-      publish / skip                   := true,
-      libraryDependencies ++= Seq(
-        "io.github.cquiroz"      %%% "scala-java-time"         % "2.5.0",
-        "org.scala-lang.modules" %%% "scala-collection-compat" % scalaCollectionCompatVersion,
-        "io.suzaku"              %%% "boopickle"               % "1.4.0"
-      ),
-      coverageExcludedPackages := ".*"
-    )
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-engine-jvm` = `quill-engine`.jvm
-lazy val `quill-engine-js`  = `quill-engine`.js
-
 lazy val `quill-core` =
-  crossProject(JVMPlatform, JSPlatform)
-    .crossType(superPure)
+  project
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
@@ -303,46 +245,25 @@ lazy val `quill-core` =
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
-      )
-    )
-    .jvmSettings(
-      Test / fork := true
-    )
-    .jsSettings(
-      publish / skip                   := true,
-      unmanagedSources / excludeFilter := new SimpleFileFilter(file => file.getName == "DynamicQuerySpec.scala"),
-      coverageExcludedPackages         := ".*"
+      ),
+      Test / fork := true,
     )
     .dependsOn(`quill-engine` % "compile->compile")
     .enablePlugins(MimaPlugin)
 
-// dependsOn in these clauses technically not needed however, intellij does not work properly without them
-lazy val `quill-core-jvm` = `quill-core`.jvm.dependsOn(`quill-engine-jvm` % "compile->compile")
-lazy val `quill-core-js`  = `quill-core`.js.dependsOn(`quill-engine-js` % "compile->compile")
-
 lazy val `quill-sql` =
-  crossProject(JVMPlatform, JSPlatform)
-    .crossType(ultraPure)
+  project
     .settings(commonSettings: _*)
-    .jsSettings(
-      publish / skip                   := true,
-      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      coverageExcludedPackages               := ".*",
-      libraryDependencies += "org.scala-js" %%% "scalajs-java-securerandom" % "1.0.0"
-    )
     .dependsOn(
       `quill-engine` % "compile->compile",
       `quill-core`   % "compile->compile;test->test"
     )
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-sql-jvm` = `quill-sql`.jvm
-lazy val `quill-sql-js`  = `quill-sql`.js
-
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))
     .settings(commonSettings: _*)
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-core` % "compile->compile;test->test")
 
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
@@ -405,7 +326,7 @@ lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
@@ -432,7 +353,7 @@ lazy val `quill-monix` =
         ("io.monix" %% "monix-reactive" % "3.0.0").cross(CrossVersion.for3Use2_13)
       )
     )
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-core` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-monix` =
@@ -456,7 +377,7 @@ lazy val `quill-jdbc-monix` =
       }
     )
     .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
@@ -470,7 +391,7 @@ lazy val `quill-zio` =
         "dev.zio" %% "zio-streams" % Version.zio
       )
     )
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-core` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-zio` =
@@ -503,7 +424,7 @@ lazy val `quill-jdbc-zio` =
       }
     )
     .dependsOn(`quill-zio` % "compile->compile;test->test")
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
@@ -515,7 +436,7 @@ lazy val `quill-spark` =
       libraryDependencies ++= Seq("org.apache.spark" %% "spark-sql" % "3.4.0"),
       excludeDependencies ++= Seq("ch.qos.logback" % "logback-classic")
     )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync` =
@@ -528,7 +449,7 @@ lazy val `quill-jasync` =
         "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
       )
     )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync-postgres` =
@@ -568,7 +489,7 @@ lazy val `quill-jasync-zio` =
       )
     )
     .dependsOn(`quill-zio` % "compile->compile;test->test")
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jasync-zio-postgres` =
@@ -596,7 +517,7 @@ lazy val `quill-cassandra` =
         })
       )
     )
-    .dependsOn(`quill-core-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-core` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-monix` =
@@ -636,25 +557,6 @@ lazy val `quill-cassandra-alpakka` =
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-//lazy val `quill-cassandra-lagom` =
-//   (project in file("quill-cassandra-lagom"))
-//    .settings(commonSettings: _*)
-//    .settings(
-//      Test / fork := true,
-//      libraryDependencies ++= {
-//        val lagomVersion = if (scalaVersion.value.startsWith("2.13")) "1.6.5" else "1.5.5"
-//        val versionSpecificDependencies =  if (scalaVersion.value.startsWith("2.13")) Seq("com.typesafe.play" %% "play-akka-http-server" % "2.8.8") else Seq.empty
-//        Seq(
-//          "com.lightbend.lagom" %% "lagom-scaladsl-persistence-cassandra" % lagomVersion % Provided,
-//          "com.lightbend.lagom" %% "lagom-scaladsl-testkit" % lagomVersion % Test,
-//          "com.datastax.cassandra" %  "cassandra-driver-core" % "3.11.2",
-//          // lagom uses datastax 3.x driver - not compatible with 4.x in API level
-//          "io.getquill" %% "quill-cassandra" % "3.10.0" % "compile->compile"
-//        ) ++ versionSpecificDependencies
-//      }
-//    )
-//    .enablePlugins(MimaPlugin)
-
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
     .settings(commonSettings: _*)
@@ -664,7 +566,7 @@ lazy val `quill-orientdb` =
         "com.orientechnologies" % "orientdb-graphdb" % "3.2.22"
       )
     )
-    .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val jdbcTestingLibraries = Seq(
@@ -752,7 +654,8 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "org.scalatest"          %%% "scalatest" % "3.2.17" % Test,
+    "org.scalatest"            %% "scalatest" % "3.2.17" % Test,
+    "org.scala-lang.modules"   %% "scala-collection-compat" % scalaCollectionCompatVersion,
     "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro && isScala2)
@@ -761,9 +664,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
         "org.scala-lang" % "scala-compiler" % scalaVersion.value,
         "org.scala-lang" % "scala-reflect"  % scalaVersion.value
       )
-    else Seq()
-  } ++ {
-    Seq("org.scala-lang.modules" %%% "scala-collection-compat" % scalaCollectionCompatVersion)
+    else Seq.empty
   },
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
@@ -809,7 +710,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
           "-Ywarn-unused:imports",
           "-Ycache-macro-class-loader:last-modified"
         )
-      case _ => Seq()
+      case _ => Seq.empty
     }
   },
   Global / concurrentRestrictions += Tags.limit(Tags.Test, 1),
@@ -831,9 +732,9 @@ lazy val docs = project
     scalacOptions += "-Xlog-implicits",
     libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
     projectName    := "ZIO Quill",
-    mainModuleName := (`quill-core-jvm` / moduleName).value,
+    mainModuleName := (`quill-core` / moduleName).value,
 //    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-//      `quill-engine-jvm`,
+//      `quill-engine`,
 //    ),
     projectStage                          := ProjectStage.ProductionReady,
     checkArtifactBuildProcessWorkflowStep := None,
