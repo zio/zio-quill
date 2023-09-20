@@ -140,7 +140,7 @@ function wait_for_bigdata() {
 
     sbt scalafmtAll
     sbt scalafmtCheckAll
-    sbt $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
+    sbt $SBT_ARGS quill-core/Test/compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
 
     wait $SETUP
