@@ -6,6 +6,7 @@ import io.getquill.util.{ContextLogger, LoadConfig}
 import io.getquill.jdbczio.Quill
 import zio.{Scope, ZEnvironment, ZIO, ZLayer}
 import zio.stream.ZStream
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import izumi.reflect.Tag
 
 import java.io.Closeable
@@ -78,7 +79,6 @@ object ZioJdbc {
   }
 
   implicit class QuillZioDataSourceExt[T](qzio: ZIO[DataSource, Throwable, T]) {
-    import io.getquill.context.qzio.ImplicitSyntax._
     def implicitDS(implicit implicitEnv: Implicit[DataSource]): ZIO[Any, SQLException, T] =
       (for {
         q <- qzio.provideEnvironment(ZEnvironment(implicitEnv.env))
@@ -86,7 +86,6 @@ object ZioJdbc {
   }
 
   implicit class QuillZioSomeDataSourceExt[T, R](qzio: ZIO[DataSource with R, Throwable, T])(implicit tag: Tag[R]) {
-    import io.getquill.context.qzio.ImplicitSyntax._
     def implicitSomeDS(implicit implicitEnv: Implicit[DataSource]): ZIO[R, SQLException, T] =
       (for {
         r <- ZIO.environment[R]
@@ -97,8 +96,6 @@ object ZioJdbc {
   }
 
   implicit class QuillZioExtPlain[T](qzio: ZIO[Connection, Throwable, T]) {
-
-    import io.getquill.context.qzio.ImplicitSyntax._
 
     def onDataSource: ZIO[DataSource, SQLException, T] =
       (for {

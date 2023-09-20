@@ -9,7 +9,7 @@ object MirrorContexts {
   object testAsyncContext extends AsyncMirrorContext(MirrorIdiom, Literal) with TestEntities {
 
     // hack to avoid Await.result since scala.js doesn't support it
-    implicit val immediateEC = new ExecutionContext {
+    implicit val immediateEC: ExecutionContext = new ExecutionContext {
       def execute(runnable: Runnable)     = runnable.run()
       def reportFailure(cause: Throwable) = ()
     }

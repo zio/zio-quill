@@ -5,6 +5,7 @@ import io.getquill.context.qzio.ImplicitSyntax._
 import io.getquill.util.LoadConfig
 import zio.Console.printLine
 import zio.ZIOAppDefault
+
 import javax.sql.DataSource
 
 object ZioAppImplicitEnv extends ZIOAppDefault {

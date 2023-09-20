@@ -17,7 +17,7 @@ object DefaultNodeCatalog extends NodeCatalog {
 
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
-  implicit def nodeToOpt(dagNode: DagNode) = Some(dagNode)
+  implicit def nodeToOpt(dagNode: DagNode): Option[DagNode] = Some(dagNode)
 
   object StringNode extends DagNode(classTag[String], None)
 

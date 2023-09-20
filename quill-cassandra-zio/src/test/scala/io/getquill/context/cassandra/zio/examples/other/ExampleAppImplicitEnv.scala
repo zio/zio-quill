@@ -1,6 +1,7 @@
 package io.getquill.context.cassandra.zio.examples.other
 
-import io.getquill.{CassandraZioContext, _}
+import io.getquill._
+import io.getquill.context.qzio.ImplicitSyntax.Implicit
 import zio.{ZIO, ZIOAppDefault}
 import zio.Console.printLine
 import io.getquill.context.qzio.ImplicitSyntax._

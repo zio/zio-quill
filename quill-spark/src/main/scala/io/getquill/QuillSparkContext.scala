@@ -47,7 +47,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
   val idiom  = SparkDialect
   val naming = Literal
 
-  private implicit def datasetEncoder[T] =
+  private implicit def datasetEncoder[T]: (Index, Dataset[T], List[Binding], ResultRow) => List[Binding] =
     (idx: Int, ds: Dataset[T], row: List[Binding], session: Session) => row :+ DatasetBinding(ds)
 
   def liftQuery[T](ds: Dataset[T]) =
