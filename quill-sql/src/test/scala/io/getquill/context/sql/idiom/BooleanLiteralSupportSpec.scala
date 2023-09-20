@@ -322,8 +322,7 @@ class BooleanLiteralSupportSpec extends Spec {
 
       // See:
       //  - Discord question: https://discord.com/channels/632150470000902164/632150470000902166/1153978338168291369
-      //  - Discord answer: https://discord.com/channels/632150470000902164/632150470000902166/1153991217684697090
-      //  - Be careful with Scala3: https://docs.scala-lang.org/tutorials/FAQ/index.html#i-want-scala-3-why-does-versionnumberstring-say-im-on-213
+      //  - Discord answer: https://discord.com/channels/632150470000902164/632150470000902166/1154004784806891571
       val isScala212 = io.getquill.Versions.scala.startsWith("2.12")
       val expectedQuery =
         if (isScala212)
