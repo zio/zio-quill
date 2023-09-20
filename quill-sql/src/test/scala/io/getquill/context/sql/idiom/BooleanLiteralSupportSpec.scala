@@ -320,7 +320,7 @@ class BooleanLiteralSupportSpec extends Spec {
         query[TestEntity].filter(t => !true)
       }
       ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT (1 = 1)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE (1 = 0)"
     }
     "field" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
