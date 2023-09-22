@@ -661,7 +661,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.22"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.23"
       )
     )
     .dependsOn(`quill-sql-jvm` % "compile->compile;test->test")
@@ -671,7 +671,7 @@ lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "4.0.3" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "8.1.0"      % Test,
-    "com.h2database"          % "h2"                      % "2.1.214"    % Test,
+    "com.h2database"          % "h2"                      % "2.2.224"    % Test,
     "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"   % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.2.2.jre8" % Test,
