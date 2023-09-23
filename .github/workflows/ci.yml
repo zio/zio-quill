@@ -5,11 +5,6 @@ on:
   push:
     branches:
       - master
-      - sbt-ci-release
-      - sbt-ci-release_no_js
-    # Do not activate CI on tags for now. For releases, run the build the initial release build
-    # tags:
-    #   - "**"
 
 env:
   JAVA_OPTS: -Xms6G -Xmx6G -XX:+UseG1GC
