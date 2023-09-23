@@ -248,7 +248,7 @@ lazy val `quill-core` =
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
       ),
-      Test / fork := true,
+      Test / fork := true
     )
     .dependsOn(`quill-engine` % "compile->compile")
     .enablePlugins(MimaPlugin)
@@ -656,9 +656,9 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "org.scalatest"            %% "scalatest" % "3.2.17" % Test,
-    "org.scala-lang.modules"   %% "scala-collection-compat" % scalaCollectionCompatVersion,
-    "com.google.code.findbugs" % "jsr305"    % "3.0.2"  % Provided // just to avoid warnings during compilation
+    "org.scalatest"           %% "scalatest"               % "3.2.17" % Test,
+    "org.scala-lang.modules"  %% "scala-collection-compat" % scalaCollectionCompatVersion,
+    "com.google.code.findbugs" % "jsr305"                  % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
     if (debugMacro && isScala2)
       Seq(
@@ -727,7 +727,7 @@ lazy val docs = project
       `quill-core`,
       `quill-cassandra-monix`,
       `quill-orientdb`,
-      `quill-doobie`,
+      `quill-doobie`
     ),
     projectStage                          := ProjectStage.ProductionReady,
     checkArtifactBuildProcessWorkflowStep := None,
