@@ -3,6 +3,8 @@ import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 
 import scala.collection.immutable.ListSet
 
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 inThisBuild(
   List(
     organization := "io.getquill",
@@ -682,20 +684,6 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     "-Ypatmat-exhaust-depth",
     "40"
   ),
-  // Only build scaladoc for Scala 2.13
-  Compile / doc / sources := {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => (Compile / doc / sources).value
-      case _             => Seq.empty
-    }
-  },
-  // Only publish scaladoc for Scala 2.13
-  Compile / packageDoc / publishArtifact := {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => (Compile / doc / publishArtifact).value
-      case _             => false
-    }
-  },
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) =>
@@ -733,9 +721,14 @@ lazy val docs = project
     libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
     projectName    := "ZIO Quill",
     mainModuleName := (`quill-core` / moduleName).value,
-//    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
-//      `quill-engine`,
-//    ),
+    // With Scala 2.12, these projects doc isn't compiling.
+    ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(
+      `quill-engine`,
+      `quill-core`,
+      `quill-cassandra-monix`,
+      `quill-orientdb`,
+      `quill-doobie`,
+    ),
     projectStage                          := ProjectStage.ProductionReady,
     checkArtifactBuildProcessWorkflowStep := None,
     docsPublishBranch                     := "master",
