@@ -79,7 +79,7 @@ jobs:
   release_scala:
     if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
-    # needs: build     TODO: Put back
+    needs: build
     strategy:
       fail-fast: false
       matrix:
