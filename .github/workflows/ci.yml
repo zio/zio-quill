@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - master
+  release:
+    types: [ published ] # Triggers the CI when a new Github Release is published
 
 env:
   JAVA_OPTS: -Xms6G -Xmx6G -XX:+UseG1GC
