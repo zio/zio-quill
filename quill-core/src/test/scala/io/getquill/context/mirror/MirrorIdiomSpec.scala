@@ -15,7 +15,7 @@ class MirrorIdiomSpec extends Spec {
 
   import MirrorIdiom._
 
-  implicit val naming = Literal
+  implicit val naming: Literal = Literal
 
   "shows schema query" - {
     "entity" in {
