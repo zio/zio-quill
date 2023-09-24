@@ -13,7 +13,7 @@ abstract class CodegenSpec extends AnyFreeSpec with SchemaMaker {
   type Prefix <: ConfigPrefix
   val prefix: Prefix
 
-  implicit def regToOption[T](t: T) = Some(t)
+  implicit def regToOption[T](t: T): Option[T] = Some(t)
 }
 
 object SchemaMaker extends SchemaMaker

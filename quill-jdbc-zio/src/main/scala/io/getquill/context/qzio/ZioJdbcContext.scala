@@ -5,7 +5,6 @@ import io.getquill.context.jdbc.JdbcContextTypes
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context._
 import io.getquill.jdbczio.Quill
-import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.{NamingStrategy, ReturnAction}
 import zio.Exit.{Failure, Success}
 import zio.stream.ZStream
@@ -76,7 +75,9 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   val currentConnection: FiberRef[Option[Connection]] =
     Unsafe.unsafe { implicit u =>
-      Runtime.default.unsafe.run(zio.Scope.global.extend(FiberRef.make(Option.empty[java.sql.Connection]))).getOrThrow()
+      Runtime.default.unsafe
+        .run(zio.Scope.global.extend(FiberRef.make(Option.empty[java.sql.Connection])))
+        .getOrThrow()
     }
 
   lazy val underlying: ZioJdbcUnderlyingContext[Dialect, Naming] = connDelegate
