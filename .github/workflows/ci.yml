@@ -5,24 +5,14 @@ on:
   push:
     branches:
       - master
-    # Do not activate CI on tags for now. For releases, run the build the initial release build
-    # tags:
-    #   - "**"
+  release:
+    types: [ published ] # Triggers the CI when a new Github Release is published
+
+env:
+  JAVA_OPTS: -Xms6G -Xmx6G -XX:+UseG1GC
+  JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC # See https://stackoverflow.com/a/73708006
 
 jobs:
-  secrets:
-    runs-on: ubuntu-latest
-    outputs:
-      secrets: ${{ steps.secrets.outputs.secrets }}
-    steps:
-      - name: secrets
-        id: secrets
-        env:
-          HAS_PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE != '' }}
-          HAS_ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD != '' }}
-        shell: bash
-        if: env.HAS_PGP_PASSPHRASE == 'true' && env.HAS_ENCRYPTION_PASSWORD == 'true'
-        run: echo ::set-output name=secrets::true
   build:
     runs-on: ubuntu-latest
 
@@ -35,7 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         scala: [2.12.x, 2.13.x, 3.3.x]
-        module: [base, db, js, async, codegen, bigdata]
+        module: [base, db, async, codegen, bigdata]
         include:
           - scala: 2.12.x
             scala_short: 212
@@ -51,8 +41,6 @@ jobs:
           - scala: 3.3.x
             module: db
           - scala: 3.3.x
-            module: js
-          - scala: 3.3.x
             module: async
           - scala: 3.3.x
             module: codegen
@@ -67,7 +55,7 @@ jobs:
     name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.0.0
     - name: Cache sbt
       uses: actions/cache@v3
       with:
@@ -77,7 +65,7 @@ jobs:
         key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
     - name: Setup Java and Scala
-      uses: actions/setup-java@v3.10.0
+      uses: actions/setup-java@v3.12.0
       with:
         distribution: temurin
         java-version: '8'
@@ -90,123 +78,28 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.scala }}
 
-  release:
-    if: ${{github.event_name != 'pull_request' && needs.secrets.outputs.secrets }}
+  release_scala:
+    if: ${{github.event_name != 'pull_request'}}
     runs-on: ubuntu-latest
-
-    needs:
-    - build
-    - secrets
-
+    needs: build
     strategy:
       fail-fast: false
       matrix:
-        scala: [2.12.x, 2.13.x, 3.3.x]
-        module: [docs, base, db, js, async, codegen, bigdata]
-        include:
-          - scala: 2.12.x
-            scala_short: 212
-            scala_short_dot: 2.12
-          - scala: 2.13.x
-            scala_short: 213
-            scala_short_dot: 2.13
-          - scala: 3.3.x
-            scala_short: 33
-            scala_short_dot: 3.3
-        exclude:
-          - scala: 3.3.x
-            module: db
-          - scala: 3.3.x
-            module: js
-          - scala: 3.3.x
-            module: async
-          - scala: 3.3.x
-            module: codegen
-          - scala: 3.3.x
-            module: bigdata
-
-    name: Release ${{matrix.scala_short_dot}} - ${{matrix.module}}
-
+        scala: [ 2.12.x, 2.13.x, 3.3.x ]
+    env:
+      CI_RELEASE: publishSigned # By default, sbt-ci-release uses the `+publishSigned` which is publishing for all the Scala versions configured, which is not what we want
+      CI_SNAPSHOT_RELEASE: publish # By default, sbt-ci-release uses the `+publish` which is publishing for all the Scala versions configured, which is not what we want
     steps:
-    - uses: actions/checkout@v3
-    - name: Cache sbt
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/coursier
-          ~/.sbt
-        key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
-
-    - name: Setup Java and Scala
-      uses: actions/setup-java@v3.10.0
-      with:
-        distribution: temurin
-        java-version: '8'
-        check-latest: true
-
-    - name: Release
-      run: |
-        echo "SCALA_VERSION='$SCALA_VERSION'"
-        echo "PULL_REQUEST='$PULL_REQUEST'"
-        echo "GITHUB_REF='$GITHUB_REF'"
-        export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
-        echo "BRANCH='$BRANCH'"
-        ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
-      env:
-        ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
-        GITHUB_REF: ${{ github.ref }}
-        PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-        PULL_REQUEST: ${{ !!github.event.pull_request }}
-        SCALA_VERSION: ${{ matrix.scala }}
-
-  publish:
-    if: ${{github.event_name != 'pull_request' && needs.secrets.outputs.secrets }}
-    runs-on: ubuntu-latest
-
-    needs:
-    - release
-    - secrets
-
-    strategy:
-      fail-fast: false
-      matrix:
-        scala: [2.13.x]
-        module: [publish]
-        include:
-          - scala: 2.13.x
-            scala_short: 213
-            scala_short_dot: 2.13
-
-    name: Publish ${{matrix.scala_short_dot}} - ${{matrix.module}}
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Cache sbt
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/coursier
-            ~/.sbt
-          key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
-
+      - uses: actions/checkout@v4.0.0
       - name: Setup Java and Scala
-        uses: actions/setup-java@v3.10.0
+        uses: actions/setup-java@v3.12.0
         with:
           distribution: temurin
           java-version: '8'
           check-latest: true
-
-      - name: Release
-        run: |
-          echo "SCALA_VERSION='$SCALA_VERSION'"
-          echo "PULL_REQUEST='$PULL_REQUEST'"
-          echo "GITHUB_REF='$GITHUB_REF'"
-          export BRANCH=$(git for-each-ref ${{ github.ref }} --format='%(refname:short)')
-          echo "BRANCH='$BRANCH'"
-          ./build/release.sh ${{ matrix.scala_short }} ${{ matrix.module }}
+      - run: sbt ++${{ matrix.scala }} -Dquill.scala.version=${{ matrix.scala }} ci-release
         env:
-          ENCRYPTION_PASSWORD: ${{ secrets.ENCRYPTION_PASSWORD }}
-          GITHUB_REF: ${{ github.ref }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PULL_REQUEST: ${{ !!github.event.pull_request }}
-          SCALA_VERSION: ${{ matrix.scala }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

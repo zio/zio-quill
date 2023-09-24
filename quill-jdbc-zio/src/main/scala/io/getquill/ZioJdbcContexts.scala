@@ -11,8 +11,8 @@ import io.getquill.context.jdbc.{
   SqliteJdbcTypes
 }
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context.qzio.{ZioJdbcContext, ZioJdbcUnderlyingContext}
 import io.getquill.context.json.PostgresJsonExtensions
+import io.getquill.context.qzio.{ZioJdbcContext, ZioJdbcUnderlyingContext}
 import io.getquill.util.LoadConfig
 
 import javax.sql.DataSource

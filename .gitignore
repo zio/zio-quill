@@ -46,3 +46,4 @@ project/.bloop/
 .DS_Store
 .vscode
 .history
+metals.sbt

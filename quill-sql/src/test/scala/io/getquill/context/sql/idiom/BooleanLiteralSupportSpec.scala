@@ -319,8 +319,18 @@ class BooleanLiteralSupportSpec extends Spec {
       val q = quote {
         query[TestEntity].filter(t => !true)
       }
-      ctx.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT (1 = 1)"
+
+      // See:
+      //  - Discord question: https://discord.com/channels/632150470000902164/632150470000902166/1153978338168291369
+      //  - Discord answer: https://discord.com/channels/632150470000902164/632150470000902166/1154004784806891571
+      val isScala212 = io.getquill.Versions.scala.startsWith("2.12")
+      val expectedQuery =
+        if (isScala212)
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT (1 = 1)"
+        else
+          "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE 1 = 0"
+
+      ctx.run(q).string mustEqual expectedQuery
     }
     "field" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
