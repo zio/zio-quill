@@ -49,6 +49,10 @@ object Messages {
     "quill.query.cacheDynamic",
     variable("quill.query.cacheDynamic", "query_query_cacheDynamic", "true").toBoolean
   )
+  def cacheDynamicMaxSize = cache(
+    "quill.query.cacheDynamicMaxSize",
+    variable("quill.query.cacheDynamicMaxSize", "query_query_cacheDynamicMaxSize", "1024").toLong
+  )
   def querySubexpand =
     cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
   def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
