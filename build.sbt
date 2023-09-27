@@ -140,24 +140,15 @@ lazy val filteredModules = {
         println("SBT =:> Invoking Aggregate Project")
         Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
       case _ | "all" =>
-        // Workaround for https://github.com/sbt/sbt/issues/3465
-        if (isScala213) {
-          println("SBT =:> Compiling Scala 2.13 Modules")
-          baseModules ++ dbModules ++ jasyncModules
-        } else {
-          println("SBT =:> Compiling All Modules")
-          allModules
-          // Note, can't do this because things like inform (i.e. formatting) actually do run for all modules
-          // throw new IllegalStateException("Tried to build all modules. Not allowed.")
-        }
+        println("SBT =:> Compiling All Modules")
+        allModules
     }
 
   val selectedModules = {
     val modules =
       moduleStrings
-        .map(matchModules(_))
-        .map(seq => ListSet(seq: _*))
-        .flatMap(elem => elem)
+        .map(matchModules)
+        .flatMap(seq => ListSet(seq: _*))
 
     if (isScala213) {
       println("SBT =:> Compiling 2.13 Modules Only")
