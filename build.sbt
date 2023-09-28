@@ -70,10 +70,10 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
+  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules
 
 lazy val scala212Modules =
-  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules
+  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine`, `quill-util`)
 
