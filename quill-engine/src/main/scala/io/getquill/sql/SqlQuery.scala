@@ -528,6 +528,4 @@ class SqlQueryApply(traceConfig: TraceConfig) {
       case FlatJoinContext(_, from, _) => collectAliases(List(from))
     }
 
-  List.emptyList.empty
-
 }
