@@ -6,8 +6,7 @@ import io.getquill.ast.StatelessTransformer
 import io.getquill.norm.capture.{AvoidAliasConflictApply, DealiasApply}
 import io.getquill.ast.Action
 import io.getquill.util.Interpolator
-import io.getquill.util.Messages.{TraceType, title, trace}
-import io.getquill.util.Messages.TraceType.Normalizations
+import io.getquill.util.Messages.{TraceType, title}
 
 import scala.annotation.tailrec
 
