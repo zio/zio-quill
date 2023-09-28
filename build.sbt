@@ -139,7 +139,7 @@ lazy val filteredModules = {
         .flatMap(seq => ListSet(seq: _*))
 
     if (isScala212) {
-      println("SBT =:> Compiling 2.13 Modules Only")
+      println("SBT =:> Compiling 2.12 Modules Only")
       modules.filter(scala212Modules.contains(_))
     } else if (isScala3) {
       println("SBT =:> Compiling 3 Modules Only")
