@@ -701,13 +701,13 @@ lazy val docs = project
     projectName    := "ZIO Quill",
     mainModuleName := (`quill-core` / moduleName).value,
     // With Scala 2.12, these projects doc isn't compiling.
-    //ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(
-    //  `quill-engine`,
-    //  `quill-core`,
-    //  `quill-cassandra-monix`,
-    //  `quill-orientdb`,
-    //  `quill-doobie`
-    //),
+    ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(
+      `quill-engine`,
+      `quill-core`,
+      `quill-cassandra-monix`,
+      `quill-orientdb`,
+      `quill-doobie`
+    ),
     projectStage                          := ProjectStage.ProductionReady,
     checkArtifactBuildProcessWorkflowStep := None,
     docsPublishBranch                     := "master",
