@@ -3,7 +3,6 @@ package io.getquill.monad
 import io.getquill.context.Context
 
 import language.experimental.macros
-import language.higherKinds
 import scala.collection.compat._
 import scala.util.Failure
 import scala.util.Success

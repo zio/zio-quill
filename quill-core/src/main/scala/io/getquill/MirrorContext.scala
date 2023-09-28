@@ -4,7 +4,6 @@ import io.getquill.context.mirror.{MirrorDecoders, MirrorEncoders, MirrorSession
 import io.getquill.context.{Context, ContextVerbPrepareLambda, ContextVerbTranslate, ExecutionInfo, ProtoContext}
 import io.getquill.idiom.{Idiom => BaseIdiom}
 import io.getquill.monad.SyncIOMonad
-import scala.language.higherKinds
 
 import scala.util.{Failure, Success, Try}
 

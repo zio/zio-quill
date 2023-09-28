@@ -6,7 +6,6 @@ import java.util.Date
 import io.getquill.context.sql.SqlContext
 
 import scala.collection.compat._
-import scala.language.higherKinds
 
 trait ArrayEncoding {
   self: SqlContext[_, _] =>

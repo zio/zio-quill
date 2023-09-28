@@ -4,8 +4,6 @@ import io.getquill.{NamingStrategy, ReturnAction}
 import io.getquill.ast.Ast
 import io.getquill.quat.Quat
 
-import scala.language.higherKinds
-
 /**
  * A common context used between Quill and ProtoQuill. This is more like a
  * pre-context because the actual `run` methods cannot be contained here since

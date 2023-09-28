@@ -7,7 +7,7 @@ import zio.{RIO, ZIO}
 
 import scala.collection.compat._
 import scala.language.experimental.macros
-import scala.language.higherKinds
+
 import scala.util.{Failure, Success}
 
 trait ZIOMonad extends IOMonad {

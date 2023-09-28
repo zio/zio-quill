@@ -7,7 +7,6 @@ import io.getquill.quat.Quat
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
-import scala.language.higherKinds
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}

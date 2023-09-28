@@ -2,7 +2,6 @@ package io.getquill.context
 
 import io.getquill.{NamingStrategy, Query, Quoted}
 
-import scala.language.higherKinds
 import scala.language.experimental.macros
 
 trait ContextVerbStream[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy] {

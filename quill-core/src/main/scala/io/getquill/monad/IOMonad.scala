@@ -1,7 +1,7 @@
 package io.getquill.monad
 
 import scala.collection.compat._
-import scala.language.higherKinds
+
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try

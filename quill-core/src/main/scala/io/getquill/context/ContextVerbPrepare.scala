@@ -3,7 +3,6 @@ package io.getquill.context
 import io.getquill.{Action, BatchAction, Query, Quoted}
 import io.getquill.dsl.CoreDsl
 import scala.language.experimental.macros
-import scala.language.higherKinds
 
 trait ContextVerbPrepare extends CoreDsl {
   type Result[T]

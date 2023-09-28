@@ -1,6 +1,5 @@
 package io.getquill.context
 
-import scala.language.higherKinds
 import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
 import io.getquill.util.Messages.fail
