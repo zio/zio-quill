@@ -25,8 +25,6 @@ object Quill {
       with Context[CqlIdiom, N]
       with Probing {
 
-    ContextLogger(classOf[Quill.Cassandra[_]])
-
     override type Error       = Throwable
     override type Environment = Any
 
