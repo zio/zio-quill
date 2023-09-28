@@ -39,9 +39,9 @@ case object UnionAllOperation extends SetOperation
 
 sealed trait DistinctKind { def isDistinct: Boolean }
 case object DistinctKind {
-  case object Distinct                    extends DistinctKind { val isDistinct: Boolean = true  }
+  case object Distinct                          extends DistinctKind { val isDistinct: Boolean = true  }
   final case class DistinctOn(props: List[Ast]) extends DistinctKind { val isDistinct: Boolean = true  }
-  case object None                        extends DistinctKind { val isDistinct: Boolean = false }
+  case object None                              extends DistinctKind { val isDistinct: Boolean = false }
 }
 
 final case class SetOperationSqlQuery(
@@ -191,11 +191,11 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           case _: GroupByMap => trace"base| Nesting GroupByMap $q" andReturn nest(source(q, alias))
           case Map(GroupBy(input, id, _), _, _) =>
             input match {
-                case _: Map =>
-                  nest(source(input, id.name))
-                case _ =>
-                  base(input, id.name, nestNextMap)
-              }
+              case _: Map =>
+                nest(source(input, id.name))
+              case _ =>
+                base(input, id.name, nestNextMap)
+            }
 
             trace"base| Nesting Map(GroupBy) $q" andReturn {
               nest(source(q, alias))

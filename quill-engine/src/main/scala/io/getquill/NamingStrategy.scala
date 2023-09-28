@@ -150,9 +150,9 @@ trait PostgresEscape extends Escape {
 object PostgresEscape extends PostgresEscape
 
 trait MysqlEscape extends NamingStrategy {
-  override def table(s: String): String   = quote(s)
-  override def column(s: String): String  = quote(s)
-  override def default(s: String) = s
-  private def quote(s: String)    = s"`$s`"
+  override def table(s: String): String  = quote(s)
+  override def column(s: String): String = quote(s)
+  override def default(s: String)        = s
+  private def quote(s: String)           = s"`$s`"
 }
 object MysqlEscape extends MysqlEscape

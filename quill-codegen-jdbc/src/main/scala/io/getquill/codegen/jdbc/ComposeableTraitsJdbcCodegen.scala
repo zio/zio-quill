@@ -143,10 +143,11 @@ class ComposeableTraitsJdbcCodegen(
   ) = this(Seq(connectionMaker), packagePrefix, false)
 
   override def makeGenerators: Seq[ContextifiedUnitGenerator] = new MultiGeneratorFactory(generatorMaker).apply
-  override def generatorMaker: SingleGeneratorFactory[ContextifiedUnitGenerator] = new SingleGeneratorFactory[ContextifiedUnitGenerator] {
-    override def apply(emitterSettings: EmitterSettings[JdbcTableMeta, JdbcColumnMeta]): ContextifiedUnitGenerator =
-      new ContextifiedUnitGenerator(emitterSettings)
-  }
+  override def generatorMaker: SingleGeneratorFactory[ContextifiedUnitGenerator] =
+    new SingleGeneratorFactory[ContextifiedUnitGenerator] {
+      override def apply(emitterSettings: EmitterSettings[JdbcTableMeta, JdbcColumnMeta]): ContextifiedUnitGenerator =
+        new ContextifiedUnitGenerator(emitterSettings)
+    }
 
   override def packagingStrategy: PackagingStrategy =
     PackagingStrategy.ByPackageHeader
@@ -180,8 +181,10 @@ class ComposeableTraitsJdbcCodegen(
                         |""".stripMargin.trimFront)
       .getOrElse("")
 
-    override def CombinedTableSchemas: (TableStereotype[TableMeta,ColumnMeta], QuerySchemaNaming) => CombinedTableSchemasGen = new CombinedTableSchemasGen(_, _) {
-      override def objectName: Option[String] = super.objectName.map(_ + "Dao")
-    }
+    override def CombinedTableSchemas
+      : (TableStereotype[TableMeta, ColumnMeta], QuerySchemaNaming) => CombinedTableSchemasGen =
+      new CombinedTableSchemasGen(_, _) {
+        override def objectName: Option[String] = super.objectName.map(_ + "Dao")
+      }
   }
 }

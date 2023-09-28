@@ -1,7 +1,5 @@
 package io.getquill
 
-
-
 //package io.getquill
 //
 //import io.getquill.util.PrintMac

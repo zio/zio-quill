@@ -21,18 +21,18 @@ inThisBuild(
     scmInfo := Some(
       ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
     ),
-    scalaVersion := scala_v_13,
+    scalaVersion       := scala_v_13,
     crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
-    scalafmtCheck := true,
-    scalafmtSbtCheck := true,
-    scalafmtOnCompile := !insideCI.value,
-    semanticdbEnabled := scalaVersion.value.startsWith("2.13"),
+    scalafmtCheck      := true,
+    scalafmtSbtCheck   := true,
+    scalafmtOnCompile  := !insideCI.value,
+    semanticdbEnabled  := scalaVersion.value.startsWith("2.13"),
     semanticdbOptions += "-P:semanticdb:synthetics:on",
-    semanticdbVersion := scalafixSemanticdb.revision, // use Scalafix compatible version
+    semanticdbVersion          := scalafixSemanticdb.revision, // use Scalafix compatible version
     scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
     scalafixDependencies ++= List(
-      "com.github.vovapolu" %% "scaluzzi" % "0.1.23",
-      "io.github.ghostbuster91.scalafix-unified" %% "unified" % "0.0.9"
+      "com.github.vovapolu"                      %% "scaluzzi" % "0.1.23",
+      "io.github.ghostbuster91.scalafix-unified" %% "unified"  % "0.0.9"
     )
   )
 )

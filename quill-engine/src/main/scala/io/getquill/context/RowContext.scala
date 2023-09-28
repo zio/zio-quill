@@ -6,8 +6,8 @@ trait RowContext {
   type PrepareRow
   type ResultRow
 
-  protected val identityPrepare: Prepare = (p: PrepareRow, _: Session) => (List.empty, p)
-  protected val identityExtractor: (ResultRow, Session) => ResultRow        = (rr: ResultRow, _: Session) => rr
+  protected val identityPrepare: Prepare                             = (p: PrepareRow, _: Session) => (List.empty, p)
+  protected val identityExtractor: (ResultRow, Session) => ResultRow = (rr: ResultRow, _: Session) => rr
 
   case class BatchGroup(string: String, prepare: List[Prepare])
   case class BatchGroupReturning(string: String, returningBehavior: ReturnAction, prepare: List[Prepare])

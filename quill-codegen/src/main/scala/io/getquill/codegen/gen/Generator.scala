@@ -151,14 +151,14 @@ trait Generator {
     override def packagePrefix: String = Generator.this.packagePrefix
 
     override def code: String = surroundByPackage(body)
-    def body: String  = caseClassesCode + "\n\n" + tableSchemasCode
+    def body: String          = caseClassesCode + "\n\n" + tableSchemasCode
 
     def caseClassesCode: String  = caseClassTables.map(CaseClass(_).code).mkString("\n\n")
     def tableSchemasCode: String = querySchemaTables.map(CombinedTableSchemas(_, querySchemaNaming).code).mkString("\n")
 
     protected def ifMembers(str: String): String = if (renderMembers) str else ""
 
-    def CaseClass: TableStereotype[TableMeta,ColumnMeta] => CaseClassGen = new CaseClassGen(_)
+    def CaseClass: TableStereotype[TableMeta, ColumnMeta] => CaseClassGen = new CaseClassGen(_)
     class CaseClassGen(val tableColumns: TableStereotype[TableMeta, ColumnMeta])
         extends super.AbstractCaseClassGen
         with CaseClassNaming[TableMeta, ColumnMeta] {
@@ -177,7 +177,8 @@ trait Generator {
       }
     }
 
-    def CombinedTableSchemas: (TableStereotype[TableMeta,ColumnMeta], QuerySchemaNaming) => CombinedTableSchemasGen = new CombinedTableSchemasGen(_, _)
+    def CombinedTableSchemas: (TableStereotype[TableMeta, ColumnMeta], QuerySchemaNaming) => CombinedTableSchemasGen =
+      new CombinedTableSchemasGen(_, _)
     class CombinedTableSchemasGen(
       tableColumns: TableStereotype[TableMeta, ColumnMeta],
       querySchemaNaming: QuerySchemaNaming
@@ -201,7 +202,7 @@ trait Generator {
         Seq(imports, schemas).pruneEmpty.mkString("\n\n")
       }
 
-      def QuerySchema: (TableStereotype[TableMeta,ColumnMeta], TableMeta) => QuerySchemaGen = new QuerySchemaGen(_, _)
+      def QuerySchema: (TableStereotype[TableMeta, ColumnMeta], TableMeta) => QuerySchemaGen = new QuerySchemaGen(_, _)
       class QuerySchemaGen(val tableColumns: TableStereotype[TableMeta, ColumnMeta], schema: TableMeta)
           extends AbstractQuerySchemaGen
           with CaseClassNaming[TableMeta, ColumnMeta] {

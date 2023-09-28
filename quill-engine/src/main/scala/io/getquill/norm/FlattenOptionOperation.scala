@@ -12,8 +12,6 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
   val interp = new Interpolator(TraceType.FlattenOptionOperation, traceConfig, 2)
   import interp._
 
-  
-
   def validateContainsOrElse(containsNon: Boolean, succeedWith: () => Ast, orElse: () => Ast): Ast =
     if (containsNon) succeedWith()
     else orElse()

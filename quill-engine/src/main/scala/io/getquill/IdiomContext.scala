@@ -20,8 +20,12 @@ object IdiomContext {
     case object Update extends Regular
     case object Delete extends Regular
 
-    final case class BatchInsert(foreachAlias: String) extends Batch { val batchAlias: Some[String] = Some(foreachAlias) }
-    final case class BatchUpdate(foreachAlias: String) extends Batch { val batchAlias: Some[String] = Some(foreachAlias) }
+    final case class BatchInsert(foreachAlias: String) extends Batch {
+      val batchAlias: Some[String] = Some(foreachAlias)
+    }
+    final case class BatchUpdate(foreachAlias: String) extends Batch {
+      val batchAlias: Some[String] = Some(foreachAlias)
+    }
 
     sealed trait Regular extends QueryType { val isBatch = false; val batchAlias = None }
     sealed trait Batch   extends QueryType { val isBatch = true                         }

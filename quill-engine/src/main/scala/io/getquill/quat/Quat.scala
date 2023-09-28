@@ -11,7 +11,9 @@ object LinkedHashMapOps {
     def zipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, V, Option[V]), R]): List[R] =
       LinkedHashMapOps.zipWith(m1, m2, f)
 
-    def outerZipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, Option[V], Option[V]), R]): mutable.LinkedHashSet[R] =
+    def outerZipWith[R](m2: mutable.LinkedHashMap[K, V])(
+      f: PartialFunction[(K, Option[V], Option[V]), R]
+    ): mutable.LinkedHashSet[R] =
       LinkedHashMapOps.outerZipWith(m1, m2, f)
   }
 
@@ -400,7 +402,7 @@ object Quat {
           (mutable.LinkedHashMap[String, String]() ++ renames): mutable.LinkedHashMap[String, String]
         )
 
-      def unapply(p: Quat.Product): Some[(mutable.LinkedHashMap[String,Quat], mutable.LinkedHashMap[String,String])] =
+      def unapply(p: Quat.Product): Some[(mutable.LinkedHashMap[String, Quat], mutable.LinkedHashMap[String, String])] =
         Some((p.fields, p.renames))
     }
 
@@ -421,7 +423,16 @@ object Quat {
         Product.WithRenames.iterated(name, tpe, fields.zip(values).iterator, renamesFrom.zip(renamesTo).iterator)
       }
 
-      def unapply(p: Quat.Product): Some[(String, Type, mutable.Iterable[String], mutable.Iterable[Quat], mutable.Iterable[String], mutable.Iterable[String])] = {
+      def unapply(p: Quat.Product): Some[
+        (
+          String,
+          Type,
+          mutable.Iterable[String],
+          mutable.Iterable[Quat],
+          mutable.Iterable[String],
+          mutable.Iterable[String]
+        )
+      ] = {
         val (fields, values)         = p.fields.unzip
         val (renamesFrom, renamesTo) = p.renames.unzip
         Some((p.name, p.tpe, fields, values, renamesFrom, renamesTo))

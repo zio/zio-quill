@@ -80,7 +80,7 @@ trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
       }
     }
 
-    override def apply(ast: Ast): (Ast, StatefulTransformer[Map[TermName,Reified]]) =
+    override def apply(ast: Ast): (Ast, StatefulTransformer[Map[TermName, Reified]]) =
       ast match {
 
         case ast: Lift =>

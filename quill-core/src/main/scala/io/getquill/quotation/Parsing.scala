@@ -201,7 +201,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$pack.querySchema[$t](${name: String}, ..$properties)" =>
       q"$t".tpe
       inferQuat(q"$t".tpe)
-      val quat     = inferQuat(q"$t".tpe).probit
+      val quat = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity.Opinionated(name, properties.map(propertyAliasParser(_)), quat, Fixed)
 
@@ -377,7 +377,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Quat.improveInfixQuat(value)
   }
 
-  val impureInfixParser: Parser[Ast] = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
+  val impureInfixParser: Parser[Ast] =
+    combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
 
   object InfixMatch {
     def unapply(tree: Tree): Option[(List[String], List[Tree])] =
@@ -834,8 +835,6 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     val symbol = tpe.typeSymbol
     symbol.isClass && symbol.asClass.isCaseClass
   }
-
-  
 
   object ClassTypeRefMatch {
     def unapply(tpe: Type): Option[(ClassSymbol, List[Type])] = tpe match {

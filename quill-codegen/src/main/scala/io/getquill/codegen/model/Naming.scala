@@ -12,7 +12,7 @@ sealed trait CodeWrapper
 final case class PackageHeader(packageName: String) extends CodeWrapper
 final case class PackageObject(packageName: String) extends CodeWrapper
 final case class SimpleObject(packageName: String)  extends CodeWrapper
-case object NoWrapper                         extends CodeWrapper
+case object NoWrapper                               extends CodeWrapper
 
 sealed trait FileNamingStrategy
 
@@ -50,5 +50,5 @@ trait CaseClassNaming[TableMeta, ColumnMeta] {
 trait FieldNaming[ColumnMeta] {
   def column: ColumnFusion[ColumnMeta]
   def rawFieldName: String = column.name
-  def fieldName: String            = escape(rawFieldName)
+  def fieldName: String    = escape(rawFieldName)
 }

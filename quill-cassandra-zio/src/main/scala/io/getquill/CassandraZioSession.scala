@@ -29,7 +29,11 @@ object CassandraZioSession {
   def fromContextConfig(config: CassandraContextConfig): ZLayer[Any, Throwable, CassandraZioSession] =
     ZLayer.succeed(config) >>> live
 
-  def fromConfig(config: Config): ZLayer[Any,Throwable,CassandraZioSession] = fromContextConfig(CassandraContextConfig(config))
+  def fromConfig(config: Config): ZLayer[Any, Throwable, CassandraZioSession] = fromContextConfig(
+    CassandraContextConfig(config)
+  )
   // Call the by-name constructor for the construction to fail inside of the effect if it fails
-  def fromPrefix(configPrefix: String): ZLayer[Any,Throwable,CassandraZioSession] = fromContextConfig(CassandraContextConfig(LoadConfig(configPrefix)))
+  def fromPrefix(configPrefix: String): ZLayer[Any, Throwable, CassandraZioSession] = fromContextConfig(
+    CassandraContextConfig(LoadConfig(configPrefix))
+  )
 }

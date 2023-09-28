@@ -38,7 +38,8 @@ object Messages {
   def debugEnabled: Boolean = cache("quill.macro.log", variable("quill.macro.log", "quill_macro_log", "true").toBoolean)
   def traceEnabled: Boolean =
     cache("quill.trace.enabled", variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean)
-  def traceColors: Boolean = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
+  def traceColors: Boolean =
+    cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
   def traceOpinions: Boolean =
     cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
   def traceAstSimple: Boolean =
@@ -51,8 +52,10 @@ object Messages {
   )
   def querySubexpand: Boolean =
     cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
-  def quillLogFile: LogToFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
-  def errorDetail: Boolean  = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
+  def quillLogFile: LogToFile =
+    cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
+  def errorDetail: Boolean =
+    cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
   def disableReturning: Boolean = cache(
     "quill.query.disableReturning",
     variable("quill.query.disableReturning", "quill_query_disableReturning", "false").toBoolean
@@ -60,12 +63,13 @@ object Messages {
   def logBinds: Boolean = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
   def queryTooLongForLogs: Int =
     cache("quill.query.tooLong", variable("quill.query.tooLong", "quill_query_tooLong", "200").toInt)
-  def errorPrefix: Boolean = cache("quill.error.prefix", variable("quill.error.prefix", "quill_error_prefix", "false").toBoolean)
+  def errorPrefix: Boolean =
+    cache("quill.error.prefix", variable("quill.error.prefix", "quill_error_prefix", "false").toBoolean)
 
   sealed trait LogToFile
   object LogToFile {
     final case class Enabled(file: String) extends LogToFile
-    case object Disabled             extends LogToFile
+    case object Disabled                   extends LogToFile
     def apply(switch: String): LogToFile =
       switch.trim match {
         case "false" => Disabled

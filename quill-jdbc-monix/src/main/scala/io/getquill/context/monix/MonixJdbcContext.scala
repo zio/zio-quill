@@ -250,7 +250,11 @@ abstract class MonixJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   /**
    * Override to enable specific vendor options needed for streaming
    */
-  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]): PreparedStatement = {
+  protected def prepareStatementForStreaming(
+    sql: String,
+    conn: Connection,
+    fetchSize: Option[Int]
+  ): PreparedStatement = {
     val stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
     fetchSize.foreach { size =>
       stmt.setFetchSize(size)
