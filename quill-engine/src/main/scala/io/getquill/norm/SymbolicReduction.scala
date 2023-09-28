@@ -16,7 +16,7 @@ import io.getquill.util.TraceConfig
  */
 class SymbolicReduction(traceConfig: TraceConfig) {
 
-  def unapply(q: Query) =
+  def unapply(q: Query): Option[Query] =
     q match {
 
       /*
@@ -66,6 +66,6 @@ class SymbolicReduction(traceConfig: TraceConfig) {
       case FlatMap(UnionAll(a, b), c, d) =>
         Some(UnionAll(FlatMap(a, c, d), FlatMap(b, c, d)))
 
-      case other => None
+      case _ => None
     }
 }

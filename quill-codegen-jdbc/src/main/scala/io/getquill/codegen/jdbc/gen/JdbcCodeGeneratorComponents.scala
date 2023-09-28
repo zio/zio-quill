@@ -21,7 +21,7 @@ trait JdbcCodeGeneratorComponents extends CodeGeneratorComponents {
 
   def nameParser: NameParser = LiteralNames
 
-  override def defaultExcludedSchemas = Set("information_schema", "performance_schema", "sys", "mysql")
+  override def defaultExcludedSchemas: Set[String] = Set("information_schema", "performance_schema", "sys", "mysql")
 
   /**
    * When the Jdbc Typer tries to figure out which Scala/Java objects to use for

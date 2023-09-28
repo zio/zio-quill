@@ -92,12 +92,12 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           )
       }
 
-    case class FieldExpansion(lookup: Tree, nullChecker: Tree)
+    final case class FieldExpansion(lookup: Tree, nullChecker: Tree)
 
     def expandRecurse(value: Value): FieldExpansion =
       value match {
 
-        case Scalar(_, tpe, decoder, optional) =>
+        case Scalar(_, _, decoder, _) =>
           index += 1
           FieldExpansion(q"$decoder($index, row, session)", q"!$isNull($index, row)")
 
@@ -114,7 +114,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
             // List((new Name(Decoder("Joe") || Decoder("Bloggs")), Decoder(123))
             // This is what needs to be fed into the constructor of the outer-entity i.e.
             // new Person((new Name(Decoder("Joe") || Decoder("Bloggs")), Decoder(123))
-            val productElements: Seq[List[Tree]] = dualGroups.map(_.map { case (k, v) => (k.lookup) })
+            val productElements: Seq[List[Tree]] = dualGroups.map(_.map { case (k, _) => (k.lookup) })
             // E.g. for Person("Joe", 123) the List(q"!nullChecker(0,row)", q"!nullChecker(1,row)") columns
             // that eventually turn into List(!NullChecker("Joe"), !NullChecker(123)) columns.
             // Once you are in a product that has a product inside e.g. Person(name: Name("Joe", "Bloggs"), age: 123)
@@ -122,7 +122,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
             // List( (NullChecker("Joe") || NullChecker("Bloggs")), NullChecker(123))
             // This is what needs to be the null-checker of the outer entity i.e.
             // if ((NullChecker("Joe") || NullChecker("Bloggs")) || NullChecker(123)) Some(new Name(...)) else None
-            val nullChecks: Seq[List[Tree]] = dualGroups.map(_.map { case (k, v) => (k.nullChecker) })
+            val nullChecks: Seq[List[Tree]] = dualGroups.map(_.map { case (k, _) => (k.nullChecker) })
 
             // Or-s together the NullChecker columns.
             // E.g. for Person("Joe", 123)

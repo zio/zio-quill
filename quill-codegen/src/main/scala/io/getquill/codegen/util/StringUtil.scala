@@ -11,9 +11,9 @@ object StringUtil {
   }
 
   implicit class StringExtensions(str: String) {
-    def snakeToUpperCamel = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString
+    def snakeToUpperCamel: String = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString
     def snakeToLowerCamel = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
-    def lowerCamelToSnake = str.split("(?=[A-Z])").mkString("_").toLowerCase
+    def lowerCamelToSnake: String = str.split("(?=[A-Z])").mkString("_").toLowerCase
     def uncapitalize =
       new String(
         (str.toList match {
@@ -21,15 +21,15 @@ object StringUtil {
           case Nil          => Nil
         }).toArray
       )
-    def unquote   = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
-    def trimFront = str.dropWhile(_ == '\n')
-    def notEmpty  = if (str.trim == "") None else Some(str)
-    def inSetNocase(seq: String*) =
+    def unquote: String   = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
+    def trimFront: String = str.dropWhile(_ == '\n')
+    def notEmpty: Option[String]  = if (str.trim == "") None else Some(str)
+    def inSetNocase(seq: String*): Boolean =
       seq.map(_.toLowerCase).toSeq.contains(str.toLowerCase)
   }
 
   implicit class OptionStringExtensions(str: Option[String]) {
-    def existsInSetNocase(seq: String*) =
+    def existsInSetNocase(seq: String*): Boolean =
       str.map(_.toLowerCase).exists(value => seq.map(_.toLowerCase).toSeq.contains(value))
   }
 }

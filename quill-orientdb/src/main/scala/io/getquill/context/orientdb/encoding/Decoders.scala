@@ -11,7 +11,7 @@ trait Decoders extends CollectionDecoders {
   type Decoder[T] = OrientDBDecoder[T]
 
   case class OrientDBDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow, session: Session) =
+    override def apply(index: Index, row: ResultRow, session: Session): T =
       decoder(index, row, session)
   }
 
@@ -23,7 +23,7 @@ trait Decoders extends CollectionDecoders {
   )
 
   def decoder[T](f: ResultRow => Index => T): Decoder[T] =
-    decoder((index, row, session) => f(row)(index))
+    decoder((index, row, _) => f(row)(index))
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     OrientDBDecoder { (index, row, session) =>
@@ -39,26 +39,26 @@ trait Decoders extends CollectionDecoders {
     OrientDBDecoder(mappedBaseDecoder(mapped, decoder.decoder))
 
   implicit val stringDecoder: Decoder[String] =
-    decoder((index, row, session) => row.field[String](row.fieldNames()(index)))
+    decoder((index, row, _) => row.field[String](row.fieldNames()(index)))
   implicit val doubleDecoder: Decoder[Double] =
-    decoder((index, row, session) => row.field[Double](row.fieldNames()(index)))
+    decoder((index, row, _) => row.field[Double](row.fieldNames()(index)))
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
-    decoder((index, row, session) => row.field[java.math.BigDecimal](row.fieldNames()(index)))
+    decoder((index, row, _) => row.field[java.math.BigDecimal](row.fieldNames()(index)))
   implicit val booleanDecoder: Decoder[Boolean] =
-    decoder((index, row, session) => row.field[Boolean](row.fieldNames()(index)))
-  implicit val intDecoder: Decoder[Int] = decoder((index, row, session) => row.field[Int](row.fieldNames()(index)))
+    decoder((index, row, _) => row.field[Boolean](row.fieldNames()(index)))
+  implicit val intDecoder: Decoder[Int] = decoder((index, row, _) => row.field[Int](row.fieldNames()(index)))
   implicit val shortDecoder: Decoder[Short] =
-    decoder((index, row, session) => row.field[Short](row.fieldNames()(index)))
-  implicit val byteDecoder: Decoder[Byte] = decoder((index, row, session) => row.field[Byte](row.fieldNames()(index)))
-  implicit val longDecoder: Decoder[Long] = decoder { (index, row, session) =>
+    decoder((index, row, _) => row.field[Short](row.fieldNames()(index)))
+  implicit val byteDecoder: Decoder[Byte] = decoder((index, row, _) => row.field[Byte](row.fieldNames()(index)))
+  implicit val longDecoder: Decoder[Long] = decoder { (index, row, _) =>
     if (row.fieldValues()(index).isInstanceOf[Int]) {
       row.field[Int](row.fieldNames()(index)).toLong
     } else
       row.field[Long](row.fieldNames()(index))
   }
   implicit val floatDecoder: Decoder[Float] =
-    decoder((index, row, session) => row.field[Float](row.fieldNames()(index)))
+    decoder((index, row, _) => row.field[Float](row.fieldNames()(index)))
   implicit val byteArrayDecoder: Decoder[Array[Byte]] =
-    decoder((index, row, session) => row.field[Array[Byte]](row.fieldNames()(index)))
-  implicit val dateDecoder: Decoder[Date] = decoder((index, row, session) => row.field[Date](row.fieldNames()(index)))
+    decoder((index, row, _) => row.field[Array[Byte]](row.fieldNames()(index)))
+  implicit val dateDecoder: Decoder[Date] = decoder((index, row, _) => row.field[Date](row.fieldNames()(index)))
 }

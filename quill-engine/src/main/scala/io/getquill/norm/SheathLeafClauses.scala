@@ -36,20 +36,20 @@ import io.getquill.util.Messages.TraceType
  * Typically this is a query-ast clause that results in a scalar type. It could
  * be M(ent,e,e.v) or an `sql"stuff".as[Query[Int/String/Boolean/etc...] ]`
  */
-case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
+final case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
     extends StatefulTransformerWithStack[Option[String]] {
 
   val interp = new Interpolator(TraceType.ShealthLeaf, traceConfig, 3)
   import interp._
 
-  def sheathLeaf(ast: Ast) =
+  def sheathLeaf(ast: Ast): (Ast, Option[String]) =
     ast match {
       case LeafQuat(p: Property) => (CaseClass.Single(p.name -> p), Some(p.name))
       case LeafQuat(body)        => (CaseClass.Single("x" -> body), Some("x"))
       case other                 => (other, None)
     }
 
-  def elaborateSheath(ast: Ast)(state: Option[String], e: Ident, newIdent: Ident) =
+  def elaborateSheath(ast: Ast)(state: Option[String], e: Ident, newIdent: Ident): Ast =
     state match {
       case Some(v) =>
         val e1  = newIdent
@@ -63,7 +63,7 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
         ast
     }
 
-  def elaborateGroupSheath(ast: Ast)(state: Option[String], replace: Ident, newIdent: Ident) = {
+  def elaborateGroupSheath(ast: Ast)(state: Option[String], replace: Ident, newIdent: Ident): Ast = {
     val e  = replace
     val e1 = newIdent
     state match {
@@ -80,9 +80,9 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
   }
 
   object NotGroupBy {
-    def unapply(ast: Ast) =
+    def unapply(ast: Ast): Option[Ast] =
       ast match {
-        case p: GroupBy => None
+        case _: GroupBy => None
         case _          => Some(ast)
       }
   }
@@ -100,7 +100,7 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
           case MapClauseType.ConcatMap => ConcatMap(a, b, c)
         }
     }
-    def unapply(ast: Ast) =
+    def unapply(ast: Ast): Option[(Ast, Ident, Ast, Remaker)] =
       ast match {
         case Map(a, b, c)       => Some((a, b, c, new Remaker(MapClauseType.Map)))
         case ConcatMap(a, b, c) => Some((a, b, c, new Remaker(MapClauseType.ConcatMap)))
@@ -121,7 +121,7 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
           case UnionClauseType.UnionAll => UnionAll(a, b)
         }
     }
-    def unapply(ast: Ast) =
+    def unapply(ast: Ast): Option[(Ast, Ast, Remaker)] =
       ast match {
         case Union(a, b)    => Some((a, b, new Remaker(UnionClauseType.Union)))
         case UnionAll(a, b) => Some((a, b, new Remaker(UnionClauseType.UnionAll)))
@@ -221,7 +221,7 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
 
       // This is the entry-point for all groupBy nodes which all must be followed by a .map clause
       // Typically the body of a groupBy.map is an aggregation.
-      case Map(grpBy @ GroupBy(LeafQuat(query), eg, LeafQuat(by)), e, LeafQuat(body)) =>
+      case Map(GroupBy(LeafQuat(query), eg, LeafQuat(by)), e, LeafQuat(body)) =>
         val innerState = query match {
           // If it's an infix inside e.g. Map(Grp(i:Infix),e,by) the higher-level apply should have changed it appropriately
           // by adding an extra Map step inside which has a CaseClass that holds a new attribute that we will pass around
@@ -372,5 +372,5 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
 }
 
 private[getquill] class SheathLeafClausesApply(traceConfig: TraceConfig) {
-  def apply(q: Ast) = new SheathLeafClauses(None, traceConfig).apply(q)(History.Root)._1
+  def apply(q: Ast): Ast = new SheathLeafClauses(None, traceConfig).apply(q)(History.Root)._1
 }

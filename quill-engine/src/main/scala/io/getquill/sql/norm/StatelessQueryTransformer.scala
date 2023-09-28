@@ -16,7 +16,7 @@ import io.getquill.quat.Quat
 
 sealed trait QueryLevel {
   def isTop: Boolean
-  def withoutTopQuat =
+  def withoutTopQuat: QueryLevel =
     this match {
       case QueryLevel.Top(_)       => QueryLevel.TopUnwrapped
       case QueryLevel.TopUnwrapped => QueryLevel.TopUnwrapped
@@ -26,7 +26,7 @@ sealed trait QueryLevel {
 object QueryLevel {
 
   /** Top-level externally-facing query */
-  case class Top(topLevelQuat: Quat) extends QueryLevel { val isTop = true }
+  final case class Top(topLevelQuat: Quat) extends QueryLevel { val isTop = true }
 
   /**
    * Top-level query that is not externally facing e.g. it's an unwrapped case

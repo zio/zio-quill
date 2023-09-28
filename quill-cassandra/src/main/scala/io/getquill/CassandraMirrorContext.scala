@@ -1,6 +1,5 @@
 package io.getquill
 
-import java.util.Date
 import io.getquill.context.cassandra.encoding.{CassandraMapper, CassandraType}
 import io.getquill.context.cassandra.{CassandraContext, CqlIdiom}
 

@@ -5,7 +5,7 @@ import io.getquill.ast._
 
 object ExpandMappedInfixCassandra extends StatelessTransformer {
 
-  override def apply(q: Ast) =
+  override def apply(q: Ast): Ast =
     q match {
       case Map(q: Infix, x, p) if (x == p) =>
         q
@@ -15,10 +15,10 @@ object ExpandMappedInfixCassandra extends StatelessTransformer {
         } match {
           case List((q, i)) =>
             Infix(parts, params.updated(i, Map(q, x, p)), pure, tr, quat)
-          case other =>
+          case _ =>
             super.apply(q)
         }
-      case other =>
+      case _ =>
         super.apply(q)
     }
 }

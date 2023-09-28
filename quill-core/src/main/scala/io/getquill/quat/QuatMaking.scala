@@ -94,7 +94,7 @@ object RuntimeEntityQuat {
 
   object CaseClass {
     // Common methods to exclude from object fields
-    val exclude = classOf[Product].getMethods.map(_.getName).toSet ++ classOf[Object].getMethods.map(_.getName).toSet
+    val exclude: Set[String] = classOf[Product].getMethods.map(_.getName).toSet ++ classOf[Object].getMethods.map(_.getName).toSet
 
     def unapply(cls: Class[_]): Option[List[Method]] =
       if (cls.getInterfaces.contains(classOf[Product])) {
@@ -266,13 +266,13 @@ trait QuatMakingBase extends MacroUtilUniverse {
 
     def parseTopLevelType(tpe: Type): Quat =
       tpe match {
-        case BooleanType(tpe) =>
+        case BooleanType(_) =>
           Quat.BooleanValue
 
-        case OptionType(BooleanType(innerParam)) =>
+        case OptionType(BooleanType(_)) =>
           Quat.BooleanValue
 
-        case DefiniteValue(tpe) =>
+        case DefiniteValue(_) =>
           Quat.Value
 
         // If it is a query type, recurse into it
@@ -287,14 +287,14 @@ trait QuatMakingBase extends MacroUtilUniverse {
         // def is80Prof[T <: Spirit] = quote { (spirit: Query[Spirit]) => spirit.filter(_.grade == 80) }
         // run(is80Proof(query[Gin]))
         // When processing is80Prof, we assume that Spirit is actually a base class to be extended
-        case Param(Signature(RealTypeBounds(lower, Deoption(upper))))
+        case Param(Signature(RealTypeBounds(_, Deoption(upper))))
             if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
           parseType(upper, true) match {
             case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
             case other           => other
           }
 
-        case Param(RealTypeBounds(lower, Deoption(upper))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
+        case Param(RealTypeBounds(_, Deoption(upper))) if (!upper.typeSymbol.isFinal && !existsEncoderFor(tpe)) =>
           parseType(upper, true) match {
             case p: Quat.Product => p.copy(tpe = Quat.Product.Type.Abstract)
             case other           => other
@@ -311,13 +311,13 @@ trait QuatMakingBase extends MacroUtilUniverse {
      */
     def parseType(tpe: Type, boundedInterfaceType: Boolean = false): Quat =
       tpe match {
-        case BooleanType(tpe) =>
+        case BooleanType(_) =>
           Quat.BooleanValue
 
         case OptionType(BooleanType(_)) =>
           Quat.BooleanValue
 
-        case DefiniteValue(tpe) =>
+        case DefiniteValue(_) =>
           Quat.Value
 
         // This will happens for val-parsing situations e.g. where you have val (a,b) = (Query[A],Query[B]) inside a quoted block.
@@ -348,7 +348,7 @@ trait QuatMakingBase extends MacroUtilUniverse {
           )
 
         // Is it a generic or does it have any generic parameters that have not been filled (e.g. is T not filled in Option[T] ?)
-        case Param(tpe) =>
+        case Param(_) =>
           Quat.Generic
 
         // Otherwise it's a terminal value
@@ -374,13 +374,13 @@ trait QuatMakingBase extends MacroUtilUniverse {
     case other => other
   }
 
-  def isNone(tpe: Type) = {
+  def isNone(tpe: Type): Boolean = {
     val era = tpe.erasure
     era =:= typeOf[None.type]
   }
 
   // Note. Used in other places beside here where None needs to be included in option type.
-  def isOptionType(tpe: Type) = {
+  def isOptionType(tpe: Type): Boolean = {
     val era = tpe.erasure
     era =:= typeOf[Option[Any]] || era =:= typeOf[Some[Any]] || era =:= typeOf[None.type]
   }

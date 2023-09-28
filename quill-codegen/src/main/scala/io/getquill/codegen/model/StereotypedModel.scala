@@ -8,18 +8,18 @@ import scala.reflect.ClassTag
  * with a given name or, if it has been combined with all other identically
  * named tables (in the same schema) that we wish to combine it with.
  */
-case class TableStereotype[TableMeta, ColumnMeta](
+final case class TableStereotype[TableMeta, ColumnMeta](
   table: TableFusion[TableMeta],
   columns: Seq[ColumnFusion[ColumnMeta]]
 )
 
-case class TableFusion[TableMeta](
+final case class TableFusion[TableMeta](
   namespace: String,
   name: String,
   meta: Seq[TableMeta]
 )
 
-case class ColumnFusion[ColumnMeta](
+final case class ColumnFusion[ColumnMeta](
   name: String,
   dataType: ClassTag[_],
   nullable: Boolean,

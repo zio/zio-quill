@@ -5,13 +5,13 @@ import io.getquill.codegen.util.ScalaLangUtil.escape
 trait ByName {
   def prefix: String
   def namespaceMaker: PackageNamingStrategy.NamespaceMaker
-  def byName(table: TableStereotype[_, _]) = namespaceMaker(table)
+  def byName(table: TableStereotype[_, _]): String = namespaceMaker(table)
 }
 
 sealed trait CodeWrapper
-case class PackageHeader(packageName: String) extends CodeWrapper
-case class PackageObject(packageName: String) extends CodeWrapper
-case class SimpleObject(packageName: String)  extends CodeWrapper
+final case class PackageHeader(packageName: String) extends CodeWrapper
+final case class PackageObject(packageName: String) extends CodeWrapper
+final case class SimpleObject(packageName: String)  extends CodeWrapper
 case object NoWrapper                         extends CodeWrapper
 
 sealed trait FileNamingStrategy
@@ -37,7 +37,7 @@ case object ByPackageObjectStandardName extends FileNamingStrategy
 case object ByPackageName extends FileNamingStrategy
 case object ByDefaultName extends FileNamingStrategy
 
-case class BySomeTableData[Gen](val namer: Gen => java.nio.file.Path)(implicit
+final case class BySomeTableData[Gen](val namer: Gen => java.nio.file.Path)(implicit
   val tt: scala.reflect.runtime.universe.TypeTag[Gen]
 ) extends FileNamingStrategy
 
@@ -50,5 +50,5 @@ trait CaseClassNaming[TableMeta, ColumnMeta] {
 trait FieldNaming[ColumnMeta] {
   def column: ColumnFusion[ColumnMeta]
   def rawFieldName: String = column.name
-  def fieldName            = escape(rawFieldName)
+  def fieldName: String            = escape(rawFieldName)
 }

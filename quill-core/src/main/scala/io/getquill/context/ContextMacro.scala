@@ -140,7 +140,7 @@ trait ContextMacro extends Quotation {
     (idiom, n)
   }
 
-  def idiomAndNamingDynamic =
+  def idiomAndNamingDynamic: Tree =
     q"(${c.prefix}.idiom, ${c.prefix}.naming)"
 
   private def idiomAndNamingStatic = {

@@ -4,7 +4,7 @@ import io.getquill.context.cassandra.CassandraRowContext
 
 import java.nio.ByteBuffer
 import java.time.{Instant, LocalDate, LocalTime}
-import java.util.{Date, UUID}
+import java.util.UUID
 
 trait Encoders extends CollectionEncoders {
   this: CassandraRowContext[_] =>
@@ -12,7 +12,7 @@ trait Encoders extends CollectionEncoders {
   type Encoder[T] = CassandraEncoder[T]
 
   case class CassandraEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session): PrepareRow =
       encoder(index, value, row, session)
   }
 

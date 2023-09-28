@@ -18,9 +18,9 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
 import io.getquill.ast.ConcatMap
 
-case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
+final case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
 
-  override def apply(ast: Ast) =
+  override def apply(ast: Ast): Ast =
     ast match {
       case q: Query if (isGroupByAggregation(q)) =>
         q match {
@@ -42,7 +42,7 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
             Aggregation(op, BetaReduction(body, ident -> agg))
           case Map(`agg`, ident, body) =>
             BetaReduction(body, ident -> agg)
-          case q @ Aggregation(op, `agg`) =>
+          case q @ Aggregation(_, `agg`) =>
             q
           case other =>
             fail(s"Invalid group by aggregation: '$other'")
@@ -53,19 +53,19 @@ case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
 
   private[this] def isGroupByAggregation(ast: Ast): Boolean =
     ast match {
-      case Aggregation(a, b)         => isGroupByAggregation(b)
-      case Map(a, b, c)              => isGroupByAggregation(a)
-      case FlatMap(a, b, c)          => isGroupByAggregation(a)
-      case ConcatMap(a, b, c)        => isGroupByAggregation(a)
-      case Filter(a, b, c)           => isGroupByAggregation(a)
-      case SortBy(a, b, c, d)        => isGroupByAggregation(a)
-      case Take(a, b)                => isGroupByAggregation(a)
-      case Drop(a, b)                => isGroupByAggregation(a)
+      case Aggregation(_, b)         => isGroupByAggregation(b)
+      case Map(a, _, _)              => isGroupByAggregation(a)
+      case FlatMap(a, _, _)          => isGroupByAggregation(a)
+      case ConcatMap(a, _, _)        => isGroupByAggregation(a)
+      case Filter(a, _, _)           => isGroupByAggregation(a)
+      case SortBy(a, _, _, _)        => isGroupByAggregation(a)
+      case Take(a, _)                => isGroupByAggregation(a)
+      case Drop(a, _)                => isGroupByAggregation(a)
       case Union(a, b)               => isGroupByAggregation(a) || isGroupByAggregation(b)
       case UnionAll(a, b)            => isGroupByAggregation(a) || isGroupByAggregation(b)
-      case Join(t, a, b, ta, tb, on) => isGroupByAggregation(a) || isGroupByAggregation(b)
+      case Join(_, a, b, _, _, _) => isGroupByAggregation(a) || isGroupByAggregation(b)
       case `agg`                     => true
-      case other                     => false
+      case _                     => false
     }
 
 }

@@ -71,7 +71,7 @@ class NormalizeReturning(normalize: Normalize) {
   object NestedProperty {
     def unapply(ast: Property): Option[Ast] =
       ast match {
-        case p @ Property(subAst, _) => Some(innerMost(subAst))
+        case Property(subAst, _) => Some(innerMost(subAst))
         case _                       => None
       }
 
@@ -101,8 +101,8 @@ class NormalizeReturning(normalize: Normalize) {
         val matchedProps =
           CollectAst(body) {
             // case prop @ NestedProperty(`returningIdent`) => prop
-            case prop @ NestedProperty(Ident(name, quat)) if (name == returningIdent.name)         => prop
-            case prop @ NestedProperty(ExternalIdent(name, quat)) if (name == returningIdent.name) => prop
+            case prop @ NestedProperty(Ident(name, _)) if (name == returningIdent.name)         => prop
+            case prop @ NestedProperty(ExternalIdent(name, _)) if (name == returningIdent.name) => prop
           }
 
         if (matchedProps.exists(matchedProp => isSameProperties(p1, matchedProp)))

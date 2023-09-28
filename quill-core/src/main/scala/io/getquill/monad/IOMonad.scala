@@ -78,7 +78,7 @@ trait IOMonad {
         IO.fromTry(f(r))
       }
 
-    def lowerFromTry[U](implicit ev: T => Try[U]) =
+    def lowerFromTry[U](implicit ev: T => Try[U]): IO[U,E] =
       transform(_.flatMap(ev))
 
     def liftToTry: IO[Try[T], E] =

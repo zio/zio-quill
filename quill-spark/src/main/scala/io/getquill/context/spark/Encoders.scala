@@ -9,7 +9,7 @@ trait Encoders {
   type PrepareRow = List[Binding]
 
   def encoder[T](f: T => String): Encoder[T] =
-    (index: Index, value: T, row: PrepareRow, session: Session) => row :+ ValueBinding(f(value))
+    (_: Index, value: T, row: PrepareRow, _: Session) => row :+ ValueBinding(f(value))
 
   private def toStringEncoder[T]: Encoder[T] = encoder((v: T) => s"$v")
 

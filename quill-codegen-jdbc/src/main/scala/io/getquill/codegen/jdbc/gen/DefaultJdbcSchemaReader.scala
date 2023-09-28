@@ -17,7 +17,7 @@ class DefaultJdbcSchemaReader(
 ) extends JdbcSchemaReader {
 
   @tailrec
-  private def resultSetExtractor[T](rs: ResultSet, extractor: (ResultSet) => T, acc: List[T] = List()): List[T] =
+  private def resultSetExtractor[T](rs: ResultSet, extractor: (ResultSet) => T, acc: List[T] = List.empty): List[T] =
     if (!rs.next())
       acc.reverse
     else
@@ -29,7 +29,7 @@ class DefaultJdbcSchemaReader(
       case _      => null
     }
 
-  def jdbcEntityFilter(ts: JdbcTableMeta) =
+  def jdbcEntityFilter(ts: JdbcTableMeta): Boolean =
     ts.tableType.existsInSetNocase("table", "view", "user table", "user view", "base table")
 
   private[getquill] def extractTables(connectionMaker: () => Connection): List[JdbcTableMeta] = {

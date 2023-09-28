@@ -57,7 +57,7 @@ import scala.collection.immutable.Set
  * called once from the top-level inside `SqlNormalize` at the very end of the
  * transformation pipeline.
  */
-private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: Boolean, traceConfig: TraceConfig)
+final private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: Boolean, traceConfig: TraceConfig)
     extends StatefulTransformer[Set[IdentName]] {
 
   val interp = new Interpolator(TraceType.AvoidAliasConflict, traceConfig, 3)
@@ -284,7 +284,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
    */
   private def applyFunction(f: Function): Function = {
     val (newBody, _, newParams) =
-      f.params.foldLeft((f.body, state, List[Ident]())) {
+      f.params.foldLeft((f.body, state, List.empty[Ident])) {
         case ((body, state, newParams), param) => {
           val fresh    = freshIdent(param)
           val pr       = BetaReduction(body, param -> fresh)
@@ -305,7 +305,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
 
 private[getquill] class AvoidAliasConflictApply(traceConfig: TraceConfig) {
   def apply(q: Query, detemp: Boolean = false): Query =
-    AvoidAliasConflict(Set[IdentName](), detemp, traceConfig)(q) match {
+    AvoidAliasConflict(Set.empty[IdentName], detemp, traceConfig)(q) match {
       case (q, _) => q
     }
 }
@@ -313,12 +313,12 @@ private[getquill] class AvoidAliasConflictApply(traceConfig: TraceConfig) {
 private[getquill] object AvoidAliasConflict {
 
   def Ast(q: Ast, detemp: Boolean = false, traceConfig: TraceConfig): Ast =
-    new AvoidAliasConflict(Set[IdentName](), detemp, traceConfig)(q) match {
+    new AvoidAliasConflict(Set.empty[IdentName], detemp, traceConfig)(q) match {
       case (q, _) => q
     }
 
   def apply(q: Query, detemp: Boolean = false, traceConfig: TraceConfig): Query =
-    AvoidAliasConflict(Set[IdentName](), detemp, traceConfig)(q) match {
+    AvoidAliasConflict(Set.empty[IdentName], detemp, traceConfig)(q) match {
       case (q, _) => q
     }
 

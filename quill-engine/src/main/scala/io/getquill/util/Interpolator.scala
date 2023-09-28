@@ -10,9 +10,9 @@ import io.getquill.util.IndentUtil._
 import scala.collection.mutable
 import scala.util.matching.Regex
 
-case class TraceConfig(enabledTraces: List[TraceType])
+final case class TraceConfig(enabledTraces: List[TraceType])
 object TraceConfig {
-  val Empty = new TraceConfig(List())
+  val Empty = new TraceConfig(List.empty)
 }
 
 class Interpolator(
@@ -28,7 +28,7 @@ class Interpolator(
     def trace(elements: Any*) = new Traceable(sc, elements)
   }
 
-  def tracesEnabled(traceType: TraceType) =
+  def tracesEnabled(traceType: TraceType): Boolean =
     traceConfig.enabledTraces.contains(traceType) || globalTracesEnabled(traceType)
 
   class Traceable(sc: StringContext, elementsSeq: Seq[Any]) {
@@ -115,7 +115,7 @@ class Interpolator(
       (sb.toList, indent)
     }
 
-    def generateString() = {
+    def generateString(): (String, Int) = {
       val (elementsRaw, indent) = readBuffers()
 
       val elements = elementsRaw.filter {
@@ -154,12 +154,12 @@ class Interpolator(
     def andLog(): Unit =
       logIfEnabled().foreach(value => out.println(value._1))
 
-    def andContinue[T](command: => T) = {
+    def andContinue[T](command: => T): T = {
       logIfEnabled().foreach(value => out.println(value._1))
       command
     }
 
-    def andReturn[T](command: => T) =
+    def andReturn[T](command: => T): T =
       logIfEnabled() match {
         case Some((output, indent)) =>
           // do the initial log
@@ -173,7 +173,7 @@ class Interpolator(
           command
       }
 
-    def andReturnIf[T](command: => T)(showIf: T => Boolean) =
+    def andReturnIf[T](command: => T)(showIf: T => Boolean): T =
       logIfEnabled() match {
         case Some((output, indent)) =>
           // Even though we usually want to evaluate the command after the initial log was done

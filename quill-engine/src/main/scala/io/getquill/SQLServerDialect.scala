@@ -25,11 +25,11 @@ trait SQLServerDialect
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
-  override def querifyAst(ast: Ast, idiomContext: TraceConfig) = AddDropToNestedOrderBy(
+  override def querifyAst(ast: Ast, idiomContext: TraceConfig): SqlQuery = AddDropToNestedOrderBy(
     new SqlQueryApply(idiomContext)(ast)
   )
 
-  override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
+  override def emptySetContainsToken(field: Token): StringToken = StringToken("1 <> 1")
 
   override def prepareForProbing(string: String) = string
 
@@ -39,7 +39,7 @@ trait SQLServerDialect
 
   override protected def limitOffsetToken(
     query: Statement
-  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (Some(limit), None)         => stmt"TOP (${limit.token}) $query"
       case (Some(limit), Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS FETCH FIRST ${limit.token} ROWS ONLY"
@@ -75,9 +75,9 @@ trait SQLServerDialect
     Tokenizer[ast.Action] {
       // Update(Filter(...)) and Delete(Filter(...)) usually cause a table alias i.e. `UPDATE People <alias> SET ... WHERE ...` or `DELETE FROM People <alias> WHERE ...`
       // since the alias is used in the WHERE clause. This functionality removes that because SQLServer doesn't support aliasing in actions.
-      case Update(Filter(table: Entity, x, where), assignments) =>
+      case Update(Filter(table: Entity, _, where), assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
-      case Delete(Filter(table: Entity, x, where)) =>
+      case Delete(Filter(table: Entity, _, where)) =>
         stmt"DELETE FROM ${table.token} WHERE ${where.token}"
       case other => super.actionTokenizer(insertEntityTokenizer).token(other)
     }

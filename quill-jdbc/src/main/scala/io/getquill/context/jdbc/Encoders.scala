@@ -1,7 +1,6 @@
 package io.getquill.context.jdbc
 
-import java.sql.{Date, Timestamp, Types}
-import java.time.temporal.TemporalField
+import java.sql.{Timestamp, Types}
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, OffsetTime, ZoneOffset, ZonedDateTime}
 import java.util.Calendar
 import java.{sql, util}
@@ -12,14 +11,14 @@ trait Encoders {
   type Encoder[T] = JdbcEncoder[T]
 
   case class JdbcEncoder[T](sqlType: Int, encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session): PrepareRow =
       encoder(index + 1, value, row, session)
   }
 
   def encoder[T](sqlType: Int, f: (Index, T, PrepareRow) => Unit): Encoder[T] =
     JdbcEncoder(
       sqlType,
-      (index: Index, value: T, row: PrepareRow, session: Session) => {
+      (index: Index, value: T, row: PrepareRow, _: Session) => {
         f(index, value, row)
         row
       }

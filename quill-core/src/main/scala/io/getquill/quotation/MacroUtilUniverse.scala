@@ -18,32 +18,32 @@ trait MacroUtilUniverse {
   import u.{Block => _, Constant => _, Function => _, Ident => _, If => _, _}
 
   object QuotedType {
-    def unapply(tpe: Type) =
+    def unapply(tpe: Type): Option[Type] =
       paramOf(tpe, typeOf[Quoted[Any]])
   }
 
   object QueryType {
-    def unapply(tpe: Type) =
+    def unapply(tpe: Type): Option[Type] =
       paramOf(tpe, typeOf[io.getquill.Query[Any]])
   }
 
   object BatchType {
-    def unapply(tpe: Type) =
+    def unapply(tpe: Type): Option[Type] =
       paramOf(tpe, typeOf[io.getquill.BatchAction[_]])
   }
 
   // Note: These will not match if they are not existential
   object ActionType {
     object Insert {
-      def unapply(tpe: Type) =
+      def unapply(tpe: Type): Option[Type] =
         paramOf(tpe, typeOf[io.getquill.Insert[_]])
     }
     object Update {
-      def unapply(tpe: Type) =
+      def unapply(tpe: Type): Option[Type] =
         paramOf(tpe, typeOf[io.getquill.Update[_]])
     }
     object Delete {
-      def unapply(tpe: Type) =
+      def unapply(tpe: Type): Option[Type] =
         paramOf(tpe, typeOf[io.getquill.Delete[_]])
     }
   }
@@ -51,7 +51,7 @@ trait MacroUtilUniverse {
   object TypeSigParam {
     def unapply(tpe: Type): Option[Type] =
       tpe.typeSymbol.typeSignature.typeParams match {
-        case head :: tail => Some(head.typeSignature)
+        case head :: _ => Some(head.typeSignature)
         case Nil          => None
       }
   }
@@ -61,10 +61,10 @@ trait MacroUtilUniverse {
     tpe match {
       case QuotedType(tpe)        => parseQueryType(tpe)
       case BatchType(tpe)         => parseQueryType(tpe)
-      case QueryType(tpe)         => Some(IdiomContext.QueryType.Select)
-      case ActionType.Insert(tpe) => Some(IdiomContext.QueryType.Insert)
-      case ActionType.Update(tpe) => Some(IdiomContext.QueryType.Update)
-      case ActionType.Delete(tpe) => Some(IdiomContext.QueryType.Delete)
+      case QueryType(_)         => Some(IdiomContext.QueryType.Select)
+      case ActionType.Insert(_) => Some(IdiomContext.QueryType.Insert)
+      case ActionType.Update(_) => Some(IdiomContext.QueryType.Update)
+      case ActionType.Delete(_) => Some(IdiomContext.QueryType.Delete)
       case _                      => None
     }
   }
@@ -80,7 +80,7 @@ trait MacroUtilUniverse {
       case _ if (tpe =:= typeOf[Nothing] || tpe =:= typeOf[Any]) =>
         // println(s"### ${tpe} is Nothing or Any")
         None
-      case TypeRef(_, cls, List(arg)) =>
+      case TypeRef(_, _, List(arg)) =>
         // println(s"### ${tpe} is a TypeRef whose arg is ${arg}")
         Some(arg)
       case TypeSigParam(param) =>

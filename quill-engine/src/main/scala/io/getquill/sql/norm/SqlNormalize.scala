@@ -6,7 +6,6 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.capture.{AvoidAliasConflict, DemarcateExternalAliases}
 import io.getquill.util.Messages.{TraceType, title}
-import io.getquill.util.TraceConfig
 
 object SqlNormalize {
   def apply(
@@ -72,5 +71,5 @@ class SqlNormalize(
       }
       .andThen(demarcate("Normalize"))
 
-  def apply(ast: Ast) = normalize(ast)
+  def apply(ast: Ast): Ast = normalize(ast)
 }

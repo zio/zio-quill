@@ -2,7 +2,6 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import io.getquill.ast._
-import io.getquill.Embedded
 import io.getquill.context._
 import io.getquill.norm.{BetaReduction, TypeBehavior}
 import io.getquill.util.MacroContextExt.RichContext
@@ -31,7 +30,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 
-    def apply(tree: Tree) =
+    def apply(tree: Tree): T =
       unapply(tree).getOrElse {
         lazy val errorDetail =
           if (Messages.errorDetail)
@@ -44,15 +43,15 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
     def unapply(tree: Tree): Option[T] =
       tree match {
-        case q"$source.withFilter(($alias) => $body)" if (alias.name.toString.contains("ifrefutable")) =>
+        case q"$source.withFilter(($alias) => $_)" if (alias.name.toString.contains("ifrefutable")) =>
           unapply(source)
-        case other =>
+        case _ =>
           p.lift(tree)
       }
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
-    case q"$i: $typ"                         => astParser(i)
+    case q"$i: $_"                         => astParser(i)
     case `queryParser`(value)                => value
     case `liftParser`(value)                 => value
     case `valParser`(value)                  => value
@@ -81,13 +80,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"{..$exprs}" if exprs.size > 1 => Block(exprs.map(astParser(_)))
   }
 
-  val valParser: Parser[Val] = Parser[Val] { case q"val $name: $typ = $body" =>
+  val valParser: Parser[Val] = Parser[Val] { case q"val $name: $_ = $body" =>
     // for some reason inferQuat(typ.tpe) causes a compile hang in scala.reflect.internal
     val bodyAst = astParser(body)
     Val(ident(name, bodyAst.quat), bodyAst)
   }
 
-  val patMatchValParser: Parser[Val] = Parser[Val] { case q"$mods val $name: $typ = ${patMatchParser(value)}" =>
+  val patMatchValParser: Parser[Val] = Parser[Val] { case q"$_ val $name: $typ = ${patMatchParser(value)}" =>
     Val(ident(name, inferQuat(q"$typ".tpe)), value)
   }
 
@@ -103,7 +102,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       path.foldLeft(tuple) { case (t, i) =>
         Property(t, s"_${i + 1}")
       }
-    def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] =
+    def reductions(ast: Ast, path: List[Int] = List.empty): List[(Ident, Ast)] =
       ast match {
         case ident: Ident => List(ident -> property(path))
         case Tuple(elems) =>
@@ -130,83 +129,83 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
   val liftParser: Parser[Lift] = Parser[Lift] {
 
-    case q"$pack.liftScalar[$t]($value)($encoder)" =>
+    case q"$_.liftScalar[$t]($value)($encoder)" =>
       ScalarValueLift(value.toString, External.Source.Parser, value, encoder, inferQuat(q"$t".tpe))
-    case q"$pack.liftCaseClass[$t]($value)" =>
+    case q"$_.liftCaseClass[$t]($value)" =>
       CaseClassValueLift(value.toString, value.toString, value, inferQuat(q"$t".tpe))
 
-    case q"$pack.liftQueryScalar[$u, $t]($value)($encoder)" =>
+    case q"$_.liftQueryScalar[$_, $t]($value)($encoder)" =>
       ScalarQueryLift(value.toString, value, encoder, inferQuat(q"$t".tpe))
-    case q"$pack.liftQueryCaseClass[$u, $t]($value)" => CaseClassQueryLift(value.toString, value, inferQuat(q"$t".tpe))
+    case q"$_.liftQueryCaseClass[$_, $t]($value)" => CaseClassQueryLift(value.toString, value, inferQuat(q"$t".tpe))
 
     // Unused, it's here only to make eclipse's presentation compiler happy :(
-    case q"$pack.lift[$t]($value)" =>
+    case q"$_.lift[$t]($value)" =>
       ScalarValueLift(value.toString, External.Source.Parser, value, q"null", inferQuat(q"$t".tpe))
-    case q"$pack.liftQuery[$t, $u]($value)" => ScalarQueryLift(value.toString, value, q"null", inferQuat(q"$t".tpe))
+    case q"$_.liftQuery[$t, $_]($value)" => ScalarQueryLift(value.toString, value, q"null", inferQuat(q"$t".tpe))
   }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
-    case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
+    case q"$_.unquote[$_]($quoted)" => astParser(quoted)
     case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
       unquote[Ast](t) match {
         case Some(ast) if (!IsDynamic(ast)) =>
           t match {
-            case t: c.universe.Block => ast // expand quote(quote(body)) locally
+            case _: c.universe.Block => ast // expand quote(quote(body)) locally
             case t =>
               Rebind(c)(t, ast, astParser(_)) match {
                 case Some(ast) => ast
                 case None      => QuotedReference(t, ast)
               }
           }
-        case other => Dynamic(t)
+        case _ => Dynamic(t)
       }
   }
 
   val boxingParser: Parser[Ast] = Parser[Ast] {
     // BigDecimal
-    case q"$pack.int2bigDecimal(${astParser(v)})"            => v
-    case q"$pack.long2bigDecimal(${astParser(v)})"           => v
-    case q"$pack.double2bigDecimal(${astParser(v)})"         => v
-    case q"$pack.javaBigDecimal2bigDecimal(${astParser(v)})" => v
+    case q"$_.int2bigDecimal(${astParser(v)})"            => v
+    case q"$_.long2bigDecimal(${astParser(v)})"           => v
+    case q"$_.double2bigDecimal(${astParser(v)})"         => v
+    case q"$_.javaBigDecimal2bigDecimal(${astParser(v)})" => v
 
     // Predef autoboxing
-    case q"$pack.byte2Byte(${astParser(v)})"       => v
-    case q"$pack.short2Short(${astParser(v)})"     => v
-    case q"$pack.char2Character(${astParser(v)})"  => v
-    case q"$pack.int2Integer(${astParser(v)})"     => v
-    case q"$pack.long2Long(${astParser(v)})"       => v
-    case q"$pack.float2Float(${astParser(v)})"     => v
-    case q"$pack.double2Double(${astParser(v)})"   => v
-    case q"$pack.boolean2Boolean(${astParser(v)})" => v
-    case q"$pack.augmentString(${astParser(v)})"   => v
-    case q"$pack.unaugmentString(${astParser(v)})" => v
+    case q"$_.byte2Byte(${astParser(v)})"       => v
+    case q"$_.short2Short(${astParser(v)})"     => v
+    case q"$_.char2Character(${astParser(v)})"  => v
+    case q"$_.int2Integer(${astParser(v)})"     => v
+    case q"$_.long2Long(${astParser(v)})"       => v
+    case q"$_.float2Float(${astParser(v)})"     => v
+    case q"$_.double2Double(${astParser(v)})"   => v
+    case q"$_.boolean2Boolean(${astParser(v)})" => v
+    case q"$_.augmentString(${astParser(v)})"   => v
+    case q"$_.unaugmentString(${astParser(v)})" => v
 
-    case q"$pack.Byte2byte(${astParser(v)})"       => v
-    case q"$pack.Short2short(${astParser(v)})"     => v
-    case q"$pack.Character2char(${astParser(v)})"  => v
-    case q"$pack.Integer2int(${astParser(v)})"     => v
-    case q"$pack.Long2long(${astParser(v)})"       => v
-    case q"$pack.Float2float(${astParser(v)})"     => v
-    case q"$pack.Double2double(${astParser(v)})"   => v
-    case q"$pack.Boolean2boolean(${astParser(v)})" => v
+    case q"$_.Byte2byte(${astParser(v)})"       => v
+    case q"$_.Short2short(${astParser(v)})"     => v
+    case q"$_.Character2char(${astParser(v)})"  => v
+    case q"$_.Integer2int(${astParser(v)})"     => v
+    case q"$_.Long2long(${astParser(v)})"       => v
+    case q"$_.Float2float(${astParser(v)})"     => v
+    case q"$_.Double2double(${astParser(v)})"   => v
+    case q"$_.Boolean2boolean(${astParser(v)})" => v
   }
 
   val queryParser: Parser[Ast] = Parser[Ast] {
 
-    case q"$pack.query[$t]" =>
+    case q"$_.query[$t]" =>
       // Unused, it's here only to make eclipse's presentation compiler happy
       val quat = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity("unused", Nil, quat)
 
-    case q"$pack.querySchema[$t](${name: String}, ..$properties)" =>
-      val ttpe     = q"$t".tpe
-      val inferred = inferQuat(q"$t".tpe)
+    case q"$_.querySchema[$t](${name: String}, ..$properties)" =>
+      q"$t".tpe
+      inferQuat(q"$t".tpe)
       val quat     = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity.Opinionated(name, properties.map(propertyAliasParser(_)), quat, Fixed)
 
-    case q"$pack.impliedQuerySchema[$t](${name: String}, ..$properties)" =>
+    case q"$_.impliedQuerySchema[$t](${name: String}, ..$properties)" =>
       val quat = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity(name, properties.map(propertyAliasParser(_)), quat)
@@ -217,40 +216,40 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$source.withFilter(($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       Filter(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.map[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.map[$_](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       Map(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.flatMap[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.flatMap[$_](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       FlatMap(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.concatMap[$t, $u](($alias) => $body)($ev)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.concatMap[$_, $_](($alias) => $body)($_)" if (is[DslQuery[Any]](source)) =>
       ConcatMap(astParser(source), identParser(alias), astParser(body))
 
-    case q"$source.sortBy[$t](($alias) => $body)($ord)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.sortBy[$_](($alias) => $body)($ord)" if (is[DslQuery[Any]](source)) =>
       SortBy(astParser(source), identParser(alias), astParser(body), astParser(ord))
 
-    case q"$source.groupBy[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.groupBy[$_](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
-    case q"$source.groupByMap[$t, $t1](($byAlias) => $byBody)(($mapAlias) => $mapBody)"
+    case q"$source.groupByMap[$_, $_](($byAlias) => $byBody)(($mapAlias) => $mapBody)"
         if (is[DslQuery[Any]](source)) =>
       GroupByMap(astParser(source), identParser(byAlias), astParser(byBody), identParser(mapAlias), astParser(mapBody))
 
-    case q"$pack.min[$t]($a)" =>
+    case q"$_.min[$_]($a)" =>
       Aggregation(AggregationOperator.`min`, astParser(a))
-    case q"$pack.max[$t]($a)" =>
+    case q"$_.max[$_]($a)" =>
       Aggregation(AggregationOperator.`max`, astParser(a))
-    case q"$pack.count[$t]($a)" =>
+    case q"$_.count[$_]($a)" =>
       Aggregation(AggregationOperator.`size`, astParser(a))
-    case q"$pack.avg[$t]($a)($imp)" =>
+    case q"$_.avg[$_]($a)($_)" =>
       Aggregation(AggregationOperator.`avg`, astParser(a))
-    case q"$pack.sum[$t]($a)($imp)" =>
+    case q"$_.sum[$_]($a)($_)" =>
       Aggregation(AggregationOperator.`sum`, astParser(a))
 
-    case q"$a.value[$t]" if (is[DslQuery[Any]](a))   => astParser(a)
-    case q"$a.min[$t]" if (is[DslQuery[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
-    case q"$a.max[$t]" if (is[DslQuery[Any]](a))     => Aggregation(AggregationOperator.`max`, astParser(a))
-    case q"$a.avg[$t]($n)" if (is[DslQuery[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
-    case q"$a.sum[$t]($n)" if (is[DslQuery[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
+    case q"$a.value[$_]" if (is[DslQuery[Any]](a))   => astParser(a)
+    case q"$a.min[$_]" if (is[DslQuery[Any]](a))     => Aggregation(AggregationOperator.`min`, astParser(a))
+    case q"$a.max[$_]" if (is[DslQuery[Any]](a))     => Aggregation(AggregationOperator.`max`, astParser(a))
+    case q"$a.avg[$_]($_)" if (is[DslQuery[Any]](a)) => Aggregation(AggregationOperator.`avg`, astParser(a))
+    case q"$a.sum[$_]($_)" if (is[DslQuery[Any]](a)) => Aggregation(AggregationOperator.`sum`, astParser(a))
     case q"$a.size" if (is[DslQuery[Any]](a))        => Aggregation(AggregationOperator.`size`, astParser(a))
 
     case q"$source.take($n)" if (is[DslQuery[Any]](source)) =>
@@ -259,13 +258,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$source.drop($n)" if (is[DslQuery[Any]](source)) =>
       Drop(astParser(source), astParser(n))
 
-    case q"$source.union[$t]($n)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.union[$_]($n)" if (is[DslQuery[Any]](source)) =>
       Union(astParser(source), astParser(n))
 
-    case q"$source.unionAll[$t]($n)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.unionAll[$_]($n)" if (is[DslQuery[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
-    case q"$source.++[$t]($n)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.++[$_]($n)" if (is[DslQuery[Any]](source)) =>
       UnionAll(astParser(source), astParser(n))
 
     case q"${joinCallParser(typ, a, Some(b))}.on(($aliasA, $aliasB) => $body)" =>
@@ -274,13 +273,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"${joinCallParser(typ, a, None)}($alias => $body)" =>
       FlatJoin(typ, a, identParser(alias), astParser(body))
 
-    case q"${joinCallParser(typ, a, b)}" =>
+    case q"${joinCallParser(_, _, _)}" =>
       c.fail("a join clause must be followed by 'on'.")
 
     // .distinct should not be allowed after a flatjoin
     case q"$source.distinct" if (is[DslQuery[Any]](source)) => {
       astParser(source) match {
-        case fj: FlatJoin =>
+        case _: FlatJoin =>
           throw new IllegalArgumentException(
             """
               |The .distinct cannot be placed after a join clause in a for-comprehension. Put it before.
@@ -294,13 +293,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       }
     }
 
-    case q"$source.distinctOn[$t](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
+    case q"$source.distinctOn[$_](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       DistinctOn(astParser(source), identParser(alias), astParser(body))
 
     // .distinct should not be allowed after a flatjoin
     case q"$source.nested" if (is[DslQuery[Any]](source)) => {
       astParser(source) match {
-        case fj: FlatJoin =>
+        case _: FlatJoin =>
           throw new IllegalArgumentException(
             """
               |The .nested cannot be placed after a join clause in a for-comprehension. Put it before.
@@ -316,12 +315,12 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   implicit val propertyAliasParser: Parser[PropertyAlias] = Parser[PropertyAlias] {
-    case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${alias: String}))" =>
+    case q"(($_) => $_.Predef.ArrowAssoc[$_]($prop).$_[$_](${alias: String}))" =>
       def path(tree: Tree): List[String] =
         tree match {
           case q"$a.$b" =>
             path(a) :+ b.decodedName.toString
-          case q"$a.$b.map[$tpe]((..$args) => $tr)" =>
+          case q"$a.$b.map[$_]((..$_) => $tr)" =>
             path(a) ++ (b.decodedName.toString :: path(tr))
           case _ =>
             Nil
@@ -332,33 +331,33 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   // It seems that in recent version of quasiquotes, things like Ord.asc are not the same io.getquill.Ord.asc
   // which may not be the same as getquill.Ord.asc. Need to cover these cases separately.
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
-    case q"$pack.implicitOrd[$t]"           => AscNullsFirst
-    case q"implicitOrd[$t]"                 => AscNullsFirst
-    case q"$pack.Ord.apply[..$t](..$elems)" => TupleOrdering(elems.map(orderingParser(_)))
-    case q"Ord.apply[..$t](..$elems)"       => TupleOrdering(elems.map(orderingParser(_)))
-    case q"$pack.Ord.asc[$t]"               => Asc
-    case q"Ord.asc[$t]"                     => Asc
-    case q"$pack.Ord.desc[$t]"              => Desc
-    case q"Ord.desc[$t]"                    => Desc
-    case q"$pack.Ord.ascNullsFirst[$t]"     => AscNullsFirst
-    case q"Ord.ascNullsFirst[$t]"           => AscNullsFirst
-    case q"$pack.Ord.descNullsFirst[$t]"    => DescNullsFirst
-    case q"Ord.descNullsFirst[$t]"          => DescNullsFirst
-    case q"$pack.Ord.ascNullsLast[$t]"      => AscNullsLast
-    case q"Ord.ascNullsLast[$t]"            => AscNullsLast
-    case q"$pack.Ord.descNullsLast[$t]"     => DescNullsLast
-    case q"Ord.descNullsLast[$t]"           => DescNullsLast
+    case q"$_.implicitOrd[$_]"           => AscNullsFirst
+    case q"implicitOrd[$_]"                 => AscNullsFirst
+    case q"$_.Ord.apply[..$_](..$elems)" => TupleOrdering(elems.map(orderingParser(_)))
+    case q"Ord.apply[..$_](..$elems)"       => TupleOrdering(elems.map(orderingParser(_)))
+    case q"$_.Ord.asc[$_]"               => Asc
+    case q"Ord.asc[$_]"                     => Asc
+    case q"$_.Ord.desc[$_]"              => Desc
+    case q"Ord.desc[$_]"                    => Desc
+    case q"$_.Ord.ascNullsFirst[$_]"     => AscNullsFirst
+    case q"Ord.ascNullsFirst[$_]"           => AscNullsFirst
+    case q"$_.Ord.descNullsFirst[$_]"    => DescNullsFirst
+    case q"Ord.descNullsFirst[$_]"          => DescNullsFirst
+    case q"$_.Ord.ascNullsLast[$_]"      => AscNullsLast
+    case q"Ord.ascNullsLast[$_]"            => AscNullsLast
+    case q"$_.Ord.descNullsLast[$_]"     => DescNullsLast
+    case q"Ord.descNullsLast[$_]"           => DescNullsLast
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Option[Ast])] = Parser[(JoinType, Ast, Option[Ast])] {
-    case q"$a.join[$t, $u]($b)" if (is[DslQuery[Any]](a))      => (InnerJoin, astParser(a), Some(astParser(b)))
-    case q"$a.leftJoin[$t, $u]($b)" if (is[DslQuery[Any]](a))  => (LeftJoin, astParser(a), Some(astParser(b)))
-    case q"$a.rightJoin[$t, $u]($b)" if (is[DslQuery[Any]](a)) => (RightJoin, astParser(a), Some(astParser(b)))
-    case q"$a.fullJoin[$t, $u]($b)" if (is[DslQuery[Any]](a))  => (FullJoin, astParser(a), Some(astParser(b)))
+    case q"$a.join[$_, $_]($b)" if (is[DslQuery[Any]](a))      => (InnerJoin, astParser(a), Some(astParser(b)))
+    case q"$a.leftJoin[$_, $_]($b)" if (is[DslQuery[Any]](a))  => (LeftJoin, astParser(a), Some(astParser(b)))
+    case q"$a.rightJoin[$_, $_]($b)" if (is[DslQuery[Any]](a)) => (RightJoin, astParser(a), Some(astParser(b)))
+    case q"$a.fullJoin[$_, $_]($b)" if (is[DslQuery[Any]](a))  => (FullJoin, astParser(a), Some(astParser(b)))
 
-    case q"$a.join[$t]" if (is[DslQuery[Any]](a))      => (InnerJoin, astParser(a), None)
-    case q"$a.leftJoin[$t]" if (is[DslQuery[Any]](a))  => (LeftJoin, astParser(a), None)
-    case q"$a.rightJoin[$t]" if (is[DslQuery[Any]](a)) => (RightJoin, astParser(a), None)
+    case q"$a.join[$_]" if (is[DslQuery[Any]](a))      => (InnerJoin, astParser(a), None)
+    case q"$a.leftJoin[$_]" if (is[DslQuery[Any]](a))  => (LeftJoin, astParser(a), None)
+    case q"$a.rightJoin[$_]" if (is[DslQuery[Any]](a)) => (RightJoin, astParser(a), None)
   }
 
   val infixParser: Parser[Ast] = Parser[Ast] {
@@ -366,9 +365,9 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Quat.improveInfixQuat(combinedInfixParser(true, Quat.BooleanExpression)(infix))
     case q"$infix.asCondition" =>
       Quat.improveInfixQuat(combinedInfixParser(false, Quat.BooleanExpression)(infix))
-    case q"$infix.generic.pure.as[$t]" =>
+    case q"$infix.generic.pure.as[$_]" =>
       Quat.improveInfixQuat(combinedInfixParser(true, Quat.Generic)(infix))
-    case q"$infix.transparent.pure.as[$t]" =>
+    case q"$infix.transparent.pure.as[$_]" =>
       Quat.improveInfixQuat(combinedInfixParser(true, Quat.Generic, true)(infix))
     case q"$infix.pure.as[$t]" =>
       Quat.improveInfixQuat(combinedInfixParser(true, inferQuat(q"$t".tpe))(infix))
@@ -378,16 +377,16 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Quat.improveInfixQuat(value)
   }
 
-  val impureInfixParser = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
+  val impureInfixParser: Parser[Ast] = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
 
   object InfixMatch {
-    def unapply(tree: Tree) =
+    def unapply(tree: Tree): Option[(List[String], List[Tree])] =
       tree match {
-        case q"$pack.InfixInterpolator(scala.StringContext.apply(..${parts: List[String]})).infix(..$params)" =>
+        case q"$_.InfixInterpolator(scala.StringContext.apply(..${parts: List[String]})).infix(..$params)" =>
           Some((parts, params))
-        case q"$pack.QsqlInfixInterpolator(scala.StringContext.apply(..${parts: List[String]})).qsql(..$params)" =>
+        case q"$_.QsqlInfixInterpolator(scala.StringContext.apply(..${parts: List[String]})).qsql(..$params)" =>
           Some((parts, params))
-        case q"$pack.SqlInfixInterpolator(scala.StringContext.apply(..${parts: List[String]})).sql(..$params)" =>
+        case q"$_.SqlInfixInterpolator(scala.StringContext.apply(..${parts: List[String]})).sql(..$params)" =>
           Some((parts, params))
         case _ => None
       }
@@ -405,13 +404,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
               } else {
                 Left(q"$part") :: Right(params(idx)) :: Nil
               }
-            case (part, idx) =>
+            case (part, _) =>
               Left(q"$part") :: Nil
           }
 
         val fused =
           (elements
-            .foldLeft(List[Either[Tree, Tree]]()) {
+            .foldLeft(List.empty[Either[Tree, Tree]]) {
               case (Left(a) :: tail, Left(b)) =>
                 Left(q"$a + $b") :: tail
               case (list, b) =>
@@ -445,7 +444,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     }
 
   val functionParser: Parser[Function] = Parser[Function] {
-    case q"new { def apply[..$t1](...$params) = $body }" =>
+    case q"new { def apply[..$_](...$_) = $_ }" =>
       c.fail(
         "Anonymous classes aren't supported for function declaration anymore. Use a method with a type parameter instead. " +
           "For instance, replace `val q = quote { new { def apply[T](q: Query[T]) = ... } }` by `def q[T] = quote { (q: Query[T] => ... }`"
@@ -466,7 +465,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case t: ValDef =>
       identClean(Ident(t.name.decodedName.toString, inferQuat(t.symbol.typeSignature)))
     case id @ c.universe.Ident(TermName(name)) => identClean(Ident(name, inferQuat(id.symbol.typeSignature)))
-    case t @ q"$cls.this.$i"                   => identClean(Ident(i.decodedName.toString, inferQuat(t.symbol.typeSignature)))
+    case t @ q"$_.this.$i"                   => identClean(Ident(i.decodedName.toString, inferQuat(t.symbol.typeSignature)))
     case t @ c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       identClean(
         Ident(name, inferQuat(t.symbol.typeSignature))
@@ -549,13 +548,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
    */
   val optionOperationParser: Parser[OptionOperation] = Parser[OptionOperation] {
 
-    case q"$o.flatMap[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+    case q"$o.flatMap[$_]({($alias) => $body})" if is[Option[Any]](o) =>
       if (isOptionOfRowType(o))
         OptionTableFlatMap(astParser(o), identParser(alias), astParser(body))
       else
         warnConditionalsExist(OptionFlatMap(astParser(o), identParser(alias), astParser(body)))
 
-    case q"$o.map[$t]({($alias) => $body})" if is[Option[Any]](o) =>
+    case q"$o.map[$_]({($alias) => $body})" if is[Option[Any]](o) =>
       if (isOptionOfRowType(o))
         OptionTableMap(astParser(o), identParser(alias), astParser(body))
       else
@@ -576,7 +575,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         warnConditionalsExist(OptionForall(astParser(o), identParser(alias), astParser(body)))
       }
 
-    case q"$prefix.NullableColumnExtensions[$nt]($o).filterIfDefined({($alias) => $body})" if is[Option[Any]](o) =>
+    case q"$_.NullableColumnExtensions[$_]($o).filterIfDefined({($alias) => $body})" if is[Option[Any]](o) =>
       if (isOptionOfRowType(o)) {
         c.fail("filterIfDefined only allowed on individual columns, not on case classes or tuples.")
       } else {
@@ -584,13 +583,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       }
 
     // For column values
-    case q"$o.flatten[$t]($implicitBody)" if is[Option[Any]](o) =>
+    case q"$o.flatten[$_]($_)" if is[Option[Any]](o) =>
       OptionFlatten(astParser(o))
-    case q"$o.getOrElse[$t]($body)" if is[Option[Any]](o) =>
+    case q"$o.getOrElse[$_]($body)" if is[Option[Any]](o) =>
       OptionGetOrElse(astParser(o), astParser(body))
-    case q"$o.orElse[$t]($body)" if is[Option[Any]](o) =>
+    case q"$o.orElse[$_]($body)" if is[Option[Any]](o) =>
       OptionOrElse(astParser(o), astParser(body))
-    case q"$o.contains[$t]($body)" if is[Option[Any]](o) =>
+    case q"$o.contains[$_]($body)" if is[Option[Any]](o) =>
       OptionContains(astParser(o), astParser(body))
     case q"$o.isEmpty" if is[Option[Any]](o) =>
       OptionIsEmpty(astParser(o))
@@ -599,9 +598,9 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$o.isDefined" if is[Option[Any]](o) =>
       OptionIsDefined(astParser(o))
 
-    case q"$o.orNull[$t]($v)" if is[Option[Any]](o) =>
+    case q"$o.orNull[$_]($_)" if is[Option[Any]](o) =>
       OptionOrNull(astParser(o))
-    case q"$prefix.NullableColumnExtensions[$nt]($o).getOrNull" if is[Option[Any]](o) =>
+    case q"$_.NullableColumnExtensions[$_]($o).getOrNull" if is[Option[Any]](o) =>
       OptionGetOrNull(astParser(o))
   }
 
@@ -610,7 +609,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       MapContains(astParser(col), astParser(body))
     case q"$col.contains($body)" if isBaseType[Set[Any]](col) =>
       SetContains(astParser(col), astParser(body))
-    case q"$col.contains[$t]($body)" if is[Seq[Any]](col) =>
+    case q"$col.contains[$_]($body)" if is[Seq[Any]](col) =>
       ListContains(astParser(col), astParser(body))
   }
 
@@ -663,7 +662,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     }
   }
 
-  val functionApplyParser: Parser[Operation] = Parser[Operation] { case q"${astParser(a)}.apply[..$t](...$values)" =>
+  val functionApplyParser: Parser[Operation] = Parser[Operation] { case q"${astParser(a)}.apply[..$_](...$values)" =>
     FunctionApply(a, values.flatten.map(astParser(_)))
   }
 
@@ -723,22 +722,22 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$a.!=($b)" =>
       equalityWithInnerTypechecksIdiomatic(a, b)(NotEqual)
 
-    case q"$pack.extras.NumericOptionOps[$t]($a)($imp).===[$q]($b)($imp2)" =>
+    case q"$_.extras.NumericOptionOps[$_]($a)($_).===[$_]($b)($_)" =>
       equalityWithInnerTypechecksAnsi(a, b)(Equal)
-    case q"$pack.extras.NumericRegOps[$t]($a)($imp).===[$q]($b)($imp2)" =>
+    case q"$_.extras.NumericRegOps[$_]($a)($_).===[$_]($b)($_)" =>
       equalityWithInnerTypechecksAnsi(a, b)(Equal)
-    case q"$pack.extras.NumericOptionOps[$t]($a)($imp).=!=[$q]($b)($imp2)" =>
+    case q"$_.extras.NumericOptionOps[$_]($a)($_).=!=[$_]($b)($_)" =>
       equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
-    case q"$pack.extras.NumericRegOps[$t]($a)($imp).=!=[$q]($b)($imp2)" =>
+    case q"$_.extras.NumericRegOps[$_]($a)($_).=!=[$_]($b)($_)" =>
       equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
 
-    case q"$pack.extras.OptionOps[$t]($a).===($b)" =>
+    case q"$_.extras.OptionOps[$_]($a).===($b)" =>
       equalityWithInnerTypechecksAnsi(a, b)(Equal)
-    case q"$pack.extras.RegOps[$t]($a).===($b)" =>
+    case q"$_.extras.RegOps[$_]($a).===($b)" =>
       equalityWithInnerTypechecksAnsi(a, b)(Equal)
-    case q"$pack.extras.OptionOps[$t]($a).=!=($b)" =>
+    case q"$_.extras.OptionOps[$_]($a).=!=($b)" =>
       equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
-    case q"$pack.extras.RegOps[$t]($a).=!=($b)" =>
+    case q"$_.extras.RegOps[$_]($a).=!=($b)" =>
       equalityWithInnerTypechecksAnsi(a, b)(NotEqual)
   }
 
@@ -759,7 +758,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   private object operator {
-    def unapply(t: TermName) =
+    def unapply(t: TermName): Option[BinaryOperator] =
       t.decodedName.toString match {
         case ">"  => Some(NumericOperator.`>`)
         case ">=" => Some(NumericOperator.`>=`)
@@ -770,7 +769,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   private object IsExtensionClass {
-    def unapply(tree: Tree) =
+    def unapply(tree: Tree): Option[(Tree, Tree)] =
       tree match {
         case cls @ q"$extension($a)" if (cls.tpe.baseClasses.contains(typeOf[Ordered[Any]].typeSymbol)) =>
           Some((extension, a))
@@ -780,7 +779,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   val orderedOperationParser: Parser[Operation] = Parser[Operation] {
-    case q"${cls @ IsExtensionClass(extension, a)}.${operator(op: BinaryOperator)} ($b)" =>
+    case q"${IsExtensionClass(_, a)}.${operator(op: BinaryOperator)} ($b)" =>
       BinaryOperation(astParser(a), op, astParser(b))
   }
 
@@ -816,7 +815,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         case "nonEmpty" => SetOperator.`nonEmpty`
       }
     Parser[Operation] {
-      case q"$a.contains[$t]($b)" if (is[DslQuery[Any]])(a) =>
+      case q"$a.contains[$_]($b)" if (is[DslQuery[Any]])(a) =>
         BinaryOperation(astParser(a), SetOperator.`contains`, astParser(b))
       case unary(op) => op
     }
@@ -836,11 +835,10 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     symbol.isClass && symbol.asClass.isCaseClass
   }
 
-  private def isTypeTuple(tpe: Type) =
-    tpe.typeSymbol.fullName startsWith "scala.Tuple"
+  
 
   object ClassTypeRefMatch {
-    def unapply(tpe: Type) = tpe match {
+    def unapply(tpe: Type): Option[(ClassSymbol, List[Type])] = tpe match {
       case TypeRef(_, cls, args) if (cls.isClass) => Some((cls.asClass, args))
       case _                                      => None
     }
@@ -862,8 +860,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
   val valueParser: Parser[Ast] = Parser[Ast] {
     case q"null"                             => NullValue
-    case q"scala.Some.apply[$t]($v)"         => OptionSome(astParser(v))
-    case q"scala.Option.apply[$t]($v)"       => OptionApply(astParser(v))
+    case q"scala.Some.apply[$_]($v)"         => OptionSome(astParser(v))
+    case q"scala.Option.apply[$_]($v)"       => OptionApply(astParser(v))
     case q"scala.None"                       => OptionNone(Quat.Null)
     case q"scala.Option.empty[$t]"           => OptionNone(inferQuat(t.tpe))
     case t @ Literal(c.universe.Constant(v)) => Constant(v, inferQuat(t.tpe))
@@ -873,7 +871,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       val params = firstConstructorParamList(c.WeakTypeTag(ccTerm.tpe.erasure))
       CaseClass(ccTerm.symbol.fullName.toString.split('.').last, params.zip(values))
     }
-    case q"(($pack.Predef.ArrowAssoc[$t1]($v1).$arrow[$t2]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
+    case q"(($_.Predef.ArrowAssoc[$_]($v1).$_[$_]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
     case q"io.getquill.dsl.UnlimitedTuple.apply($v)"               => astParser(v)
     case q"io.getquill.dsl.UnlimitedTuple.apply(..$v)"             => Tuple(v.map(astParser(_)))
     case q"$ccCompanion(..$v)"
@@ -958,12 +956,12 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         Some(ReturningMultipleFieldSupported)
       case Some(returnType) if (returnType =:= typeOf[ReturningNotSupported]) => Some(ReturningNotSupported)
       // If there's no idiom selected, return None and this error check shouldn't be done
-      case other => None
+      case _ => None
     }
   }
 
   implicit class InsertReturnCapabilityExtension(capability: ReturningCapability) {
-    def verifyAst(returnBody: Ast) = capability match {
+    def verifyAst(returnBody: Ast): Unit = capability match {
       case OutputClauseSupported =>
         returnBody match {
           case _: Query =>
@@ -994,7 +992,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       case ReturningSingleFieldSupported =>
         returnBody match {
           case Property(_, _) =>
-          case other =>
+          case _ =>
             c.fail(
               s"${currentIdiom.map(n => s"The dialect ${n} only allows").getOrElse("Unspecified dialects only allow")} single, auto-incrementing columns in 'returning' clauses."
             )
@@ -1044,11 +1042,11 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
     // Theory:  ( (Query[Person]).update(....) ).returning[T]
     // Example: ( query[Person].filter(p => p.name == "Joe").update(....) ).returning[Something]
-    case q"$action.returning[$r]" =>
+    case q"$_.returning[$_]" =>
       c.fail(s"A 'returning' clause must have arguments.")
 
     // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returning(p => (p.id, p.age))
-    case q"$action.returning[$r](($alias) => $body)" =>
+    case q"$action.returning[$_](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
       verifyCapability("returning")
@@ -1056,7 +1054,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Returning(astParser(action), ident, bodyAst)
 
     // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returningMany(p => (p.id, p.age))
-    case q"$action.returningMany[$r](($alias) => $body)" =>
+    case q"$action.returningMany[$_](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
       verifyCapability("returningMany")
@@ -1064,7 +1062,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Returning(astParser(action), ident, bodyAst)
 
     // ( (Query[Person]).insert(_.name -> "Joe", _.age -> 123) ).returningGenerated(p => (p.id, p.otherGeneratedProp))
-    case q"$action.returningGenerated[$r](($alias) => $body)" =>
+    case q"$action.returningGenerated[$_](($alias) => $body)" =>
       val ident   = identParser(alias)
       val bodyAst = reprocessReturnClause(ident, astParser(body), action)
       // Verify that the idiom supports this type of returning clause
@@ -1082,7 +1080,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     // Batch Action (https://getquill.io/#quotation-actions-batch-insert)
     // Example: { liftQuery(List(Person("Joe", 123), Person("Jack", 456))) }.foreach(p => (query[Person].insert(p.name, p.age))<Compiler Inferred: (implicit unquote: B => A)>
     // Theory:  { Query[Person] }.foreach(p => (Action[Person])<Compiler Inferred: (implicit unquote: B => A)>
-    case q"$query.foreach[$t1, $t2](($alias) => $body)($f)" if (is[DslQuery[Any]](query)) =>
+    case q"$query.foreach[$_, $_](($alias) => $body)($_)" if (is[DslQuery[Any]](query)) =>
       // If there are actions inside the subtree, we need to do some additional sanitizations
       // of the variables so that their content will not collide with code that we have generated.
       AvoidAliasConflict.sanitizeVariables(
@@ -1120,7 +1118,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         )
         val newBody =
           tpe match {
-            case q"(($newAlias) => $newBody)" => newBody
+            case q"(($_) => $newBody)" => newBody
             case _ =>
               c.fail("Could not process whole-record 'returning' clause. Consider trying to return individual columns.")
           }
@@ -1135,7 +1133,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   private val assignmentDualParser: Parser[AssignmentDual] = Parser[AssignmentDual] {
-    case q"((${identParser(i1)}, ${identParser(i2)}) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
+    case q"((${identParser(i1)}, ${identParser(i2)}) => $_.Predef.ArrowAssoc[$_]($prop).$_[$_]($value))" =>
       checkTypes(prop, value)
       val valueAst = Transform(astParser(value)) {
         case `i1` => OnConflict.Existing(i1)
@@ -1145,12 +1143,12 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   private val assignmentParser: Parser[Assignment] = Parser[Assignment] {
-    case q"((${identParser(i1)}) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v]($value))" =>
+    case q"((${identParser(i1)}) => $_.Predef.ArrowAssoc[$_]($prop).$_[$_]($value))" =>
       checkTypes(prop, value)
       Assignment(i1, astParser(prop), astParser(value))
 
     // Unused, it's here only to make eclipse's presentation compiler happy
-    case astParser(ast) =>
+    case astParser(_) =>
       Assignment(Ident("unused", Quat.Value), Ident("unused", Quat.Value), Constant("unused", Quat.Value))
   }
 
@@ -1168,7 +1166,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
   private def parseConflictProps(targets: List[Tree]) = OnConflict.Properties {
     targets.map {
-      case q"($e) => $prop" => propertyParser(prop)
+      case q"($_) => $prop" => propertyParser(prop)
       case tree             => c.fail(s"Tree '$tree' can't be parsed as conflict target")
     }
   }
@@ -1231,7 +1229,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         case false => maybeQuoted
         case true  => q"unquote($maybeQuoted)"
       }
-    val t = TypeName(c.freshName("T"))
+    TypeName(c.freshName("T"))
     try
       c.typecheck(unquoted(tree), c.TYPEmode)
     catch {

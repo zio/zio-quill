@@ -22,7 +22,7 @@ class JdbcExpresser(
     val columnModels =
       schema.columns
         .map(desc => (desc, typer(JdbcTypeInfo(desc))))
-        .filter { case (desc, tpe) => tpe.isDefined }
+        .filter { case (_, tpe) => tpe.isDefined }
         .map { case (desc, tpe) =>
           ColumnFusion(
             nameParser.parseColumn(desc),

@@ -28,7 +28,7 @@ class ApplyMap(traceConfig: TraceConfig) {
 
   object InfixedTailOperation {
 
-    def hasImpureInfix(ast: Ast) =
+    def hasImpureInfix(ast: Ast): Boolean =
       CollectAst(ast) { case i @ Infix(_, _, false, _, _) =>
         i
       }.nonEmpty
@@ -48,7 +48,7 @@ class ApplyMap(traceConfig: TraceConfig) {
   object MapWithoutInfixes {
     def unapply(ast: Ast): Option[(Ast, Ident, Ast)] =
       ast match {
-        case Map(a, b, InfixedTailOperation(c)) => None
+        case Map(_, _, InfixedTailOperation(_)) => None
         case Map(a, b, c)                       => Some((a, b, c))
         case _                                  => None
       }
@@ -73,10 +73,10 @@ class ApplyMap(traceConfig: TraceConfig) {
       ast match {
         // Maps that contains
         case Map(_, _, ContainsImpurities())    => None
-        case Map(a: GroupBy, b, c)              => None
-        case Map(a: DistinctOn, b, c)           => None
-        case Map(a: FlatJoin, b, c)             => None // FlatJoin should always be surrounded by a Map
-        case Map(a, b, InfixedTailOperation(c)) => None
+        case Map(_: GroupBy, _, _)              => None
+        case Map(_: DistinctOn, _, _)           => None
+        case Map(_: FlatJoin, _, _)             => None // FlatJoin should always be surrounded by a Map
+        case Map(_, _, InfixedTailOperation(_)) => None
         case Map(a, b, c)                       => Some((a, b, c))
         case _                                  => None
       }
@@ -85,11 +85,11 @@ class ApplyMap(traceConfig: TraceConfig) {
   def unapply(q: Query): Option[Query] =
     q match {
 
-      case Map(a: GroupBy, b, c) if (b == c)    => None
-      case Map(a: GroupByMap, b, c) if (b == c) => None
-      case Map(a: Nested, b, c) if (b == c)     => None
-      case Map(a: FlatJoin, b, c) if (b == c)   => None // FlatJoin should always be surrounded by a Map
-      case Nested(DetachableMap(a, b, c))       => None
+      case Map(_: GroupBy, b, c) if (b == c)    => None
+      case Map(_: GroupByMap, b, c) if (b == c) => None
+      case Map(_: Nested, b, c) if (b == c)     => None
+      case Map(_: FlatJoin, b, c) if (b == c)   => None // FlatJoin should always be surrounded by a Map
+      case Nested(DetachableMap(_, _, _))       => None
 
       //  map(i => (i.i, i.l)).distinct.map(x => (x._1, x._2)) =>
       //    map(i => (i.i, i.l)).distinct
@@ -98,7 +98,7 @@ class ApplyMap(traceConfig: TraceConfig) {
 
       // a.map(b => c).map(d => e) =>
       //    a.map(b => e[d := c])
-      case before @ Map(MapWithoutInfixes(a, b, c), d, e) =>
+      case Map(MapWithoutInfixes(a, b, c), d, e) =>
         val er = BetaReduction(e, d -> c)
         trace"ApplyMap on double-map for $q" andReturn Some(Map(a, b, er))
 
@@ -238,6 +238,6 @@ class ApplyMap(traceConfig: TraceConfig) {
         trace"ApplyMap inside join-reduceLeft for $q" andReturn
           Some(Map(Join(tpe, a, d, b, iB, onr), t, Tuple(List(t1, t2))))
 
-      case other => None
+      case _ => None
     }
 }

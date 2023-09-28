@@ -1,11 +1,11 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.oss.driver.internal.core.`type`.{DefaultListType, PrimitiveType}
+import com.datastax.oss.driver.internal.core.`type`.PrimitiveType
 import io.getquill.context.cassandra.CassandraRowContext
 import io.getquill.util.Messages.fail
 
 import java.time.{Instant, LocalDate, LocalTime}
-import java.util.{Date, UUID}
+import java.util.UUID
 
 trait Decoders extends CollectionDecoders {
   this: CassandraRowContext[_] =>
@@ -13,7 +13,7 @@ trait Decoders extends CollectionDecoders {
   type Decoder[T] = CassandraDecoder[T]
 
   case class CassandraDecoder[T](decoder: BaseDecoder[T]) extends BaseDecoder[T] {
-    override def apply(index: Index, row: ResultRow, session: Session) =
+    override def apply(index: Index, row: ResultRow, session: Session): T =
       decoder(index, row, session)
   }
 
@@ -26,7 +26,7 @@ trait Decoders extends CollectionDecoders {
   )
 
   def decoder[T](f: ResultRow => Index => T): Decoder[T] =
-    decoder((index, row, session) => f(row)(index))
+    decoder((index, row, _) => f(row)(index))
 
   implicit def optionDecoder[T](implicit d: Decoder[T]): Decoder[Option[T]] =
     CassandraDecoder { (index, row, session) =>
@@ -41,7 +41,7 @@ trait Decoders extends CollectionDecoders {
 
   implicit val stringDecoder: Decoder[String] = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
-    decoder((index, row, session) => row.getBigDecimal(index))
+    decoder((index, row, _) => row.getBigDecimal(index))
   implicit val booleanDecoder: Decoder[Boolean] = decoder(_.getBoolean)
   implicit val byteDecoder: Decoder[Byte]       = decoder(_.getByte)
   implicit val shortDecoder: Decoder[Short]     = decoder(_.getShort)
@@ -50,7 +50,7 @@ trait Decoders extends CollectionDecoders {
   implicit val floatDecoder: Decoder[Float]     = decoder(_.getFloat)
   implicit val doubleDecoder: Decoder[Double]   = decoder(_.getDouble)
   implicit val byteArrayDecoder: Decoder[Array[Byte]] =
-    decoder { (index, row, session) =>
+    decoder { (index, row, _) =>
       val bb = row.getByteBuffer(index)
       val b  = new Array[Byte](bb.remaining())
       bb.get(b)

@@ -40,15 +40,14 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 
-  def close() = {}
+  def close(): Unit = {}
 
   def probe(statement: String): Try[_] = Success(())
 
   val idiom  = SparkDialect
   val naming = Literal
 
-  private implicit def datasetEncoder[T]: (Index, Dataset[T], List[Binding], ResultRow) => List[Binding] =
-    (idx: Int, ds: Dataset[T], row: List[Binding], session: Session) => row :+ DatasetBinding(ds)
+  __
 
   def liftQuery[T](ds: Dataset[T]) =
     quote {
@@ -146,7 +145,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
     string: String,
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
-  )(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  )(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext): Dataset[T] = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
@@ -155,7 +154,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
     string: String,
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
-  )(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext) = {
+  )(info: ExecutionInfo, dc: Runner)(implicit enc: SparkEncoder[T], spark: SQLContext): Dataset[T] = {
     val ds = spark.sql(prepareString(string, prepare))
     percolateNullArrays(ds.toDF(CaseAccessors[T](ds.schema): _*).as[T])
   }
@@ -163,7 +162,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
   private[getquill] def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
     var dsId = 0
     val withSubstitutions =
-      prepare(Nil, ())._2.foldLeft(string) {
+      prepare(List.empty, ())._2.foldLeft(string) {
         case (string, DatasetBinding(ds)) =>
           dsId += 1
           val name = s"ds${queryCounter.incrementAndGet()}"

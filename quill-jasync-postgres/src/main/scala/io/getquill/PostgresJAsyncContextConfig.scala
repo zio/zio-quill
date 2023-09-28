@@ -6,5 +6,5 @@ import com.github.jasync.sql.db.postgresql.util.URLParser
 import com.typesafe.config.Config
 import io.getquill.context.jasync.JAsyncContextConfig
 
-case class PostgresJAsyncContextConfig(config: Config)
+final case class PostgresJAsyncContextConfig(config: Config)
     extends JAsyncContextConfig[PostgreSQLConnection](config, new PostgreSQLConnectionFactory(_), URLParser.INSTANCE)

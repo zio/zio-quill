@@ -78,8 +78,7 @@ class CatalogBasedAncestry(ancestryCatalog: NodeCatalog = DefaultNodeCatalog) ex
           .zipOnKeys(twoAncestry.zipWithIndex.toMap)
           .collect { case (key, (Some(i), Some(j))) => (key, i + j) }
           .toList
-          .sortBy { case (node, order) => order }
-          .head
+          .minBy { case (_, order) => order }
 
       node.cls
     }

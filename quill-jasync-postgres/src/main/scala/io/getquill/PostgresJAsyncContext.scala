@@ -7,7 +7,6 @@ import com.typesafe.config.Config
 import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
 import io.getquill.context.jasync.{ArrayDecoders, ArrayEncoders, JAsyncContext, UUIDObjectEncoding}
 import io.getquill.util.LoadConfig
-import io.getquill.util.Messages.fail
 import scala.jdk.CollectionConverters._
 
 class PostgresJAsyncContext[+N <: NamingStrategy](naming: N, pool: ConnectionPool[PostgreSQLConnection])

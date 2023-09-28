@@ -1,7 +1,6 @@
 package io.getquill.context.qzio
 
 import com.github.jasync.sql.db.RowData
-import io.getquill.context.Context
 
 import java.time._
 import java.util.Date
@@ -19,7 +18,7 @@ trait Encoders {
   type DecoderSqlType = SqlTypes.SqlTypes
 
   case class AsyncEncoder[T](sqlType: DecoderSqlType)(implicit encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session): PrepareRow =
       encoder.apply(index, value, row, session)
   }
 

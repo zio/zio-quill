@@ -1,14 +1,12 @@
 package io.getquill
 
 import com.datastax.oss.driver.api.core.CqlSession
-import com.datastax.oss.driver.api.core.cql.{AsyncResultSet, ResultSet, Row}
+import com.datastax.oss.driver.api.core.cql.{AsyncResultSet, Row}
 import com.typesafe.config.Config
 import io.getquill.context.ExecutionInfo
-import io.getquill.context.cassandra.util.FutureConversions._
 import io.getquill.util.{ContextLogger, LoadConfig}
 import monix.eval.Task
 import monix.execution.Scheduler
-import monix.execution.Scheduler.Implicits
 import monix.reactive.Observable
 
 import scala.compat.java8.FutureConverters._

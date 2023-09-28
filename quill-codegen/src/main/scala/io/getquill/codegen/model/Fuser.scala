@@ -11,7 +11,7 @@ trait FuserBase[TableMeta, ColumnMeta] extends Fuser[TableMeta, ColumnMeta] {
 
   val ancestry: ClassAncestry
 
-  protected def unifyColumns(a: ColumnFusion[ColumnMeta], b: ColumnFusion[ColumnMeta]) = {
+  protected def unifyColumns(a: ColumnFusion[ColumnMeta], b: ColumnFusion[ColumnMeta]): ColumnFusion[ColumnMeta] = {
     val commonAncestor = ancestry(a.dataType, b.dataType)
     ColumnFusion(
       a.name,

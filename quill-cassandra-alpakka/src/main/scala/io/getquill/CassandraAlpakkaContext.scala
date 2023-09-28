@@ -100,7 +100,7 @@ class CassandraAlpakkaContext[+N <: NamingStrategy](
     }
       .map(_ => Done)
 
-  override def close() = {
+  override def close(): Unit = {
     alpakkaSession.close(scala.concurrent.ExecutionContext.Implicits.global)
     ()
   }

@@ -6,8 +6,8 @@ object StatefulTransformerWithStack {
   }
   object History {
     case object Root extends History { val ast = None }
-    case class Child(clause: Ast, prev: History) extends History {
-      def ast = Some(clause)
+    final case class Child(clause: Ast, prev: History) extends History {
+      def ast: Some[Ast] = Some(clause)
     }
 
     def apply(ast: Ast)(implicit prev: History): Child =
@@ -335,8 +335,8 @@ trait StatefulTransformerWithStack[T] {
 
   def apply[U, R](list: List[U])(f: StatefulTransformerWithStack[T] => U => (R, StatefulTransformerWithStack[T]))(
     implicit parent: History
-  ) =
-    list.foldLeft((List[R](), this)) { case ((values, t), v) =>
+  ): (List[R], StatefulTransformerWithStack[T]) =
+    list.foldLeft((List.empty[R], this)) { case ((values, t), v) =>
       val (vt, vtt) = f(t)(v)
       (values :+ vt, vtt)
     }

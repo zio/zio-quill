@@ -21,7 +21,7 @@ trait CodeGeneratorComponents extends HasBasicMeta with QuerySchemaNaming {
   type QuerySchemaNaming = TableMeta => String
   type ColumnGetter      = ColumnMeta => String
 
-  def defaultExcludedSchemas = Set[String]()
+  def defaultExcludedSchemas: Set[String] = Set.empty[String]
   def querySchemaImports     = ""
   def nameParser: NameParser
   def unrecognizedTypeStrategy: UnrecognizedTypeStrategy

@@ -20,13 +20,13 @@ trait CqlIdiom extends Idiom {
 
   override def liftingPlaceholder(idx: Int) = "?"
 
-  override def emptySetContainsToken(field: Token) = stmt"$field IN ()"
+  override def emptySetContainsToken(field: Token): Statement = stmt"$field IN ()"
 
   override def prepareForProbing(string: String) = string
 
   override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
     implicit naming: NamingStrategy
-  ) = {
+  ): (Ast, Statement, ExecutionType) = {
     val cqlNormalize  = new CqlNormalize(idiomContext.config)
     val normalizedAst = cqlNormalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
@@ -34,7 +34,7 @@ trait CqlIdiom extends Idiom {
 
   override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
     implicit naming: NamingStrategy
-  ) = {
+  ): (Ast, Statement, ExecutionType) = {
     val cqlNormalize  = new CqlNormalize(idiomContext.config)
     val normalizedAst = NormalizeCaching(cqlNormalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
@@ -170,14 +170,14 @@ trait CqlIdiom extends Idiom {
   implicit def assignmentTokenizer(implicit
     propertyTokenizer: Tokenizer[Property],
     strategy: NamingStrategy
-  ): Tokenizer[Assignment] = Tokenizer[Assignment] { case Assignment(alias, prop, value) =>
+  ): Tokenizer[Assignment] = Tokenizer[Assignment] { case Assignment(_, prop, value) =>
     stmt"${prop.token} = ${value.token}"
   }
 
   implicit def assignmentDualTokenizer(implicit
     propertyTokenizer: Tokenizer[Property],
     strategy: NamingStrategy
-  ): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] { case AssignmentDual(alias1, alias2, prop, value) =>
+  ): Tokenizer[AssignmentDual] = Tokenizer[AssignmentDual] { case AssignmentDual(_, _, prop, value) =>
     stmt"${prop.token} = ${value.token}"
   }
 
@@ -195,7 +195,7 @@ trait CqlIdiom extends Idiom {
         val values  = assignments.map(_.value)
         stmt"INSERT INTO ${table.token} (${columns.mkStmt(",")}) VALUES (${values.map(_.token).mkStmt(", ")})"
 
-      case Update(Filter(table, x, where), assignments) =>
+      case Update(Filter(table, _, where), assignments) =>
         stmt"UPDATE ${table.token} SET ${assignments.token} WHERE ${where.token}"
 
       case Update(table, assignments) =>
@@ -207,7 +207,7 @@ trait CqlIdiom extends Idiom {
       case Delete(Map(table, _, columns)) =>
         stmt"DELETE ${columns.token} FROM ${table.token}"
 
-      case Delete(Filter(table, x, where)) =>
+      case Delete(Filter(table, _, where)) =>
         stmt"DELETE FROM ${table.token} WHERE ${where.token}"
 
       case Delete(table) =>
@@ -222,7 +222,7 @@ trait CqlIdiom extends Idiom {
   }
 
   implicit def entityTokenizer(implicit strategy: NamingStrategy): Tokenizer[Entity] = Tokenizer[Entity] {
-    case Entity.Opinionated(name, properties, _, renameable) =>
+    case Entity.Opinionated(name, _, _, renameable) =>
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 

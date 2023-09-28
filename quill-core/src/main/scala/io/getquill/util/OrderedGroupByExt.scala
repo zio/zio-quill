@@ -5,7 +5,7 @@ import collection.mutable.{LinkedHashMap => MMap, Builder}
 import scala.language.higherKinds
 
 object OrderedGroupByExt {
-  implicit class GroupByOrderedImplicitImpl[A](val t: Traversable[A]) extends AnyVal {
+  implicit class GroupByOrderedImplicitImpl[A](private val t: Traversable[A]) extends AnyVal {
     def groupByOrderedUnique[K](f: A => K): Map[K, ListSet[A]] =
       groupByGen(ListSet.newBuilder[A])(f)
 

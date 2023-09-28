@@ -9,32 +9,32 @@ trait NamingStrategy {
 trait CompositeNamingStrategy extends NamingStrategy {
   protected val elements: List[NamingStrategy]
 
-  override def default(s: String) =
+  override def default(s: String): String =
     elements.foldLeft(s)((s, n) => n.default(s))
 
-  override def table(s: String) =
+  override def table(s: String): String =
     elements.foldLeft(s)((s, n) => n.table(s))
 
-  override def column(s: String) =
+  override def column(s: String): String =
     elements.foldLeft(s)((s, n) => n.column(s))
 }
 
-case class CompositeNamingStrategy2[N1 <: NamingStrategy, N2 <: NamingStrategy](
+final case class CompositeNamingStrategy2[N1 <: NamingStrategy, N2 <: NamingStrategy](
   n1: N1,
   n2: N2
 ) extends CompositeNamingStrategy {
-  override protected val elements = List(n1, n2)
+  override protected val elements: List[NamingStrategy] = List(n1, n2)
 }
 
-case class CompositeNamingStrategy3[N1 <: NamingStrategy, N2 <: NamingStrategy, N3 <: NamingStrategy](
+final case class CompositeNamingStrategy3[N1 <: NamingStrategy, N2 <: NamingStrategy, N3 <: NamingStrategy](
   n1: N1,
   n2: N2,
   n3: N3
 ) extends CompositeNamingStrategy {
-  override protected val elements = List(n1, n2, n3)
+  override protected val elements: List[NamingStrategy] = List(n1, n2, n3)
 }
 
-case class CompositeNamingStrategy4[
+final case class CompositeNamingStrategy4[
   N1 <: NamingStrategy,
   N2 <: NamingStrategy,
   N3 <: NamingStrategy,
@@ -45,7 +45,7 @@ case class CompositeNamingStrategy4[
   n3: N3,
   n4: N4
 ) extends CompositeNamingStrategy {
-  override protected val elements = List(n1, n2, n3, n4)
+  override protected val elements: List[NamingStrategy] = List(n1, n2, n3, n4)
 }
 
 object NamingStrategy {
@@ -86,7 +86,7 @@ trait Literal extends NamingStrategy {
 object Literal extends Literal
 
 trait Escape extends NamingStrategy {
-  override def default(s: String) =
+  override def default(s: String): String =
     s""""$s""""
 }
 object Escape extends Escape
@@ -105,7 +105,7 @@ object LowerCase extends LowerCase
 
 trait SnakeCase extends NamingStrategy {
 
-  override def default(s: String) =
+  override def default(s: String): String =
     (s.toList match {
       case c :: tail => c.toLower +: snakeCase(tail)
       case Nil       => Nil
@@ -122,7 +122,7 @@ object SnakeCase extends SnakeCase
 
 trait CamelCase extends NamingStrategy {
 
-  override def default(s: String) =
+  override def default(s: String): String =
     camelCase(s.toList).mkString
 
   private def camelCase(s: List[Char]): List[Char] =
@@ -138,20 +138,20 @@ object CamelCase extends CamelCase
 
 trait PluralizedTableNames extends NamingStrategy {
   override def default(s: String) = s
-  override def table(s: String) =
+  override def table(s: String): String =
     if (s.endsWith("s")) s
     else s + "s"
 }
 object PluralizedTableNames extends PluralizedTableNames
 
 trait PostgresEscape extends Escape {
-  override def column(s: String) = if (s.startsWith("$")) s else super.column(s)
+  override def column(s: String): String = if (s.startsWith("$")) s else super.column(s)
 }
 object PostgresEscape extends PostgresEscape
 
 trait MysqlEscape extends NamingStrategy {
-  override def table(s: String)   = quote(s)
-  override def column(s: String)  = quote(s)
+  override def table(s: String): String   = quote(s)
+  override def column(s: String): String  = quote(s)
   override def default(s: String) = s
   private def quote(s: String)    = s"`$s`"
 }

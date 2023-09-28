@@ -7,7 +7,7 @@ class UdtMetaDslMacro(val c: MacroContext) {
   import c.universe._
 
   def udtMeta[T](path: Tree, columns: Tree*)(implicit t: WeakTypeTag[T]): Tree = {
-    val pairs = columns.map { case q"(($x1) => $pack.Predef.ArrowAssoc[$t]($prop).$arrow[$v](${alias: String}))" =>
+    val pairs = columns.map { case q"(($_) => $_.Predef.ArrowAssoc[$_]($prop).$_[$_](${alias: String}))" =>
       q"(${prop.symbol.name.decodedName.toString}, $alias)"
     }
     c.untypecheck {

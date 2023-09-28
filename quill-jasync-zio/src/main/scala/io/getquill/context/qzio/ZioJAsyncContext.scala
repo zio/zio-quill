@@ -24,7 +24,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: Concre
     with Encoders
     with ZIOMonad {
 
-  protected val dateTimeZone = ZoneId.systemDefault()
+  protected val dateTimeZone: ZoneId = ZoneId.systemDefault()
 
   private val logger = ContextLogger(classOf[ZioJAsyncContext[_, _, _]])
 
@@ -80,7 +80,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: Concre
     info: ExecutionInfo,
     dc: DatasourceContext
   ): RIO[ZioJAsyncConnection, List[T]] = {
-    val (params, values) = prepare(Nil, ())
+    val (params, values) = prepare(List.empty, ())
     logger.logQuery(sql, params)
     ZioJAsyncConnection
       .sendPreparedStatement(sql, values)
@@ -98,7 +98,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: Concre
     sql: String,
     prepare: Prepare = identityPrepare
   )(info: ExecutionInfo, dc: DatasourceContext): Result[Long] = {
-    val (params, values) = prepare(Nil, ())
+    val (params, values) = prepare(List.empty, ())
     logger.logQuery(sql, params)
     ZioJAsyncConnection.sendPreparedStatement(sql, values).map(_.getRowsAffected)
   }
@@ -118,7 +118,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: Concre
     returningAction: ReturnAction
   )(info: ExecutionInfo, dc: DatasourceContext): RIO[ZioJAsyncConnection, List[T]] = {
     val expanded         = expandAction(sql, returningAction)
-    val (params, values) = prepare(Nil, ())
+    val (params, values) = prepare(List.empty, ())
     logger.logQuery(sql, params)
     ZioJAsyncConnection
       .sendPreparedStatement(expanded, values)
@@ -153,6 +153,6 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: Concre
       .map(_.flatten.toList)
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
-    prepare(Nil, ())._2.map(prepareParam)
+    prepare(List.empty, ())._2.map(prepareParam)
 
 }

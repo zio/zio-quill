@@ -19,7 +19,7 @@ trait CassandraSession extends UdtValueLookup {
     .groupBy(_.getName.toString)
 
   override def udtValueOf(udtName: String, keyspace: Option[String] = None): UdtValue =
-    udtMetadata.getOrElse(udtName.toLowerCase, Nil) match {
+    udtMetadata.getOrElse(udtName.toLowerCase, List.empty) match {
       case udt :: Nil => udt.newValue()
       case Nil =>
         fail(s"Could not find UDT `$udtName` in any keyspace")

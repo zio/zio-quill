@@ -88,21 +88,21 @@ abstract class JdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   protected val currentConnection = new DynamicVariable[Option[Connection]](None)
 
-  protected def withConnection[T](f: Connection => Result[T]) =
+  protected def withConnection[T](f: Connection => Result[T]): Result[T] =
     currentConnection.value.map(f).getOrElse {
       val conn = dataSource.getConnection
       try f(conn)
       finally conn.close()
     }
 
-  def close() = dataSource.close()
+  def close(): Unit = dataSource.close()
 
-  def probe(sql: String) =
+  def probe(sql: String): Try[Result[Boolean]] =
     Try {
       withConnection(_.createStatement.execute(sql))
     }
 
-  def transaction[T](f: => T) =
+  def transaction[T](f: => T): T =
     currentConnection.value match {
       case Some(_) => f // already in transaction
       case None =>

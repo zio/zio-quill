@@ -11,7 +11,7 @@ import java.lang.{
 }
 import java.math.{BigDecimal => JBigDecimal}
 import java.nio.ByteBuffer
-import java.util.{Date, UUID}
+import java.util.UUID
 import java.time.{Instant, LocalDate}
 
 /**

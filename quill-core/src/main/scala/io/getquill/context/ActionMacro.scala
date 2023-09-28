@@ -113,7 +113,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
   def batchActionRows(quoted: Tree, method: String, numRows: Tree): Tree =
     expandBatchActionNew(quoted, false) {
-      case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
+      case (batch, _, expanded, _, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
         q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.${TermName(method)}({
@@ -171,7 +171,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
   def batchActionReturningRows[T](quoted: Tree, numRows: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandBatchActionNew(quoted, true) {
-      case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
+      case (batch, _, expanded, _, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
         q"""
           ..${EnableReflectiveCalls(c)}
           ${c.prefix}.executeBatchActionReturning({
@@ -214,9 +214,9 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
             //     or possibly: (value: Person) => CaseClassValueLift("value", value, Encoder[Person], quatOf[Person])
             val nestedLift =
               lift match {
-                case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
+                case ScalarQueryLift(_, _: Tree, encoder: Tree, quat) =>
                   ScalarValueLift("value", External.Source.UnparsedProperty("value"), q"$values", encoder, quat)
-                case CaseClassQueryLift(name, batch: Tree, quat) =>
+                case CaseClassQueryLift(_, _: Tree, quat) =>
                   CaseClassValueLift("value", "value", q"$values", quat)
               }
 
@@ -291,7 +291,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
   object ExtractLiftings {
     def of(ast: Ast): (Ast, List[(String, ScalarLift)]) = {
-      val (outputAst, extracted) = ExtractLiftings(List())(ast)
+      val (outputAst, extracted) = ExtractLiftings(List.empty)(ast)
       (outputAst, extracted.state.map { case (tag, lift) => (tag.uid, lift) })
     }
   }
@@ -311,7 +311,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
     // liftQuery(people).foreach(ps => query[Person].filter(_.name == lift("not this")).insertValue(_.name -> <these!>, ...))
     override def apply(e: Ast): (Ast, StatefulTransformer[List[(ScalarTag, ScalarLift)]]) =
       e match {
-        case rawLift @ ScalarValueLift(_, rawSource @ External.Source.UnparsedProperty(rawSourceName), _, _, _) =>
+        case rawLift @ ScalarValueLift(_, External.Source.UnparsedProperty(rawSourceName), _, _, _) =>
           val uuid      = UUID.randomUUID().toString
           val source    = External.Source.UnparsedProperty(rawSourceName.stripPrefix("value.").replace(".", "_"))
           val scalarTag = ScalarTag(uuid, source)
@@ -335,16 +335,16 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
   def expandBatchAction(quoted: Tree)(call: (Tree, Tree, Tree) => Tree): Tree =
     BetaReduction(extractAst(quoted)) match {
-      case totalAst @ Foreach(lift: Lift, alias, body) =>
+      case Foreach(lift: Lift, alias, body) =>
         val batch         = lift.value.asInstanceOf[Tree]
         val batchItemType = batch.tpe.typeArgs.head
         c.typecheck(q"(value: $batchItemType) => value") match {
           case q"($param) => $value" =>
             val nestedLift =
               lift match {
-                case ScalarQueryLift(name, batch: Tree, encoder: Tree, quat) =>
+                case ScalarQueryLift(_, _: Tree, encoder: Tree, quat) =>
                   ScalarValueLift("value", External.Source.UnparsedProperty("value"), value, encoder, quat)
-                case CaseClassQueryLift(name, batch: Tree, quat) =>
+                case CaseClassQueryLift(_, _: Tree, quat) =>
                   CaseClassValueLift("value", "value", value, quat)
               }
             val (ast, _) = reifyLiftings(BetaReduction(body, alias -> nestedLift))

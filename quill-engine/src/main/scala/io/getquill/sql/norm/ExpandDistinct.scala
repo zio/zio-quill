@@ -59,7 +59,7 @@ class ExpandDistinct(traceConfig: TraceConfig) {
           // query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id))
           // cannot treat such a case normally or "confused" queries will result e.g:
           // SELECT p.embname, p.embid FROM (SELECT DISTINCT emb.name /* Where the heck is 'emb' coming from? */ AS embname, emb.id AS embid FROM Parent p) AS p
-          case d @ Distinct(Map(q, x, p @ Property.Opinionated(_, _, _, Hidden))) =>
+          case d @ Distinct(Map(_, _, Property.Opinionated(_, _, _, Hidden))) =>
             trace"ExpandDistinct Keep Distinct(Map(q, _, Property(Hidden)))" andReturn d
 
           // This was a buggy clause that was not well typed. Not needed anymore since we have SheathLeafClauses

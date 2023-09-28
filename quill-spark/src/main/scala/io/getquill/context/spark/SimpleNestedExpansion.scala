@@ -17,11 +17,11 @@ object TopLevelExpansion {
 
   private def apply(value: SelectValue, length: Int): List[SelectValue] =
     value match {
-      case SelectValue(Tuple(values), alias, concat) =>
+      case SelectValue(Tuple(values), _, concat) =>
         values.zipWithIndex.map { case (ast, i) =>
           SelectValue(ast, Some(s"_${i + 1}"), concat)
         }
-      case SelectValue(CaseClass(_, fields), alias, concat) =>
+      case SelectValue(CaseClass(_, fields), _, concat) =>
         fields.map { case (name, ast) =>
           SelectValue(ast, Some(name), concat)
         }
@@ -31,7 +31,7 @@ object TopLevelExpansion {
       // and therefore cannot directly expand it into select-values since there could be fields that we have missed.
       // The only good option that I have thought of so far, is to expand the Ident in the SparkDialect directly
       // in the FlattenSqlTokenizer with special handling for length=1 selects
-      case SelectValue(Ident(singleFieldName, q @ Quat.Product(fields)), alias, concat)
+      case SelectValue(Ident(singleFieldName, q @ Quat.Product(fields)), _, concat)
           if (length == 1 && q.tpe == Quat.Product.Type.Concrete) =>
         fields.map { case (name, quat) =>
           SelectValue(Property(Ident(singleFieldName, quat), name), Some(name), concat)
@@ -81,9 +81,9 @@ object SingleValuePrimitive {
       case op: UnaryOperation if (op.quat.isPrimitive)      => true
       case op: IterableOperation if (op.quat.isPrimitive)   => true
       case i: Infix if (!i.quat.isInstanceOf[Quat.Product]) => true
-      case l: Lift                                          => true
+      case _: Lift                                          => true
       // idents should not be directly tokenized as sql values since they always need to be a start-select in a query
-      case id: Ident => false
+      case _: Ident => false
       case _ =>
         import io.getquill.util.Messages._
         trace(
@@ -100,13 +100,13 @@ object SimpleNestedExpansion extends StatelessQueryTransformer {
     q match {
       case q: FlattenSqlQuery => // if (isTopLevel) =>  //needs to be for all levels
         expandNested(q.copy(select = TopLevelExpansion(q.select, q.select.length))(q.quat), level)
-      case other =>
+      case _ =>
         super.apply(q, level)
     }
 
   protected override def expandNested(q: FlattenSqlQuery, level: QueryLevel): FlattenSqlQuery =
     q match {
-      case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
+      case FlattenSqlQuery(_, _, _, _, _, _, select, _) =>
         val newFroms = q.from.map(expandContext(_))
 
         def distinctIfNotTopLevel(values: List[SelectValue]) =

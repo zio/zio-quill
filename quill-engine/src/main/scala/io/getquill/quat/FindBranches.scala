@@ -6,19 +6,19 @@ import io.getquill.quat.FindBranches.Result.ProductWithBranches
 
 object VerifyNoBranches {
   private implicit class DotsExt(list: List[String]) {
-    def dots = list.mkString(".")
+    def dots: String = list.mkString(".")
   }
 
   private implicit class StringExt(str: String) {
-    def appendIfNotEmpty(value: String) =
+    def appendIfNotEmpty(value: String): String =
       str.trim match {
         case ""    => ""
         case other => other + value
       }
-    def isNonEmpty = str.trim != ""
+    def isNonEmpty: Boolean = str.trim != ""
   }
 
-  case class BranchFound(
+  final case class BranchFound(
     outerClass: Option[String],
     pathToInnerField: String,
     innerField: String,
@@ -54,7 +54,7 @@ object VerifyNoBranches {
             children.flatMap(child => recurse(child, classesToHere :+ name))
         }
 
-      val foundBranches = recurse(result, List())
+      val foundBranches = recurse(result, List.empty)
       // In some situations e.g. CCOuter(a: CCFoo(bar: CCBar(baz), b: CCFoo(bar: CCBar(baz)) we will have two messages:
       // field 'baz' will be used instead of a in Outer.a
       // and:
@@ -75,9 +75,9 @@ object VerifyNoBranches {
   }
 
   // TODO What about a a top-level branch, what's the text for that?
-  case class BranchFoundMessage(msg: String)
+  final case class BranchFoundMessage(msg: String)
   object BranchFoundMessage {
-    def makeFrom(found: BranchFound) = {
+    def makeFrom(found: BranchFound): BranchFoundMessage = {
       val link = "https://getquill.io/#extending-quill-custom-encoding"
       // The field 'value' in Person.Name.First will be use in the query[Person] instead of Person.name or Person.Name.first.
       // Are you sure this is the intended behavior? Perhaps you meant to write an encoder/decoder for Person.Name.First?
@@ -95,10 +95,10 @@ object VerifyNoBranches {
     }
   }
 
-  case class Output(messages: List[BranchFoundMessage])
-  def in(quat: Quat) = {
+  final case class Output(messages: List[BranchFoundMessage])
+  def in(quat: Quat): Output = {
     val foundBranchResults = FindBranches.in(quat)
-    val foundBranches      = foundBranchResults.map(BranchFound.constructFrom(_)).getOrElse(List())
+    val foundBranches      = foundBranchResults.map(BranchFound.constructFrom(_)).getOrElse(List.empty)
     Output(foundBranches.map(BranchFoundMessage.makeFrom(_)))
   }
 }
@@ -107,11 +107,11 @@ private[getquill] object FindBranches {
 
   sealed trait Result
   object Result {
-    case class SingleBranch private[quat] (path: List[PathElement], innermostField: String) extends Result
-    case class ProductWithBranches(name: String, children: List[Result])                    extends Result
+    final case class SingleBranch private[quat] (path: List[PathElement], innermostField: String) extends Result
+    final case class ProductWithBranches(name: String, children: List[Result])                    extends Result
   }
 
-  def in(quat: Quat) = recurseFind("root", quat)
+  def in(quat: Quat): Option[Result] = recurseFind("root", quat)
 
   private def recurseFind(currentPropName: String, quat: Quat): Option[Result] =
     quat match {
@@ -145,11 +145,11 @@ private[getquill] object FindBranches {
           None
       }
 
-    case class AccumPath private[quat] (first: RootElement, rest: List[PathElement]) {
+    final case class AccumPath private[quat] (first: RootElement, rest: List[PathElement]) {
       def :+(elem: PathElement) = this.copy(rest = rest :+ elem)
     }
     object AccumPath {
-      def make(firstClassName: String) = new AccumPath(RootElement(firstClassName), List())
+      def make(firstClassName: String) = new AccumPath(RootElement(firstClassName), List.empty)
     }
     def recurse(thisField: String, thisQuat: Quat, path: AccumPath): Option[Branch] =
       thisQuat match {
@@ -163,20 +163,20 @@ private[getquill] object FindBranches {
       }
 
     object SingletonProduct {
-      def unapply(quat: Quat) =
+      def unapply(quat: Quat): Option[(String, (String, Quat))] =
         quat match {
           case p: Quat.Product if (p.fields.size == 1) => Some((p.name, p.fields.head))
           case _                                       => None
         }
     }
 
-    case class RootElement(fieldClassName: String)
-    case class PathElement(field: String, fieldClassName: String)
+    final case class RootElement(fieldClassName: String)
+    final case class PathElement(field: String, fieldClassName: String)
 
-    case class Branch(first: RootElement, tailPath: List[PathElement], innermostField: String) {
+    final case class Branch(first: RootElement, tailPath: List[PathElement], innermostField: String) {
       // field name originally given to a branch will always be "root" but this allows a higher level mechanism to set it since
       // the higher level mechanism should know the parent-product of the whole branch
-      def pathWithRootField(fieldName: String) =
+      def pathWithRootField(fieldName: String): List[PathElement] =
         PathElement(fieldName, first.fieldClassName) +: tailPath
     }
   }

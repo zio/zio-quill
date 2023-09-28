@@ -13,12 +13,12 @@ object StatementInterpolator {
   }
 
   object Tokenizer {
-    def apply[T](f: T => Token) = new Tokenizer[T] {
+    def apply[T](f: T => Token): Tokenizer[T] = new Tokenizer[T] {
       def token(v: T) = f(v)
     }
     def withFallback[T](
       fallback: Tokenizer[T] => Tokenizer[T]
-    )(pf: PartialFunction[T, Token]) =
+    )(pf: PartialFunction[T, Token]): Tokenizer[T] =
       new Tokenizer[T] {
         private val stable       = fallback(this)
         override def token(v: T) = pf.applyOrElse(v, stable.token)
@@ -26,7 +26,7 @@ object StatementInterpolator {
   }
 
   implicit class TokenImplicit[T](v: T)(implicit tokenizer: Tokenizer[T]) {
-    def token = tokenizer.token(v)
+    def token: Token = tokenizer.token(v)
   }
 
   implicit def stringTokenizer: Tokenizer[String] =
@@ -55,7 +55,7 @@ object StatementInterpolator {
       case tag: QuotationTag => QuotationTagToken(tag)
       case lift: ScalarLift  => ScalarLiftToken(lift)
       // TODO Longer Explanation
-      case lift: Tag => fail("Cannot tokenizer a non-scalar tagging.")
+      case _: Tag => fail("Cannot tokenizer a non-scalar tagging.")
       case lift: Lift =>
         fail(
           s"Can't tokenize a non-scalar lifting. ${lift.name}\n" +
@@ -102,7 +102,7 @@ object StatementInterpolator {
     Tokenizer[ScalarLiftToken](identity)
 
   implicit class TokenList[T](list: List[T]) {
-    def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]) = {
+    def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]): Statement = {
       val l1 = list.map(_.token)
       val l2 = List.fill(l1.size - 1)(StringToken(sep))
       Statement(Interleave(l1, l2))

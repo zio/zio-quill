@@ -5,10 +5,10 @@ import io.getquill.util.TraceConfig
 
 class OrderTerms(traceConfig: TraceConfig) {
 
-  def unapply(q: Query) =
+  def unapply(q: Query): Option[Query] =
     q match {
 
-      case Take(Map(a: GroupBy, b, c), d) => None
+      case Take(Map(_: GroupBy, _, _), _) => None
 
       // a.sortBy(b => c).filter(d => e) =>
       //     a.filter(d => e).sortBy(b => c)
@@ -25,6 +25,6 @@ class OrderTerms(traceConfig: TraceConfig) {
       case Map(Drop(fm: FlatMap, n), ma, mb) =>
         Some(Drop(Map(fm, ma, mb), n))
 
-      case other => None
+      case _ => None
     }
 }

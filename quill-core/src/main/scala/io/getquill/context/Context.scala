@@ -1,11 +1,9 @@
 package io.getquill.context
 
-import com.typesafe.scalalogging.Logger
 
 import scala.language.higherKinds
 import scala.language.experimental.macros
 import io.getquill.dsl.CoreDsl
-import io.getquill.util.ContextLogger
 import io.getquill.util.Messages.fail
 
 import java.io.Closeable
@@ -50,7 +48,7 @@ trait Context[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy]
     numRows: Int
   ): Result[RunBatchActionReturningResult[T]] = macro ActionMacro.runBatchActionReturningRows[T]
 
-  protected def handleSingleResult[T](sql: String, list: List[T]) =
+  protected def handleSingleResult[T](sql: String, list: List[T]): T =
     list match {
       case Nil =>
         fail(s"Expected a single result from the query: `${sql}` but got a empty result-set!")

@@ -2,7 +2,7 @@ package io.getquill.codegen.model
 
 import java.sql.ResultSet
 
-case class RawSchema[T, C](table: T, columns: Seq[C])
+final case class RawSchema[T, C](table: T, columns: Seq[C])
 
 trait BasicTableMeta {
   def tableSchema: Option[String]
@@ -13,7 +13,7 @@ trait BasicColumnMeta {
   def columnName: String
 }
 
-case class JdbcTableMeta(
+final case class JdbcTableMeta(
   tableCat: Option[String],
   tableSchema: Option[String],
   tableName: String,
@@ -21,7 +21,7 @@ case class JdbcTableMeta(
 ) extends BasicTableMeta
 
 object JdbcTableMeta {
-  def fromResultSet(rs: ResultSet) = JdbcTableMeta(
+  def fromResultSet(rs: ResultSet): JdbcTableMeta = JdbcTableMeta(
     tableCat = Option(rs.getString("TABLE_CAT")),
     tableSchema = Option(rs.getString("TABLE_SCHEM")),
     tableName = rs.getString("TABLE_NAME"),
@@ -29,7 +29,7 @@ object JdbcTableMeta {
   )
 }
 
-case class JdbcColumnMeta(
+final case class JdbcColumnMeta(
   tableCat: Option[String],
   tableSchema: Option[String],
   tableName: String,
@@ -41,7 +41,7 @@ case class JdbcColumnMeta(
 ) extends BasicColumnMeta
 
 object JdbcColumnMeta {
-  def fromResultSet(rs: ResultSet) =
+  def fromResultSet(rs: ResultSet): JdbcColumnMeta =
     JdbcColumnMeta(
       tableCat = Option(rs.getString("TABLE_CAT")),
       tableSchema = Option(rs.getString("TABLE_SCHEM")),

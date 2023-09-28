@@ -6,5 +6,5 @@ import com.github.jasync.sql.db.mysql.util.URLParser
 import com.typesafe.config.Config
 import io.getquill.context.jasync.JAsyncContextConfig
 
-case class MysqlJAsyncContextConfig(config: Config)
+final case class MysqlJAsyncContextConfig(config: Config)
     extends JAsyncContextConfig[MySQLConnection](config, new MySQLConnectionFactory(_), URLParser.INSTANCE)

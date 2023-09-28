@@ -19,9 +19,9 @@ import io.getquill.norm.Normalize
  */
 class ExpandJoin(normalize: Normalize) {
 
-  def apply(q: Ast) = expand(q, None)
+  def apply(q: Ast): Ast = expand(q, None)
 
-  def expand(q: Ast, id: Option[Ident]) =
+  def expand(q: Ast, id: Option[Ident]): Ast =
     Transform(q) {
       case q @ Join(
             _,
@@ -54,7 +54,7 @@ class ExpandJoin(normalize: Normalize) {
         val or       = BetaReduction(o, tB -> bt)
         (Join(t, a, br, tA, tB, or), Tuple(List(tA, bt)))
 
-      case q @ Join(t, a, b, tA, tB, on) =>
+      case Join(t, a, b, tA, tB, on) =>
         (Join(t, nestedExpand(a, tA), nestedExpand(b, tB), tA, tB, on), Tuple(List(tA, tB)))
     }
 

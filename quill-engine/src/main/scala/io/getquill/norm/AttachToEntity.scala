@@ -86,6 +86,6 @@ object AttachToEntity {
       case DistinctOn(a: Query, b, c) => DistinctOn(applyWithId(f, Some(b), nextId + 1)(a), b, c)
 
       case IsEntity(q) => f(q, alias.getOrElse(Ident(s"[tmp_attachtoentity${nextId}]", q.quat)))
-      case other       => fail(s"Can't find an 'Entity' in '$q'")
+      case _       => fail(s"Can't find an 'Entity' in '$q'")
     }
 }

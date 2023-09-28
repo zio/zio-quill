@@ -11,6 +11,7 @@ import io.getquill.codegen.model.{BySomeTableData, JdbcColumnMeta, JdbcTableMeta
 import io.getquill.codegen.util.StringUtil._
 import io.getquill.util.LoadConfig
 import javax.sql.DataSource
+import io.getquill.codegen.model.TableStereotype
 
 /**
  * This generator generates a query schema trait which can be composed with a
@@ -142,7 +143,7 @@ class ComposeableTraitsJdbcCodegen(
   ) = this(Seq(connectionMaker), packagePrefix, false)
 
   override def makeGenerators: Seq[ContextifiedUnitGenerator] = new MultiGeneratorFactory(generatorMaker).apply
-  override def generatorMaker = new SingleGeneratorFactory[ContextifiedUnitGenerator] {
+  override def generatorMaker: SingleGeneratorFactory[ContextifiedUnitGenerator] = new SingleGeneratorFactory[ContextifiedUnitGenerator] {
     override def apply(emitterSettings: EmitterSettings[JdbcTableMeta, JdbcColumnMeta]): ContextifiedUnitGenerator =
       new ContextifiedUnitGenerator(emitterSettings)
   }
@@ -159,7 +160,7 @@ class ComposeableTraitsJdbcCodegen(
   class ContextifiedUnitGenerator(emitterSettings: EmitterSettings[JdbcTableMeta, JdbcColumnMeta])
       extends CodeEmitter(emitterSettings) {
 
-    def possibleTraitNesting(innerCode: String) = if (nestedTrait) {
+    def possibleTraitNesting(innerCode: String): String = if (nestedTrait) {
       s"""
          |object ${packageName.getOrElse(defaultNamespace).capitalize}Schema {
          |  ${indent(innerCode)}
@@ -179,7 +180,7 @@ class ComposeableTraitsJdbcCodegen(
                         |""".stripMargin.trimFront)
       .getOrElse("")
 
-    override def CombinedTableSchemas = new CombinedTableSchemasGen(_, _) {
+    override def CombinedTableSchemas: (TableStereotype[TableMeta,ColumnMeta], QuerySchemaNaming) => CombinedTableSchemasGen = new CombinedTableSchemasGen(_, _) {
       override def objectName: Option[String] = super.objectName.map(_ + "Dao")
     }
   }

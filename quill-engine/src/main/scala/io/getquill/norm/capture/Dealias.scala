@@ -5,7 +5,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.{Interpolator, TraceConfig}
 import io.getquill.util.Messages.TraceType
 
-case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends StatefulTransformer[Option[Ident]] {
+final case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends StatefulTransformer[Option[Ident]] {
 
   val interp = new Interpolator(TraceType.Standard, traceConfig, 3)
   import interp._
@@ -34,11 +34,11 @@ case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends State
         dealias(a, b, c)(GroupBy)
       case g @ GroupByMap(qry, b, c, d, e) =>
         apply(qry) match {
-          case (an, t @ Dealias(Some(alias), traceConfig)) =>
+          case (an, t @ Dealias(Some(alias), _)) =>
             val b1 = alias.copy(quat = b.quat)
             val d1 = alias.copy(quat = d.quat)
             (GroupByMap(an, b1, BetaReduction(c, b -> b1), d1, BetaReduction(e, d -> d1)), t)
-          case other =>
+          case _ =>
             (g, Dealias(Some(b), traceConfig))
         }
       case DistinctOn(a, b, c) =>
@@ -70,24 +70,24 @@ case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends State
 
   private def dealias[T](a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => T) =
     apply(a) match {
-      case (an, t @ Dealias(Some(alias), traceConfig)) =>
+      case (an, t @ Dealias(Some(alias), _)) =>
         val retypedAlias = alias.copy(quat = b.quat)
         trace"Dealias $b into $retypedAlias".andLog()
         (f(an, retypedAlias, BetaReduction(c, b -> retypedAlias)), t)
-      case other =>
+      case _ =>
         (f(a, b, c), Dealias(Some(b), traceConfig))
     }
 }
 
 object Dealias {
-  def apply(query: Query)(traceConfig: TraceConfig) =
+  def apply(query: Query)(traceConfig: TraceConfig): Query =
     new Dealias(None, traceConfig)(query) match {
       case (q, _) => q
     }
 }
 
 class DealiasApply(traceConfig: TraceConfig) {
-  def apply(query: Query) =
+  def apply(query: Query): Query =
     new Dealias(None, traceConfig)(query) match {
       case (q, _) => q
     }

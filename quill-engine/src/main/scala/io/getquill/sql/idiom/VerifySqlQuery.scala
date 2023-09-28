@@ -5,11 +5,11 @@ import io.getquill.context.sql._
 import io.getquill.quotation.FreeVariables
 import io.getquill.quat.Quat
 
-case class Error(free: List[Ident], ast: Ast)
-case class InvalidSqlQuery(errors: List[Error]) {
-  override def toString = {
+final case class Error(free: List[Ident], ast: Ast)
+final case class InvalidSqlQuery(errors: List[Error]) {
+  override def toString: String = {
     val allVars  = errors.flatMap(_.free).distinct
-    val firstVar = errors.headOption.flatMap(_.free.headOption).getOrElse("someVar")
+    errors.headOption.flatMap(_.free.headOption).getOrElse("someVar")
     s"""
        |When synthesizing Joins, Quill found some variables that could not be traced back to their
        |origin: ${allVars.map(_.name)}. Typically this happens when there are some flatMapped
@@ -30,18 +30,18 @@ object VerifySqlQuery {
   private def verify(query: SqlQuery): Option[InvalidSqlQuery] =
     query match {
       case q: FlattenSqlQuery             => verify(q)
-      case SetOperationSqlQuery(a, op, b) => verify(a).orElse(verify(b))
-      case UnaryOperationSqlQuery(op, q)  => verify(q)
+      case SetOperationSqlQuery(a, _, b) => verify(a).orElse(verify(b))
+      case UnaryOperationSqlQuery(_, q)  => verify(q)
     }
 
   private def verifyFlatJoins(q: FlattenSqlQuery) = {
 
     def loop(l: List[FromContext], available: Set[String]): Set[String] =
       l.foldLeft(available) {
-        case (av, TableContext(_, alias)) => Set(alias)
-        case (av, InfixContext(_, alias)) => Set(alias)
-        case (av, QueryContext(_, alias)) => Set(alias)
-        case (av, JoinContext(_, a, b, on)) =>
+        case (_, TableContext(_, alias)) => Set(alias)
+        case (_, InfixContext(_, alias)) => Set(alias)
+        case (_, QueryContext(_, alias)) => Set(alias)
+        case (av, JoinContext(_, a, b, _)) =>
           av ++ loop(a :: Nil, av) ++ loop(b :: Nil, av)
         case (av, FlatJoinContext(_, a, on)) =>
           val nav     = av ++ loop(a :: Nil, av)
@@ -54,7 +54,7 @@ object VerifySqlQuery {
           )
           nav
       }
-    loop(q.from, Set())
+    loop(q.from, Set.empty)
   }
 
   private def verify(query: FlattenSqlQuery): Option[InvalidSqlQuery] = {
@@ -101,7 +101,7 @@ object VerifySqlQuery {
         }
 
     val nestedErrors =
-      query.from.collect { case QueryContext(query, alias) =>
+      query.from.collect { case QueryContext(query, _) =>
         verify(query).map(_.errors)
       }.flatten.flatten
 
@@ -146,7 +146,7 @@ object VerifySqlQuery {
           throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
 
         case cond: If => checkIllegalIdents(cond.condition)
-        case other    => None
+        case _    => None
       })
   }
 }

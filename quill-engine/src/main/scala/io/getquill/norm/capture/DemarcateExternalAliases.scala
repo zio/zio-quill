@@ -20,9 +20,9 @@ import io.getquill.ast._
  * body. Other places where this needs to be done (e.g. in a Tuple that
  * `Returning` returns) are done in `ExpandReturning`.
  */
-private[getquill] case class DemarcateExternalAliases(externalIdent: Ident) extends StatelessTransformer {
+final private[getquill] case class DemarcateExternalAliases(externalIdent: Ident) extends StatelessTransformer {
 
-  def applyNonOverride(idents: Ident*)(ast: Ast) =
+  def applyNonOverride(idents: Ident*)(ast: Ast): Ast =
     if (idents.forall(_ != externalIdent)) apply(ast)
     else ast
 
@@ -81,7 +81,7 @@ object DemarcateExternalAliases {
     case Returning(a, id, body) =>
       Returning(a, id, demarcateQueriesInBody(id, body))
     case ReturningGenerated(a, id, body) =>
-      val d = demarcateQueriesInBody(id, body)
+      demarcateQueriesInBody(id, body)
       ReturningGenerated(a, id, demarcateQueriesInBody(id, body))
     case other =>
       other

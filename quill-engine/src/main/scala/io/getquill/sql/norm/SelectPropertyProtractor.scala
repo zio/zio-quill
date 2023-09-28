@@ -33,23 +33,23 @@ import io.getquill.sql.norm.InContext.{InContextType, InInfixContext, InQueryCon
  * that we may not know the FromContext that a property comes from since it may
  * not exist.
  */
-case class InContext(from: List[FromContext]) {
+final case class InContext(from: List[FromContext]) {
   // Are we sure it is a subselect
-  def isSubselect(ast: Ast) =
+  def isSubselect(ast: Ast): Boolean =
     contextReferenceType(ast) match {
       case Some(InQueryContext) => true
       case _                    => false
     }
 
   // Are we sure it is a table reference
-  def isEntityReference(ast: Ast) =
+  def isEntityReference(ast: Ast): Boolean =
     contextReferenceType(ast) match {
       case Some(InTableContext) => true
       case Some(InInfixContext) => true
       case _                    => false
     }
 
-  def contextReferenceType(ast: Ast) = {
+  def contextReferenceType(ast: Ast): Option[InContextType] = {
     val references = collectTableAliases(from)
     ast match {
       case Ident(v, _)                           => references.get(v)
@@ -65,7 +65,7 @@ case class InContext(from: List[FromContext]) {
       case c: InfixContext             => Map(c.alias -> InInfixContext)
       case JoinContext(_, a, b, _)     => collectTableAliases(List(a)) ++ collectTableAliases(List(b))
       case FlatJoinContext(_, from, _) => collectTableAliases(List(from))
-    }.foldLeft(Map[String, InContextType]())(_ ++ _)
+    }.foldLeft(Map.empty[String, InContextType])(_ ++ _)
 }
 object InContext {
   sealed trait InContextType
@@ -74,8 +74,8 @@ object InContext {
   case object InInfixContext extends InContextType
 }
 
-case class SelectPropertyProtractor(from: List[FromContext]) {
-  val inContext = InContext(from)
+final case class SelectPropertyProtractor(from: List[FromContext]) {
+  val inContext: InContext = InContext(from)
 
   /*
    * Properties that do not belong to an entity i.e. where the 'from' is not
@@ -85,7 +85,7 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
   def freezeNonEntityProps(p: Ast, isEntity: Boolean): Ast = {
     def freezeEntityPropsRecurse(p: Ast): Ast =
       p match {
-        case Property.Opinionated(ast, name, r, v) =>
+        case Property.Opinionated(ast, name, _, _) =>
           Property.Opinionated(freezeEntityPropsRecurse(ast), name, Renameable.Fixed, Visible)
         case other =>
           other
@@ -142,7 +142,7 @@ case class SelectPropertyProtractor(from: List[FromContext]) {
  * quat: CC(foo,bar:Quat(a,b)) with core id:Ident(x) =>
  *   List( Prop(id,foo) [foo], Prop(Prop(id,bar),a) [bar.a], Prop(Prop(id,bar),b) [bar.b] )
  */
-case class ProtractQuat(refersToEntity: Boolean) {
+final case class ProtractQuat(refersToEntity: Boolean) {
   def apply(quat: Quat.Product, core: Ast): List[(Property, List[String])] = {
     val prot = applyInner(quat, core)
     prot

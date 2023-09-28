@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 
 class QueryLogger(logToFile: LogToFile) {
 
-  val runtime =
+  val runtime: Option[Runtime.Scoped[Unit]] =
     Unsafe.unsafe { implicit u =>
       logToFile match {
         case LogToFile.Enabled(logFile) =>

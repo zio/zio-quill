@@ -12,7 +12,7 @@ import io.getquill.util.TraceConfig
 
 class AdHocReduction(traceConfig: TraceConfig) {
 
-  def unapply(q: Query) =
+  def unapply(q: Query): Option[Query] =
     q match {
 
       // ---------------------------
@@ -47,7 +47,7 @@ class AdHocReduction(traceConfig: TraceConfig) {
       case FlatMap(a, b, UnionAll(c, d)) =>
         Some(UnionAll(FlatMap(a, b, c), FlatMap(a, b, d)))
 
-      case other => None
+      case _ => None
     }
 
 }

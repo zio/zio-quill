@@ -1,11 +1,12 @@
 package io.getquill.context.orientdb.dsl
 
 import io.getquill.context.orientdb.OrientDBContext
+import io.getquill.Quoted
 
 trait OrientDBDsl {
   this: OrientDBContext[_] =>
 
   implicit class Like(s1: String) {
-    def like(s2: String) = quote(sql"$s1 like $s2".as[Boolean])
+    def like(s2: String): Quoted[Boolean] = quote(sql"$s1 like $s2".as[Boolean])
   }
 }

@@ -23,7 +23,7 @@ class JdbcGeneratorBase(val connectionMakers: Seq[JdbcConnectionMaker], val pack
 trait JdbcGenerator extends Generator { this: JdbcCodeGeneratorComponents with JdbcStereotyper =>
   val connectionMakers: Seq[JdbcConnectionMaker]
   val databaseType: DatabaseType = DiscoverDatabaseType.apply(connectionMakers.head)
-  val columnGetter               = (cm: ColumnMeta) => cm.columnName
+  val columnGetter: ColumnMeta => String               = (cm: ColumnMeta) => cm.columnName
 
   override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
     databaseType match {

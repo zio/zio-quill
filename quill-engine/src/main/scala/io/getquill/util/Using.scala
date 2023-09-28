@@ -144,7 +144,7 @@ object Using {
     import Manager._
 
     private var closed                             = false
-    private[this] var resources: List[Resource[_]] = Nil
+    private[this] var resources: List[Resource[_]] = List.empty
 
     /**
      * Registers the specified resource with this manager, so that the resource

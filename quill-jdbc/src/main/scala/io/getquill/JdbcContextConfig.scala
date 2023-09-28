@@ -7,9 +7,9 @@ import com.zaxxer.hikari.HikariDataSource
 import java.util.Properties
 import scala.util.control.NonFatal
 
-case class JdbcContextConfig(config: Config) {
+final case class JdbcContextConfig(config: Config) {
 
-  def configProperties = {
+  def configProperties: Properties = {
     import scala.jdk.CollectionConverters._
     val p = new Properties
     for (entry <- config.entrySet.asScala)
@@ -17,7 +17,7 @@ case class JdbcContextConfig(config: Config) {
     p
   }
 
-  def dataSource =
+  def dataSource: HikariDataSource =
     try
       new HikariDataSource(new HikariConfig(configProperties))
     catch {

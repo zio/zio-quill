@@ -36,8 +36,7 @@ class Normalize(config: TranspileConfig) extends StatelessTransformer {
     trace"Avoid Capture and Normalize $q into:" andReturn
       norm(DealiasPhase(AvoidAliasConflictPhase(q, false)))
 
-  private def traceNorm[T](label: String) =
-    trace[T](s"${label} (Normalize)", 1, Normalizations)
+  
 
   private def demarcate(heading: String) =
     ((ast: Query) => title(s"(Normalize) $heading", TraceType.Normalizations)(ast))

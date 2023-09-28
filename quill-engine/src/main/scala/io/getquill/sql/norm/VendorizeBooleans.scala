@@ -33,7 +33,7 @@ object VendorizeBooleans extends StatelessTransformer {
   object OperatorOnExpressions {
     import BooleanOperator._
 
-    def unapply(op: BinaryOperator) =
+    def unapply(op: BinaryOperator): Option[BinaryOperator] =
       op match {
         case `||` | `&&` => Some(op)
         case _           => None
@@ -43,7 +43,7 @@ object VendorizeBooleans extends StatelessTransformer {
   object OperatorOnValues {
     import NumericOperator._
 
-    def unapply(op: BinaryOperator) =
+    def unapply(op: BinaryOperator): Option[BinaryOperator] =
       op match {
         case `<` | `>` | `<=` | `>=` | EqualityOperator.`_==` | EqualityOperator.`_!=` => Some(op)
         case _                                                                         => None
@@ -53,7 +53,7 @@ object VendorizeBooleans extends StatelessTransformer {
   object StringTransformerOperation {
     import StringOperator._
 
-    def unapply(op: UnaryOperation) =
+    def unapply(op: UnaryOperation): Option[UnaryOperation] =
       op.operator match {
         case `toUpperCase` | `toLowerCase` | `toLong` | `toInt` => Some(op)
         case _                                                  => None

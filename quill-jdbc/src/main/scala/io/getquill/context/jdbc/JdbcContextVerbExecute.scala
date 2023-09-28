@@ -7,6 +7,7 @@ import io.getquill.util.ContextLogger
 import io.getquill.{NamingStrategy, ReturnAction}
 
 import java.sql.{Connection, ResultSet, Statement}
+import java.sql.PreparedStatement
 
 trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     extends JdbcContextTypes[Dialect, Naming] {
@@ -77,7 +78,7 @@ trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       extractResult(ps.getGeneratedKeys, conn, extractor)
     }
 
-  protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction) =
+  protected def prepareWithReturning(sql: String, conn: Connection, returningBehavior: ReturnAction): PreparedStatement =
     returningBehavior match {
       case ReturnRecord           => conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
       case ReturnColumns(columns) => conn.prepareStatement(sql, columns.toArray)

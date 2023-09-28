@@ -11,7 +11,7 @@ class StereotypePackager[Emitter, TableMeta, ColumnMeta] {
     emitterMaker: (EmitterSettings[TableMeta, ColumnMeta]) => Emitter,
     packagingStrategy: PackagingStrategy,
     tables: Seq[TableStereotype[TableMeta, ColumnMeta]]
-  ) = {
+  ): Seq[Emitter] = {
     import io.getquill.codegen.util.MapExtensions._
     import packagingStrategy._
     implicit class OptionSeqExtentions[T](optionalSeq: Option[Seq[T]]) {

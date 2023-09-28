@@ -19,12 +19,12 @@ import io.getquill.norm.BetaReduction
 // Note that this is the case with Oracle. With SqlServer we also use this functionality
 // but with output causes the alias becomes OUTPUT so it can be different in those cases.
 object HideTopLevelFilterAlias extends StatelessTransformer {
-  def hideAlias(alias: Ident, in: Ast) = {
+  def hideAlias(alias: Ident, in: Ast): (Ident, Ast) = {
     val newAlias = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden)
     (newAlias, BetaReduction(in, alias -> newAlias))
   }
 
-  def hideAssignmentAlias(assignment: Assignment) = {
+  def hideAssignmentAlias(assignment: Assignment): Assignment = {
     val alias         = assignment.alias
     val newAlias      = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden)
     val newValue      = BetaReduction(assignment.value, alias -> newAlias)

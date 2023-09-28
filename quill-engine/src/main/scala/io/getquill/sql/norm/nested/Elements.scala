@@ -18,7 +18,7 @@ object Elements {
    *
    * This class keeps track of the values needed in order to perform do this.
    */
-  case class OrderedSelect(order: List[Int], selectValue: SelectValue) extends PseudoAst {
+  final case class OrderedSelect(order: List[Int], selectValue: SelectValue) extends PseudoAst {
     override def toString: String = s"[${order.mkString(",")}]${selectValue}"
   }
   object OrderedSelect {

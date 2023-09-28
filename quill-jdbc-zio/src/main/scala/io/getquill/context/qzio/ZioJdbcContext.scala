@@ -197,7 +197,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       // We can just return the op in the case that there is already a connection set on the fiber ref
       // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
       // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
-      case Some(connection) => op
+      case Some(_) => op
       case None =>
         val connection: ZIO[DataSource with Scope, Throwable, Unit] = for {
           env        <- ZIO.service[DataSource]
@@ -218,7 +218,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
           // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
           _ <- ZIO.addFinalizerExit {
                  case Success(_)     => blocking(ZIO.succeed(connection.commit()))
-                 case Failure(cause) => blocking(ZIO.succeed(connection.rollback()))
+                 case Failure(_) => blocking(ZIO.succeed(connection.rollback()))
                }
         } yield ()
 

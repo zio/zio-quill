@@ -41,7 +41,7 @@ trait TranspileConfigSummoning {
           foundMemberNames.contains(simpleName)
         }
       case None =>
-        List()
+        List.empty
     }
   }
 
@@ -60,21 +60,21 @@ trait TranspileConfigSummoning {
           foundMemberNames.contains(simpleName)
         }
       case None =>
-        List()
+        List.empty
     }
   }
 
   private[getquill] def getConfigListMembers(consMember: Type): List[Type] = {
     val isNil  = consMember <:< typeOf[io.getquill.norm.ConfigList.HNil]
     val isCons = consMember <:< typeOf[io.getquill.norm.ConfigList.::[_, _]]
-    if (isNil) Nil
+    if (isNil) List.empty
     else if (isCons) {
       val member = consMember.typeArgs(0)
       val next   = consMember.typeArgs(1)
       member :: getConfigListMembers(next)
     } else {
       c.warn(s"Unknown parameter of ConfigList ${consMember} is not a HList Cons or Nil. Ignoring it.")
-      Nil
+      List.empty
     }
   }
 

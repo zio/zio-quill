@@ -1,7 +1,6 @@
 package io.getquill.dsl
 
 import scala.reflect.macros.whitebox.{Context => MacroContext}
-import io.getquill.Embedded
 import io.getquill.util.OptionalTypecheck
 import io.getquill.util.MacroContextExt._
 
@@ -77,13 +76,13 @@ trait ValueComputation {
           def path(tree: Tree): List[TermName] =
             tree match {
               case q"$a.$b"                => path(a) :+ b
-              case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
+              case q"$a.map[$_]($_ => $c)" => path(a) ++ path(c)
               case _                       => Nil
             }
           path(f.body)
         }
 
-      def filter(value: Value, path: List[TermName] = Nil): Option[Value] =
+      def filter(value: Value, path: List[TermName] = List.empty): Option[Value] =
         value match {
           case value if paths.contains(path ++ value.term) =>
             None

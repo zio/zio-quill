@@ -31,12 +31,13 @@ import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
 import io.getquill.context.{CannotReturn, ExecutionType}
 import io.getquill.quat.Quat
+import io.getquill.idiom.Statement
 
 class SparkDialect extends SparkIdiom
 
 trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
-  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) =
+  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] =
     super.sqlQueryTokenizer
 
   def liftingPlaceholder(index: Int): String = "?"
@@ -50,7 +51,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
     implicit naming: NamingStrategy
-  ) = {
+  ): (Ast, Statement, ExecutionType) = {
     val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, idiomContext.config))
 
     implicit val implicitIdiomContext: IdiomContext = idiomContext
@@ -79,9 +80,9 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     astTokenizer: Tokenizer[Ast],
     strategy: NamingStrategy
   ): Tokenizer[Ident] = Tokenizer[Ident] {
-    case id @ Ident(name, q @ Quat.Product(fields)) if (q.tpe == Quat.Product.Type.Concrete) =>
-      stmt"struct(${fields.map { case (field, subQuat) => (Property(id, field): Ast) }.toList.token})"
-    case id @ Ident(name, q: Quat.Product) if (q.tpe == Quat.Product.Type.Abstract) =>
+    case id @ Ident(_, q @ Quat.Product(fields)) if (q.tpe == Quat.Product.Type.Concrete) =>
+      stmt"struct(${fields.map { case (field, _) => (Property(id, field): Ast) }.toList.token})"
+    case Ident(name, q: Quat.Product) if (q.tpe == Quat.Product.Type.Abstract) =>
       stmt"struct(${name.token}.*)"
     // Situations where a single ident arise with is a Quat.Value typically only happen when an operation yields a single SelectValue
     // e.g. a concatMap (or aggregation?)
@@ -129,7 +130,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
         case List(SelectValue(Ident(a, _: Quat.Primitive), _, _)) =>
           stmt"${a.token}.*"
         // If the selection is a single value e.g. SelectValue(prop.value), SelectValue(Constant) return it right here as a SingleValuePrimitive
-        case sv @ List(SelectValue(a @ SingleValuePrimitive(), _, _)) =>
+        case sv @ List(SelectValue(SingleValuePrimitive(), _, _)) =>
           sv.token
         // Otherwise it should have multiple values.
         // TODO Maybe we should even introduce an exception here because all the support single-value selects have already been enumerated

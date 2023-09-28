@@ -13,58 +13,58 @@ object Messages {
   private def cache[T](name: String, value: => T): T =
     cacheMap.getOrElseUpdate(name, value).asInstanceOf[T]
 
-  def quatKryoPoolSize =
+  def quatKryoPoolSize: Int =
     cache("quill.quat.kryoPool", variable("quill.quat.kryoPool", "quill_quat_kryoPool", "10").toInt)
-  def maxQuatFields =
+  def maxQuatFields: Int =
     cache("quill.quat.tooManyFields", variable("quill.quat.tooManyFields", "quill_quat_tooManyFields", "500").toInt)
-  def attachTopLevelQuats = cache(
+  def attachTopLevelQuats: Boolean = cache(
     "quill.quat.attachTopLevel",
     variable("quill.quat.attachTopLevel", "quill_quat_attachTopLevel", "true").toBoolean
   )
-  def strictQuatChecking =
+  def strictQuatChecking: Boolean =
     cache("quill.quat.strict", variable("quill.quat.strict", "quill_quat_strict", "false").toBoolean)
-  def prettyPrint =
+  def prettyPrint: Boolean =
     cache("quill.macro.log.pretty", variable("quill.macro.log.pretty", "quill_macro_log", "false").toBoolean)
-  def alwaysAlias =
+  def alwaysAlias: Boolean =
     cache("quill.query.alwaysAlias", variable("quill.query.alwaysAlias", "quill_query_alwaysAlias", "false").toBoolean)
-  def pruneColumns = cache(
+  def pruneColumns: Boolean = cache(
     "quill.query.pruneColumns",
     variable("quill.query.pruneColumns", "quill_query_pruneColumns", "true").toBoolean
   )
-  def smartBooleans = cache(
+  def smartBooleans: Boolean = cache(
     "quill.query.smartBooleans",
     variable("quill.query.smartBooleans", "quill_query_smartBooleans", "true").toBoolean
   )
-  def debugEnabled = cache("quill.macro.log", variable("quill.macro.log", "quill_macro_log", "true").toBoolean)
-  def traceEnabled =
+  def debugEnabled: Boolean = cache("quill.macro.log", variable("quill.macro.log", "quill_macro_log", "true").toBoolean)
+  def traceEnabled: Boolean =
     cache("quill.trace.enabled", variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean)
-  def traceColors = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
-  def traceOpinions =
+  def traceColors: Boolean = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
+  def traceOpinions: Boolean =
     cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
-  def traceAstSimple =
+  def traceAstSimple: Boolean =
     cache("quill.trace.ast.simple", variable("quill.trace.ast.simple", "quill_trace_ast_simple", "false").toBoolean)
-  def traceQuats =
+  def traceQuats: QuatTrace =
     cache("quill.trace.quat", QuatTrace(variable("quill.trace.quat", "quill_trace_quat", QuatTrace.None.value)))
-  def cacheDynamicQueries = cache(
+  def cacheDynamicQueries: Boolean = cache(
     "quill.query.cacheDynamic",
     variable("quill.query.cacheDynamic", "query_query_cacheDynamic", "true").toBoolean
   )
-  def querySubexpand =
+  def querySubexpand: Boolean =
     cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
-  def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
-  def errorDetail  = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
-  def disableReturning = cache(
+  def quillLogFile: LogToFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
+  def errorDetail: Boolean  = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
+  def disableReturning: Boolean = cache(
     "quill.query.disableReturning",
     variable("quill.query.disableReturning", "quill_query_disableReturning", "false").toBoolean
   )
-  def logBinds = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
-  def queryTooLongForLogs =
+  def logBinds: Boolean = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
+  def queryTooLongForLogs: Int =
     cache("quill.query.tooLong", variable("quill.query.tooLong", "quill_query_tooLong", "200").toInt)
-  def errorPrefix = cache("quill.error.prefix", variable("quill.error.prefix", "quill_error_prefix", "false").toBoolean)
+  def errorPrefix: Boolean = cache("quill.error.prefix", variable("quill.error.prefix", "quill_error_prefix", "false").toBoolean)
 
   sealed trait LogToFile
   object LogToFile {
-    case class Enabled(file: String) extends LogToFile
+    final case class Enabled(file: String) extends LogToFile
     case object Disabled             extends LogToFile
     def apply(switch: String): LogToFile =
       switch.trim match {
@@ -79,7 +79,7 @@ object Messages {
     case object Full  extends QuatTrace { val value = "full"  }
     case object All   extends QuatTrace { val value = "all"   }
     case object None  extends QuatTrace { val value = "none"  }
-    val values = List(Short, Full, All, None)
+    val values: List[QuatTrace] = List(Short, Full, All, None)
     def apply(str: String): QuatTrace =
       values
         .find(_.value == str)
@@ -105,7 +105,7 @@ object Messages {
     )
   }
 
-  def tracesEnabled(tt: TraceType) =
+  def tracesEnabled(tt: TraceType): Boolean =
     (traceEnabled && traces.contains(tt)) || tt == TraceType.Warning
 
   def enableTrace(
@@ -210,13 +210,13 @@ object Messages {
   ) =
     new AstPrinter(traceOpinions, traceAstSimple, traceQuats)
 
-  def fail(msg: String) =
+  def fail(msg: String): Nothing =
     throw new IllegalStateException(msg)
 
-  def title[T](label: String, traceType: TraceType = TraceType.Standard) =
+  def title[T](label: String, traceType: TraceType = TraceType.Standard): T => T =
     trace[T](("=".repeat(10)) + s" $label " + ("=".repeat(10)), 0, traceType)
 
-  def trace[T](label: String, numIndent: Int = 0, traceType: TraceType = TraceType.Standard) =
+  def trace[T](label: String, numIndent: Int = 0, traceType: TraceType = TraceType.Standard): T => T =
     (v: T) => {
       val indent = (0 to numIndent).map(_ => "").mkString("  ")
       if (tracesEnabled(traceType))
@@ -227,6 +227,6 @@ object Messages {
     }
 
   implicit class StringExt(str: String) {
-    def repeat(n: Int) = (0 until n).map(_ => str).mkString
+    def repeat(n: Int): String = (0 until n).map(_ => str).mkString
   }
 }
