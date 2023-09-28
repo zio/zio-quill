@@ -7,7 +7,6 @@ import io.getquill.context.{Context, ExecutionInfo}
 import io.getquill.context.cassandra.{CassandraRowContext, CqlIdiom}
 import io.getquill.context.qzio.ZioContext
 import io.getquill.util.Messages.fail
-import io.getquill.util.ContextLogger
 import zio.stream.ZStream
 import zio.{Chunk, ChunkBuilder, ZEnvironment, ZIO}
 

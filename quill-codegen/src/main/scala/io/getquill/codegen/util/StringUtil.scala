@@ -12,7 +12,7 @@ object StringUtil {
 
   implicit final class StringExtensions(private val str: String) extends AnyVal {
     def snakeToUpperCamel: String = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString
-    def snakeToLowerCamel         = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
+    def snakeToLowerCamel: String         = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
     def lowerCamelToSnake: String = str.split("(?=[A-Z])").mkString("_").toLowerCase
     def uncapitalize =
       new String(

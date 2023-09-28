@@ -4,7 +4,6 @@ import com.datastax.oss.driver.api.core.cql.{BoundStatement, Row}
 import io.getquill.context.cassandra.{CassandraRowContext, CqlIdiom}
 import io.getquill.context.qzio.ZioContext
 import io.getquill.context.{Context, ExecutionInfo}
-import io.getquill.util.ContextLogger
 import io.getquill.{CassandraZioContext, NamingStrategy}
 import zio.stream.ZStream
 import zio.{Tag, ZEnvironment, ZIO, ZLayer}
