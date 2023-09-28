@@ -3,6 +3,7 @@ package io.getquill.context.cassandra
 import io.getquill.{Action, Delete, EntityQuery, Insert, Query, Update}
 
 @SuppressWarnings(Array("scalafix:ExplicitResultTypes"))
+// noinspection TypeAnnotation
 trait Ops {
   this: CassandraContext[_] =>
 
@@ -31,11 +32,11 @@ trait Ops {
   }
 
   implicit class ActionOps[T](q: Action[T]) {
-    def ifCond(cond: T => Boolean): Quoted[Action[T]] =
+    def ifCond(cond: T => Boolean) =
       quote(sql"$q IF $cond".as[Action[T]])
   }
 
   implicit class MapOps[K, V](map: Map[K, V]) {
-    def containsValue(value: V): Quoted[Boolean] = quote(sql"$map CONTAINS $value".as[Boolean])
+    def containsValue(value: V) = quote(sql"$map CONTAINS $value".as[Boolean])
   }
 }
