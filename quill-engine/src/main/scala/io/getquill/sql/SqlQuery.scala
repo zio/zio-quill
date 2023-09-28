@@ -180,7 +180,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
     nestNextMap: Boolean
   ): FlattenSqlQuery = {
 
-    def select(alias: String, quat: Quat) = SelectValue(Ident(alias, quat), None) :: List.empty
+    def select(alias: String, quat: Quat): List[SelectValue] = List(SelectValue(Ident(alias, quat), None))
 
     def base(q: Ast, alias: String, nestNextMap: Boolean): FlattenSqlQuery =
       trace"Computing Base (nestingMaps=${nestNextMap}) for Query: $q" andReturn {
