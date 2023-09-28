@@ -13,7 +13,7 @@ trait Ops {
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
-    def allowFiltering: Quoted[Q] = quote(sql"$q ALLOW FILTERING".transparent.pure.as[Q])
+    def allowFiltering = quote(sql"$q ALLOW FILTERING".transparent.pure.as[Q])
   }
 
   implicit class EntityOps[A <: EntityQuery[_]](q: A) extends Options(q)
