@@ -70,16 +70,16 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules
-
-lazy val scala212Modules =
   baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
+
+lazy val scala213Modules =
+  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine`, `quill-util`)
 
-def isScala212 = {
+def isScala213 = {
   val scalaVersion = sys.props.get("quill.scala.version")
-  scalaVersion.map(_.startsWith("2.12")).getOrElse(false)
+  scalaVersion.map(_.startsWith("2.13")).getOrElse(false)
 }
 
 def isScala3 = {
@@ -138,9 +138,9 @@ lazy val filteredModules = {
         .map(matchModules)
         .flatMap(seq => ListSet(seq: _*))
 
-    if (isScala212) {
-      println("SBT =:> Compiling 2.12 Modules Only")
-      modules.filter(scala212Modules.contains(_))
+    if (isScala213) {
+      println("SBT =:> Compiling 2.13 Modules Only")
+      modules.filter(scala213Modules.contains(_))
     } else if (isScala3) {
       println("SBT =:> Compiling 3 Modules Only")
       modules.filter(scala3Modules.contains(_))
