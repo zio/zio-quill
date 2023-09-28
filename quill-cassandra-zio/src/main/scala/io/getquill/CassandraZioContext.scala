@@ -45,8 +45,6 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
     with Context[CqlIdiom, N]
     with Probing {
 
-  ContextLogger(classOf[CassandraZioContext[_]])
-
   override type Error       = Throwable
   override type Environment = CassandraZioSession
 
