@@ -8,12 +8,12 @@ trait TestEntities {
 
   case class TestEntity(s: String, i: Int, l: Long, o: Option[Int], b: Boolean)
 
-  lazy val testEntitySchemaMeta = schemaMeta[TestEntity](
+  lazy val testEntitySchemaMeta: SchemaMeta[TestEntity] = schemaMeta[TestEntity](
     "TestEntity",
     _.s -> "s"
   )
 
-  lazy val testEntityQuerySchema = quote(
+  lazy val testEntityQuerySchema: Quoted[EntityQuery[TestEntity]] = quote(
     querySchema[TestEntity](
       "TestEntity",
       _.s -> "s",
@@ -36,37 +36,37 @@ trait TestEntities {
   private val QV  = Quat.Value
   private val QBV = Quat.BooleanValue
 
-  val TestEntityQuat = Quat.Product("TestEntity", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV, "b" -> QBV)
-  val TestEntityEmbQuat =
+  val TestEntityQuat: Quat.Product = Quat.Product("TestEntity", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV, "b" -> QBV)
+  val TestEntityEmbQuat: Quat.Product =
     Quat.Product("TestEntityEmb", "emb" -> Quat.Product("Emb", "s" -> QV, "i" -> QV), "l" -> QV, "o" -> QV)
-  val TestEntity2Quat    = Quat.Product("TestEntity2", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
-  val TestEntity3Quat    = Quat.Product("TestEntity3", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
-  val TestEntity4Quat    = Quat.Product("TestEntity4", "i" -> QV)
-  val TestEntity5Quat    = Quat.Product("TestEntity5", "i" -> QV, "s" -> QV)
-  val TestEntity4EmbQuat = Quat.Product("TestEntity4Emb", "emb" -> Quat.Product("EmbSingle", "i" -> QV))
+  val TestEntity2Quat: Quat.Product    = Quat.Product("TestEntity2", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntity3Quat: Quat.Product    = Quat.Product("TestEntity3", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)
+  val TestEntity4Quat: Quat.Product    = Quat.Product("TestEntity4", "i" -> QV)
+  val TestEntity5Quat: Quat.Product    = Quat.Product("TestEntity5", "i" -> QV, "s" -> QV)
+  val TestEntity4EmbQuat: Quat.Product = Quat.Product("TestEntity4Emb", "emb" -> Quat.Product("EmbSingle", "i" -> QV))
 
-  val qr1 = quote {
+  val qr1: Quoted[EntityQuery[TestEntity]] = quote {
     query[TestEntity]
   }
-  val qr1Emb = quote {
+  val qr1Emb: Quoted[EntityQuery[TestEntityEmb]] = quote {
     querySchema[TestEntityEmb]("TestEntity")
   }
-  val qr2 = quote {
+  val qr2: Quoted[EntityQuery[TestEntity2]] = quote {
     query[TestEntity2]
   }
-  val qr3 = quote {
+  val qr3: Quoted[EntityQuery[TestEntity3]] = quote {
     query[TestEntity3]
   }
-  val qr4 = quote {
+  val qr4: Quoted[EntityQuery[TestEntity4]] = quote {
     query[TestEntity4]
   }
-  val qr5 = quote {
+  val qr5: Quoted[EntityQuery[TestEntity5]] = quote {
     query[TestEntity5]
   }
-  val qr4Emb = quote {
+  val qr4Emb: Quoted[EntityQuery[TestEntity4Emb]] = quote {
     querySchema[TestEntity4Emb]("TestEntity4")
   }
-  val qrRegular = quote {
+  val qrRegular: Quoted[EntityQuery[TestEntityRegular]] = quote {
     for {
       a <- query[TestEntity]
     } yield TestEntityRegular(a.s, a.l)

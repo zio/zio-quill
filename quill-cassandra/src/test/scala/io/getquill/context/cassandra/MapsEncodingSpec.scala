@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra
 
 import java.time.{Instant, LocalDate}
-import java.util.{Date, UUID}
+import java.util.UUID
 
 class MapsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB
@@ -15,7 +15,7 @@ class MapsEncodingSpec extends CollectionsSpec {
     boolDate: Map[Boolean, LocalDate],
     uuidTimestamp: Map[UUID, Instant]
   )
-  val e = MapsEntity(
+  val e: MapsEntity = MapsEntity(
     1,
     Map("1"               -> BigDecimal(1)),
     Map(1                 -> 1d, 2 -> 2d, 3 -> 3d),
@@ -31,13 +31,13 @@ class MapsEncodingSpec extends CollectionsSpec {
   }
 
   "Empty maps and optional fields" in {
-    case class Entity(
+    final case class Entity(
       id: Int,
       textDecimal: Option[Map[String, BigDecimal]],
       intDouble: Option[Map[Int, Double]],
       longFloat: Map[Long, Float]
     )
-    val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map())
+    val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map.empty)
     val q = quote(querySchema[Entity]("MapsEntity"))
 
     ctx.run(q.insertValue(lift(e)))
@@ -45,7 +45,7 @@ class MapsEncodingSpec extends CollectionsSpec {
   }
 
   "Mapped encoding for CassandraType" in {
-    case class StrEntity(id: Int, textDecimal: Map[StrWrap, BigDecimal])
+    final case class StrEntity(id: Int, textDecimal: Map[StrWrap, BigDecimal])
     val e = StrEntity(1, Map(StrWrap("1") -> BigDecimal(1)))
     val q = quote(querySchema[StrEntity]("MapsEntity"))
 
@@ -54,7 +54,7 @@ class MapsEncodingSpec extends CollectionsSpec {
   }
 
   "Mapped encoding for CassandraMapper types" in {
-    case class IntEntity(id: Int, intDouble: Map[IntWrap, Double])
+    final case class IntEntity(id: Int, intDouble: Map[IntWrap, Double])
     val e = IntEntity(1, Map(IntWrap(1) -> 1d))
     val q = quote(querySchema[IntEntity]("MapsEntity"))
 
@@ -66,10 +66,10 @@ class MapsEncodingSpec extends CollectionsSpec {
     val e = MapFrozen(Map(1 -> true))
     ctx.run(mapFroz.insertValue(lift(e)))
     ctx.run(mapFroz.filter(_.id == lift(Map(1 -> true)))) mustBe List(e)
-    ctx.run(mapFroz.filter(_.id == lift(Map(1 -> false)))) mustBe Nil
+    ctx.run(mapFroz.filter(_.id == lift(Map(1 -> false)))) mustBe List.empty
 
     ctx.run(mapFroz.filter(_.id.contains(1)).allowFiltering) mustBe List(e)
-    ctx.run(mapFroz.filter(_.id.contains(2)).allowFiltering) mustBe Nil
+    ctx.run(mapFroz.filter(_.id.contains(2)).allowFiltering) mustBe List.empty
   }
 
   "Map.containsValue" in {
@@ -77,7 +77,7 @@ class MapsEncodingSpec extends CollectionsSpec {
     ctx.run(mapFroz.insertValue(lift(e)))
 
     ctx.run(mapFroz.filter(_.id.containsValue(true)).allowFiltering) mustBe List(e)
-    ctx.run(mapFroz.filter(_.id.containsValue(false)).allowFiltering) mustBe Nil
+    ctx.run(mapFroz.filter(_.id.containsValue(false)).allowFiltering) mustBe List.empty
   }
 
   override protected def beforeEach(): Unit = {

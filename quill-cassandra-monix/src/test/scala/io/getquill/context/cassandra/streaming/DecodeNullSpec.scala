@@ -1,6 +1,5 @@
 package io.getquill.context.cassandra.streaming
 
-import io.getquill._
 import io.getquill.base.Spec
 import monix.reactive.Observable
 
@@ -32,5 +31,5 @@ class DecodeNullSpec extends Spec {
 
   case class DecodeNullTestWriteEntity(id: Int, value: Option[Int])
 
-  val insertValue = DecodeNullTestWriteEntity(0, None)
+  val insertValue: DecodeNullTestWriteEntity = DecodeNullTestWriteEntity(0, None)
 }

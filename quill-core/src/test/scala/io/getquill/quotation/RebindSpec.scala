@@ -25,7 +25,7 @@ class RebindSpec extends Spec {
       }
     }
 
-    case class A(date: Option[Long] = None)
+    final case class A(date: Option[Long] = None)
     testContext.run(query[A].filter(a => a.date.valid)).string mustEqual
       s"""querySchema("A").filter(a => sql"($${a.date} IS NULL OR $${a.date} > $${?})")"""
   }

@@ -15,7 +15,7 @@ trait DistinctSpec extends Spec {
   val peopleInsert =
     quote((p: Person) => query[Person].insertValue(p))
 
-  val peopleEntries = List(
+  val peopleEntries: List[Person] = List(
     Person("A", 1),
     Person("B", 2),
     Person("X", 10),
@@ -26,7 +26,7 @@ trait DistinctSpec extends Spec {
   val couplesInsert =
     quote((c: Couple) => query[Couple].insertValue(c))
 
-  val couplesEntries = List(
+  val couplesEntries: List[Couple] = List(
     Couple("B", "X"),
     Couple("B", "Y"),
     Couple("B", "Z"),

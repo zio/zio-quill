@@ -9,7 +9,7 @@ import java.util
 import scala.jdk.CollectionConverters._
 class SessionBuilderSpec extends Spec {
 
-  def envAddress = sys.env.get("CASSANDRA_CONTACT_POINT_0").get
+  def envAddress: String = sys.env.get("CASSANDRA_CONTACT_POINT_0").get
 
   "creates Builder" - {
 

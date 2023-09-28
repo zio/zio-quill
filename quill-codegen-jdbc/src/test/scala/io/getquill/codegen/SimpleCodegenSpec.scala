@@ -11,21 +11,21 @@ class SimpleCodegenSpec extends AnyFreeSpec with Matchers {
 
   case class FieldData(fieldName: String, dataType: String, columnName: String)
   case class FieldDataGroup(data: FieldData*) {
-    def ccList = data.map(fd => (fd.fieldName, fd.dataType))
+    def ccList: Seq[(String, String)] = data.map(fd => (fd.fieldName, fd.dataType))
 
-    def querySchemaList = data.map(fd => (fd.fieldName, fd.columnName))
+    def querySchemaList: Seq[(String, String)] = data.map(fd => (fd.fieldName, fd.columnName))
   }
 
-  def fdg(data: FieldData*) = FieldDataGroup(data: _*)
+  def fdg(data: FieldData*): FieldDataGroup = FieldDataGroup(data: _*)
 
-  def fdgConv(data: (String, String)*)(converter: String => String) =
+  def fdgConv(data: (String, String)*)(converter: String => String): FieldDataGroup =
     FieldDataGroup(data.map { case (field, dataType) =>
       FieldData(field, dataType, converter(field))
     }: _*)
 
   case class QuerySchema(defName: String, tableName: String, fields: Seq[(String, String)])
 
-  def assertStandardObject(objectCode: String, objectName: String, ccName: String, querySchemas: Seq[QuerySchema]) = {
+  def assertStandardObject(objectCode: String, objectName: String, ccName: String, querySchemas: Seq[QuerySchema]): Unit = {
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox()
     val ob = tb.parse(objectCode)
     ob match {
@@ -112,7 +112,7 @@ class SimpleCodegenSpec extends AnyFreeSpec with Matchers {
     }
   }
 
-  def assertCaseClass(generatedCode: String, className: String, fields: Seq[(String, String)]) = {
+  def assertCaseClass(generatedCode: String, className: String, fields: Seq[(String, String)]): Unit = {
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox()
     val cc = tb.parse(generatedCode)
     cc match {

@@ -26,37 +26,37 @@ class AdHocReductionSpec extends Spec {
   "flatMap.*" - {
     "a.flatMap(b => c).map(d => e)" in {
       val q = quote {
-        qr1.flatMap(b => qr2).map(d => d.s)
+        qr1.flatMap(_ => qr2).map(d => d.s)
       }
       val n = quote {
-        qr1.flatMap(b => qr2.map(d => d.s))
+        qr1.flatMap(_ => qr2.map(d => d.s))
       }
       AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
     }
     "a.flatMap(b => c).filter(d => e)" in {
       val q = quote {
-        qr1.flatMap(b => qr2).filter(d => d.s == "s2")
+        qr1.flatMap(_ => qr2).filter(d => d.s == "s2")
       }
       val n = quote {
-        qr1.flatMap(b => qr2.filter(d => d.s == "s2"))
+        qr1.flatMap(_ => qr2.filter(d => d.s == "s2"))
       }
       AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
     }
     "a.flatMap(b => c.union(d))" in {
       val q = quote {
-        qr1.flatMap(b => qr2.filter(t => t.i == 1).union(qr2.filter(t => t.s == "s")))
+        qr1.flatMap(_ => qr2.filter(t => t.i == 1).union(qr2.filter(t => t.s == "s")))
       }
       val n = quote {
-        qr1.flatMap(b => qr2.filter(t => t.i == 1)).union(qr1.flatMap(b => qr2.filter(t => t.s == "s")))
+        qr1.flatMap(_ => qr2.filter(t => t.i == 1)).union(qr1.flatMap(_ => qr2.filter(t => t.s == "s")))
       }
       AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
     }
     "a.flatMap(b => c.unionAll(d))" in {
       val q = quote {
-        qr1.flatMap(b => qr2.filter(t => t.i == 1).unionAll(qr2.filter(t => t.s == "s")))
+        qr1.flatMap(_ => qr2.filter(t => t.i == 1).unionAll(qr2.filter(t => t.s == "s")))
       }
       val n = quote {
-        qr1.flatMap(b => qr2.filter(t => t.i == 1)).unionAll(qr1.flatMap(b => qr2.filter(t => t.s == "s")))
+        qr1.flatMap(_ => qr2.filter(t => t.i == 1)).unionAll(qr1.flatMap(_ => qr2.filter(t => t.s == "s")))
       }
       AdHocReduction.unapply(q.ast) mustEqual Some(n.ast)
     }

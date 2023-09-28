@@ -1,6 +1,5 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.Ord
 import io.getquill.base.Spec
 import io.getquill.context.sql.testContext.qr1
 import io.getquill.context.sql.testContext.quote
@@ -26,7 +25,7 @@ class ExpandDistinctSpec extends Spec {
         """querySchema("TestEntity").map(e => (e.i, e.l)).groupBy(g => g._1).map(x1 => (x1._2.max)).distinct.map(x1 => x1._1).nested"""
     }
     "with case class" in {
-      case class Rec(one: Int, two: Long)
+      final case class Rec(one: Int, two: Long)
       val q = quote {
         qr1.map(e => Rec(e.i, e.l)).distinct.nested
       }

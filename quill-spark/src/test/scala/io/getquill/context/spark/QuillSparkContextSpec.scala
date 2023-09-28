@@ -8,7 +8,7 @@ class QuillSparkContextSpec extends Spec {
   import sqlContext.implicits._
   import testContext._
 
-  val entities = Seq(Test(1, 2, "3"))
+  val entities: Seq[Test] = Seq(Test(1, 2, "3"))
 
   "toQuery" in {
     testContext.run(liftQuery(entities.toDS)).collect.toList mustEqual

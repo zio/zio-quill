@@ -4,16 +4,18 @@ import io.getquill.ast.{AscNullsFirst, Constant, Ident, Map, SortBy}
 import io.getquill.MirrorContexts.testContext._
 import io.getquill.Query
 import io.getquill.base.Spec
+import io.getquill.Quoted
+import io.getquill.ast.Ast
 
 class AttachToEntitySpec extends Spec {
 
-  val attachToEntity =
+  val attachToEntity: Ast => Ast =
     (AttachToEntity(SortBy(_, _, Constant.auto(1), AscNullsFirst)) _).andThen(replaceTempIdent.apply _)
 
   "attaches clause to the root of the query (entity)" - {
     "query is the entity" in {
       val n = quote {
-        qr1.sortBy(x => 1)
+        qr1.sortBy(_ => 1)
       }
       attachToEntity(qr1.ast) mustEqual n.ast
     }
@@ -23,16 +25,16 @@ class AttachToEntitySpec extends Spec {
           qr1.filter(t => t.i == 1).map(t => t.s)
         }
         val n = quote {
-          qr1.sortBy(t => 1).filter(t => t.i == 1).map(t => t.s)
+          qr1.sortBy(_ => 1).filter(t => t.i == 1).map(t => t.s)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
       "flatMap" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).flatMap(t => qr2)
+          qr1.filter(t => t.i == 1).flatMap(_ => qr2)
         }
         val n = quote {
-          qr1.sortBy(t => 1).filter(t => t.i == 1).flatMap(t => qr2)
+          qr1.sortBy(_ => 1).filter(t => t.i == 1).flatMap(_ => qr2)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -41,7 +43,7 @@ class AttachToEntitySpec extends Spec {
           qr1.filter(t => t.i == 1).concatMap(t => t.s.split(" "))
         }
         val n = quote {
-          qr1.sortBy(t => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
+          qr1.sortBy(_ => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -50,7 +52,7 @@ class AttachToEntitySpec extends Spec {
           qr1.filter(t => t.i == 1).filter(t => t.s == "s1")
         }
         val n = quote {
-          qr1.sortBy(t => 1).filter(t => t.i == 1).filter(t => t.s == "s1")
+          qr1.sortBy(_ => 1).filter(t => t.i == 1).filter(t => t.s == "s1")
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -59,7 +61,7 @@ class AttachToEntitySpec extends Spec {
           qr1.sortBy(t => t.s)
         }
         val n = quote {
-          qr1.sortBy(t => 1).sortBy(t => t.s)
+          qr1.sortBy(_ => 1).sortBy(t => t.s)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -68,7 +70,7 @@ class AttachToEntitySpec extends Spec {
           qr1.sortBy(b => b.s).take(1)
         }
         val n = quote {
-          qr1.sortBy(b => 1).sortBy(b => b.s).take(1)
+          qr1.sortBy(_ => 1).sortBy(b => b.s).take(1)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -77,7 +79,7 @@ class AttachToEntitySpec extends Spec {
           qr1.sortBy(b => b.s).drop(1)
         }
         val n = quote {
-          qr1.sortBy(b => 1).sortBy(b => b.s).drop(1)
+          qr1.sortBy(_ => 1).sortBy(b => b.s).drop(1)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -86,21 +88,21 @@ class AttachToEntitySpec extends Spec {
           qr1.sortBy(b => b.s).drop(1).distinct
         }
         val n = quote {
-          qr1.sortBy(b => 1).sortBy(b => b.s).drop(1).distinct
+          qr1.sortBy(_ => 1).sortBy(b => b.s).drop(1).distinct
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
     }
   }
 
-  val iqr1 = quote {
+  val iqr1: Quoted[Query[TestEntity]] = quote {
     sql"$qr1".as[Query[TestEntity]]
   }
 
   "attaches clause to the root of the query (infix)" - {
     "query is the entity" in {
       val n = quote {
-        iqr1.sortBy(x => 1)
+        iqr1.sortBy(_ => 1)
       }
       attachToEntity(iqr1.ast) mustEqual n.ast
     }
@@ -110,16 +112,16 @@ class AttachToEntitySpec extends Spec {
           iqr1.filter(t => t.i == 1).map(t => t.s)
         }
         val n = quote {
-          iqr1.sortBy(t => 1).filter(t => t.i == 1).map(t => t.s)
+          iqr1.sortBy(_ => 1).filter(t => t.i == 1).map(t => t.s)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
       "flatMap" in {
         val q = quote {
-          iqr1.filter(t => t.i == 1).flatMap(t => qr2)
+          iqr1.filter(t => t.i == 1).flatMap(_ => qr2)
         }
         val n = quote {
-          iqr1.sortBy(t => 1).filter(t => t.i == 1).flatMap(t => qr2)
+          iqr1.sortBy(_ => 1).filter(t => t.i == 1).flatMap(_ => qr2)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -128,7 +130,7 @@ class AttachToEntitySpec extends Spec {
           iqr1.filter(t => t.i == 1).concatMap(t => t.s.split(" "))
         }
         val n = quote {
-          iqr1.sortBy(t => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
+          iqr1.sortBy(_ => 1).filter(t => t.i == 1).concatMap(t => t.s.split(" "))
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -137,7 +139,7 @@ class AttachToEntitySpec extends Spec {
           iqr1.filter(t => t.i == 1).filter(t => t.s == "s1")
         }
         val n = quote {
-          iqr1.sortBy(t => 1).filter(t => t.i == 1).filter(t => t.s == "s1")
+          iqr1.sortBy(_ => 1).filter(t => t.i == 1).filter(t => t.s == "s1")
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -146,7 +148,7 @@ class AttachToEntitySpec extends Spec {
           iqr1.sortBy(t => t.s)
         }
         val n = quote {
-          iqr1.sortBy(t => 1).sortBy(t => t.s)
+          iqr1.sortBy(_ => 1).sortBy(t => t.s)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -155,7 +157,7 @@ class AttachToEntitySpec extends Spec {
           iqr1.sortBy(b => b.s).take(1)
         }
         val n = quote {
-          iqr1.sortBy(b => 1).sortBy(b => b.s).take(1)
+          iqr1.sortBy(_ => 1).sortBy(b => b.s).take(1)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -164,7 +166,7 @@ class AttachToEntitySpec extends Spec {
           iqr1.sortBy(b => b.s).drop(1)
         }
         val n = quote {
-          iqr1.sortBy(b => 1).sortBy(b => b.s).drop(1)
+          iqr1.sortBy(_ => 1).sortBy(b => b.s).drop(1)
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -173,7 +175,7 @@ class AttachToEntitySpec extends Spec {
           iqr1.sortBy(b => b.s).drop(1).distinct
         }
         val n = quote {
-          iqr1.sortBy(b => 1).sortBy(b => b.s).drop(1).distinct
+          iqr1.sortBy(_ => 1).sortBy(b => b.s).drop(1).distinct
         }
         attachToEntity(q.ast) mustEqual n.ast
       }
@@ -186,7 +188,7 @@ class AttachToEntitySpec extends Spec {
         qr1.union(qr2)
       }
       val n = quote {
-        qr1.union(qr2).sortBy(x => 1)
+        qr1.union(qr2).sortBy(_ => 1)
       }
       attachToEntity(q.ast) mustEqual n.ast
     }
@@ -195,25 +197,25 @@ class AttachToEntitySpec extends Spec {
         qr1.unionAll(qr2)
       }
       val n = quote {
-        qr1.unionAll(qr2).sortBy(x => 1)
+        qr1.unionAll(qr2).sortBy(_ => 1)
       }
       attachToEntity(q.ast) mustEqual n.ast
     }
     "outer join" in {
       val q = quote {
-        qr1.leftJoin(qr2).on((a, b) => true)
+        qr1.leftJoin(qr2).on((_, _) => true)
       }
       val n = quote {
-        qr1.leftJoin(qr2).on((a, b) => true).sortBy(x => 1)
+        qr1.leftJoin(qr2).on((_, _) => true).sortBy(_ => 1)
       }
       attachToEntity(q.ast) mustEqual n.ast
     }
     "groupBy.map" in {
       val q = quote {
-        qr1.groupBy(a => a.i).map(a => 1)
+        qr1.groupBy(a => a.i).map(_ => 1)
       }
       val n = quote {
-        qr1.groupBy(a => a.i).map(a => 1).sortBy(x => 1)
+        qr1.groupBy(a => a.i).map(_ => 1).sortBy(_ => 1)
       }
       attachToEntity(q.ast) mustEqual n.ast
     }

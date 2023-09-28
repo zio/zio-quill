@@ -2,7 +2,6 @@ package io.getquill.context.sql.idiom
 
 import io.getquill._
 import io.getquill.idiom.StringToken
-import io.getquill.idiom.{Idiom => BaseIdiom}
 
 trait AbstractMySQLDialectSpec extends OnConflictSpec {
 
@@ -85,13 +84,13 @@ trait AbstractMySQLDialectSpec extends OnConflictSpec {
       "INSERT INTO TestEntity4 (i) VALUES (DEFAULT)"
   }
   "Insert with returning generated - multiple fields - should not compile" in {
-    val q = quote {
+    quote {
       qr1.insertValue(lift(TestEntity("s", 1, 2L, Some(3), true)))
     }
     "ctx.run(q.returningGenerated(r => (r.i, r.l))).string" mustNot compile
   }
   "Insert with returning should not compile" in {
-    val q = quote {
+    quote {
       qr4.insertValue(lift(TestEntity4(0)))
     }
     "ctx.run(q.returning(_.i)).string" mustNot compile

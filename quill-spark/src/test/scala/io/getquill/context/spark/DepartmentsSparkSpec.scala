@@ -3,9 +3,9 @@ package io.getquill.context.spark
 import io.getquill.Query
 import io.getquill.base.Spec
 
-case class Department(dpt: String)
-case class Employee(emp: String, dpt: String)
-case class Task(emp: String, tsk: String)
+final case class Department(dpt: String)
+final case class Employee(emp: String, dpt: String)
+final case class Task(emp: String, tsk: String)
 
 class DepartmentsSparkSpec extends Spec {
 

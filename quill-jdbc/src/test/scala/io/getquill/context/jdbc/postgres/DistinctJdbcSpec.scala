@@ -1,6 +1,5 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.Ord
 import io.getquill.context.sql.DistinctSpec
 import org.scalatest.matchers.should.Matchers._
 
@@ -9,7 +8,7 @@ class DistinctJdbcSpec extends DistinctSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     testContext.transaction {
       testContext.run(query[Couple].delete)
       testContext.run(query[Person].delete)

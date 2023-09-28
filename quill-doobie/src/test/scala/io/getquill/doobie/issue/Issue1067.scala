@@ -7,13 +7,14 @@ import io.getquill._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
 import io.getquill.doobie.DoobieContext
+import doobie.util.transactor
 
 // https://github.com/tpolecat/doobie/issues/1067
 class Issue1067 extends AnyFreeSpec with Matchers {
 
   import cats.effect.unsafe.implicits.global
 
-  lazy val xa = Transactor.fromDriverManager[IO](
+  lazy val xa: transactor.Transactor.Aux[IO,Unit] = Transactor.fromDriverManager[IO](
     "org.postgresql.Driver",
     s"jdbc:postgresql://${System.getenv("POSTGRES_HOST")}:${System.getenv("POSTGRES_PORT")}/doobie_test",
     "postgres",

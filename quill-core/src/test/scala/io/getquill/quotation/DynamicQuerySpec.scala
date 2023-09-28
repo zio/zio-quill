@@ -76,7 +76,7 @@ class DynamicQuerySpec extends Spec {
 
     "simple dynamic query succeeds" in {
       val s = dynamicQuerySchema[Person2]("Person2")
-      s.ast mustEqual Entity("Person2", List(), Quat.LeafProduct("firstName", "lastName"))
+      s.ast mustEqual Entity("Person2", List.empty, Quat.LeafProduct("firstName", "lastName"))
     }
 
     "dynamicQuery" in {
@@ -137,7 +137,7 @@ class DynamicQuerySpec extends Spec {
         cond = false
         test(
           dynamicQuery[TestEntity].map(v0 => if (cond) quote(v0.i) else quote(1)),
-          query[TestEntity].map(v0 => 1)
+          query[TestEntity].map(_ => 1)
         )
       }
     }
@@ -145,19 +145,19 @@ class DynamicQuerySpec extends Spec {
     "flatMap" - {
       "simple" in {
         test(
-          dynamicQuery[TestEntity].flatMap(v0 => dynamicQuery[TestEntity]),
-          query[TestEntity].flatMap(v0 => query[TestEntity])
+          dynamicQuery[TestEntity].flatMap(_ => dynamicQuery[TestEntity]),
+          query[TestEntity].flatMap(_ => query[TestEntity])
         )
       }
       "mixed with static" in {
         test(
-          dynamicQuery[TestEntity].flatMap(v0 => query[TestEntity]),
-          query[TestEntity].flatMap(v0 => query[TestEntity])
+          dynamicQuery[TestEntity].flatMap(_ => query[TestEntity]),
+          query[TestEntity].flatMap(_ => query[TestEntity])
         )
 
         test(
-          query[TestEntity].flatMap(v0 => dynamicQuery[TestEntity]),
-          query[TestEntity].flatMap(v0 => query[TestEntity])
+          query[TestEntity].flatMap(_ => dynamicQuery[TestEntity]),
+          query[TestEntity].flatMap(_ => query[TestEntity])
         )
       }
       "with map" in {
@@ -363,8 +363,8 @@ class DynamicQuerySpec extends Spec {
 
     "size" in {
       test(
-        dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].size),
-        query[TestEntity].map(v0 => query[TestEntity].size)
+        dynamicQuery[TestEntity].map(_ => dynamicQuery[TestEntity].size),
+        query[TestEntity].map(_ => query[TestEntity].size)
       )
     }
 
@@ -443,15 +443,15 @@ class DynamicQuerySpec extends Spec {
 
     "nonEmpty" in {
       test(
-        dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].nonEmpty),
-        query[TestEntity].map(v0 => query[TestEntity].nonEmpty)
+        dynamicQuery[TestEntity].map(_ => dynamicQuery[TestEntity].nonEmpty),
+        query[TestEntity].map(_ => query[TestEntity].nonEmpty)
       )
     }
 
     "isEmpty" in {
       test(
-        dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].isEmpty),
-        query[TestEntity].map(v0 => query[TestEntity].isEmpty)
+        dynamicQuery[TestEntity].map(_ => dynamicQuery[TestEntity].isEmpty),
+        query[TestEntity].map(_ => query[TestEntity].isEmpty)
       )
     }
 
@@ -464,8 +464,8 @@ class DynamicQuerySpec extends Spec {
       }
       "value" in {
         test(
-          dynamicQuery[TestEntity].map(v0 => dynamicQuery[TestEntity].map(v1 => v1.i).contains(1)),
-          query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).contains(lift(1)))
+          dynamicQuery[TestEntity].map(_ => dynamicQuery[TestEntity].map(v1 => v1.i).contains(1)),
+          query[TestEntity].map(_ => query[TestEntity].map(v1 => v1.i).contains(lift(1)))
         )
       }
     }

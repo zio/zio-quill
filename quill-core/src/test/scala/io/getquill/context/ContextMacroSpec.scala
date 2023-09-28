@@ -184,7 +184,7 @@ class ContextMacroSpec extends Spec {
       }
 
       "value class" in {
-        case class Entity(x: ValueClass)
+        final case class Entity(x: ValueClass)
         val q = quote {
           query[Entity].filter(t => t.x == lift(ValueClass(1)))
         }
@@ -193,7 +193,7 @@ class ContextMacroSpec extends Spec {
         r.prepareRow mustEqual Row(1)
       }
       "generic value class" in {
-        case class Entity(x: GenericValueClass[Int])
+        final case class Entity(x: GenericValueClass[Int])
         val q = quote {
           query[Entity].filter(t => t.x == lift(GenericValueClass(1)))
         }
@@ -219,7 +219,7 @@ class ContextMacroSpec extends Spec {
       }
       "dynamic type param" in {
         def test[T: SchemaMeta: QueryMeta] = quote {
-          query[T].map(t => lift(1))
+          query[T].map(_ => lift(1))
         }
         val r = testContext.run(test[TestEntity])
         r.string mustEqual """querySchema("TestEntity").map(t => ?)"""
@@ -274,7 +274,7 @@ class ContextMacroSpec extends Spec {
       }
 
       "value class" in {
-        case class Entity(x: ValueClass)
+        final case class Entity(x: ValueClass)
         val q = quote {
           query[Entity].filter(t => t.x == lift(ValueClass(1)))
         }
@@ -282,7 +282,7 @@ class ContextMacroSpec extends Spec {
           """querySchema("Entity").filter(t => t.x == 1)"""
       }
       "generic value class" in {
-        case class Entity(x: GenericValueClass[Int])
+        final case class Entity(x: GenericValueClass[Int])
         val q = quote {
           query[Entity].filter(t => t.x == lift(GenericValueClass(1)))
         }
@@ -304,7 +304,7 @@ class ContextMacroSpec extends Spec {
       }
       "dynamic type param" in {
         def test[T: SchemaMeta: QueryMeta] = quote {
-          query[T].map(t => lift(1))
+          query[T].map(_ => lift(1))
         }
         testContext.translate(test[TestEntity]) mustEqual
           """querySchema("TestEntity").map(t => 1)"""
@@ -320,7 +320,7 @@ class ContextMacroSpec extends Spec {
   }
 
   "fails if there's a free variable" in {
-    val q = {
+    {
       val i = 1
       quote {
         qr1.filter(_.i == i)

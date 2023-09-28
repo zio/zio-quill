@@ -11,7 +11,7 @@ class JdbcContextSpec extends Spec {
   }
 
   "probes sqls" in {
-    val p = testContext.probe("DELETE FROM TestEntity")
+    testContext.probe("DELETE FROM TestEntity")
   }
 
   "run non-batched action" in {
@@ -73,7 +73,7 @@ class JdbcContextSpec extends Spec {
     }
 
     "with multiple columns - case class" in {
-      case class Return(id: Int, str: String, opt: Option[Int])
+      final case class Return(id: Int, str: String, opt: Option[Int])
       testContext.run(qr1.delete)
       val inserted = testContext.run {
         qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
@@ -106,7 +106,7 @@ class JdbcContextSpec extends Spec {
     }
 
     "with multiple columns - case class" in {
-      case class Return(id: Int, str: String, opt: Option[Int])
+      final case class Return(id: Int, str: String, opt: Option[Int])
       testContext.run(qr1.delete)
       testContext.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 

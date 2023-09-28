@@ -24,7 +24,7 @@ trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
     dates: Seq[LocalDate]
   )
 
-  val e = ArraysTestEntity(
+  val e: ArraysTestEntity = ArraysTestEntity(
     List("test"),
     Seq(BigDecimal(2.33)),
     Vector(true, true),
@@ -58,5 +58,5 @@ trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
   implicit val strWrapEncode: MappedEncoding[StrWrap, String] = MappedEncoding(_.str)
   implicit val strWrapDecode: MappedEncoding[String, StrWrap] = MappedEncoding(StrWrap.apply)
   case class WrapEntity(texts: Seq[StrWrap])
-  val wrapE = WrapEntity(List("hey", "ho").map(StrWrap.apply))
+  val wrapE: WrapEntity = WrapEntity(List("hey", "ho").map(StrWrap.apply))
 }

@@ -16,7 +16,7 @@ class ListsEncodingSpec extends Spec {
     doubles: List[Double],
     timestamps: List[Date]
   )
-  val e = ListsEntity(1, List("c"), List(true), List(1, 2), List(2, 3), List(1.2f, 3.2f), List(5.1d), List(new Date()))
+  val e: ListsEntity = ListsEntity(1, List("c"), List(true), List(1, 2), List(2, 3), List(1.2f, 3.2f), List(5.1d), List(new Date()))
 
   private def verify(expected: ListsEntity, actual: ListsEntity): Boolean = {
     expected.id mustEqual actual.id
@@ -49,7 +49,7 @@ class ListsEncodingSpec extends Spec {
   "Empty Lists and optional fields" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class Entity(id: Int, texts: Option[List[String]], bools: Option[List[Boolean]])
+    final case class Entity(id: Int, texts: Option[List[String]], bools: Option[List[Boolean]])
     val e = Entity(1, Some(List("1", "2")), None)
     val q = quote(querySchema[Entity]("ListEntity"))
 
@@ -62,7 +62,7 @@ class ListsEncodingSpec extends Spec {
   "Blob (Array[Byte]) support" ignore {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class BlobsEntity(id: Int, blobs: List[Array[Byte]])
+    final case class BlobsEntity(id: Int, blobs: List[Array[Byte]])
     val e = BlobsEntity(1, List(Array(1.toByte, 2.toByte), Array(2.toByte)))
     val q = quote(querySchema[BlobsEntity]("BlobsEntity"))
 
@@ -74,12 +74,12 @@ class ListsEncodingSpec extends Spec {
   "List in where clause" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class ListFrozen(id: List[Int])
+    final case class ListFrozen(id: List[Int])
     val e = ListFrozen(List(1, 2))
     val q = quote(query[ListFrozen])
     ctx.run(q.delete)
     ctx.run(q.insertValue(lift(e)))
     ctx.run(q.filter(p => liftQuery(Set(1)).contains(p.id))) mustBe List(e)
-    ctx.run(q.filter(_.id == lift(List(1)))) mustBe Nil
+    ctx.run(q.filter(_.id == lift(List(1)))) mustBe List.empty
   }
 }

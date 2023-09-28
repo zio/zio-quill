@@ -8,12 +8,12 @@ class QuestionMarkSpec extends Spec {
   import testContext._
   import sqlContext.implicits._
 
-  val peopleList = Seq(
+  val peopleList: Seq[Contact] = Seq(
     Contact("Alex", "Jones", 60, 2, "?"),
     Contact("Bert", "James", 55, 3, "bar")
   )
 
-  val addressList = Seq(
+  val addressList: Seq[Address] = Seq(
     Address(1, "123 Fake Street", 11234, "?")
   )
 

@@ -49,12 +49,12 @@ object orientdb {
       ()
     }
 
-  def mirrorContext = {
+  def mirrorContext: OrientDBMirrorContext[Literal.type] with TestEntities = {
     if (!setupDone) { setup(); setupDone = true }
     new OrientDBMirrorContext(Literal) with TestEntities
   }
 
-  def testSyncDB = {
+  def testSyncDB: OrientDBSyncContext[Literal.type] = {
     if (!setupDone) { setup(); setupDone = true }
     new OrientDBSyncContext(Literal, "ctx")
   }

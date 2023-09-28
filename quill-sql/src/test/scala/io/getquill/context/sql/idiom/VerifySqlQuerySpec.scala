@@ -2,7 +2,7 @@ package io.getquill.context.sql.idiom
 
 import io.getquill.base.Spec
 import io.getquill.context.sql.testContext._
-import io.getquill.context.sql.{SqlQuery, SqlQueryApply}
+import io.getquill.context.sql.SqlQueryApply
 
 import scala.util.Try
 import io.getquill.context.sql.norm.SqlNormalize

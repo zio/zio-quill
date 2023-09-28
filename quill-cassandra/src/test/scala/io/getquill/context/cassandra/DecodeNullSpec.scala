@@ -1,6 +1,5 @@
 package io.getquill.context.cassandra
 
-import io.getquill._
 import io.getquill.base.Spec
 
 class DecodeNullSpec extends Spec {
@@ -43,6 +42,6 @@ class DecodeNullSpec extends Spec {
 
   case class DecodeNullTestWriteEntity(id: Int, value: Option[Int])
 
-  val insertValue = DecodeNullTestWriteEntity(0, None)
+  val insertValue: DecodeNullTestWriteEntity = DecodeNullTestWriteEntity(0, None)
 
 }

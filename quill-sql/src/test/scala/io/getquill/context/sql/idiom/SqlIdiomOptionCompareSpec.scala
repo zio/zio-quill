@@ -138,8 +138,8 @@ class SqlIdiomOptionCompareSpec extends Spec {
         "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
     }
     "embedded" - {
-      case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(value: Int)
+      final case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
+      final case class EmbeddedEntity(value: Int)
 
       "exists" in {
         val q = quote {
@@ -157,8 +157,8 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
     }
     "nested" - {
-      case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(optionalValue: Option[Int])
+      final case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
+      final case class EmbeddedEntity(optionalValue: Option[Int])
 
       "contains" in {
         val q = quote {
@@ -354,8 +354,8 @@ class SqlIdiomOptionCompareSpec extends Spec {
         "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
     }
     "embedded" - {
-      case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(value: Int)
+      final case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
+      final case class EmbeddedEntity(value: Int)
 
       "exists" in {
         val q = quote {
@@ -373,8 +373,8 @@ class SqlIdiomOptionCompareSpec extends Spec {
       }
     }
     "nested" - {
-      case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
-      case class EmbeddedEntity(optionalValue: Option[Int])
+      final case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
+      final case class EmbeddedEntity(optionalValue: Option[Int])
 
       "contains" in {
         val q = quote {

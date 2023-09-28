@@ -10,7 +10,7 @@ class ProductJdbcSpec extends ProductSpec {
 
   implicit val scheduler = Scheduler.global
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     testContext.run(quote(query[Product].delete)).runSyncUnsafe()
     ()
   }

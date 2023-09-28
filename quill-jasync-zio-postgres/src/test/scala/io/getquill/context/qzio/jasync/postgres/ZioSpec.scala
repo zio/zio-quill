@@ -27,17 +27,17 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     }
 
   implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
-    def runSyncUnsafe() =
+    def runSyncUnsafe(): T =
       Unsafe.unsafe { implicit u =>
         Runtime.default.unsafe.run(qzio).getOrThrow()
       }
   }
 
   implicit class ZStreamTestExt[T](stream: ZStream[ZioJAsyncConnection, Throwable, T]) {
-    def runSyncUnsafe() = collect[T](stream)
+    def runSyncUnsafe(): List[T] = collect[T](stream)
   }
 
   implicit class ZioTestExt[T](qzio: ZIO[ZioJAsyncConnection, Throwable, T]) {
-    def runSyncUnsafe() = ZioSpec.this.runSyncUnsafe[T](qzio)
+    def runSyncUnsafe(): T = ZioSpec.this.runSyncUnsafe[T](qzio)
   }
 }

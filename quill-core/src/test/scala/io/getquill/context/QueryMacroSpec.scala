@@ -137,7 +137,7 @@ class QueryMacroSpec extends Spec {
         val q = quote {
           qr1.filter(t => t.i == lift(1) && t.s == lift("a")).map(t => t.i)
         }
-        val r = testContext.translate(q.dynamic) mustEqual
+        testContext.translate(q.dynamic) mustEqual
           """querySchema("TestEntity").filter(t => (t.i == 1) && (t.s == 'a')).map(t => t.i)"""
       }
       "nested" in {

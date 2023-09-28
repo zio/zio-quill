@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill.base.Spec
-import java.util.{Date, UUID}
+import java.util.UUID
 
 import java.time.{Instant, LocalDate}
 
@@ -70,7 +70,7 @@ abstract class EncodingSpecHelper extends Spec {
 
   protected val fixUUID: UUID = UUID.fromString("606c79e8-a331-4810-8bd7-0668ff7a23ef")
 
-  val insertValues =
+  val insertValues: List[EncodingTestEntity] =
     List(
       EncodingTestEntity(
         id = 1,

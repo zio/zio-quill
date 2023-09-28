@@ -29,7 +29,7 @@ sealed trait CodegenTestCases {
     sym.name.decodedName.toString + "-lib"
   }
 
-  def schemaMakerCoordinates(dbPrefix: ConfigPrefix) = SchemaMakerCoordinates(dbPrefix, naming, schemaConfig)
+  def schemaMakerCoordinates(dbPrefix: ConfigPrefix): SchemaMakerCoordinates = SchemaMakerCoordinates(dbPrefix, naming, schemaConfig)
 
   def generateWithSchema(dbPrefix: ConfigPrefix, basePath: String): Future[Seq[Path]] =
     SchemaMaker.withContext(schemaMakerCoordinates(dbPrefix))({
@@ -37,22 +37,22 @@ sealed trait CodegenTestCases {
     })
 
   protected def generate(dbPrefix: ConfigPrefix, basePath: String): Future[Seq[Path]]
-  protected def pathList(implicit dbPrefix: ConfigPrefix) =
+  protected def pathList(implicit dbPrefix: ConfigPrefix): List[String] =
     List("io", "getquill", "codegen", "generated", dbPrefix.packagePath)
-  protected def path(implicit dbPrefix: ConfigPrefix, basePath: String) =
+  protected def path(implicit dbPrefix: ConfigPrefix, basePath: String): String =
     (basePath +: pathList :+ testName).mkString("/")
-  protected def `package`(implicit dbPrefix: ConfigPrefix) = (pathList :+ s"`${testName}`").mkString(".")
+  protected def `package`(implicit dbPrefix: ConfigPrefix): String = (pathList :+ s"`${testName}`").mkString(".")
 }
 
 object CodegenTestCases {
 
-  trait `1-simple-snake`              extends CodegenTestCases
-  trait `2-simple-literal`            extends CodegenTestCases
-  trait `1-comp-sanity`               extends CodegenTestCases
-  trait `2-comp-stereo-single`        extends CodegenTestCases
-  trait `3-comp-stereo-oneschema`     extends CodegenTestCases
-  trait `4-comp-stereo-twoschema`     extends CodegenTestCases
-  trait `5-comp-non-stereo-allschema` extends CodegenTestCases
+  sealed trait `1-simple-snake`              extends CodegenTestCases
+  sealed trait `2-simple-literal`            extends CodegenTestCases
+  sealed trait `1-comp-sanity`               extends CodegenTestCases
+  sealed trait `2-comp-stereo-single`        extends CodegenTestCases
+  sealed trait `3-comp-stereo-oneschema`     extends CodegenTestCases
+  sealed trait `4-comp-stereo-twoschema`     extends CodegenTestCases
+  sealed trait `5-comp-non-stereo-allschema` extends CodegenTestCases
 
   case object `1-simple-snake` extends TestInfo(SnakeCase, simpleSnake) with `1-simple-snake` {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
@@ -138,7 +138,7 @@ object CodegenTestCases {
         override def nameParser: NameParser   = CustomNames()
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
-        override def namespacer: Namespacer[JdbcTableMeta] = ts => "public"
+        override def namespacer: Namespacer[JdbcTableMeta] = _ => "public"
         override def querySchemaNaming: JdbcQuerySchemaNaming = ts => {
           val schema = super.namespacer(ts)
           (if (schema startsWith "codegenTest") "public" else schema) + ts.tableName.toLowerCase.capitalize

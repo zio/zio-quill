@@ -2,37 +2,38 @@ package io.getquill.context.spark.norm
 
 import io.getquill.base.Spec
 import io.getquill.context.spark.{sqlContext, testContext}
+import io.getquill.{ Query, Quoted }
 
-case class Test(i: Int, j: Int, s: String)
-case class TestHolder(ta: Test, tb: Test)
-case class TestHolderOtherData(ta: Test, otherData: String)
-case class TestHolderHolder(tha: TestHolder, thb: TestHolder)
-case class TestHolderHolderOneSide(tha: TestHolder, tbb: Test)
-case class TupleHolderTest(tup: (Int, Int), otherData: String)
-case class NestedTupleHolderTest(tup: (Int, Test), otherData: String)
-case class ParentNestedTupleHolderTest(tup: NestedTupleHolderTest, otherData: String)
-case class SuperParentNestedTupleHolderTest(tup: (NestedTupleHolderTest, Test), otherData: String)
-case class SingleElement(i: Int)
-case class SingleElementSingleHolder(sma: SingleElement)
-case class SingleElementMultiHolder(t: Test, sm: SingleElement)
+final case class Test(i: Int, j: Int, s: String)
+final case class TestHolder(ta: Test, tb: Test)
+final case class TestHolderOtherData(ta: Test, otherData: String)
+final case class TestHolderHolder(tha: TestHolder, thb: TestHolder)
+final case class TestHolderHolderOneSide(tha: TestHolder, tbb: Test)
+final case class TupleHolderTest(tup: (Int, Int), otherData: String)
+final case class NestedTupleHolderTest(tup: (Int, Test), otherData: String)
+final case class ParentNestedTupleHolderTest(tup: NestedTupleHolderTest, otherData: String)
+final case class SuperParentNestedTupleHolderTest(tup: (NestedTupleHolderTest, Test), otherData: String)
+final case class SingleElement(i: Int)
+final case class SingleElementSingleHolder(sma: SingleElement)
+final case class SingleElementMultiHolder(t: Test, sm: SingleElement)
 
 class ExpandEntityIdsSpec extends Spec {
 
   import testContext._
   import sqlContext.implicits._
 
-  val ent      = Test(1, 2, "3")
-  val entities = Seq(ent)
+  val ent: Test      = Test(1, 2, "3")
+  val entities: Seq[Test] = Seq(ent)
 
-  val qr1 = liftQuery(entities.toDS)
-  val qr2 = liftQuery(entities.toDS)
-  val qr3 = liftQuery(entities.toDS)
-  val qr4 = liftQuery(entities.toDS)
+  val qr1: Quoted[Query[Test]] = liftQuery(entities.toDS)
+  val qr2: Quoted[Query[Test]] = liftQuery(entities.toDS)
+  val qr3: Quoted[Query[Test]] = liftQuery(entities.toDS)
+  val qr4: Quoted[Query[Test]] = liftQuery(entities.toDS)
 
-  val s0 = liftQuery(Seq(Tuple1(1), Tuple1(2)).toDS)
-  val s1 = liftQuery(Seq(SingleElement(1), SingleElement(2)).toDS)
-  val s2 = liftQuery(Seq(SingleElementSingleHolder(SingleElement(1)), SingleElementSingleHolder(SingleElement(2))).toDS)
-  val s3 = liftQuery(
+  val s0: Quoted[Query[Tuple1[Int]]] = liftQuery(Seq(Tuple1(1), Tuple1(2)).toDS)
+  val s1: Quoted[Query[SingleElement]] = liftQuery(Seq(SingleElement(1), SingleElement(2)).toDS)
+  val s2: Quoted[Query[SingleElementSingleHolder]] = liftQuery(Seq(SingleElementSingleHolder(SingleElement(1)), SingleElementSingleHolder(SingleElement(2))).toDS)
+  val s3: Quoted[Query[SingleElementMultiHolder]] = liftQuery(
     Seq(
       SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(1)),
       SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(2))

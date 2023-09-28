@@ -4,7 +4,7 @@ import io.getquill.ast.{Action => AstAction, Query => AstQuery, _}
 import io.getquill.context.sql._
 import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom.StringToken
-import io.getquill.{IdiomContext, Literal, Ord}
+import io.getquill.{Literal, Ord}
 import io.getquill.base.Spec
 import io.getquill.quat.Quat
 import io.getquill.util.TraceConfig
@@ -34,7 +34,7 @@ class OrientDBQuerySpec extends Spec {
     }
     "other" in {
       val q = quote {
-        qr1.map(t => "s")
+        qr1.map(_ => "s")
       }
       mirrorContext.run(q).string mustEqual
         "SELECT 's' FROM TestEntity"
@@ -185,7 +185,7 @@ class OrientDBQuerySpec extends Spec {
 
   import OrientDBIdiom._
   implicit val n = Literal
-  val i          = Ident("i")
+  val i: Ident          = Ident("i")
 
   "tokenizers" - {
     "if" in {
@@ -198,11 +198,11 @@ class OrientDBQuerySpec extends Spec {
     }
     "query" in {
       val t = implicitly[Tokenizer[AstQuery]]
-      t.token(Entity("name", Nil, QEP)) mustBe new SqlQueryApply(TraceConfig.Empty)(Entity("name", Nil, QEP)).token
+      t.token(Entity("name", List.empty, QEP)) mustBe new SqlQueryApply(TraceConfig.Empty)(Entity("name", List.empty, QEP)).token
     }
     "sql query" in {
       val t = implicitly[Tokenizer[SqlQuery]]
-      val e = FlattenSqlQuery(select = Nil)(Quat.Value)
+      val e = FlattenSqlQuery(select = List.empty)(Quat.Value)
 
       t.token(e) mustBe stmt"SELECT *"
 
@@ -215,7 +215,7 @@ class OrientDBQuerySpec extends Spec {
         t.token(e.copy(select = List(x, x), distinct = DistinctKind.Distinct)(Quat.Value))
       ).getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
 
-      val tb = TableContext(Entity("tb", Nil, QEP), "x1")
+      val tb = TableContext(Entity("tb", List.empty, QEP), "x1")
       t.token(e.copy(from = List(tb, tb))(Quat.Value)) mustBe stmt"SELECT * FROM tb"
 
       val jn = FlatJoinContext(InnerJoin, tb.copy(alias = "x2"), Ident("x"))
@@ -242,7 +242,7 @@ class OrientDBQuerySpec extends Spec {
       t.token(BinaryOperation(NullValue, EqualityOperator.`_!=`, i)) mustBe stmt"i IS NOT NULL"
       t.token(BinaryOperation(i, NumericOperator.`+`, i)) mustBe stmt"i + i"
       intercept[IllegalStateException](t.token(BinaryOperation(i, EqualityOperator.`_!=`, i)))
-      intercept[IllegalStateException](t.token(FunctionApply(i, Nil)))
+      intercept[IllegalStateException](t.token(FunctionApply(i, List.empty)))
     }
     "set operation" in {
       val t = implicitly[Tokenizer[SetOperation]]
@@ -253,7 +253,7 @@ class OrientDBQuerySpec extends Spec {
       val t = implicitly[Tokenizer[SelectValue]]
       t.token(SelectValue(Ident("?"))) mustBe "?".token
       t.token(
-        SelectValue(Aggregation(AggregationOperator.`max`, Entity("t", Nil, QEP)), Some("x"))
+        SelectValue(Aggregation(AggregationOperator.`max`, Entity("t", List.empty, QEP)), Some("x"))
       ) mustBe stmt"(SELECT MAX(*) FROM t) x"
     }
     "prop" in {
@@ -271,12 +271,12 @@ class OrientDBQuerySpec extends Spec {
       val t = implicitly[Tokenizer[AstAction]]
       intercept[IllegalStateException](t.token(null: AstAction))
       def ins(a: String) =
-        Insert(Entity("tb", Nil, QEP), List(Assignment(i, Property(Property(i, "x"), a), i)))
+        Insert(Entity("tb", List.empty, QEP), List(Assignment(i, Property(Property(i, "x"), a), i)))
       t.token(ins("isEmpty")) mustBe stmt"INSERT INTO tb (x IS NULL) VALUES(i)"
       t.token(ins("isDefined")) mustBe stmt"INSERT INTO tb (x IS NOT NULL) VALUES(i)"
       t.token(ins("nonEmpty")) mustBe stmt"INSERT INTO tb (x IS NOT NULL) VALUES(i)"
       t.token(
-        Insert(Entity("tb", Nil, QEP), List(Assignment(i, Property(i, "i"), i)))
+        Insert(Entity("tb", List.empty, QEP), List(Assignment(i, Property(i, "i"), i)))
       ) mustBe stmt"INSERT INTO tb (i) VALUES(i)"
     }
     // not actually used anywhere but doing a sanity check here

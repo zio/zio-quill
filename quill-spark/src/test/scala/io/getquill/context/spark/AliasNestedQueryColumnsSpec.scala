@@ -2,14 +2,14 @@ package io.getquill.context.spark
 
 import io.getquill.base.Spec
 
-case class Test(i: Int, j: Int, s: String)
+final case class Test(i: Int, j: Int, s: String)
 
 class AliasNestedQueryColumnsSpec extends Spec {
 
   import testContext._
   import sqlContext.implicits._
 
-  val entities = Seq(Test(1, 2, "3"))
+  val entities: Seq[Test] = Seq(Test(1, 2, "3"))
 
   val qr1 = liftQuery(entities.toDS)
   val qr2 = liftQuery(entities.toDS)
@@ -31,7 +31,7 @@ class AliasNestedQueryColumnsSpec extends Spec {
     }
     "unary operation" in {
       val q = quote {
-        qr1.filter(t => qr2.nested.nonEmpty)
+        qr1.filter(_ => qr2.nested.nonEmpty)
       }
       testContext.run(q).collect.toList mustEqual
         entities

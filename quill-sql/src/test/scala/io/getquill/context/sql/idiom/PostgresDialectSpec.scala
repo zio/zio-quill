@@ -7,7 +7,7 @@ import io.getquill.TestEntities
 
 class PostgresDialectSpec extends OnConflictSpec {
 
-  val ctx = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[PostgresDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
   import ctx._
 
   "applies explicit casts" - {
@@ -26,7 +26,7 @@ class PostgresDialectSpec extends OnConflictSpec {
   }
 
   "Array Operations" - {
-    case class ArrayOps(id: Int, numbers: Vector[Int])
+    final case class ArrayOps(id: Int, numbers: Vector[Int])
     "contains" in {
       ctx.run(query[ArrayOps].filter(_.numbers.contains(10))).string mustEqual
         "SELECT x1.id, x1.numbers FROM ArrayOps x1 WHERE 10 = ANY(x1.numbers)"

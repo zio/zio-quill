@@ -34,7 +34,7 @@ class OnConflictJdbcSpec extends OnConflictSpec {
   }
 
   "ON CONFLICT (i) DO UPDATE with schemaMeta ..." in {
-    case class TestEntityRename(s2: String, i2: Int, l2: Long, o2: Option[Int])
+    final case class TestEntityRename(s2: String, i2: Int, l2: Long, o2: Option[Int])
 
     def testQuery(e: TestEntityRename) = quote {
       querySchema[TestEntityRename](

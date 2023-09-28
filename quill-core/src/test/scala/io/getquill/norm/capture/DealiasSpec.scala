@@ -15,10 +15,10 @@ class DealiasSpec extends Spec {
   "ensures that each entity is referenced by the same alias" - {
     "flatMap" in {
       val q = quote {
-        qr1.filter(a => a.s == "s").flatMap(b => qr2)
+        qr1.filter(a => a.s == "s").flatMap(_ => qr2)
       }
       val n = quote {
-        qr1.filter(a => a.s == "s").flatMap(a => qr2)
+        qr1.filter(a => a.s == "s").flatMap(_ => qr2)
       }
       Dealias(q.ast) mustEqual n.ast
     }

@@ -31,7 +31,7 @@ class CassandraContextMacroSpec extends Spec {
   "probes queries" in {
     val ctx = new CassandraMirrorContextWithQueryProbing
     import ctx._
-    val q = quote {
+    quote {
       query[TestEntity].filter(_.s == "fail")
     }
     "ctx.run(q)" mustNot compile
@@ -48,7 +48,7 @@ class CassandraContextMacroSpec extends Spec {
     }
     "filter.map" in {
       val q = quote {
-        qr1.filter(t => t.i == lift(1)).map(t => lift(2L))
+        qr1.filter(t => t.i == lift(1)).map(_ => lift(2L))
       }
       val mirror = mirrorContext.run(q)
       mirror.string mustEqual "SELECT ? FROM TestEntity WHERE i = ?"

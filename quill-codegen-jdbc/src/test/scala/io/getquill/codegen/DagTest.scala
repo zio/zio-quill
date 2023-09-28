@@ -16,7 +16,7 @@ class CodeGeneratorRunnerDagTest extends AnyFunSuite with BeforeAndAfter {
 
   case class TestCase[O](one: ClassTag[_], twos: Seq[ClassTag[_]], result: ClassTag[_])
 
-  val cases = Seq(
+  val cases: Seq[TestCase[Nothing]] = Seq(
     TestCase(classTag[Int], Seq(classTag[Long]), classTag[Long]),
     TestCase(classTag[Long], Seq(classTag[Boolean], classTag[Int], classTag[Byte], classTag[Long]), classTag[Long]),
     TestCase(classTag[Int], Seq(classTag[Boolean], classTag[Int], classTag[Byte]), classTag[Int]),
@@ -54,7 +54,7 @@ class CodeGeneratorRunnerDagTest extends AnyFunSuite with BeforeAndAfter {
     TestCase(classTag[UnknownClass], Seq(classTag[Int]), classTag[String])
   )
 
-  val casesIter = for {
+  val casesIter: Seq[(ClassTag[_$1], ClassTag[_$2], ClassTag[_$3]) forSome { type _$1; type _$2; type _$3 }] = for {
     cas <- cases
     two <- cas.twos
   } yield (cas.one, two, cas.result)

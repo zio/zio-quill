@@ -23,14 +23,14 @@ trait PeopleReturningSpec extends Spec with BeforeAndAfterEach {
   val peopleInsert =
     quote((p: Contact) => query[Contact].insertValue(p))
 
-  val people = List(
+  val people: List[Contact] = List(
     Contact("Joe", "A", 44),
     Contact("Dan", "D", 55),
     Contact("Joe", "B", 66),
     Contact("Jim", "J", 77)
   )
 
-  val product = Product(0, "Something", 123)
+  val product: Product = Product(0, "Something", 123)
 
   object `Ex 0 insert.returning(_.generatedColumn) mod` {
     val op = quote {

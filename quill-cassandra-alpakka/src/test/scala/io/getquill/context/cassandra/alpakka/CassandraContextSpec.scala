@@ -8,7 +8,7 @@ import scala.util.Try
 class CassandraContextSpec extends CassandraAlpakkaSpec {
   import testDB._
   "run non-batched action" in {
-    case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
+    final case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
     val update = quote {
       query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
     }
@@ -17,11 +17,11 @@ class CassandraContextSpec extends CassandraAlpakkaSpec {
 
   "fail on returning" in {
 
-    val p: Prepare        = (x, session) => (Nil, x)
+    val p: Prepare        = (x, _) => (List.empty, x)
     val e: Extractor[Int] = (_, _) => 1
 
     intercept[IllegalStateException](executeActionReturning("", p, e, "")(ExecutionInfo.unknown, ())).getMessage mustBe
-      intercept[IllegalStateException](executeBatchActionReturning(Nil, e)(ExecutionInfo.unknown, ())).getMessage
+      intercept[IllegalStateException](executeBatchActionReturning(List.empty, e)(ExecutionInfo.unknown, ())).getMessage
   }
 
   "return failed future on `prepare` error in async context" - {

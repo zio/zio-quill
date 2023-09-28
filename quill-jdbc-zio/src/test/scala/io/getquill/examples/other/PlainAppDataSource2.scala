@@ -13,7 +13,7 @@ object PlainAppDataSource2 {
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
   import MyPostgresContext._
 
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 
   def hikariConfig     = new HikariConfig(JdbcContextConfig(LoadConfig("testPostgresDB")).configProperties)
   def hikariDataSource = new HikariDataSource(hikariConfig)

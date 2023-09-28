@@ -8,11 +8,11 @@ class RenamePropertiesSpec extends Spec {
 
   import mirrorContext._
 
-  val e = quote {
+  val e: Quoted[EntityQuery[TestEntity]] = quote {
     querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
   }
 
-  val f = quote {
+  val f: Quoted[EntityQuery[TestEntity]] = quote {
     qr1.filter(t => t.i == 1)
   }
 

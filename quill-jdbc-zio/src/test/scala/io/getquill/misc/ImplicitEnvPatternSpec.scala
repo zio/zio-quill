@@ -24,7 +24,7 @@ class ImplicitEnvPatternSpec extends PeopleZioProxySpec {
   }
 
   case class MyService(ds: DataSource) {
-    implicit val env = Implicit(ds)
+    implicit val env: Implicit[DataSource] = Implicit(ds)
 
     def alexes = testContext.run(query[Person].filter(p => p.name == "Alex"))
     def berts  = testContext.run(query[Person].filter(p => p.name == "Bert"))

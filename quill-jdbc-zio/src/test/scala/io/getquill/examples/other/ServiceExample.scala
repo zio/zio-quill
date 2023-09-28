@@ -7,14 +7,15 @@ import zio.{ZIO, ZIOAppDefault, ZLayer}
 
 import java.sql.SQLException
 import javax.sql.DataSource
+import zio.{ ExitCode, URIO }
 
 object ServiceExample extends ZIOAppDefault {
   import DBModel._
 
-  override def run =
+  override def run: URIO[Any,ExitCode] =
     runApp.provide(DBManager.live).exitCode
 
-  def runApp =
+  def runApp: ZIO[DBManager.Service,Throwable,Unit] =
     for {
       _    <- DBManager.deleteJoes
       _    <- DBManager.persist(Person("Joe", 123))
@@ -24,7 +25,7 @@ object ServiceExample extends ZIOAppDefault {
 }
 
 object DBModel {
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 }
 
 object DBManager {

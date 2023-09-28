@@ -28,7 +28,7 @@ class BatchValuesJdbcSpec extends BatchValuesSpec {
 
   "Ex 2B - Batch Insert Returning - whole row" in {
     import `Ex 2 - Batch Insert Returning`._
-    implicit def meta = insertMeta[Product](_.id)
+    
     def op = quote {
       liftQuery(products).foreach(p => query[Product].insertValue(p).returning(p => p))
     }

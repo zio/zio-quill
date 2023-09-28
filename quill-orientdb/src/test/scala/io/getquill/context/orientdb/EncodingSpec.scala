@@ -22,10 +22,10 @@ class EncodingSpec extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     // 100% coverage
-    case class A()
-    case class B()
-    val a1: Encoder[A] = encoder((b, c, d) => d)
-    val a2: Decoder[A] = decoder(b => c => A())
+    final case class A()
+    final case class B()
+    val a1: Encoder[A] = encoder((_, _, d) => d)
+    val a2: Decoder[A] = decoder(_ => _ => A())
     mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[OrientDBDecoder[B]] mustBe true
     mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[OrientDBEncoder[B]] mustBe true
   }
@@ -103,7 +103,7 @@ class EncodingSpec extends Spec {
     o10: Option[Byte]
   )
 
-  val insertValues =
+  val insertValues: List[EncodingTestEntity] =
     List(
       EncodingTestEntity(
         id = 1,

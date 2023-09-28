@@ -9,7 +9,7 @@ class QueryGenerator(seed: Int) {
   private val random = new Random(seed)
 
   implicit class IdentExt(id: Ident) {
-    def randomProperty =
+    def randomProperty: Ast =
       id.quat match {
         case Quat.Product(fields) =>
           Property(id, fields.toList(random.nextInt(fields.size))._1)
@@ -31,9 +31,9 @@ class QueryGenerator(seed: Int) {
 
   def apply(i: Int): Query =
     if (i <= 2) {
-      val quat = Quat.Product("Test")
+      Quat.Product("Test")
       val s    = string(3)
-      Entity(s, Nil, Quat.Product("Test", (1 to 20).map(i => (string(3), Quat.Value)).toList.distinct: _*))
+      Entity(s, List.empty, Quat.Product("Test", (1 to 20).map(_ => (string(3), Quat.Value)).toList.distinct: _*))
     } else {
       random.nextInt(8) match {
         case 0 => map(i)
@@ -99,9 +99,9 @@ class QueryGenerator(seed: Int) {
   }
 }
 
-case class IsAggregated(state: Boolean = false) extends StatefulTransformer[Boolean] {
+final case class IsAggregated(state: Boolean = false) extends StatefulTransformer[Boolean] {
 
-  override def apply(q: Query) =
+  override def apply(q: Query): (Query, StatefulTransformer[Boolean]) =
     q match {
       case q: Aggregation => (q, IsAggregated(true))
       case other          => super.apply(q)

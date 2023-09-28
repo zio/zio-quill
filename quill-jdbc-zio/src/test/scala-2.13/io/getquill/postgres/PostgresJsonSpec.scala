@@ -15,10 +15,10 @@ class PostgresJsonSpec extends ZioSpec {
   case class JsonEntity(name: String, value: JsonValue[PersonJson])
   case class JsonbEntity(name: String, value: JsonbValue[PersonJsonb])
 
-  val jsonJoe    = JsonValue(PersonJson("Joe", 123))
-  val jsonValue  = JsonEntity("JoeEntity", jsonJoe)
-  val jsonbJoe   = JsonbValue(PersonJsonb("Joe", 123))
-  val jsonbValue = JsonbEntity("JoeEntity", jsonbJoe)
+  val jsonJoe: JsonValue[PersonJson]    = JsonValue(PersonJson("Joe", 123))
+  val jsonValue: JsonEntity  = JsonEntity("JoeEntity", jsonJoe)
+  val jsonbJoe: JsonbValue[PersonJsonb]   = JsonbValue(PersonJsonb("Joe", 123))
+  val jsonbValue: JsonbEntity = JsonbEntity("JoeEntity", jsonbJoe)
 
   case class JsonAstEntity(name: String, value: JsonValue[Json])
   case class JsonbAstEntity(name: String, value: JsonbValue[Json])
@@ -29,7 +29,7 @@ class PostgresJsonSpec extends ZioSpec {
   implicit val personJsonbEncoder: JsonEncoder[PersonJsonb] = DeriveJsonEncoder.gen[PersonJsonb]
   implicit val personJsonbDecoder: JsonDecoder[PersonJsonb] = DeriveJsonDecoder.gen[PersonJsonb]
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     super.beforeAll()
     testContext.run(quote(query[JsonbEntity].delete)).runSyncUnsafe()
     testContext.run(quote(query[JsonEntity].delete)).runSyncUnsafe()

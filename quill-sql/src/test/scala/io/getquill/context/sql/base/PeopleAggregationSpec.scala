@@ -13,7 +13,7 @@ trait PeopleAggregationSpec extends Spec {
 
   case class Address(id: Int, street: String, zip: Int = 0, otherExtraInfo: Option[String] = None)
 
-  val people = List(
+  val people: List[Contact] = List(
     Contact("Joe", "A", 20, 1),
     Contact("Dan", "D", 30, 2),
     Contact("Joe", "B", 40, 3),
@@ -21,7 +21,7 @@ trait PeopleAggregationSpec extends Spec {
     Contact("Dan", "E", 60, 1)
   )
 
-  val addresses = List(
+  val addresses: List[Address] = List(
     Address(1, "111 St"),
     Address(2, "222 Ct"),
     Address(3, "333 Sq"),

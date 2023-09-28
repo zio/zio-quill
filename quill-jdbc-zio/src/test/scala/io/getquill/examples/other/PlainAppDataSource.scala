@@ -6,17 +6,19 @@ import io.getquill.jdbczio.Quill
 import io.getquill.{JdbcContextConfig, Literal, PostgresZioJdbcContext}
 import zio.Console.printLine
 import zio.{Runtime, Unsafe}
+import javax.sql.DataSource
+import zio.ZLayer
 
 object PlainAppDataSource {
 
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
   import MyPostgresContext._
 
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 
-  def config = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def config: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  val zioDS = Quill.DataSource.fromDataSource(new HikariDataSource(config))
+  val zioDS: ZLayer[Any,Throwable,DataSource] = Quill.DataSource.fromDataSource(new HikariDataSource(config))
 
   def main(args: Array[String]): Unit = {
     val people = quote {

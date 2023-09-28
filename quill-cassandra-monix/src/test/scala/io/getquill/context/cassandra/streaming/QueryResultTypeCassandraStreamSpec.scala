@@ -10,10 +10,10 @@ class QueryResultTypeCassandraStreamSpec extends QueryResultTypeCassandraSpec {
 
   import context._
 
-  def result[T](t: Observable[T]) =
+  def result[T](t: Observable[T]): List[T] =
     await(t.foldLeftL(List.empty[T])(_ :+ _).runToFuture)
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     result(context.run(deleteAll))
     result(context.run(liftQuery(entries).foreach(e => insert(e))))
     ()

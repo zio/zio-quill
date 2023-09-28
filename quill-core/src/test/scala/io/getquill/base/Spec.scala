@@ -10,14 +10,15 @@ import org.scalatest.matchers.must.Matchers
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+import io.getquill.context.ExecutionType
 
 abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
   val QV                                = Quat.Value
-  val QEP                               = Quat.Product.empty("Product")
-  def QP(name: String, fields: String*) = Quat.LeafProduct(name, fields: _*)
+  val QEP: Quat.Product                               = Quat.Product.empty("Product")
+  def QP(name: String, fields: String*): Quat.Product = Quat.LeafProduct(name, fields: _*)
 
   // Used by various tests to replace temporary idents created by AttachToEntity with 'x'
-  val replaceTempIdent = new StatelessTransformer {
+  val replaceTempIdent: StatelessTransformer = new StatelessTransformer {
     override def applyIdent(id: Ident): Ident =
       id match {
         case TemporaryIdent(tid) =>
@@ -28,7 +29,7 @@ abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
   }
 
   implicit class QuatOps(quat: Quat) {
-    def productOrFail() =
+    def productOrFail(): Quat.Product =
       quat match {
         case p: Quat.Product => p
         case _               => throw new IllegalArgumentException(s"The quat ${quat} is expected to be a product but is not")
@@ -38,7 +39,7 @@ abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
   def await[T](f: Future[T]): T = Await.result(f, Duration.Inf)
 
   implicit class MirrorContextOps(m: BatchActionMirrorGeneric[_]) {
-    def triple = {
+    def triple: (String, List[List[Any]], ExecutionType) = {
       if (m.groups.length != 1)
         fail(s"Expected all batch groups per design to only have one root element but has multiple ${m.groups}")
       val (queryString, prepares) = m.groups(0)
@@ -55,7 +56,7 @@ abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
       )
     }
 
-    def tripleBatchMulti =
+    def tripleBatchMulti: List[(String, List[List[Any]], ExecutionType)] =
       m.groups.map { case (queryString, prepares) =>
         (
           queryString,
@@ -72,7 +73,7 @@ abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
   }
 
   implicit class MirrorReturningContextOps[E[_]](m: BatchActionReturningMirrorGeneric[_, _, E]) {
-    def triple = {
+    def triple: (String, List[List[Any]], ExecutionType) = {
       if (m.groups.length != 1)
         fail(s"Expected all batch groups per design to only have one root element but has multiple ${m.groups}")
       val (queryString, returnAction, prepares) = m.groups(0)
@@ -89,7 +90,7 @@ abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
       )
     }
 
-    def tripleBatchMulti =
+    def tripleBatchMulti: List[(String, List[List[Any]], ExecutionType)] =
       m.groups.map { case (queryString, returnAction, prepares) =>
         (
           queryString,

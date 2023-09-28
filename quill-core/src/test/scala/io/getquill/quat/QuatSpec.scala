@@ -2,7 +2,6 @@ package io.getquill.quat
 
 import io.getquill._
 import io.getquill.base.Spec
-import io.getquill.norm.RepropagateQuats
 import io.getquill.quotation.QuatException
 
 import scala.language.reflectiveCalls
@@ -13,7 +12,7 @@ class QuatSpec extends Spec {
   import testContext._
 
   "boolean and optional boolean" in {
-    case class MyPerson(name: String, isHuman: Boolean, isRussian: Option[Boolean])
+    final case class MyPerson(name: String, isHuman: Boolean, isRussian: Option[Boolean])
     val MyPersonQuat =
       Quat.Product("MyPerson", "name" -> Quat.Value, "isHuman" -> Quat.BooleanValue, "isRussian" -> Quat.BooleanValue)
 
@@ -22,7 +21,7 @@ class QuatSpec extends Spec {
   }
 
   "should support standard case class" in {
-    case class MyPerson(firstName: String, lastName: String, age: Int)
+    final case class MyPerson(firstName: String, lastName: String, age: Int)
     val MyPersonQuat = Quat.LeafProduct("MyPerson", "firstName", "lastName", "age")
 
     quote(query[MyPerson]).ast.quat mustEqual MyPersonQuat
@@ -30,8 +29,8 @@ class QuatSpec extends Spec {
   }
 
   "should support embedded" in {
-    case class MyName(first: String, last: String)
-    case class MyPerson(name: MyName, age: Int)
+    final case class MyName(first: String, last: String)
+    final case class MyPerson(name: MyName, age: Int)
     val MyPersonQuat =
       Quat.Product("MyPerson", "name" -> Quat.LeafProduct("MyName", "first", "last"), "age" -> Quat.Value)
 
@@ -40,7 +39,7 @@ class QuatSpec extends Spec {
   }
 
   "should refine quats from generic infixes" - {
-    case class MyPerson(name: String, age: Int)
+    final case class MyPerson(name: String, age: Int)
     val MyPersonQuat = Quat.Product("MyPerson", "name" -> Quat.Value, "age" -> Quat.Value)
 
     "propagating from transparent infixes in: extension methods" in {
@@ -87,9 +86,9 @@ class QuatSpec extends Spec {
   }
 
   "should support multi-level embedded" in {
-    case class MyName(first: String, last: String)
-    case class MyId(name: MyName, memberNum: Int)
-    case class MyPerson(name: MyId, age: Int)
+    final case class MyName(first: String, last: String)
+    final case class MyId(name: MyName, memberNum: Int)
+    final case class MyPerson(name: MyId, age: Int)
     val MyPersonQuat = Quat.Product(
       "MyPerson",
       "name" -> Quat.Product("MyId", "name" -> Quat.LeafProduct("MyName", "first", "last"), "memberNum" -> Quat.Value),
@@ -110,7 +109,7 @@ class QuatSpec extends Spec {
 
     "in query as" in {
       trait Animal { def name: String }
-      case class Cat(name: String, color: Int) extends Animal
+      final case class Cat(name: String, color: Int) extends Animal
 
       def isSpot[A <: Animal] = quote { (animals: Query[A]) =>
         animals.filter(a => a.name == "Spot")
@@ -136,7 +135,7 @@ class QuatSpec extends Spec {
     val p: Quat = Quat.Product("p", "foo" -> Quat.Value)
     val v: Quat = Quat.Value
     p.probit mustEqual p
-    val e = intercept[QuatException] {
+    intercept[QuatException] {
       v.probit
     }
   }
@@ -160,7 +159,7 @@ class QuatSpec extends Spec {
     "rename field" in {
       prod.withRenames(List("bv" -> "bva", "p" -> "pa")).applyRenames mustEqual expect
     }
-    val e = intercept[QuatException] {
+    intercept[QuatException] {
       value.withRenames(List("foo" -> "bar"))
     }
   }
@@ -215,14 +214,14 @@ class QuatSpec extends Spec {
       func.ast.quat mustEqual Quat.Generic
     }
     "case class" in {
-      case class MyPerson(name: String, isRussian: Boolean)
+      final case class MyPerson(name: String, isRussian: Boolean)
       def func = quote { (q: Query[MyPerson]) =>
         q.filter(p => p.name == "Joe")
       }
       func.ast.quat mustEqual Quat.Product("MyPerson", "name" -> Quat.Value, "isRussian" -> Quat.BooleanValue)
     }
     "case class with boundary" in {
-      case class MyPerson(name: String, isRussian: Boolean)
+      final case class MyPerson(name: String, isRussian: Boolean)
       def func[T <: MyPerson] = quote { (q: Query[T]) =>
         q.filter(p => p.name == "Joe")
       }
@@ -314,14 +313,14 @@ class QuatSpec extends Spec {
       func.ast.quat mustEqual Quat.Product("T", "name" -> Quat.Value, "isRussian" -> Quat.BooleanValue)
     }
     "case class" in {
-      case class MyPerson(name: String, isRussian: Boolean)
+      final case class MyPerson(name: String, isRussian: Boolean)
       def func = quote { (q: MyPerson) =>
         q
       }
       func.ast.quat mustEqual Quat.Product("MyPerson", "name" -> Quat.Value, "isRussian" -> Quat.BooleanValue)
     }
     "case class with boundary" in {
-      case class MyPerson(name: String, isRussian: Boolean)
+      final case class MyPerson(name: String, isRussian: Boolean)
       def func[T <: MyPerson] = quote { (q: T) =>
         q
       }

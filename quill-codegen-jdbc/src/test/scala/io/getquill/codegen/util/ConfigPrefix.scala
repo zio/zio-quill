@@ -37,7 +37,7 @@ object ConfigPrefix {
   case object TestSqliteDB    extends TestSqliteDB
   case object TestSqlServerDB extends TestSqlServerDB
 
-  def all = List(
+  def all: List[ConfigPrefix] = List(
     TestH2DB,
     TestMysqlDB,
     TestOracleDB,

@@ -9,7 +9,7 @@ class QuatRunSpec extends Spec {
   import testContext._
 
   "should refine quats from generic infixes and express during execution" - {
-    case class MyPerson(name: String, age: Int)
+    final case class MyPerson(name: String, age: Int)
     val MyPersonQuat = Quat.Product("MyPersonQuat", "name" -> Quat.Value, "age" -> Quat.Value)
 
     "from extension methods" in {

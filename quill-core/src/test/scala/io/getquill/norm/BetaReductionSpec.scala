@@ -49,7 +49,7 @@ class BetaReductionSpec extends Spec {
         OnConflict.Existing(Ident("a'"))
     }
     "with inline" - {
-      val entity = Entity("a", Nil, QEP)
+      val entity = Entity("a", List.empty, QEP)
       // Entity Idents
       val (aE, bE, cE, dE) = (Ident("a", QEP), Ident("b", QEP), Ident("c", QEP), Ident("d", QEP))
       // Value Idents

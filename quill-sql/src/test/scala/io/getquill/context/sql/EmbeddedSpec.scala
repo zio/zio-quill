@@ -5,13 +5,13 @@ import io.getquill.base.Spec
 
 class EmbeddedSpec extends Spec {
 
-  val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[MirrorSqlDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(MirrorSqlDialect, Literal) with TestEntities
   import ctx._
 
   "queries with embedded entities should" - {
     "function property inside of nested distinct queries" in {
-      case class Parent(id: Int, emb1: Emb)
-      case class Emb(a: Int, b: Int)
+      final case class Parent(id: Int, emb1: Emb)
+      final case class Emb(a: Int, b: Int)
       val q = quote {
         query[Emb].map(e => Parent(1, e)).distinct
       }
@@ -19,8 +19,8 @@ class EmbeddedSpec extends Spec {
     }
 
     "function property inside of nested distinct queries - tuple" in {
-      case class Parent(id: Int, emb1: Emb)
-      case class Emb(a: Int, b: Int)
+      final case class Parent(id: Int, emb1: Emb)
+      final case class Emb(a: Int, b: Int)
       val q = quote {
         query[Emb].map(e => Parent(1, e)).distinct.map(p => (2, p)).distinct
       }
@@ -28,8 +28,8 @@ class EmbeddedSpec extends Spec {
     }
 
     "function property inside of nested distinct queries through tuples" in {
-      case class Parent(id: Int, emb1: Emb)
-      case class Emb(a: Int, b: Int)
+      final case class Parent(id: Int, emb1: Emb)
+      final case class Emb(a: Int, b: Int)
       val q = quote {
         query[Emb].map(e => (1, e)).distinct.map(t => Parent(t._1, t._2)).distinct
       }
@@ -37,9 +37,9 @@ class EmbeddedSpec extends Spec {
     }
 
     "function property inside of nested distinct queries - twice" in {
-      case class Grandparent(idG: Int, par: Parent)
-      case class Parent(idP: Int, emb1: Emb)
-      case class Emb(a: Int, b: Int)
+      final case class Grandparent(idG: Int, par: Parent)
+      final case class Parent(idP: Int, emb1: Emb)
+      final case class Emb(a: Int, b: Int)
       val q = quote {
         query[Emb].map(e => Parent(1, e)).distinct.map(p => Grandparent(2, p)).distinct
       }
@@ -47,9 +47,9 @@ class EmbeddedSpec extends Spec {
     }
 
     "function property inside of nested distinct queries - twice - into tuple" in {
-      case class Grandparent(idG: Int, par: Parent)
-      case class Parent(idP: Int, emb1: Emb)
-      case class Emb(a: Int, b: Int)
+      final case class Grandparent(idG: Int, par: Parent)
+      final case class Parent(idP: Int, emb1: Emb)
+      final case class Emb(a: Int, b: Int)
       val q = quote {
         query[Emb].map(e => Parent(1, e)).distinct.map(p => Grandparent(2, p)).distinct.map(g => (3, g)).distinct
       }

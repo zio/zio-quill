@@ -10,12 +10,12 @@ class RenamePropertiesOverrideSpec extends Spec {
 
   case class IntLongCaseClassScope(im: Int, lm: Long)
 
-  val e = quote {
+  val e: Quoted[EntityQuery[TestEntity]] = quote {
     // Field i should be capitalized according to the naming convention
     querySchema[TestEntity]("test_entity", _.i -> "field_i", _.s -> "field_s")
   }
 
-  val f = quote {
+  val f: Quoted[EntityQuery[TestEntity]] = quote {
     qr1.filter(t => t.i == 1)
   }
 
@@ -33,7 +33,7 @@ class RenamePropertiesOverrideSpec extends Spec {
         "SELECT t.field_s AS _1, t._2 FROM test_tuple t"
     }
     "mapped to caseclass and filtered" in {
-      case class StringInt(strProp: String, intProp: Int)
+      final case class StringInt(strProp: String, intProp: Int)
       val q = quote {
         tup.map(t => new StringInt(t._1, t._2)).filter(_.strProp == "foo")
       }
@@ -103,7 +103,7 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "transitive" in {
         val q = quote {
-          e.flatMap(t => qr2.map(u => t)).map(t => t.s)
+          e.flatMap(t => qr2.map(_ => t)).map(t => t.s)
         }
         testContextUpper.run(q).string mustEqual
           "SELECT t.field_s FROM test_entity t, TESTENTITY2 u"
@@ -137,7 +137,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "SELECT t.field_i AS _1, t.L AS _2 FROM test_entity t"
       }
       "body with caseclass" in {
-        case class IntLongCase(im: Int, lm: Long)
+        final case class IntLongCase(im: Int, lm: Long)
         val q = quote {
           e.map(t => new IntLongCase(t.i, t.l))
         }
@@ -145,7 +145,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "SELECT t.field_i AS im, t.L AS lm FROM test_entity t"
       }
       "body with caseclass companion constructed" in {
-        case class IntLongCase(im: Int, lm: Long)
+        final case class IntLongCase(im: Int, lm: Long)
         val q = quote {
           e.map(t => IntLongCase(t.i, t.l))
         }
@@ -324,7 +324,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     "operation" - {
       "unary" in {
         val q: Quoted[EntityQuery[Index]] = quote {
-          e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
+          e.filter(_ => e.filter(b => b.i > 0).isEmpty).map(_.i)
         }
         testContextUpper.run(q).string mustEqual
           "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.L AS l, b.O AS o, b.B AS b FROM test_entity b WHERE b.field_i > 0)"
@@ -349,14 +349,14 @@ class RenamePropertiesOverrideSpec extends Spec {
   "respects the schema definition for embedded" - {
     "query" - {
       "without schema" in {
-        case class B(c: Int)
-        case class A(b: B)
+        final case class B(c: Int)
+        final case class A(b: B)
         testContextUpper.run(query[A]).string mustEqual
           "SELECT x.C AS c FROM A x"
       }
       "with schema" in {
-        case class B(c: Int)
-        case class A(b: B)
+        final case class B(c: Int)
+        final case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC")
         }
@@ -366,14 +366,14 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "query for Option embedded" - {
       "without schema" in {
-        case class B(c1: Int, c2: Int)
-        case class A(b: Option[B])
+        final case class B(c1: Int, c2: Int)
+        final case class A(b: Option[B])
         testContextUpper.run(query[A]).string mustEqual
           "SELECT x.C1 AS c1, x.C2 AS c2 FROM A x"
       }
       "with schema" in {
-        case class B(c1: Int, c2: Int)
-        case class A(b: Option[B])
+        final case class B(c1: Int, c2: Int)
+        final case class A(b: Option[B])
         val q = quote {
           querySchema[A]("A", _.b.map(_.c1) -> "bC1", _.b.map(_.c2) -> "bC2")
         }
@@ -383,8 +383,8 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "update" - {
       "without schema" in {
-        case class B(c: Int)
-        case class A(b: B)
+        final case class B(c: Int)
+        final case class A(b: B)
         val q = quote {
           query[A].update(_.b.c -> 1)
         }
@@ -392,8 +392,8 @@ class RenamePropertiesOverrideSpec extends Spec {
           "UPDATE A SET C = 1"
       }
       "with schema" in {
-        case class B(c: Int)
-        case class A(b: B)
+        final case class B(c: Int)
+        final case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").update(_.b.c -> 1)
         }
@@ -403,8 +403,8 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "insert" - {
       "without schema" in {
-        case class B(c: Int)
-        case class A(b: B)
+        final case class B(c: Int)
+        final case class A(b: B)
         val q = quote {
           query[A].insert(_.b.c -> 1)
         }
@@ -412,8 +412,8 @@ class RenamePropertiesOverrideSpec extends Spec {
           "INSERT INTO A (C) VALUES (1)"
       }
       "with schema" in {
-        case class B(c: Int)
-        case class A(b: B)
+        final case class B(c: Int)
+        final case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").insert(_.b.c -> 1)
         }
@@ -423,8 +423,8 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
 
     "sql" - {
-      case class B(b: Int)
-      case class A(u: Long, v: Int, w: B)
+      final case class B(b: Int)
+      final case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
         val q = quote {
           sql"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]

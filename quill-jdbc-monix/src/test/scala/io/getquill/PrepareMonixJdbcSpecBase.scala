@@ -9,7 +9,7 @@ import org.scalactic.Equality
 
 trait PrepareMonixJdbcSpecBase extends ProductSpec {
 
-  implicit val productEq = new Equality[Product] {
+  implicit val productEq: Equality[Product] = new Equality[Product] {
     override def areEqual(a: Product, b: Any): Boolean = b match {
       case Product(_, desc, sku) => desc == a.description && sku == a.sku
       case _                     => false
@@ -18,17 +18,17 @@ trait PrepareMonixJdbcSpecBase extends ProductSpec {
 
   def productExtractor: (ResultSet, Connection) => Product
 
-  def withOrderedIds(products: List[Product]) =
+  def withOrderedIds(products: List[Product]): List[Product] =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
 
-  def singleInsert(conn: => Connection)(prep: Connection => Task[PreparedStatement]) =
+  def singleInsert(conn: => Connection)(prep: Connection => Task[PreparedStatement]): Task[Boolean] =
     Task(conn).bracket { conn =>
       prep(conn).bracket { stmt =>
         Task(stmt.execute())
       }(stmt => Task(stmt.close()))
     }(conn => Task(conn.close()))
 
-  def batchInsert(conn: => Connection)(prep: Connection => Task[List[PreparedStatement]]) =
+  def batchInsert(conn: => Connection)(prep: Connection => Task[List[PreparedStatement]]): Task[List[Boolean]] =
     Task(conn).bracket { conn =>
       prep(conn).flatMap(stmts =>
         Task.sequence(
@@ -43,7 +43,7 @@ trait PrepareMonixJdbcSpecBase extends ProductSpec {
 
   def extractResults[T](
     conn: => Connection
-  )(prep: Connection => Task[PreparedStatement])(extractor: (ResultSet, Connection) => T) =
+  )(prep: Connection => Task[PreparedStatement])(extractor: (ResultSet, Connection) => T): Task[List[T]] =
     Task(conn).bracket { conn =>
       prep(conn).bracket { stmt =>
         Task(stmt.executeQuery()).bracket { rs =>
@@ -52,6 +52,6 @@ trait PrepareMonixJdbcSpecBase extends ProductSpec {
       }(stmt => Task(stmt.close()))
     }(conn => Task(conn.close()))
 
-  def extractProducts(conn: => Connection)(prep: Connection => Task[PreparedStatement]) =
+  def extractProducts(conn: => Connection)(prep: Connection => Task[PreparedStatement]): Task[List[Product]] =
     extractResults(conn)(prep)(productExtractor)
 }

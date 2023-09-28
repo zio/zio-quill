@@ -15,13 +15,13 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
   import scala.reflect.runtime.{universe => ru}
 
   object MockResultSet {
-    def apply[T: ClassTag: ru.TypeTag](data: Seq[T]) = {
+    def apply[T: ClassTag: ru.TypeTag](data: Seq[T]): ResultSet = {
       val rs       = mock[ResultSet]
       var rowIndex = -1
 
       def introspection                = new Introspection(data(rowIndex))
       def getIndex(i: Int): Any        = introspection.getIndex(i)
-      def getColumn(name: String): Any = introspection.getField(name)
+      
 
       when(rs.next()) thenAnswer {
         rowIndex += 1
@@ -125,11 +125,11 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
   }
 
   "stream is correctly closed when ending conn.setAutoCommit returns error but is caught" in {
-    val people = List(Person("Joe", 11), Person("Jack", 22))
+    List(Person("Joe", 11), Person("Jack", 22))
 
     val ds   = mock[MyDataSource]
     val conn = mock[Connection]
-    val stmt = mock[PreparedStatement]
+    mock[PreparedStatement]
 
     when(ds.getConnection) thenReturn conn
     when(conn.getAutoCommit) thenThrow (new SQLException(msg))
@@ -170,7 +170,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((_: Boolean) => ()) andThenThrow (new SQLException(msg))
 
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._

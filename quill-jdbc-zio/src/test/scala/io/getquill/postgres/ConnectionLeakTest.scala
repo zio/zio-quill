@@ -10,16 +10,19 @@ import io.getquill.jdbczio.Quill
 import zio.{Runtime, Unsafe}
 
 import scala.util.Random
+import com.zaxxer.hikari.HikariDataSource
+import javax.sql.DataSource
+import zio.ZLayer
 
 class ConnectionLeakTest extends ProductSpec with ZioProxySpec {
 
-  implicit val pool = Implicit(Quill.DataSource.fromPrefix("testPostgresDB"))
+  implicit val pool: Implicit[ZLayer[Any,Throwable,DataSource]] = Implicit(Quill.DataSource.fromPrefix("testPostgresDB"))
 
-  val dataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
+  val dataSource: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
   val context    = new PostgresZioJdbcContext(Literal)
   import context._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     super.beforeAll()
     context.run(quote(query[Product].delete)).provide(pool.env).runSyncUnsafe()
     ()

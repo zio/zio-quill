@@ -12,7 +12,7 @@ class AggregationSpec extends Spec {
   // remove the === matcher from scalatest so that we can test === in Context.extra
   override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(left)
 
-  val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[MirrorSqlDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(MirrorSqlDialect, Literal) with TestEntities
   import ctx._
 
   // an issue heavily related to the ability to use an aggregator and then a .nested after which
@@ -168,7 +168,7 @@ class AggregationSpec extends Spec {
         "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM (SELECT p.age FROM Person p) AS p GROUP BY p.age) AS p WHERE p.x > 1000"
     }
 
-    case class NameAge(name: String, age: Int)
+    final case class NameAge(name: String, age: Int)
 
     "work with map(product).filter.groupByMap.filter" in {
       ctx.run {
@@ -192,9 +192,9 @@ class AggregationSpec extends Spec {
     }
 
     "work in a for-comprehension" in { // //
-      case class Address(id: Int, owner: Int, street: String)
-      case class Furniture(owner: Int, location: Int)
-      case class PersonInfo(id: Int, maxAge: Int)
+      final case class Address(id: Int, owner: Int, street: String)
+      final case class Furniture(owner: Int, location: Int)
+      final case class PersonInfo(id: Int, maxAge: Int)
       import extras._
 
       ctx.run {

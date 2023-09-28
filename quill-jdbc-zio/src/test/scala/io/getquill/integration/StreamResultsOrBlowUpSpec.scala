@@ -5,6 +5,7 @@ import org.scalatest.matchers.should.Matchers._
 import io.getquill._
 import io.getquill.context.ZioJdbc._
 import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import javax.sql.DataSource
 
 /**
  * This is a long-running test that will cause a OutOfMemory exception if a
@@ -18,7 +19,7 @@ import io.getquill.context.qzio.ImplicitSyntax.Implicit
  * As a default, this test will run as part of the suite without blowing up.
  */
 class StreamResultsOrBlowUpSpec extends ZioProxySpec {
-  implicit val pool = Implicit(io.getquill.postgres.pool)
+  implicit val pool: Implicit[DataSource] = Implicit(io.getquill.postgres.pool)
 
   case class Person(name: String, age: Int)
 
@@ -26,7 +27,7 @@ class StreamResultsOrBlowUpSpec extends ZioProxySpec {
   // that will force jdbc to load the entire ResultSet into memory and crash this test.
   val doBlowUp = false
 
-  val ctx = new PostgresZioJdbcContext.Underlying(Literal) {
+  val ctx: PostgresZioJdbcContext.Underlying[Literal.type] = new PostgresZioJdbcContext.Underlying(Literal) {
     override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
       val stmt =
         conn.prepareStatement(
@@ -40,11 +41,11 @@ class StreamResultsOrBlowUpSpec extends ZioProxySpec {
     }
   }
   import ctx.{run => runQuill, _}
-  val inserts = quote { (numRows: Long) =>
+  val inserts: Quoted[Long => Insert[Int]] = quote { (numRows: Long) =>
     sql"""insert into person (name, age) select md5(random()::text), random()*10+1 from generate_series(1, ${numRows}) s(i)"""
       .as[Insert[Int]]
   }
-  val deletes = runQuill(sql"TRUNCATE TABLE Person".as[Delete[Person]])
+  val deletes: QCIO[Long] = runQuill(sql"TRUNCATE TABLE Person".as[Delete[Person]])
 
   val numRows = 1000000L
 

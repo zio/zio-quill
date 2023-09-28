@@ -1,8 +1,10 @@
 package io.getquill.context.spark
 
 import io.getquill.base.Spec
+import io.getquill.{ Query, Quoted }
+import org.scalatest.Assertion
 
-case class EncodingTestEntity(
+final case class EncodingTestEntity(
   v1: String,
   v2: BigDecimal,
   v3: Boolean,
@@ -145,17 +147,17 @@ class EncodingSparkSpec extends Spec {
       val q = quote {
         entities.filter(_.o8.exists(lift(v).contains(_))).map(_.o8)
       }
-      testContext.run(q).collect.toList mustEqual List()
+      testContext.run(q).collect.toList mustEqual List.empty
     }
   }
 
   "mapped encoding" in {
-    case class Temp(i: Int)
+    final case class Temp(i: Int)
     implicit val enc = MappedEncoding[Temp, Int](_.i)
     implicitly[Encoder[Temp]]
   }
 
-  val entities = liftQuery {
+  val entities: Quoted[Query[EncodingTestEntity]] = liftQuery {
     Seq(
       EncodingTestEntity(
         "s",
@@ -200,7 +202,7 @@ class EncodingSparkSpec extends Spec {
     ).toDS
   }
 
-  def verify(result: List[EncodingTestEntity]) =
+  def verify(result: List[EncodingTestEntity]): Assertion =
     result match {
       case List(e1, e2) =>
         e1.v1 mustEqual "s"

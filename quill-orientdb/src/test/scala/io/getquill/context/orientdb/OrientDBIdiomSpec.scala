@@ -43,7 +43,7 @@ class OrientDBIdiomSpec extends Spec {
 
   "distinct" - {
     "simple" in {
-      val q = quote {
+      quote {
         qr1.distinct
       }
       "mirrorContext.run(q).string" mustNot compile
@@ -57,7 +57,7 @@ class OrientDBIdiomSpec extends Spec {
     }
 
     "distinct tuple" in {
-      val q = quote {
+      quote {
         qr1.map(i => (i.i, i.l)).distinct
       }
       "mirrorContext.run(q).string" mustNot compile
@@ -118,13 +118,13 @@ class OrientDBIdiomSpec extends Spec {
         "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "unary (not supported)" in {
-      val q = quote {
+      quote {
         qr1.filter(t => !(t.i == 1))
       }
       "mirrorContext.run(q)" mustNot compile
     }
     "function apply (not supported)" in {
-      val q = quote {
+      quote {
         qr1.filter(t => sql"f".as[Int => Boolean](t.i))
       }
       "mirrorContext.run(q)" mustNot compile
@@ -236,7 +236,7 @@ class OrientDBIdiomSpec extends Spec {
         "SELECT s, i, l, o, b FROM TestEntity WHERE s = 'a'"
     }
     "unit" in {
-      case class Test(u: Unit)
+      final case class Test(u: Unit)
       val q = quote {
         query[Test].filter(t => t.u == (())).size
       }
@@ -258,7 +258,7 @@ class OrientDBIdiomSpec extends Spec {
         "SELECT i _1, s _2 FROM TestEntity"
     }
     "caseclass" in {
-      case class IntString(intProp: Int, stringProp: String)
+      final case class IntString(intProp: Int, stringProp: String)
       val q = quote {
         qr1.map(t => new IntString(t.i, t.s))
       }

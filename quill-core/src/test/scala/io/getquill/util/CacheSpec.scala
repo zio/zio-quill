@@ -9,7 +9,7 @@ class CacheSpec extends Spec {
 
   class Value extends Closeable {
     var closes         = 0
-    override def close = closes += 1
+    override def close: Unit = closes += 1
   }
 
   "caches hits" in {

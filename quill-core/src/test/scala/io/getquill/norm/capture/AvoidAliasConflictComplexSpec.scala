@@ -10,12 +10,11 @@ class AvoidAliasConflictComplexSpec extends Spec {
   val normalize = new Normalize(TranspileConfig.Empty)
 
   "properly aliases explicit join sets" - {
-    import io.getquill.norm.Normalize
     import scala.language.reflectiveCalls
 
-    case class Person(id: Int, name: String)
-    case class Address(id: Int, ownerFk: Int, street: String)
-    case class Room(addressId: Int, stuff: String)
+    final case class Person(id: Int, name: String)
+    final case class Address(id: Int, ownerFk: Int, street: String)
+    final case class Room(addressId: Int, stuff: String)
 
     "in tail clause" in {
       def fun[T <: { def id: Int }] = quote { (tbl: Query[T]) =>

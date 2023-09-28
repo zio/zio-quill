@@ -2,6 +2,7 @@ package io.getquill.context.sql.mirror
 
 import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
+import io.getquill.{ EntityQuery, Quoted }
 
 class ObservationMirrorSpec extends Spec {
 
@@ -12,7 +13,7 @@ class ObservationMirrorSpec extends Spec {
   case class ScalarData(value: Long, position: Option[LatLon])
   case class Observation(data: Option[ScalarData], foo: Option[String], bar: Option[String])
 
-  val obs = quote {
+  val obs: Quoted[EntityQuery[Observation]] = quote {
     querySchema[Observation](
       "observation",
       _.data.map(_.value)               -> "obs_value",
@@ -22,7 +23,7 @@ class ObservationMirrorSpec extends Spec {
     )
   }
 
-  val obsEntry = Observation(Some(ScalarData(123, Some(LatLon(2, 3)))), None, Some("abc"))
+  val obsEntry: Observation = Observation(Some(ScalarData(123, Some(LatLon(2, 3)))), None, Some("abc"))
 
   "select query" in {
     ctx.run(obs).string mustEqual

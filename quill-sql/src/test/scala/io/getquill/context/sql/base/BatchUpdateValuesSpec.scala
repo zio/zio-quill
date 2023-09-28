@@ -22,12 +22,12 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     ContactBase("Caboose", "Castle", 66),
     ContactBase("E", "E", 111)
   )
-  val updatePeople                             = List("Joe", "Jan", "James", "Dale", "Caboose")
+  val updatePeople: List[String]                             = List("Joe", "Jan", "James", "Dale", "Caboose")
   def includeInUpdate(name: String): Boolean   = updatePeople.contains(name)
   def includeInUpdate(c: ContactBase): Boolean = includeInUpdate(c.firstName)
-  val updateBase =
+  val updateBase: List[ContactBase] =
     dataBase.filter(includeInUpdate(_)).map(r => r.copy(lastName = r.lastName + "U"))
-  val expectBase = dataBase.map { r =>
+  val expectBase: List[ContactBase] = dataBase.map { r =>
     if (includeInUpdate(r)) r.copy(lastName = r.lastName + "U") else r
   }
 

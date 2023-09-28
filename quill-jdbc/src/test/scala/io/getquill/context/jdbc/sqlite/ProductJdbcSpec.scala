@@ -7,7 +7,7 @@ class ProductJdbcSpec extends ProductSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     testContext.run(quote(query[Product].delete))
     ()
   }
@@ -72,7 +72,7 @@ class ProductJdbcSpec extends ProductSpec {
 
     "supports casts from string to number" - {
       "toInt" in {
-        case class Product(id: Long, description: String, sku: Int)
+        final case class Product(id: Long, description: String, sku: Int)
         val queried = testContext.run {
           query[Product].filter(_.sku == lift("1004").toInt)
         }.head

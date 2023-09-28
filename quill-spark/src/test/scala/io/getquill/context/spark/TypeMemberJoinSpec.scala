@@ -6,9 +6,9 @@ import org.apache.spark.sql.Dataset
 
 import scala.language.reflectiveCalls
 
-case class Parent(name: String, childId: Int)
-case class Child(name: String, id: Int)
-case class GrandChild(name: String, parentId: Int)
+final case class Parent(name: String, childId: Int)
+final case class Child(name: String, id: Int)
+final case class GrandChild(name: String, parentId: Int)
 
 class TypeMemberJoinSpec extends Spec {
 
@@ -39,9 +39,9 @@ class TypeMemberJoinSpec extends Spec {
   }
 
   object Data {
-    val parent     = Parent("Joe", 1)
-    val child      = Child("Jack", 1)
-    val grandChild = GrandChild("James", 1)
+    val parent: Parent     = Parent("Joe", 1)
+    val child: Child      = Child("Jack", 1)
+    val grandChild: GrandChild = GrandChild("James", 1)
   }
   val parents           = List(Data.parent).toDS
   val childrenBase      = List(Data.child).toDS

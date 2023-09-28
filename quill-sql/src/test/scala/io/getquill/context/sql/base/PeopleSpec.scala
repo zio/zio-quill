@@ -3,6 +3,7 @@ package io.getquill.context.sql.base
 import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
 import io.getquill.{Ord, Query, Quoted}
+import io.getquill.EntityQuery
 
 trait PeopleSpec extends Spec {
 
@@ -17,7 +18,7 @@ trait PeopleSpec extends Spec {
   val peopleInsert =
     quote((p: Person) => query[Person].insertValue(p))
 
-  val peopleEntries = List(
+  val peopleEntries: List[Person] = List(
     Person("Alex", 60),
     Person("Bert", 55),
     Person("Cora", 33),
@@ -29,7 +30,7 @@ trait PeopleSpec extends Spec {
   val couplesInsert =
     quote((c: Couple) => query[Couple].insertValue(c))
 
-  val couplesEntries = List(
+  val couplesEntries: List[Couple] = List(
     Couple("Alex", "Bert"),
     Couple("Cora", "Drew"),
     Couple("Edna", "Fred")
@@ -58,7 +59,7 @@ trait PeopleSpec extends Spec {
   val `Ex 2 param 2`         = 40
   val `Ex 2 expected result` = List(Person("Cora", 33), Person("Drew", 31))
 
-  val satisfies =
+  val satisfies: Quoted[(Int => Boolean) => EntityQuery[Person]] =
     quote { (p: Int => Boolean) =>
       for {
         u <- query[Person] if (p(u.age))

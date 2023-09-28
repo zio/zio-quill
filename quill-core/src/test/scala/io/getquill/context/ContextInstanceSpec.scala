@@ -5,16 +5,16 @@ import io.getquill.context.mirror.{MirrorSession, Row}
 import io.getquill.MirrorContexts.testContext
 import io.getquill.MirrorContexts.testContext._
 
-case class ValueClass(value: Int) extends AnyVal
+final case class ValueClass(value: Int) extends AnyVal
 
-case class GenericValueClass[T](value: T) extends AnyVal
+final case class GenericValueClass[T](value: T) extends AnyVal
 
 class ContextInstanceSpec extends Spec {
 
   "provides mapped encoding" - {
 
-    case class StringValue(s: String)
-    case class Entity(s: StringValue)
+    final case class StringValue(s: String)
+    final case class Entity(s: StringValue)
 
     "context-based" - {
       "encoding" in {
@@ -54,7 +54,7 @@ class ContextInstanceSpec extends Spec {
   }
 
   "encoding set" in {
-    case class Entity(i: Int)
+    final case class Entity(i: Int)
     val q = quote {
       query[Entity].filter(e => liftQuery(Set(1)).contains(e.i))
     }
@@ -62,7 +62,7 @@ class ContextInstanceSpec extends Spec {
   }
 
   "encodes value class" - {
-    case class Entity(x: ValueClass, s: String)
+    final case class Entity(x: ValueClass, s: String)
 
     "encoding" in {
       val q = quote {
@@ -81,7 +81,7 @@ class ContextInstanceSpec extends Spec {
   }
 
   "encodes generic value class" - {
-    case class Entity(x: GenericValueClass[Int], s: String)
+    final case class Entity(x: GenericValueClass[Int], s: String)
 
     "encoding" in {
       val q = quote {

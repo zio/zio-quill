@@ -11,7 +11,7 @@ class InterpolatorSpec extends Spec {
   import interp._
 
   case class Small(id: Int)
-  val small = Small(123)
+  val small: Small = Small(123)
 
   "traces small objects on single line - single" in {
     trace"small object: $small".generateString() mustEqual (("small object: Small(123) ", 0))
@@ -49,8 +49,8 @@ and bar $small""".generateString() mustEqual (
     nine: String,
     ten: String
   )
-  val vars  = (0 until 10).map(i => (0 until i).map(_ => "Test").mkString("")).toList
-  val large = Large(123, vars(0), vars(1), vars(2), vars(3), vars(4), vars(5), vars(6), vars(7), vars(8), vars(9))
+  val vars: List[String]  = (0 until 10).map(i => (0 until i).map(_ => "Test").mkString("")).toList
+  val large: Large = Large(123, vars(0), vars(1), vars(2), vars(3), vars(4), vars(5), vars(6), vars(7), vars(8), vars(9))
 
   "traces large objects on multiple line - single" in {
     trace"large object: $large".generateString() mustEqual ((

@@ -48,7 +48,7 @@ class PrepareSpec extends Spec {
     "with outer join" in {
       val q = quote {
         for {
-          (a, b) <- qr1 join qr2 on ((a, b) => a.i == a.i)
+          (a, b) <- qr1 join qr2 on ((a, _) => a.i == a.i)
           c      <- qr1 rightJoin (c => c.i == a.i)
         } yield (a, b, c.map(c => c.i))
       }

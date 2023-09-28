@@ -1,10 +1,9 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill._
-import io.getquill.idiom.StringToken
 
 class MySQLDialectSpec extends AbstractMySQLDialectSpec {
-  lazy val ctx = new SqlMirrorContext(MySQLDialect, Literal) with TestEntities
+  lazy val ctx: SqlMirrorContext[MySQLDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(MySQLDialect, Literal) with TestEntities
 
   import ctx._
 

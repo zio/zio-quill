@@ -2,12 +2,9 @@ package io.getquill.context.sql
 
 import io.getquill.base.Spec
 
-import java.time
 import java.time.{
-  Instant,
   LocalDate,
   LocalDateTime,
-  LocalTime,
   OffsetDateTime,
   OffsetTime,
   ZoneId,
@@ -15,10 +12,12 @@ import java.time.{
   ZonedDateTime
 }
 import java.util.{Date, UUID}
+import io.getquill.{ Delete, Quoted }
+import org.scalatest.Assertion
 
-case class EncodingTestType(value: String)
+final case class EncodingTestType(value: String)
 
-case class Number(value: String) extends AnyVal
+final case class Number(value: String) extends AnyVal
 
 object Number {
   def withValidation(value: String): Option[Number] =
@@ -65,12 +64,12 @@ trait EncodingSpec extends Spec {
 
   object TimeEntity {
     case class TimeEntityInput(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int, nano: Int) {
-      def toLocalDate = LocalDateTime.of(year, month, day, hour, minute, second, nano)
+      def toLocalDate: LocalDateTime = LocalDateTime.of(year, month, day, hour, minute, second, nano)
     }
     object TimeEntityInput {
       def default = new TimeEntityInput(2022, 1, 2, 3, 4, 6, 0)
     }
-    def make(zoneIdRaw: ZoneId, timeEntity: TimeEntityInput = TimeEntityInput.default) = {
+    def make(zoneIdRaw: ZoneId, timeEntity: TimeEntityInput = TimeEntityInput.default): TimeEntity = {
       val zoneId = zoneIdRaw.normalized()
       // Millisecond precisions in SQL Server and many contexts are wrong so not using them
       val nowInstant  = timeEntity.toLocalDate.atZone(zoneId).toInstant
@@ -125,7 +124,7 @@ trait EncodingSpec extends Spec {
     o15: Option[Number]
   )
 
-  val delete = quote {
+  val delete: Quoted[Delete[EncodingTestEntity]] = quote {
     query[EncodingTestEntity].delete
   }
 
@@ -133,7 +132,7 @@ trait EncodingSpec extends Spec {
     query[EncodingTestEntity].insertValue(e)
   }
 
-  val insertValues =
+  val insertValues: Seq[EncodingTestEntity] =
     Seq(
       EncodingTestEntity(
         "s",
@@ -199,7 +198,7 @@ trait EncodingSpec extends Spec {
       )
     )
 
-  def verify(result: List[EncodingTestEntity]) = {
+  def verify(result: List[EncodingTestEntity]): Unit = {
     result.size mustEqual insertValues.size
     result.zip(insertValues).foreach { case (e1, e2) =>
       e1.v1 mustEqual e2.v1
@@ -238,9 +237,9 @@ trait EncodingSpec extends Spec {
   case class BarCode(description: String, uuid: Option[UUID] = None)
 
   val insertBarCode = quote((b: BarCode) => query[BarCode].insertValue(b).returningGenerated(_.uuid))
-  val barCodeEntry  = BarCode("returning UUID")
+  val barCodeEntry: BarCode  = BarCode("returning UUID")
 
   def findBarCodeByUuid(uuid: UUID) = quote(query[BarCode].filter(_.uuid.forall(_ == lift(uuid))))
 
-  def verifyBarcode(barCode: BarCode) = barCode.description mustEqual "returning UUID"
+  def verifyBarcode(barCode: BarCode): Assertion = barCode.description mustEqual "returning UUID"
 }

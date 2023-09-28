@@ -11,9 +11,9 @@ import io.getquill.util.Messages.fail
 sealed trait Effect
 
 object Effect {
-  trait Read        extends Effect
-  trait Write       extends Effect
-  trait Transaction extends Effect
+  sealed trait Read        extends Effect
+  sealed trait Write       extends Effect
+  sealed trait Transaction extends Effect
 }
 
 trait IOMonad {

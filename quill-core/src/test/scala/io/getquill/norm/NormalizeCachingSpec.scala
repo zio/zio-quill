@@ -1,11 +1,12 @@
 package io.getquill.norm
 
 import io.getquill.base.Spec
+import io.getquill.ast.Ast
 
 class NormalizeCachingSpec extends Spec {
 
   val normalize = new Normalize(TranspileConfig.Empty)
-  val cached    = NormalizeCaching(normalize.apply)
+  val cached: Ast => Ast    = NormalizeCaching(normalize.apply)
   val gen       = new QueryGenerator(1)
 
   "Cached normalization" - {

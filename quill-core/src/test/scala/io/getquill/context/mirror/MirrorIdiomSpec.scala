@@ -37,7 +37,7 @@ class MirrorIdiomSpec extends Spec {
   "shows queries" - {
     "complex" in {
       val q = quote {
-        query[TestEntity].filter(t => t.s == "test").flatMap(t => query[TestEntity]).drop(9).take(10).map(t => t)
+        query[TestEntity].filter(t => t.s == "test").flatMap(_ => query[TestEntity]).drop(9).take(10).map(t => t)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""querySchema("TestEntity").filter(t => t.s == "test").flatMap(t => querySchema("TestEntity")).drop(9).take(10).map(t => t)"""
@@ -92,7 +92,7 @@ class MirrorIdiomSpec extends Spec {
     }
     "flat join" in {
       val q = quote {
-        qr1.join(x => true)
+        qr1.join(_ => true)
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""querySchema("TestEntity").join((x) => true)"""
@@ -466,7 +466,7 @@ class MirrorIdiomSpec extends Spec {
           stmt"$t.onConflictIgnore(_.i, _.s)"
       }
       "onConflictUpdate(assigns*)" in {
-        stmt"${(i.onConflictUpdate((t, e) => t.s -> e.s, (t, e) => t.i -> (t.i + 1)).ast: Ast).token}" mustEqual
+        stmt"${(i.onConflictUpdate((t, e) => t.s -> e.s, (t, _) => t.i -> (t.i + 1)).ast: Ast).token}" mustEqual
           stmt"$t.onConflictUpdate((t, e) => t.s -> e.s, (t, e) => t.i -> (t.i + 1))"
       }
       "onConflictUpdate(targets*)(assigns*)" in {
@@ -479,7 +479,7 @@ class MirrorIdiomSpec extends Spec {
   "shows sql" - {
     "as part of the query" in {
       val q = quote {
-        qr1.filter(t => sql"true".as[Boolean])
+        qr1.filter(_ => sql"true".as[Boolean])
       }
       stmt"${(q.ast: Ast).token}" mustEqual
         stmt"""querySchema("TestEntity").filter(t => sql"true")"""
@@ -513,7 +513,7 @@ class MirrorIdiomSpec extends Spec {
   }
 
   "shows option operations" - {
-    case class Row(id: Int, value: String)
+    final case class Row(id: Int, value: String)
 
     "getOrElse" in {
       val q = quote { (o: Option[Int]) =>
@@ -701,7 +701,7 @@ class MirrorIdiomSpec extends Spec {
 
   "liftTokenizer" in {
     val q = quote {
-      qr1.map(x => lift(1))
+      qr1.map(_ => lift(1))
     }
     q.ast.toString mustEqual """querySchema("TestEntity").map(x => ?)"""
   }

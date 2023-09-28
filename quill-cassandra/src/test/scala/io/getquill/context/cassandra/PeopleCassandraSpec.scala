@@ -9,7 +9,7 @@ class PeopleCassandraSpec extends Spec {
 
   case class Person(id: Int, name: String, age: Int)
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     val entries = List(
       Person(1, "Bob", 30),
       Person(2, "Gus", 40),
@@ -22,7 +22,7 @@ class PeopleCassandraSpec extends Spec {
     ()
   }
 
-  val q = quote { (ids: Query[Int]) =>
+  val q: Quoted[Query[Int] => EntityQuery[Person]] = quote { (ids: Query[Int]) =>
     query[Person].filter(p => ids.contains(p.id))
   }
 

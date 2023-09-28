@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra.udt
 
 import com.datastax.oss.driver.api.core.CqlIdentifier
-import com.typesafe.config.{ConfigValue, ConfigValueFactory}
+import com.typesafe.config.ConfigValueFactory
 import io.getquill.{CassandraContextConfig, CassandraSyncContext, SnakeCase}
 import io.getquill.context.cassandra.testSyncDB
 import io.getquill.util.LoadConfig
@@ -10,10 +10,10 @@ import io.getquill.Udt
 class UdtEncodingSessionContextSpec extends UdtSpec {
 
   val ctx1 = testSyncDB
-  val config0 = CassandraContextConfig(
+  val config0: CassandraContextConfig = CassandraContextConfig(
     LoadConfig("testSyncDB").withValue("keyspace", ConfigValueFactory.fromAnyRef("system"))
   )
-  val config2 = CassandraContextConfig(
+  val config2: CassandraContextConfig = CassandraContextConfig(
     LoadConfig("testSyncDB").withValue("keyspace", ConfigValueFactory.fromAnyRef("quill_test_2"))
   )
   val ctx2 = new CassandraSyncContext(SnakeCase, config2)
@@ -39,8 +39,8 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
       implicitly[Encoder[List[Personal]]]
     }
     "MappedEncoding" in {
-      case class FirstName(name: String)
-      case class MyName(firstName: FirstName) extends Udt
+      final case class FirstName(name: String)
+      final case class MyName(firstName: FirstName) extends Udt
 
       implicit val encodeFirstName = MappedEncoding[FirstName, String](_.name)
       implicit val decodeFirstName = MappedEncoding[String, FirstName](FirstName)
@@ -55,7 +55,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
   "Complete examples" - {
     import ctx1._
     "without meta" in {
-      case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
+      final case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
 
       val e = WithEverything(
         1,
@@ -74,8 +74,8 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
       ctx1.run(query[WithEverything].filter(_.id == 1)).headOption must contain(e)
     }
     "with meta" in {
-      case class MyName(first: String) extends Udt
-      case class WithEverything(id: Int, name: MyName, nameList: List[MyName])
+      final case class MyName(first: String) extends Udt
+      final case class WithEverything(id: Int, name: MyName, nameList: List[MyName])
       implicit val myNameMeta = udtMeta[MyName]("Name", _.first -> "firstName")
 
       val e = WithEverything(2, MyName("first"), List(MyName("first")))
@@ -107,7 +107,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec {
 
   "naming strategy" in {
     import ctx2._
-    case class WithUdt(id: Int, name: Name)
+    final case class WithUdt(id: Int, name: Name)
     val e = WithUdt(1, Name("first", Some("second")))
     // quill_test_2 uses snake case
     ctx2.run(query[WithUdt].insertValue(lift(e)))

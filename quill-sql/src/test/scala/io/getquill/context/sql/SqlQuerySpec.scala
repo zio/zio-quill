@@ -10,7 +10,7 @@ import io.getquill.util.TraceConfig
 
 class SqlQuerySpec extends Spec {
 
-  implicit val naming = new Literal {}
+  implicit val naming: Literal = new Literal {}
 
   val SqlQuery = new SqlQueryApply(TraceConfig.Empty)
 
@@ -371,7 +371,7 @@ class SqlQuerySpec extends Spec {
         val q = quote {
           qr1.flatMap(a => sql"SELECT * FROM TestEntity2 t where t.s = ${a.s}".as[Query[TestEntity2]])
         }
-        val e = intercept[IllegalStateException] {
+        intercept[IllegalStateException] {
           SqlQuery(q.ast)
         }
       }
@@ -400,7 +400,7 @@ class SqlQuerySpec extends Spec {
       }
       "with flatMap" in {
         val q = quote {
-          qr1.sortBy(t => t.s).flatMap(t => qr2.map(t => t.s))
+          qr1.sortBy(t => t.s).flatMap(_ => qr2.map(t => t.s))
         }
         testContext.run(q).string mustEqual
           "SELECT t1.s FROM (SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t ORDER BY t.s ASC NULLS FIRST) AS t, TestEntity2 t1"
@@ -458,12 +458,12 @@ class SqlQuerySpec extends Spec {
           "SELECT b._1, b._2 FROM (SELECT a.s AS _1, b.s AS _2 FROM TestEntity a, TestEntity2 b WHERE a.i = b.i) AS b ORDER BY b._2 DESC"
       }
       "fails if the sortBy criteria is malformed" in {
-        case class Test(a: (Int, Int))
+        final case class Test(a: (Int, Int))
         implicit val o: Ordering[TestEntity] = null
         val q = quote {
           query[Test].sortBy(_.a)(Ord(Ord.asc, Ord.desc))
         }
-        val e = intercept[IllegalStateException] {
+        intercept[IllegalStateException] {
           SqlQuery(q.ast)
         }
       }
@@ -478,7 +478,7 @@ class SqlQuerySpec extends Spec {
       }
       "nested" in {
         val q = quote {
-          qr1.groupBy(t => t.i).map(t => t._1).flatMap(t => qr2)
+          qr1.groupBy(t => t.i).map(t => t._1).flatMap(_ => qr2)
         }
         testContext.run(q).string mustEqual
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT t.i FROM TestEntity t GROUP BY t.i) AS t, TestEntity2 x"
@@ -487,7 +487,7 @@ class SqlQuerySpec extends Spec {
         val q = quote {
           qr1.groupBy(t => t.i)
         }
-        val e = intercept[IllegalStateException] {
+        intercept[IllegalStateException] {
           SqlQuery(q.ast)
         }
       }
@@ -582,7 +582,7 @@ class SqlQuerySpec extends Spec {
       }
       "with map" in {
         val q = quote {
-          qr1.map(t => t.i).distinct.map(t => 1)
+          qr1.map(t => t.i).distinct.map(_ => 1)
         }
         testContext.run(q).string mustEqual
           "SELECT 1 FROM (SELECT DISTINCT t.i AS _1 FROM TestEntity t) AS t" // hel
@@ -591,7 +591,7 @@ class SqlQuerySpec extends Spec {
       "with map uppercase" in {
         import testContextUpper._
         val q = quote {
-          qr1.map(t => t.i).distinct.map(t => 1)
+          qr1.map(t => t.i).distinct.map(_ => 1)
         }
         testContextUpper.run(q).string mustEqual
           "SELECT 1 FROM (SELECT DISTINCT t.I AS _1 FROM TESTENTITY t) AS t"
@@ -642,7 +642,7 @@ class SqlQuerySpec extends Spec {
       }
 
       "with map query inside join with case class" in {
-        case class IntermediateRecord(one: Int, two: Long)
+        final case class IntermediateRecord(one: Int, two: Long)
         val q = quote {
           qr1
             .join(
@@ -657,7 +657,7 @@ class SqlQuerySpec extends Spec {
       }
 
       "with map query inside join with case class and operation" in {
-        case class IntermediateRecord(one: Int, two: Long)
+        final case class IntermediateRecord(one: Int, two: Long)
         val q = quote {
           qr1
             .join(
@@ -704,7 +704,7 @@ class SqlQuerySpec extends Spec {
       }
 
       "mapped" in {
-        case class Person(id: Int, name: String, age: Int)
+        final case class Person(id: Int, name: String, age: Int)
         val q = quote {
           query[Person].map(e => (e.name, e.age % 2)).distinctOn(_._2).sortBy(_._2)(Ord.desc)
         }
@@ -713,8 +713,8 @@ class SqlQuerySpec extends Spec {
       }
 
       "joined" in {
-        case class Person(id: Int, name: String, age: Int)
-        case class Address(fk: Int, street: String)
+        final case class Person(id: Int, name: String, age: Int)
+        final case class Address(fk: Int, street: String)
 
         val q = quote {
           (for {
@@ -748,7 +748,7 @@ class SqlQuerySpec extends Spec {
       }
       "nested" in {
         val q = quote {
-          qr1.take(10).flatMap(a => qr2)
+          qr1.take(10).flatMap(_ => qr2)
         }
         testContext.run(q).string mustEqual
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x LIMIT 10) AS a, TestEntity2 x"
@@ -778,7 +778,7 @@ class SqlQuerySpec extends Spec {
       }
       "nested" in {
         val q = quote {
-          qr1.drop(10).flatMap(a => qr2)
+          qr1.drop(10).flatMap(_ => qr2)
         }
         testContext.run(q).string mustEqual
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x OFFSET 10) AS a, TestEntity2 x"
@@ -808,7 +808,7 @@ class SqlQuerySpec extends Spec {
       }
       "nested" in {
         val q = quote {
-          qr1.drop(10).take(11).flatMap(a => qr2)
+          qr1.drop(10).take(11).flatMap(_ => qr2)
         }
         testContext.run(q).string mustEqual
           "SELECT x.s, x.i, x.l, x.o FROM (SELECT x.s, x.i, x.l, x.o, x.b FROM TestEntity x LIMIT 11 OFFSET 10) AS a, TestEntity2 x"
@@ -928,7 +928,7 @@ class SqlQuerySpec extends Spec {
     }
 
     "embedded sortBy" in {
-      case class Sim(sid: Int, name: String)
+      final case class Sim(sid: Int, name: String)
       val q = quote {
         query[Sim]
           .map(sim => (sim.sid, sim.name))
@@ -938,13 +938,13 @@ class SqlQuerySpec extends Spec {
     }
 
     "queries using options" - {
-      case class Entity(id: Int, s: String, o: Option[String], fk: Int, io: Option[Int])
-      case class EntityA(id: Int, s: String, o: Option[String])
-      case class EntityB(id: Int, s: String, o: Option[String])
+      final case class Entity(id: Int, s: String, o: Option[String], fk: Int, io: Option[Int])
+      final case class EntityA(id: Int, s: String, o: Option[String])
+      final case class EntityB(id: Int, s: String, o: Option[String])
 
       val e  = quote(query[Entity])
       val ea = quote(query[EntityA])
-      val eb = quote(query[EntityB])
+      quote(query[EntityB])
 
       "flatten in left join" in {
         val q = quote {
@@ -988,7 +988,7 @@ class SqlQuerySpec extends Spec {
     }
 
     "case class queries" - {
-      case class TrivialEntity(str: String)
+      final case class TrivialEntity(str: String)
 
       "in single join" in {
         val q = quote {
@@ -1012,7 +1012,7 @@ class SqlQuerySpec extends Spec {
       }
 
       "in union same field name" in {
-        case class TrivialEntitySameField(s: String)
+        final case class TrivialEntitySameField(s: String)
 
         val q = quote {
           qr1.map(q => TrivialEntitySameField(q.s)) ++ qr1.map(q => TrivialEntitySameField(q.s))

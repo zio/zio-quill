@@ -9,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class ResultSetIteratorSpec extends ZioProxySpec {
 
-  implicit val pool = Implicit(io.getquill.postgres.pool)
+  implicit val pool: Implicit[DataSource] = Implicit(io.getquill.postgres.pool)
   val ctx           = new PostgresZioJdbcContext(Literal)
   import ctx._
 
@@ -18,13 +18,13 @@ class ResultSetIteratorSpec extends ZioProxySpec {
   val peopleInsert =
     quote((p: Person) => query[Person].insertValue(p))
 
-  val peopleEntries = List(
+  val peopleEntries: List[Person] = List(
     Person("Alex", 60),
     Person("Bert", 55),
     Person("Cora", 33)
   )
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     super.beforeAll()
     ctx.transaction {
       for {
@@ -43,7 +43,7 @@ class ResultSetIteratorSpec extends ZioProxySpec {
           ZIO.attempt {
             val stmt = conn.prepareStatement("select * from person")
             val rs =
-              new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+              new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, _) => { rs.getString(1) })
             val accum = ArrayBuffer[String]()
             while (rs.hasNext) accum += rs.next()
             accum
@@ -62,7 +62,7 @@ class ResultSetIteratorSpec extends ZioProxySpec {
         .acquireReleaseWithAuto { conn =>
           ZIO.attempt {
             val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-            val rs   = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+            val rs   = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, _) => { rs.getString(1) })
             rs.head
           }
         }

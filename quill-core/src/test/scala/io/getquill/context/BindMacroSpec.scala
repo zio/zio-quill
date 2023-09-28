@@ -7,7 +7,7 @@ import io.getquill.MirrorContexts.testContext
 
 class BindMacroSpec extends Spec {
 
-  val session = MirrorSession("test")
+  val session: MirrorSession = MirrorSession("test")
 
   "binds non-batched action" - {
     "normal" in {

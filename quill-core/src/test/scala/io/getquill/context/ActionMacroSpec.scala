@@ -54,7 +54,7 @@ class ActionMacroSpec extends Spec {
         r.returningBehavior mustEqual ReturnRecord
       }
       "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) {
-        ctx =>
+        _ =>
           "import ctx._; ctx.run(qr1.insert(t => t.i -> 1).returning(t => t.l))" mustNot compile
       }
       "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
@@ -88,7 +88,7 @@ class ActionMacroSpec extends Spec {
       }
       "returning generated value - with single - multi should not compile" in testContext.withDialect(
         MirrorIdiomReturningSingle
-      ) { ctx =>
+      ) { _ =>
         "import ctx._; ctx.run(qr1.insert(t => t.i -> 1).returningGenerated(t => (t.l, t.i))" mustNot compile
       }
       "returning generated value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
@@ -103,7 +103,7 @@ class ActionMacroSpec extends Spec {
       }
       "returning generated value - with multi - operation in clause should not compile" in testContext.withDialect(
         MirrorIdiomReturningMulti
-      ) { ctx =>
+      ) { _ =>
         "import ctx._; ctx.run(qr1.insert(t => t.i -> 1).returningGenerated(t => (t.l, t.i + 1)))" mustNot compile
       }
       "returning generated value - with multi - single" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
@@ -174,7 +174,7 @@ class ActionMacroSpec extends Spec {
         r.returningBehavior mustEqual ReturnRecord
       }
       "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) {
-        ctx =>
+        _ =>
           "import ctx._; ctx.run(qr1.update(t => t.i -> 1).returning(t => t.l))" mustNot compile
       }
       "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
@@ -227,7 +227,7 @@ class ActionMacroSpec extends Spec {
         r.returningBehavior mustEqual ReturnRecord
       }
       "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) {
-        ctx =>
+        _ =>
           "import ctx._; ctx.delete.returning(t => t.l))" mustNot compile
       }
       "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>

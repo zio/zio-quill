@@ -12,7 +12,7 @@ class MapsEncodingSpec extends Spec {
     intDouble: Map[Int, Double],
     boolDate: Map[Boolean, Date]
   )
-  val e = MapsEntity(1, Map(1L -> 1.1), Map(1 -> 1.1d), Map(true -> new Date()))
+  val e: MapsEntity = MapsEntity(1, Map(1L -> 1.1), Map(1 -> 1.1d), Map(true -> new Date()))
 
   private def verify(expected: MapsEntity, actual: MapsEntity): Boolean = {
     expected.id mustEqual actual.id
@@ -42,7 +42,7 @@ class MapsEncodingSpec extends Spec {
   "Empty maps and optional fields" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class Entity(
+    final case class Entity(
       id: Int,
       intDouble: Option[Map[Int, Double]],
       longDouble: Option[Map[Long, Double]]
@@ -58,7 +58,7 @@ class MapsEncodingSpec extends Spec {
   "Map in where clause" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class MapFrozen(id: Map[Int, Boolean])
+    final case class MapFrozen(id: Map[Int, Boolean])
     val e = MapFrozen(Map(1 -> true))
     val q = quote(query[MapFrozen])
     ctx.run(q.delete)

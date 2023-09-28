@@ -34,15 +34,15 @@ class JdbcEncodingSpec extends EncodingSpec {
     timeEntity mustEqual actual
   }
 
-  def emptyAsNull(e: EncodingTestType) = e.copy(value = if (e.value == "") null else e.value)
-  def emptyAsNull(str: String)         = if (str == "") null else str
-  def emptyAsNull(bytes: Array[Byte])  = if (bytes == null || bytes.isEmpty) null else bytes
+  def emptyAsNull(e: EncodingTestType): EncodingTestType = e.copy(value = if (e.value == "") null else e.value)
+  def emptyAsNull(str: String): String         = if (str == "") null else str
+  def emptyAsNull(bytes: Array[Byte]): Array[Byte]  = if (bytes == null || bytes.isEmpty) null else bytes
 
   /**
    * Since oracle encodes "" as null, need to modify verification in order to
    * track this
    */
-  override def verify(result: List[EncodingTestEntity]) = {
+  override def verify(result: List[EncodingTestEntity]): Unit = {
     result.size mustEqual insertValues.size
     result.zip(insertValues).foreach { case (e1, e2) =>
       emptyAsNull(e2.v1) mustEqual emptyAsNull(e2.v1)

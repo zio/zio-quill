@@ -49,7 +49,7 @@ class CqlIdiomSpec extends Spec {
 
   "distinct" - {
     "simple" in {
-      val q = quote {
+      quote {
         qr1.distinct
       }
       "mirrorContext.run(q).string" mustNot compile
@@ -126,13 +126,13 @@ class CqlIdiomSpec extends Spec {
         "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
     }
     "unary (not supported)" in {
-      val q = quote {
+      quote {
         qr1.filter(t => !(t.i == 1))
       }
       "mirrorContext.run(q)" mustNot compile
     }
     "function apply (not supported)" in {
-      val q = quote {
+      quote {
         qr1.filter(t => sql"f".as[Int => Boolean](t.i))
       }
       "mirrorContext.run(q)" mustNot compile
@@ -148,7 +148,7 @@ class CqlIdiomSpec extends Spec {
         "SELECT COUNT(1) FROM TestEntity WHERE i = 1"
     }
     "invalid" in {
-      val q = quote {
+      quote {
         qr1.map(t => t.i).max
       }
       "mirrorContext.run(q)" mustNot compile
@@ -206,7 +206,7 @@ class CqlIdiomSpec extends Spec {
         "UPDATE TestEntity SET i = i + 1"
     }
     "invalid" in {
-      val q = quote {
+      quote {
         qr1.filter(t => t.i * 2 == 4)
       }
       "mirrorContext.run(q)" mustNot compile
@@ -222,7 +222,7 @@ class CqlIdiomSpec extends Spec {
         "SELECT s, i, l, o, b FROM TestEntity WHERE s = 's'"
     }
     "unit" in {
-      case class Test(u: Unit)
+      final case class Test(u: Unit)
       val q = quote {
         query[Test].filter(t => t.u == (())).size
       }
@@ -251,7 +251,7 @@ class CqlIdiomSpec extends Spec {
         "SELECT s, i, l, o, b FROM TestEntity WHERE i IN (?, ?)"
     }
     "null (not supported)" in {
-      val q = quote {
+      quote {
         qr1.filter(t => t.s == null)
       }
       "mirrorContext.run(q)" mustNot compile
@@ -406,12 +406,12 @@ class CqlIdiomSpec extends Spec {
     }
     "cql" in {
       val t = implicitly[Tokenizer[CqlQuery]]
-      val e = CqlQuery(Entity("name", Nil, QEP), None, Nil, None, Nil, distinct = true)
+      val e = CqlQuery(Entity("name", List.empty, QEP), None, List.empty, None, List.empty, distinct = true)
       intercept[IllegalStateException](t.token(e))
       t.token(e.copy(distinct = false)) mustBe stmt"SELECT * FROM name"
     }
     "fail on invalid" in {
-      intercept[IllegalStateException](implicitly[Tokenizer[Ast]].token(Block(Nil)))
+      intercept[IllegalStateException](implicitly[Tokenizer[Ast]].token(Block(List.empty)))
     }
     "value" in {
       implicitly[Tokenizer[Value]].token(Tuple(List(Ident("a")))) mustBe stmt"a"
@@ -422,7 +422,7 @@ class CqlIdiomSpec extends Spec {
     "action" in {
       val t = implicitly[Tokenizer[AstAction]]
       intercept[IllegalStateException](t.token(null: AstAction))
-      intercept[IllegalStateException](t.token(Insert(Nested(Ident("a")), Nil)))
+      intercept[IllegalStateException](t.token(Insert(Nested(Ident("a")), List.empty)))
     }
     // not actually used anywhere but doing a sanity check here
     "external ident sanity check" in {

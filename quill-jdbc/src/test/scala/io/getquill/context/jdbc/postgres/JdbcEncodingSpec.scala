@@ -32,7 +32,7 @@ class JdbcEncodingSpec extends EncodingSpec {
   }
 
   "LocalDateTime" in {
-    case class EncodingTestEntity(v11: Option[LocalDateTime])
+    final case class EncodingTestEntity(v11: Option[LocalDateTime])
     val now = LocalDateTime.now()
     val e1  = EncodingTestEntity(Some(now))
     val e2  = EncodingTestEntity(None)

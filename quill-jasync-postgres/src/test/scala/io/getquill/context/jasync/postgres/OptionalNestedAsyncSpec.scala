@@ -8,7 +8,7 @@ class OptionalProductEncodingJasyncSpec extends OptionalNestedSpec {
   val context: testContext.type = testContext
   import testContext._
 
-  override protected def beforeEach() = {
+  override protected def beforeEach(): Unit = {
     import Setup._
     await(testContext.run(query[Contact].delete))
     ()

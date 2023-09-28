@@ -3,16 +3,14 @@ package io.getquill.context.sql.idiom
 import io.getquill.MirrorSqlDialectWithBooleanLiterals
 import io.getquill.base.Spec
 import io.getquill.context.sql.testContext
-import io.getquill.norm.EnableTrace
-import io.getquill.util.Messages.TraceType
 
 class BooleanLiteralSupportSpec extends Spec {
 
   "value-fy boolean expression where needed" - testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
     import ctx._
 
-    case class Ent(name: String, b: Boolean, bb: Boolean, bc: Boolean, num: Int)
-    case class Status(name: String, value: Boolean)
+    final case class Ent(name: String, b: Boolean, bb: Boolean, bc: Boolean, num: Int)
+    final case class Status(name: String, value: Boolean)
 
     "condition" in {
       val q = quote {
@@ -63,7 +61,7 @@ class BooleanLiteralSupportSpec extends Spec {
     import ctx._
 
     "expressify asCondition" - {
-      case class Ent(name: String, i: Int, b: Boolean)
+      final case class Ent(name: String, i: Int, b: Boolean)
 
       "filter-clause" in {
         val q = quote {
@@ -132,7 +130,7 @@ class BooleanLiteralSupportSpec extends Spec {
     }
 
     "valuefy normally" - {
-      case class Ent(name: String, i: Int, b: Boolean)
+      final case class Ent(name: String, i: Int, b: Boolean)
 
       "filter-clause" in {
         val q = quote {
@@ -169,7 +167,7 @@ class BooleanLiteralSupportSpec extends Spec {
   }
 
   "do not expressify string transforming operations" - {
-    case class Product(id: Long, desc: String, sku: Int)
+    final case class Product(id: Long, desc: String, sku: Int)
 
     "first parameter" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
@@ -192,7 +190,7 @@ class BooleanLiteralSupportSpec extends Spec {
     "both parameters" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
       val q = quote {
-        query[Product].filter(p => lift("2").toInt == lift("1").toInt)
+        query[Product].filter(_ => lift("2").toInt == lift("1").toInt)
       }
       ctx.run(q).string mustEqual
         "SELECT p.id, p.desc, p.sku FROM Product p WHERE  (?) =  (?)"
@@ -225,7 +223,7 @@ class BooleanLiteralSupportSpec extends Spec {
     "join + map" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
       val q = quote {
-        qr1.leftJoin(qr2).on((a, b) => true).map(t => (t._1.i, t._2.map(_.s), false))
+        qr1.leftJoin(qr2).on((_, _) => true).map(t => (t._1.i, t._2.map(_.s), false))
       }
       ctx.run(q).string mustEqual
         "SELECT a.i AS _1, b.s AS _2, 0 AS _3 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
@@ -234,7 +232,7 @@ class BooleanLiteralSupportSpec extends Spec {
     "join + map (with conditional)" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
       val q = quote {
-        qr1.leftJoin(qr2).on((a, b) => true).map(t => (t._1.i, if (t._2.map(_.i > 20) === true) false else true))
+        qr1.leftJoin(qr2).on((_, _) => true).map(t => (t._1.i, if (t._2.map(_.i > 20) === true) false else true))
       }
       ctx.run(q).string mustEqual
         "SELECT a.i AS _1, CASE WHEN CASE WHEN b.i > 20 THEN 1 ELSE 0 END = 1 THEN 0 ELSE 1 END AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
@@ -243,7 +241,7 @@ class BooleanLiteralSupportSpec extends Spec {
     "join + map (with conditional comparison)" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
       val q = quote {
-        qr1.leftJoin(qr2).on((a, b) => true).map(t => (t._1.i, if (t._2.exists(_.i > 20)) false else true))
+        qr1.leftJoin(qr2).on((_, _) => true).map(t => (t._1.i, if (t._2.exists(_.i > 20)) false else true))
       }
       ctx.run(q).string mustEqual
         "SELECT a.i AS _1, CASE WHEN b.i > 20 THEN 0 ELSE 1 END AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 1"
@@ -255,7 +253,7 @@ class BooleanLiteralSupportSpec extends Spec {
         val q = quote {
           qr1
             .leftJoin(qr2)
-            .on((a, b) => true)
+            .on((_, _) => true)
             .map(t => (t._1.i, if (t._2.exists(_.i > 20)) lift(false) else lift(true)))
         }
         ctx.run(q).string mustEqual
@@ -267,9 +265,9 @@ class BooleanLiteralSupportSpec extends Spec {
       val q = quote {
         qr1
           .leftJoin(qr2)
-          .on((a, b) => false)
+          .on((_, _) => false)
           .map(t => (t._1.i, t._2.map(_.s), false))
-          .filter(_._2.forall(v => if (true) true else false))
+          .filter(_._2.forall(_ => if (true) true else false))
       }
       ctx.run(q).string mustEqual
         "SELECT a.i AS _1, b.s AS _2, 0 AS _3 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 0 WHERE b.s IS NULL OR b.s IS NOT NULL AND (1 = 1 AND 1 = 1 OR NOT (1 = 1) AND 1 = 0)"
@@ -280,9 +278,9 @@ class BooleanLiteralSupportSpec extends Spec {
       val q = quote {
         qr1
           .leftJoin(qr2)
-          .on((a, b) => false)
+          .on((_, _) => false)
           .map(t => (t._1.i, t._2.map(_.s), false))
-          .filter(_._2.forall(v => if (lift(true)) lift(true) else lift(false)))
+          .filter(_._2.forall(_ => if (lift(true)) lift(true) else lift(false)))
       }
       ctx.run(q).string mustEqual
         "SELECT a.i AS _1, b.s AS _2, 0 AS _3 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 0 WHERE b.s IS NULL OR b.s IS NOT NULL AND (1 = ? AND 1 = ? OR NOT (1 = ?) AND 1 = ?)"
@@ -293,7 +291,7 @@ class BooleanLiteralSupportSpec extends Spec {
       val q = quote {
         for {
           t1 <- query[TestEntity]
-          t2 <- query[TestEntity].join(t => true)
+          t2 <- query[TestEntity].join(_ => true)
         } yield (t1, t2)
       }
       ctx.run(q).string mustEqual
@@ -317,7 +315,7 @@ class BooleanLiteralSupportSpec extends Spec {
     "constant" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
       import ctx._
       val q = quote {
-        query[TestEntity].filter(t => !true)
+        query[TestEntity].filter(_ => !true)
       }
 
       // See:

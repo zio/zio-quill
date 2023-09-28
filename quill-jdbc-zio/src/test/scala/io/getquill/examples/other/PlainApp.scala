@@ -3,15 +3,17 @@ package io.getquill.examples.other
 import io.getquill.jdbczio.Quill
 import io.getquill.{Literal, PostgresZioJdbcContext}
 import zio.{Runtime, Unsafe}
+import javax.sql.DataSource
+import zio.ZLayer
 
 object PlainApp {
 
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
   import MyPostgresContext._
 
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 
-  val zioDS = Quill.DataSource.fromPrefix("testPostgresDB")
+  val zioDS: ZLayer[Any,Throwable,DataSource] = Quill.DataSource.fromPrefix("testPostgresDB")
 
   def main(args: Array[String]): Unit = {
     val people = quote {

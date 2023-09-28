@@ -12,10 +12,10 @@ class SimplifyNullChecksSpec extends Spec {
   // remove the === matcher from scalatest so that we can test === in Context.extra
   override def convertToEqualizer[T](left: T): Equalizer[T] = new Equalizer(left)
 
-  val ia = Ident("a")
-  val ib = Ident("b")
-  val it = Ident("t")
-  val ca = Constant.auto("a")
+  val ia: Ident = Ident("a")
+  val ib: Ident = Ident("b")
+  val it: Ident = Ident("t")
+  val ca: Constant = Constant.auto("a")
 
   val SimplifyNullChecksAnsi    = new SimplifyNullChecks(AnsiEquality)
   val SimplifyNullChecksNonAnsi = new SimplifyNullChecks(NonAnsiEquality)

@@ -1,6 +1,5 @@
 package io.getquill.context.cassandra
 
-import io.getquill._
 import io.getquill.base.Spec
 import io.getquill.context.ExecutionInfo
 
@@ -13,7 +12,7 @@ class CassandraContextSpec extends Spec {
 
     "async" in {
       import testAsyncDB._
-      case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
+      final case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
       val update = quote {
         query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
       }
@@ -21,7 +20,7 @@ class CassandraContextSpec extends Spec {
     }
     "sync" in {
       import testSyncDB._
-      case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
+      final case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
       val update = quote {
         query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
       }
@@ -31,11 +30,11 @@ class CassandraContextSpec extends Spec {
 
   "fail on returning" in {
     import testSyncDB._
-    val p: Prepare        = (x, session) => (Nil, x)
+    val p: Prepare        = (x, _) => (List.empty, x)
     val e: Extractor[Int] = (_, _) => 1
 
     intercept[IllegalStateException](executeActionReturning("", p, e, "")(ExecutionInfo.unknown, ())).getMessage mustBe
-      intercept[IllegalStateException](executeBatchActionReturning(Nil, e)(ExecutionInfo.unknown, ())).getMessage
+      intercept[IllegalStateException](executeBatchActionReturning(List.empty, e)(ExecutionInfo.unknown, ())).getMessage
   }
 
   "probe" in {

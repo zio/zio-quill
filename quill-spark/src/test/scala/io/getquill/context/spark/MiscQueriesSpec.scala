@@ -2,10 +2,10 @@ package io.getquill.context.spark
 
 import io.getquill.base.Spec
 
-case class Inner(i: Int)
-case class Outer(inner: Inner)
-case class Original(id: Long, name: String, age: Long, numeric: Long)
-case class MapTo(id: Long, name: String, numeric: Long)
+final case class Inner(i: Int)
+final case class Outer(inner: Inner)
+final case class Original(id: Long, name: String, age: Long, numeric: Long)
+final case class MapTo(id: Long, name: String, numeric: Long)
 
 class MiscQueriesSpec extends Spec {
 

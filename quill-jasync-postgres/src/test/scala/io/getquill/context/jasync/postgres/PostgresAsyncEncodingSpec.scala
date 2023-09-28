@@ -28,15 +28,15 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
   }
 
   "encodes and decodes uuids" in {
-    case class EncodingUUIDTestEntity(v1: UUID)
+    final case class EncodingUUIDTestEntity(v1: UUID)
     val testUUID = UUID.fromString("e5240c08-6ee7-474a-b5e4-91f79c48338f")
 
     // delete old values
     val q0   = quote(query[EncodingUUIDTestEntity].delete)
-    val rez0 = Await.result(testContext.run(q0), Duration.Inf)
+    Await.result(testContext.run(q0), Duration.Inf)
 
     // insert new uuid
-    val rez1 = Await.result(
+    Await.result(
       testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))),
       Duration.Inf
     )
@@ -51,15 +51,15 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
   "fails if the column has the wrong type" - {
     "numeric" in {
       Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
-      case class EncodingTestEntity(v1: Int)
-      val e = intercept[IllegalStateException] {
+      final case class EncodingTestEntity(v1: Int)
+      intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }
     "non-numeric" in {
       Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
-      case class EncodingTestEntity(v1: Date)
-      val e = intercept[IllegalStateException] {
+      final case class EncodingTestEntity(v1: Date)
+      intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }
@@ -91,7 +91,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
   }
 
   "decodes LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
+    final case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
     val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)

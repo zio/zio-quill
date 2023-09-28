@@ -12,7 +12,7 @@ import javax.sql.DataSource
 
 trait PrepareZioJdbcSpecBase extends ProductSpec with ZioProxySpec {
 
-  implicit val productEq = new Equality[Product] {
+  implicit val productEq: Equality[Product] = new Equality[Product] {
     override def areEqual(a: Product, b: Any): Boolean = b match {
       case Product(_, desc, sku) => desc == a.description && sku == a.sku
       case _                     => false
@@ -21,16 +21,16 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioProxySpec {
 
   def productExtractor: (ResultSet, Connection) => Product
 
-  def withOrderedIds(products: List[Product]) =
+  def withOrderedIds(products: List[Product]): List[Product] =
     products.zipWithIndex.map { case (product, id) => product.copy(id = id.toLong + 1) }
 
-  def singleInsert(prep: QCIO[PreparedStatement])(implicit runtime: Implicit[DataSource]) =
+  def singleInsert(prep: QCIO[PreparedStatement])(implicit runtime: Implicit[DataSource]): Boolean =
     prep
       .flatMap(stmt => ZIO.attempt(stmt).acquireReleaseWithAuto(stmt => ZIO.attempt(stmt.execute())))
       .onDataSource
       .runSyncUnsafe()
 
-  def batchInsert(prep: QCIO[List[PreparedStatement]])(implicit runtime: Implicit[DataSource]) =
+  def batchInsert(prep: QCIO[List[PreparedStatement]])(implicit runtime: Implicit[DataSource]): List[Boolean] =
     prep
       .flatMap(stmts =>
         ZIO.collectAll(
@@ -42,7 +42,7 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioProxySpec {
 
   def extractResults[T](
     prepareStatement: QCIO[PreparedStatement]
-  )(extractor: (ResultSet, Connection) => T)(implicit runtime: Implicit[DataSource]) =
+  )(extractor: (ResultSet, Connection) => T)(implicit runtime: Implicit[DataSource]): List[T] =
     (for {
       conn <- ZIO.service[Connection]
       result <- prepareStatement.provideEnvironment(ZEnvironment(conn)).acquireReleaseWithAuto { stmt =>
@@ -52,6 +52,6 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioProxySpec {
                 }
     } yield result).onDataSource.runSyncUnsafe()
 
-  def extractProducts(prep: QCIO[PreparedStatement])(implicit runtime: Implicit[DataSource]) =
+  def extractProducts(prep: QCIO[PreparedStatement])(implicit runtime: Implicit[DataSource]): List[Product] =
     extractResults(prep)(productExtractor)
 }

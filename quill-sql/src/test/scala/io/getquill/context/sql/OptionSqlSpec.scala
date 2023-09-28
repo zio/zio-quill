@@ -1,7 +1,7 @@
 package io.getquill.context.sql
 
 import io.getquill.base.Spec
-import io.getquill.{MirrorSqlDialectWithBooleanLiterals, Query, Quoted}
+import io.getquill.MirrorSqlDialectWithBooleanLiterals
 
 class OptionSqlSpec extends Spec {
   import testContext._
@@ -50,7 +50,7 @@ class OptionSqlSpec extends Spec {
         "SELECT s1.name FROM Someone q INNER JOIN Someone s1 ON s1.name IS NULL AND q.name IS NULL OR s1.name = q.name"
     }
 
-    case class Node(name: String, uptime: Long)
+    final case class Node(name: String, uptime: Long)
 
     "table foreach" in {
       testContext.run(query[Node].map(n => Some(n)).map(n => n.exists(nn => nn.uptime > 123))).string mustEqual

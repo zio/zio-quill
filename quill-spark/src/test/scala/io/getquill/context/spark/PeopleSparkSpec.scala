@@ -3,8 +3,8 @@ package io.getquill.context.spark
 import io.getquill.base.Spec
 import io.getquill.{Query, Quoted}
 
-case class Person(name: String, age: Int)
-case class Couple(her: String, him: String)
+final case class Person(name: String, age: Int)
+final case class Couple(her: String, him: String)
 
 class PeopleJdbcSpec extends Spec {
 
@@ -148,8 +148,7 @@ class PeopleJdbcSpec extends Spec {
         List(("Alex", 5), ("Cora", 2))
     }
     "should throw Exception" in {
-      val q =
-        """ quote {
+      """ quote {
           for {
             c <- couples
             w <- people.join(w => c.her == w.name).distinct
@@ -185,8 +184,7 @@ class PeopleJdbcSpec extends Spec {
         List(("Alex", 5), ("Cora", 2))
     }
     "should throw Exception" in {
-      val q =
-        """ quote {
+      """ quote {
           for {
             c <- couples
             w <- people.join(w => c.her == w.name).nested

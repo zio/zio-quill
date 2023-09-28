@@ -8,7 +8,7 @@ class JdbcContextSpec extends Spec {
   import ctx._
 
   "probes sqls" in {
-    val p = ctx.probe("DELETE FROM TestEntity")
+    ctx.probe("DELETE FROM TestEntity")
   }
 
   "run non-batched action" in {
@@ -48,7 +48,7 @@ class JdbcContextSpec extends Spec {
     "prepare" in {
       ctx.prepareParams(
         "select * from Person where name=? and age > ?",
-        (ps, session) => (List("Sarah", 127), ps)
+        (ps, _) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }
@@ -73,7 +73,7 @@ class JdbcContextSpec extends Spec {
     ctx.run(qr5.delete)
     val id = ctx.run(qr5.insertValue(lift(TestEntity5(0, "foo"))).returningGenerated(_.i))
     val id2 = ctx.run {
-      qr5.insert(_.s -> "bar").returningGenerated(r => query[TestEntity5].filter(_.s == "foo").map(_.i).max)
+      qr5.insert(_.s -> "bar").returningGenerated(_ => query[TestEntity5].filter(_.s == "foo").map(_.i).max)
     }.get
     id mustBe id2
   }
@@ -145,7 +145,7 @@ class JdbcContextSpec extends Spec {
     }
 
     "with multiple columns - case class" in {
-      case class Return(id: Int, str: String, opt: Option[Int])
+      final case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
       val inserted = ctx.run {
         qr1.insertValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
@@ -231,7 +231,7 @@ class JdbcContextSpec extends Spec {
     }
 
     "with multiple columns - case class" in {
-      case class Return(id: Int, str: String, opt: Option[Int])
+      final case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
       ctx.run(qr1.insertValue(lift(TestEntity("one", 1, 18L, Some(1), true))))
 
@@ -311,7 +311,7 @@ class JdbcContextSpec extends Spec {
     }
 
     "with multiple columns - case class" in {
-      case class Return(id: Int, str: String, opt: Option[Int])
+      final case class Return(id: Int, str: String, opt: Option[Int])
       ctx.run(qr1.delete)
       ctx.run(qr1.insertValue(lift(TestEntity("one", 1, 18L, Some(123), true))))
 

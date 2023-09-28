@@ -29,7 +29,7 @@ class SqlQueryMacroSpec extends Spec {
       }
       "with flatMap" in {
         val q = quote {
-          qr1.flatMap(t => qr2)
+          qr1.flatMap(_ => qr2)
         }
         val mirror = testContext.run(q)
         mirror.prepareRow mustEqual Row()

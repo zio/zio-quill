@@ -1,7 +1,6 @@
 package io.getquill.context.jdbc.sqlite
 
 import io.getquill.context.sql.base.BatchValuesSpec
-import io.getquill._
 
 class BatchValuesJdbcSpec extends BatchValuesSpec { //
 

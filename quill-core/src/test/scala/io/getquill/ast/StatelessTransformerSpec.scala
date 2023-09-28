@@ -14,7 +14,7 @@ class StatelessTransformerSpec extends Spec {
   "transforms asts" - {
     "query" - {
       "entity" in {
-        val ast: Ast = Entity("a", Nil, QEP)
+        val ast: Ast = Entity("a", List.empty, QEP)
         Subject()(ast) mustEqual ast
       }
       "filter" in {
@@ -161,9 +161,9 @@ class StatelessTransformerSpec extends Spec {
           Delete(Ident("a'"))
       }
       "onConflict" in {
-        val ast: Ast = OnConflict(Insert(Ident("a"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+        val ast: Ast = OnConflict(Insert(Ident("a"), List.empty), OnConflict.NoTarget, OnConflict.Ignore)
         Subject(Ident("a") -> Ident("a'"))(ast) mustEqual
-          OnConflict(Insert(Ident("a'"), Nil), OnConflict.NoTarget, OnConflict.Ignore)
+          OnConflict(Insert(Ident("a'"), List.empty), OnConflict.NoTarget, OnConflict.Ignore)
       }
     }
 
@@ -383,25 +383,25 @@ class StatelessTransformerSpec extends Spec {
     "block" in {
       val ast: Ast = Block(
         List(
-          Val(Ident("a"), Entity("a", Nil, QEP)),
-          Val(Ident("b"), Entity("b", Nil, QEP))
+          Val(Ident("a"), Entity("a", List.empty, QEP)),
+          Val(Ident("b"), Entity("b", List.empty, QEP))
         )
       )
-      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(
+      Subject(Entity("a", List.empty, QEP) -> Entity("b", List.empty, QEP), Entity("b", List.empty, QEP) -> Entity("c", List.empty, QEP))(
         ast
       ) mustEqual
         Block(
           List(
-            Val(Ident("a"), Entity("b", Nil, QEP)),
-            Val(Ident("b"), Entity("c", Nil, QEP))
+            Val(Ident("a"), Entity("b", List.empty, QEP)),
+            Val(Ident("b"), Entity("c", List.empty, QEP))
           )
         )
     }
 
     "val" in {
-      val ast: Ast = Val(Ident("a"), Entity("a", Nil, QEP))
-      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP))(ast) mustEqual
-        Val(Ident("a"), Entity("b", Nil, QEP))
+      val ast: Ast = Val(Ident("a"), Entity("a", List.empty, QEP))
+      Subject(Entity("a", List.empty, QEP) -> Entity("b", List.empty, QEP))(ast) mustEqual
+        Val(Ident("a"), Entity("b", List.empty, QEP))
     }
   }
 }

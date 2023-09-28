@@ -44,7 +44,7 @@ class JoinComplexSpec extends Spec {
   }
 
   "FlatJoin should function properly when plugged in with a shadow" - {
-    case class FooEntity(fs: String, fi: Int, fl: Long, fo: Option[Int], fb: Boolean)
+    final case class FooEntity(fs: String, fi: Int, fl: Long, fo: Option[Int], fb: Boolean)
 
     val first = quote { (tbl: Query[TestEntity]) =>
       for {

@@ -5,11 +5,11 @@ import io.getquill.{Literal, PostgresDialect, SqlMirrorContext, TestEntities}
 
 class QuerySchemaSpec extends Spec {
 
-  val ctx = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[PostgresDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
   import ctx._
 
   "OnConflict Should work correct with" - {
-    case class Person(id: Long, name: String)
+    final case class Person(id: Long, name: String)
     val p = Person(1, "Joe")
 
     "querySchema" in {

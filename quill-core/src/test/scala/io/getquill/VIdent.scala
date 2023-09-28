@@ -15,6 +15,6 @@ object VIdent {
       case _              => None
     }
 
-  def apply(value: String) =
+  def apply(value: String): Ident =
     Ident(value, Quat.Value)
 }

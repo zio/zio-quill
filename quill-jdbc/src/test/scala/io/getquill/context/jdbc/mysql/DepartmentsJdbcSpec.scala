@@ -7,7 +7,7 @@ class DepartmentsJdbcSpec extends DepartmentsSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     testContext.transaction {
       testContext.run(query[Department].delete)
       testContext.run(query[Employee].delete)

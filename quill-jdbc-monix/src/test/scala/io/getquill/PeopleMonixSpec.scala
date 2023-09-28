@@ -13,8 +13,8 @@ trait PeopleMonixSpec extends PeopleSpec {
 
   import context._
 
-  def collect[T](o: Observable[T]) =
-    o.foldLeft(List[T]()) { case (l, elem) => elem +: l }
+  def collect[T](o: Observable[T]): List[T] =
+    o.foldLeft(List.empty[T]) { case (l, elem) => elem +: l }
       .firstL
       .runSyncUnsafe()
 

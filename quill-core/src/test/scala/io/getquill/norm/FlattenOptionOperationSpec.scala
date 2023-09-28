@@ -10,15 +10,15 @@ import io.getquill.util.TraceConfig
 
 class FlattenOptionOperationSpec extends Spec { // hello
 
-  def o      = Ident("o")
-  def c1     = Constant.auto(1)
-  def c2     = Constant.auto(2)
-  def cFoo   = Constant.auto("foo")
-  def cBar   = Constant.auto("bar")
-  def cValue = Constant.auto("value")
+  def o: Ident      = Ident("o")
+  def c1: Constant     = Constant.auto(1)
+  def c2: Constant     = Constant.auto(2)
+  def cFoo: Constant   = Constant.auto("foo")
+  def cBar: Constant   = Constant.auto("bar")
+  def cValue: Constant = Constant.auto("value")
 
   "transforms option operations into simple properties" - {
-    case class Row(id: Int, value: String)
+    final case class Row(id: Int, value: String)
 
     "getOrElse" in {
       val q = quote { (o: Option[Int]) =>

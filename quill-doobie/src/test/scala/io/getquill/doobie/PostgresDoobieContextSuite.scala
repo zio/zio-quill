@@ -17,7 +17,7 @@ class PostgresDoobieContextSuite extends AnyFreeSpec with Matchers {
   import cats.effect.unsafe.implicits.global
 
   // A transactor that always rolls back.
-  lazy val xa = Transactor.after
+  lazy val xa: Transactor[IO[A]] = Transactor.after
     .set(
       Transactor.fromDriverManager[IO](
         "org.postgresql.Driver",
@@ -75,7 +75,7 @@ class PostgresDoobieContextSuite extends AnyFreeSpec with Matchers {
   }
 
   // For these last two we need a new table with an auto-generated id, so we'll do a temp table.
-  val create = {
+  val create: ConnectionIO[Long] = {
     val q = quote {
       qsql"""
         CREATE TEMPORARY TABLE QuillTest (

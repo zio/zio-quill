@@ -3,12 +3,13 @@ package io.getquill.context.sql.idiom
 import io.getquill.{Insert, Quoted, TestEntities}
 import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
+import io.getquill.Delete
 
 trait OnConflictSpec extends Spec {
   val ctx: SqlContext[_, _] with TestEntities
   import ctx._
 
-  lazy val e = TestEntity("s1", 1, 1, None, true)
+  lazy val e: TestEntity = TestEntity("s1", 1, 1, None, true)
 
   def `onConflict with query`(fun: Quoted[Insert[TestEntity]] => Unit) =
     "with query" - fun(quote(query[TestEntity].insertValue(lift(e))))
@@ -26,7 +27,7 @@ trait OnConflictSpec extends Spec {
     `onConflict with querySchema`(fun)
   }
 
-  def del = quote(query[TestEntity].delete)
+  def del: Quoted[Delete[TestEntity]] = quote(query[TestEntity].delete)
 
   def `no target - ignore`(ins: Quoted[Insert[TestEntity]]) = quote {
     ins.onConflictIgnore

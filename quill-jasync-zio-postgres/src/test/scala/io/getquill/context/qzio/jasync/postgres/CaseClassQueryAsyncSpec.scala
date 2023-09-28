@@ -7,7 +7,7 @@ class CaseClassQueryAsyncSpec extends CaseClassQuerySpec with ZioSpec {
 
   import context._
 
-  override def beforeAll =
+  override def beforeAll: Unit =
     runSyncUnsafe {
       context.transaction {
         for {

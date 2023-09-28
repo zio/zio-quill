@@ -58,7 +58,7 @@ class OnDataSourceSpec extends PeopleZioProxySpec {
     "should work with additional dependency" in {
       // This is how you import the decoders of `underlying` context without importing things that will conflict
       // i.e. the quote and run methods
-      case class Service(ds: DataSource) {
+      final case class Service(ds: DataSource) {
         // Note that implicit Implicit(dataSource) is given by the package-level `pool` object
         // implicit val dsi = Implicit(ds)
         val people =
@@ -78,7 +78,7 @@ class OnDataSourceSpec extends PeopleZioProxySpec {
     "should work" in {
       // This is how you import the decoders of `underlying` context without importing things that will conflict
       // i.e. the quote and run methods
-      case class Service(ds: DataSource) {
+      final case class Service(ds: DataSource) {
         // Note that implicit Implicit(dataSource) is given by the package-level `pool` object
         // implicit val dsi = Implicit(ds)
         val people =

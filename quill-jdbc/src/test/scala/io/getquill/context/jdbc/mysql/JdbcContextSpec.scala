@@ -8,7 +8,7 @@ class JdbcContextSpec extends Spec {
   import testContext._
 
   "probes sqls" in {
-    val p = testContext.probe("DELETE FROM TestEntity")
+    testContext.probe("DELETE FROM TestEntity")
   }
 
   "run non-batched action" in {
@@ -48,7 +48,7 @@ class JdbcContextSpec extends Spec {
     "prepare" in {
       testContext.prepareParams(
         "select * from Person where name=? and age > ?",
-        (ps, session) => (List("Sarah", 127), ps)
+        (ps, _) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }

@@ -34,19 +34,19 @@ class OrderTermsSpec extends Spec {
   "a.flatMap(b => c).?.map(d => e)" - {
     "take" in {
       val q = quote {
-        qr1.flatMap(b => qr2).take(3).map(d => d.s)
+        qr1.flatMap(_ => qr2).take(3).map(d => d.s)
       }
       val n = quote {
-        qr1.flatMap(b => qr2).map(d => d.s).take(3)
+        qr1.flatMap(_ => qr2).map(d => d.s).take(3)
       }
       OrderTerms.unapply(q.ast) mustEqual Some(n.ast)
     }
     "drop" in {
       val q = quote {
-        qr1.flatMap(b => qr2).drop(3).map(d => d.s)
+        qr1.flatMap(_ => qr2).drop(3).map(d => d.s)
       }
       val n = quote {
-        qr1.flatMap(b => qr2).map(d => d.s).drop(3)
+        qr1.flatMap(_ => qr2).map(d => d.s).drop(3)
       }
       OrderTerms.unapply(q.ast) mustEqual Some(n.ast)
     }

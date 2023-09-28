@@ -107,15 +107,15 @@ class SqlActionMacroSpec extends Spec {
         mirror.string mustEqual "INSERT INTO TestEntity DEFAULT VALUES"
         mirror.returningBehavior mustEqual ReturnColumns(List("s", "i", "l", "o", "b"))
       }
-      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { _ =>
         """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(r => (r.i, r.l + 1)) }""" mustNot compile
       }
       "multi - should fail on operation inside case class" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) {
-        ctx =>
-          case class Foo(one: Int, two: Long)
+        _ =>
+          final case class Foo(one: Int, two: Long)
           """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(r => Foo(r.i, r.l + 1)) }""" mustNot compile
       }
-      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { ctx =>
+      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { _ =>
         """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 1L, None))).returningGenerated(r => r.i) }""" mustNot compile
       }
       "returning clause - single" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -174,7 +174,7 @@ class SqlActionMacroSpec extends Spec {
         mirror.returningBehavior mustEqual ReturnRecord
       }
       "returning clause - embedded" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx => //
           import ctx._
@@ -209,16 +209,16 @@ class SqlActionMacroSpec extends Spec {
         }
       }
       "with returning clause - query" - {
-        case class Dummy(i: Int)
-        case class DummyS(s: String)
-        case class Dummy2(i: Int, s: String)
+        final case class Dummy(i: Int)
+        final case class DummyS(s: String)
+        final case class Dummy2(i: Int, s: String)
 
         "simple not using id - id not excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returningGenerated(r => (query[Dummy].map(d => d.i).value))
+              .returningGenerated(_ => (query[Dummy].map(d => d.i).value))
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT d.i FROM Dummy d)"
@@ -279,7 +279,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returningGenerated(r => (query[Dummy].filter(r => r.i == lift(value)).max))
+              .returningGenerated(_ => (query[Dummy].filter(r => r.i == lift(value)).max))
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(r1.*) FROM Dummy r1 WHERE r1.i = ?)"
@@ -291,7 +291,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returningGenerated(r => (query[Dummy].map(r => r.i).max))
+              .returningGenerated(_ => (query[Dummy].map(r => r.i).max))
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(r1.i) FROM Dummy r1)"
@@ -302,7 +302,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returningGenerated(r =>
+              .returningGenerated(_ =>
                 (
                   query[Dummy].join(query[Dummy]).on((r, x) => r.i == x.i).map(_._1.i).max
                 )
@@ -318,7 +318,7 @@ class SqlActionMacroSpec extends Spec {
             val q = quote {
               qr1
                 .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-                .returningGenerated(r =>
+                .returningGenerated(_ =>
                   (
                     query[Dummy].flatMap(r => query[Dummy].filter(s => r.i == s.i)).map(_.i).max
                   )
@@ -334,7 +334,7 @@ class SqlActionMacroSpec extends Spec {
             val q = quote {
               qr1
                 .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-                .returningGenerated(r =>
+                .returningGenerated(_ =>
                   (
                     query[DummyS].concatMap(r => r.s.split(" ")).max
                   )
@@ -350,7 +350,7 @@ class SqlActionMacroSpec extends Spec {
             val q = quote {
               qr1
                 .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-                .returningGenerated(r => query[Dummy].groupBy(r => r.i).map(_._2.map(_.i).min).value)
+                .returningGenerated(_ => query[Dummy].groupBy(r => r.i).map(_._2.map(_.i).min).value)
             }
             val mirror = ctx.run(q)
             mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MIN(r1.i) FROM Dummy r1 GROUP BY r1.i)"
@@ -362,7 +362,7 @@ class SqlActionMacroSpec extends Spec {
             val q = quote {
               qr1
                 .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-                .returningGenerated(r =>
+                .returningGenerated(_ =>
                   {
                     for {
                       d  <- query[Dummy]
@@ -381,7 +381,7 @@ class SqlActionMacroSpec extends Spec {
             val q = quote {
               qr1
                 .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-                .returningGenerated(r => query[Dummy].sortBy(r => r.i).max)
+                .returningGenerated(_ => query[Dummy].sortBy(r => r.i).max)
             }
             val mirror = ctx.run(q)
             mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(r1.*) FROM Dummy r1 ORDER BY r1.i ASC NULLS FIRST)"
@@ -394,7 +394,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returningGenerated(r =>
+              .returningGenerated(_ =>
                 (query[Dummy]
                   .filter(r => r.i == r.i /* always true since r overridden! */
                   )
@@ -486,7 +486,7 @@ class SqlActionMacroSpec extends Spec {
         mirror.returningBehavior mustEqual ReturnRecord
       }
       "output clause - embedded" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "embedded property" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
           import ctx._
@@ -509,7 +509,7 @@ class SqlActionMacroSpec extends Spec {
       }
       "output clause - naming strategy renames INSERTED clause with correct column naming" in testContextSnake
         .withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
-          case class Person(firstName: String, age: Int)
+          final case class Person(firstName: String, age: Int)
           import ctx._
           val q = quote {
             query[Person].insertValue(lift(Person("Joe", 123))).returning(p => p.firstName)
@@ -519,7 +519,7 @@ class SqlActionMacroSpec extends Spec {
           mirror.string mustEqual "INSERT INTO person (first_name,age) OUTPUT INSERTED.first_name VALUES (?, ?)"
           mirror.returningBehavior mustEqual ReturnRecord
         }
-      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { _ =>
         """import ctx._; quote { qr4.insert(lift(TestEntity4(1L))).returningGenerated(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
@@ -535,10 +535,10 @@ class SqlActionMacroSpec extends Spec {
         mirror.string mustEqual "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
         mirror.returningBehavior mustEqual ReturnColumns(List("l"))
       }
-      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { _ =>
         """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 1L, None))).returning(r => (r.i, r.l + 1)) }""" mustNot compile
       }
-      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { ctx =>
+      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { _ =>
         """import ctx._; quote { qr1.insert(lift(TestEntity("s", 0, 1L, None))).returning(r => r.i) }""" mustNot compile
       }
       "returning clause - single" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -570,7 +570,7 @@ class SqlActionMacroSpec extends Spec {
         mirror.returningBehavior mustEqual ReturnRecord
       }
       "returning clause - embedded" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
@@ -605,14 +605,14 @@ class SqlActionMacroSpec extends Spec {
         }
       }
       "with returning clause - query" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "simple not using id - id not excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returning(r => (query[Dummy].map(d => d.i).max))
+              .returning(_ => (query[Dummy].map(d => d.i).max))
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(d.i) FROM Dummy d)"
@@ -651,7 +651,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returning(r => (query[Dummy].map(r => r.i).max))
+              .returning(_ => (query[Dummy].map(r => r.i).max))
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "INSERT INTO TestEntity AS r (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) RETURNING (SELECT MAX(r1.i) FROM Dummy r1)"
@@ -664,7 +664,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returning(r =>
+              .returning(_ =>
                 (query[Dummy]
                   .filter(r => r.i == r.i /* always true since r overridden! */
                   )
@@ -745,7 +745,7 @@ class SqlActionMacroSpec extends Spec {
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
-      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { _ =>
         """import ctx._; quote { qr4.insert(lift(TestEntity4(1L))).returning(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
@@ -761,10 +761,10 @@ class SqlActionMacroSpec extends Spec {
         mirror.string mustEqual "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ?"
         mirror.returningBehavior mustEqual ReturnColumns(List("l"))
       }
-      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { _ =>
         """import ctx._; quote { qr1.update(lift(TestEntity("s", 0, 1L, None))).returning(r => (r.i, r.l + 1)) }""" mustNot compile
       }
-      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { ctx =>
+      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { _ =>
         """import ctx._; quote { qr1.update(lift(TestEntity("s", 0, 1L, None))).returning(r => r.i) }""" mustNot compile
       }
 
@@ -807,7 +807,7 @@ class SqlActionMacroSpec extends Spec {
         mirror.returningBehavior mustEqual ReturnRecord
       }
       "returning clause - embedded" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
@@ -842,14 +842,14 @@ class SqlActionMacroSpec extends Spec {
         }
       }
       "with returning clause - query" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "simple not using id - id not excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
           val q = quote {
             qr1
               .updateValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returning(r => query[Dummy].map(d => d.i).max)
+              .returning(_ => query[Dummy].map(d => d.i).max)
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "UPDATE TestEntity AS r SET s = ?, i = ?, l = ?, o = ?, b = ? RETURNING (SELECT MAX(d.i) FROM Dummy d)"
@@ -888,7 +888,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .updateValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returning(r => query[Dummy].map(r => r.i).max)
+              .returning(_ => query[Dummy].map(r => r.i).max)
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "UPDATE TestEntity AS r SET s = ?, i = ?, l = ?, o = ?, b = ? RETURNING (SELECT MAX(r1.i) FROM Dummy r1)"
@@ -901,7 +901,7 @@ class SqlActionMacroSpec extends Spec {
           val q = quote {
             qr1
               .updateValue(lift(TestEntity("s", 0, 1L, None, true)))
-              .returning(r =>
+              .returning(_ =>
                 (query[Dummy]
                   .filter(r => r.i == r.i /* always true since r overridden! */
                   )
@@ -982,7 +982,7 @@ class SqlActionMacroSpec extends Spec {
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
-      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { _ =>
         """import ctx._; quote { qr4.update(lift(TestEntity4(1L))).returning(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
@@ -998,10 +998,10 @@ class SqlActionMacroSpec extends Spec {
         mirror.string mustEqual "DELETE FROM TestEntity"
         mirror.returningBehavior mustEqual ReturnColumns(List("l"))
       }
-      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
+      "multi - should fail on operation" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { _ =>
         """import ctx._; quote { qr1.delete.returning(r => (r.i, r.l + 1)) }""" mustNot compile
       }
-      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { ctx =>
+      "no return - should fail on property" in testContext.withDialect(MirrorSqlDialectWithNoReturn) { _ =>
         """import ctx._; quote { qr1.delete.returning(r => r.i) }""" mustNot compile
       }
 
@@ -1044,7 +1044,7 @@ class SqlActionMacroSpec extends Spec {
         mirror.returningBehavior mustEqual ReturnRecord
       }
       "returning clause - embedded" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "embedded property" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
@@ -1077,12 +1077,12 @@ class SqlActionMacroSpec extends Spec {
         }
       }
       "with returning clause - query" - {
-        case class Dummy(i: Int)
+        final case class Dummy(i: Int)
 
         "simple not using id - id not excluded" in testContext.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
           import ctx._
           val q = quote {
-            qr1.delete.returning(r => query[Dummy].map(d => d.i).max)
+            qr1.delete.returning(_ => query[Dummy].map(d => d.i).max)
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(d.i) FROM Dummy d)"
@@ -1115,7 +1115,7 @@ class SqlActionMacroSpec extends Spec {
         ) { ctx =>
           import ctx._
           val q = quote {
-            qr1.delete.returning(r => query[Dummy].map(r => r.i).max)
+            qr1.delete.returning(_ => query[Dummy].map(r => r.i).max)
           }
           val mirror = ctx.run(q)
           mirror.string mustEqual "DELETE FROM TestEntity AS r RETURNING (SELECT MAX(r1.i) FROM Dummy r1)"
@@ -1127,7 +1127,7 @@ class SqlActionMacroSpec extends Spec {
           import ctx._
           val q = quote {
             qr1.delete
-              .returning(r =>
+              .returning(_ =>
                 (query[Dummy]
                   .filter(r => r.i == r.i /* always true since r overridden! */
                   )
@@ -1207,14 +1207,14 @@ class SqlActionMacroSpec extends Spec {
           mirror.returningBehavior mustEqual ReturnRecord
         }
       }
-      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { ctx =>
+      "output clause - should fail on query" in testContext.withDialect(MirrorSqlDialectWithOutputClause) { _ =>
         """import ctx._; quote { qr4.delete.returning(r => query[TestEntity4].filter(t => t.i == r.i)) }""" mustNot compile
       }
     }
   }
   "apply naming strategy to returning action" in testContext.withNaming(SnakeCase) { ctx =>
     import ctx._
-    case class TestEntity4(intId: Int, textCol: String)
+    final case class TestEntity4(intId: Int, textCol: String)
     val q = quote {
       query[TestEntity4].insertValue(lift(TestEntity4(1, "s"))).returningGenerated(_.intId)
     }

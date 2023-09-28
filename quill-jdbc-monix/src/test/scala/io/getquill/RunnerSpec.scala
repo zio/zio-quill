@@ -13,8 +13,8 @@ class RunnerSpec extends Spec {
 
   class SideEffect {
     private var state = 0
-    def apply()       = state = 1
-    def applied       = state == 1
+    def apply(): Unit       = state = 1
+    def applied: Boolean       = state == 1
   }
 
   implicit val scheduler = Scheduler.global

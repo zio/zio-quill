@@ -51,7 +51,7 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
         super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(
+      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (_, _) => 1)(
         new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET)
       )
       ctx.handleSingleResult("<not used>", v)
@@ -62,7 +62,7 @@ class PostgresJAsyncContextSpec extends Spec with ZioSpec {
   "prepare" in {
     testContext.prepareParams(
       "",
-      (ps, session) => (Nil, ps ++ List("Sarah", 127))
+      (ps, _) => (List.empty, ps ++ List("Sarah", 127))
     ) mustEqual List("'Sarah'", "127")
   }
 

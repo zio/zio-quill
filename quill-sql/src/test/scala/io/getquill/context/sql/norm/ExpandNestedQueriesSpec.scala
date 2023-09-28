@@ -24,7 +24,7 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multi-nests correctly" in {
     import testContext._
-    case class MyPerson(first: String, last: String, age: Int)
+    final case class MyPerson(first: String, last: String, age: Int)
     val q = quote {
       query[MyPerson].nested.nested
     }
@@ -34,7 +34,7 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multi-nests correctly with exclusions" in {
     import testContext._
-    case class MyPerson(first: String, last: String, age: Int)
+    final case class MyPerson(first: String, last: String, age: Int)
     val q = quote {
       query[MyPerson].nested.nested.map(p => (p.first, p.last))
     }
@@ -77,7 +77,7 @@ class ExpandNestedQueriesSpec extends Spec {
     object testContext extends SqlMirrorContext(MirrorSqlDialect, SnakeCase)
     import testContext._
 
-    case class Entity(camelCase: String)
+    final case class Entity(camelCase: String)
 
     testContext
       .run(
@@ -123,8 +123,8 @@ class ExpandNestedQueriesSpec extends Spec {
   "expands nested mapped entity correctly" in {
     import testContext._
 
-    case class TestEntity(s: String, i: Int, l: Long, o: Option[Int])
-    case class Dual(ta: TestEntity, tb: TestEntity)
+    final case class TestEntity(s: String, i: Int, l: Long, o: Option[Int])
+    final case class Dual(ta: TestEntity, tb: TestEntity)
 
     val qr1 = quote {
       query[TestEntity]
@@ -179,8 +179,8 @@ class ExpandNestedQueriesSpec extends Spec {
     import ctx._
 
     "embedded, distinct entity in sub-tuple" in {
-      case class Parent(id: Int, emb: Emb)
-      case class Emb(name: String, id: Int)
+      final case class Parent(id: Int, emb: Emb)
+      final case class Emb(name: String, id: Int)
 
       val q = quote {
         query[Parent].map(p => (p.emb, 1)).distinct.map(e => (e._1.name, e._1.id))
@@ -190,9 +190,9 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     "embedded, distinct entity in case class" in {
-      case class Parent(id: Int, emb: Emb)
-      case class Emb(name: String, id: Int)
-      case class SuperParent(emb: Emb, id: Int)
+      final case class Parent(id: Int, emb: Emb)
+      final case class Emb(name: String, id: Int)
+      final case class SuperParent(emb: Emb, id: Int)
 
       val q = quote {
         query[Parent].map(p => SuperParent(p.emb, 1)).distinct.map(e => (e.emb.name, e.emb.id))
@@ -202,8 +202,8 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     "can be propagated across nested query with naming intact" in {
-      case class Parent(id: Int, emb: Emb)
-      case class Emb(name: String, id: Int)
+      final case class Parent(id: Int, emb: Emb)
+      final case class Emb(name: String, id: Int)
 
       val q = quote {
         query[Parent].map(p => p.emb).nested.map(e => (e.name, e.id))
@@ -212,8 +212,8 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     "can be propagated across distinct query with naming intact" in {
-      case class Parent(id: Int, emb: Emb)
-      case class Emb(name: String, id: Int)
+      final case class Parent(id: Int, emb: Emb)
+      final case class Emb(name: String, id: Int)
 
       val q = quote {
         query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id))
@@ -222,8 +222,8 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     "can be propagated across distinct query with naming intact - double distinct" in {
-      case class Parent(id: Int, emb: Emb)
-      case class Emb(name: String, id: Int)
+      final case class Parent(id: Int, emb: Emb)
+      final case class Emb(name: String, id: Int)
 
       val q = quote {
         query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct
@@ -232,8 +232,8 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     "can be propagated across distinct query with naming intact then re-wrapped into the parent" in {
-      case class Parent(id: Int, emb: Emb)
-      case class Emb(name: String, id: Int)
+      final case class Parent(id: Int, emb: Emb)
+      final case class Emb(name: String, id: Int)
 
       val q = quote {
         query[Parent]
@@ -255,9 +255,9 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multiple embedding levels" in {
     import testContext._
-    case class Emb(id: Int, name: String)
-    case class Parent(id: Int, name: String, emb: Emb)
-    case class GrandParent(id: Int, par: Parent)
+    final case class Emb(id: Int, name: String)
+    final case class Parent(id: Int, name: String, emb: Emb)
+    final case class GrandParent(id: Int, par: Parent)
 
     val q = quote {
       query[GrandParent]
@@ -317,9 +317,9 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multiple embedding levels - another example" in {
     import testContext._
-    case class Sim(sid: Int)
-    case class Mam(mid: Int, sim: Sim)
-    case class Bim(bid: Int, mam: Mam)
+    final case class Sim(sid: Int)
+    final case class Mam(mid: Int, sim: Sim)
+    final case class Bim(bid: Int, mam: Mam)
 
     val q = quote {
       query[Bim]
@@ -386,9 +386,9 @@ class ExpandNestedQueriesSpec extends Spec {
 
   "multiple embedding levels - another example - with rename" in {
     import testContext._
-    case class Sim(sid: Int)
-    case class Mam(mid: Int, sim: Sim)
-    case class Bim(bid: Int, mam: Mam)
+    final case class Sim(sid: Int)
+    final case class Mam(mid: Int, sim: Sim)
+    final case class Bim(bid: Int, mam: Mam)
 
     implicit val bimSchemaMeta = schemaMeta[Bim]("theBim", _.bid -> "theBid", _.mam.sim.sid -> "theSid")
 
@@ -459,9 +459,9 @@ class ExpandNestedQueriesSpec extends Spec {
   "multiple embedding levels - another example - with rename - with escape column" in {
     val ctx = testContextUpperEscapeColumn
     import ctx._
-    case class Sim(sid: Int)
-    case class Mam(mid: Int, sim: Sim)
-    case class Bim(bid: Int, mam: Mam)
+    final case class Sim(sid: Int)
+    final case class Mam(mid: Int, sim: Sim)
+    final case class Bim(bid: Int, mam: Mam)
 
     implicit val bimSchemaMeta = schemaMeta[Bim]("theBim", _.bid -> "theBid", _.mam.sim.sid -> "theSid")
 
@@ -531,9 +531,9 @@ class ExpandNestedQueriesSpec extends Spec {
   "multiple embedding levels - another example - with rename - with escape column - with groupby" in {
     val ctx = testContextUpperEscapeColumn
     import ctx._
-    case class Sim(sid: Int)
-    case class Mam(mid: Int, sim: Sim)
-    case class Bim(bid: Int, mam: Mam)
+    final case class Sim(sid: Int)
+    final case class Mam(mid: Int, sim: Sim)
+    final case class Bim(bid: Int, mam: Mam)
 
     implicit val bimSchemaMeta = schemaMeta[Bim]("theBim", _.bid -> "theBid", _.mam.sim.sid -> "theSid")
 
@@ -636,8 +636,8 @@ class ExpandNestedQueriesSpec extends Spec {
     val ctx = testContextUpperEscapeColumn
     import ctx._
 
-    case class Sim(sid: Int)
-    case class Mam(mid: Int, sim: Sim)
+    final case class Sim(sid: Int)
+    final case class Mam(mid: Int, sim: Sim)
 
     val q = quote {
       query[Mam]
@@ -696,7 +696,7 @@ class ExpandNestedQueriesSpec extends Spec {
     import testContext._
 
     "should be handled correctly in a regular schema" in {
-      case class Person(firstName: String, lastName: String)
+      final case class Person(firstName: String, lastName: String)
       val q = quote {
         sql"fromSomewhere()".as[Query[Person]]
       }
@@ -705,8 +705,8 @@ class ExpandNestedQueriesSpec extends Spec {
     }
 
     "should be handled correctly in a regular schema - nested" in {
-      case class Name(firstName: String, lastName: String)
-      case class Person(name: Name, theAge: Int)
+      final case class Name(firstName: String, lastName: String)
+      final case class Person(name: Name, theAge: Int)
       val q = quote {
         sql"fromSomewhere()".as[Query[Person]]
       }
@@ -716,8 +716,8 @@ class ExpandNestedQueriesSpec extends Spec {
   }
 
   "expression subquery" - {
-    case class ThePerson(name: String, age: Int, bossId: Int)
-    case class TheBoss(bossId: Int, name: String, age: Int)
+    final case class ThePerson(name: String, age: Int, bossId: Int)
+    final case class TheBoss(bossId: Int, name: String, age: Int)
 
     object testContext extends SqlMirrorContext(MirrorSqlDialect, SnakeCase)
     import testContext._

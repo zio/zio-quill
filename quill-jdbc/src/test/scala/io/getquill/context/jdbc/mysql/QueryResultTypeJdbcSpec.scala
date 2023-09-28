@@ -13,7 +13,7 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
 
   val insertedProducts = new ConcurrentLinkedQueue[Product]
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     context.run(deleteAll)
     val ids = context.run(liftQuery(productEntries).foreach(p => productInsert(p)))
     val inserted = (ids zip productEntries).map { case (id, prod) =>

@@ -12,12 +12,12 @@ class OpsSpec extends Spec {
       val q = quote {
         query[TestEntity]
       }
-      q.ast mustEqual Entity("TestEntity", Nil, TestEntityQuat)
+      q.ast mustEqual Entity("TestEntity", List.empty, TestEntityQuat)
     }
     "implicitly" in {
       val q: Quoted[Query[TestEntity]] =
         query[TestEntity]
-      q.ast mustEqual Entity("TestEntity", Nil, TestEntityQuat)
+      q.ast mustEqual Entity("TestEntity", List.empty, TestEntityQuat)
     }
   }
 
@@ -27,14 +27,14 @@ class OpsSpec extends Spec {
         unquote(qr1).map(t => t)
       }
       val quat = TestEntityQuat
-      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
+      q.ast mustEqual Map(Entity("TestEntity", List.empty, quat), Ident("t", quat), Ident("t", quat))
     }
     "implicitly" in {
       val q = quote {
         qr1.map(t => t)
       }
       val quat = TestEntityQuat
-      q.ast mustEqual Map(Entity("TestEntity", Nil, quat), Ident("t", quat), Ident("t", quat))
+      q.ast mustEqual Map(Entity("TestEntity", List.empty, quat), Ident("t", quat), Ident("t", quat))
     }
   }
 
@@ -44,7 +44,7 @@ class OpsSpec extends Spec {
         val q = quote {
           sql"true".as[Boolean]
         }
-        q.ast mustEqual Infix(List("true"), Nil, false, false, Quat.BooleanValue)
+        q.ast mustEqual Infix(List("true"), List.empty, false, false, Quat.BooleanValue)
       }
     }
     "other values" - {
@@ -52,13 +52,13 @@ class OpsSpec extends Spec {
         val q = quote {
           sql"1".as[Int]
         }
-        q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
+        q.ast mustEqual Infix(List("1"), List.empty, false, false, Quat.Value)
       }
       "without `as`" in {
         val q = quote {
           sql"1"
         }
-        q.ast mustEqual Infix(List("1"), Nil, false, false, Quat.Value)
+        q.ast mustEqual Infix(List("1"), List.empty, false, false, Quat.Value)
       }
     }
   }
@@ -74,24 +74,24 @@ class OpsSpec extends Spec {
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
-    def allowFiltering = quote(sql"$q ALLOW FILTERING".as[Q])
+    def allowFiltering: Quoted[Q] = quote(sql"$q ALLOW FILTERING".as[Q])
   }
 
   "unquotes quoted function bodies automatically" - {
     "one param" in {
-      val q: Quoted[Int => EntityQuery[TestEntity]] = quote { (i: Int) =>
+      val q: Quoted[Int => EntityQuery[TestEntity]] = quote { (_: Int) =>
         query[TestEntity].allowFiltering
       }
-      val n = quote { (i: Int) =>
+      val n = quote { (_: Int) =>
         unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast
     }
     "multiple params" in {
-      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote { (i: Int, j: Int, k: Int) =>
+      val q: Quoted[(Int, Int, Int) => EntityQuery[TestEntity]] = quote { (_: Int, _: Int, _: Int) =>
         query[TestEntity].allowFiltering
       }
-      val n = quote { (i: Int, j: Int, k: Int) =>
+      val n = quote { (_: Int, _: Int, _: Int) =>
         unquote(query[TestEntity].allowFiltering)
       }
       q.ast mustEqual n.ast

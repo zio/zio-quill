@@ -4,6 +4,7 @@ import io.getquill.context.cassandra.CollectionsSpec
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
+import io.getquill.{ EntityQuery, Quoted }
 
 class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   val ctx = testDB
@@ -23,7 +24,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     timestamps: Set[Instant],
     uuids: Set[UUID]
   )
-  val e = SetsEntity(
+  val e: SetsEntity = SetsEntity(
     1,
     Set("c"),
     Set(BigDecimal(1.33)),
@@ -36,7 +37,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     Set(Instant.now()),
     Set(UUID.randomUUID())
   )
-  val q = quote(query[SetsEntity])
+  val q: Quoted[EntityQuery[SetsEntity]] = quote(query[SetsEntity])
 
   "Set encoders/decoders for CassandraTypes and CassandraMappers" in {
     await {
@@ -50,7 +51,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Empty sets and optional fields" in {
-    case class Entity(id: Int, texts: Option[Set[String]], bools: Option[Set[Boolean]], ints: Set[Int])
+    final case class Entity(id: Int, texts: Option[Set[String]], bools: Option[Set[Boolean]], ints: Set[Int])
     val e = Entity(1, Some(Set("1", "2")), None, Set.empty)
     val q = quote(querySchema[Entity]("SetsEntity"))
 
@@ -65,7 +66,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Mapped encoding for CassandraType" in {
-    case class StrEntity(id: Int, texts: Set[StrWrap])
+    final case class StrEntity(id: Int, texts: Set[StrWrap])
     val e = StrEntity(1, Set("1", "2").map(StrWrap.apply))
     val q = quote(querySchema[StrEntity]("SetsEntity"))
 
@@ -80,7 +81,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Mapped encoding for CassandraMapper types" in {
-    case class IntEntity(id: Int, ints: Set[IntWrap])
+    final case class IntEntity(id: Int, ints: Set[IntWrap])
     val e = IntEntity(1, Set(1, 2).map(IntWrap.apply))
     val q = quote(querySchema[IntEntity]("SetsEntity"))
 
@@ -95,7 +96,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Blob (Array[Byte]) support" in {
-    case class BlobsEntity(id: Int, blobs: Set[Array[Byte]])
+    final case class BlobsEntity(id: Int, blobs: Set[Array[Byte]])
     val e = BlobsEntity(4, Set(Array(1.toByte, 2.toByte), Array(2.toByte)))
     val q = quote(querySchema[BlobsEntity]("SetsEntity"))
 

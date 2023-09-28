@@ -10,7 +10,7 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
   val peopleInsert =
     quote((p: Contact) => query[Contact].insertValue(p))
 
-  val peopleEntries = List(
+  val peopleEntries: List[Contact] = List(
     Contact(1, "Alex", "Jones", 60, 2, "foo"),
     Contact(2, "Bert", "James", 55, 3, "bar"),
     Contact(3, "Cora", "Jasper", 33, 3, "baz")
@@ -19,7 +19,7 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
   val addressInsert =
     quote((c: Address) => query[Address].insertValue(c))
 
-  val addressEntries = List(
+  val addressEntries: List[Address] = List(
     Address(1, "123 Fake Street", 11234, "something"),
     Address(2, "456 Old Street", 45678, "something else"),
     Address(3, "789 New Street", 89010, "another thing")

@@ -11,8 +11,8 @@ class NormalizeReturningSpec extends Spec {
 
   "do not remove assignment if embedded has columns with the same name" - {
 
-    case class EmbEntity(id: Int)
-    case class Entity(id: Int, emb: EmbEntity)
+    final case class EmbEntity(id: Int)
+    final case class Entity(id: Int, emb: EmbEntity)
 
     val e = Entity(1, EmbEntity(2))
     val q = quote {
@@ -27,7 +27,7 @@ class NormalizeReturningSpec extends Spec {
     }
     "when returning parent col - single - returning should not compile" in testContext.withDialect(
       MirrorIdiomReturningSingle
-    ) { ctx =>
+    ) { _ =>
       "ctx.run(query[Entity].insert(lift(e)).returning(p => p.id))" mustNot compile
     }
     "when returning parent col - single - returning generated" in testContext.withDialect(MirrorIdiomReturningSingle) {

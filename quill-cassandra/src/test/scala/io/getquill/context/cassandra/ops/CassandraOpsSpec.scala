@@ -1,6 +1,5 @@
 package io.getquill.context.cassandra.ops
 
-import io.getquill._
 import io.getquill.base.Spec
 import io.getquill.context.cassandra.mirrorContext
 

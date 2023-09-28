@@ -7,7 +7,7 @@ class OptionalProductEncodingJdbcSpec extends OptionalNestedSpec {
   val context = testContext
   import testContext._
 
-  override protected def beforeEach() = {
+  override protected def beforeEach(): Unit = {
     import Setup._
     testContext.run(query[Contact].delete)
     ()

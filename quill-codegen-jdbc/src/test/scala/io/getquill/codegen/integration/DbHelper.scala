@@ -78,7 +78,7 @@ object DbHelper {
 
     }
 
-  def dropTables(ds: DataSource with Closeable) = {
+  def dropTables(ds: DataSource with Closeable): Unit = {
 
     val databaseType = getDatabaseType(ds)
 

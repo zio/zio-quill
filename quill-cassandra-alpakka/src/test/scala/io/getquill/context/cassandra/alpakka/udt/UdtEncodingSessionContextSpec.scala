@@ -29,8 +29,8 @@ class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
       implicitly[Encoder[List[Personal]]]
     }
     "MappedEncoding" in {
-      case class FirstName(name: String)
-      case class MyName(firstName: FirstName) extends Udt
+      final case class FirstName(name: String)
+      final case class MyName(firstName: FirstName) extends Udt
 
       implicit val encodeFirstName = MappedEncoding[FirstName, String](_.name)
       implicit val decodeFirstName = MappedEncoding[String, FirstName](FirstName)
@@ -45,7 +45,7 @@ class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
   "Complete examples" - {
     import ctx1._
     "without meta" in {
-      case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
+      final case class WithEverything(id: Int, personal: Personal, nameList: List[Name])
 
       val e = WithEverything(
         1,
@@ -71,8 +71,8 @@ class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
       }
     }
     "with meta" in {
-      case class MyName(first: String) extends Udt
-      case class WithEverything(id: Int, name: MyName, nameList: List[MyName])
+      final case class MyName(first: String) extends Udt
+      final case class WithEverything(id: Int, name: MyName, nameList: List[MyName])
       implicit val myNameMeta = udtMeta[MyName]("Name", _.first -> "firstName")
 
       val e = WithEverything(2, MyName("first"), List(MyName("first")))

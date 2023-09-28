@@ -14,14 +14,14 @@ class QuestionMarkEscaperSpec extends Spec {
     unescape(escape(str)) must equal(str)
   }
 
-  def plug1(str: String) = pluginValueSafe(str, "<1>")
-  def plug2(str: String) = pluginValueSafe(plug1(str), "<2>")
-  def plug3(str: String) = pluginValueSafe(plug2(str), "<3>")
-  def plug4(str: String) = pluginValueSafe(plug3(str), "<4>")
+  def plug1(str: String): String = pluginValueSafe(str, "<1>")
+  def plug2(str: String): String = pluginValueSafe(plug1(str), "<2>")
+  def plug3(str: String): String = pluginValueSafe(plug2(str), "<3>")
+  def plug4(str: String): String = pluginValueSafe(plug3(str), "<4>")
 
-  def plug2Q(str: String)  = pluginValueSafe(plug1(str), "<2?>")
-  def plug3QN(str: String) = pluginValueSafe(plug2Q(str), "<3>")
-  def plug4Q(str: String)  = pluginValueSafe(plug3QN(str), "<4?>")
+  def plug2Q(str: String): String  = pluginValueSafe(plug1(str), "<2?>")
+  def plug3QN(str: String): String = pluginValueSafe(plug2Q(str), "<3>")
+  def plug4Q(str: String): String  = pluginValueSafe(plug3QN(str), "<4?>")
 
   "should escape and replace variables correctly" in {
     val str = "foo ? bar ? ?"

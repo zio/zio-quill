@@ -15,7 +15,7 @@ trait BatchValuesSpec extends Spec with BeforeAndAfterEach {
   def insertProduct =
     quote((p: Product) => query[Product].insertValue(p))
 
-  def makeProducts(maxRows: Int = 22) =
+  def makeProducts(maxRows: Int = 22): IndexedSeq[Product] =
     (1 to maxRows).map(i => Product(i, s"Product-${i}", i * 100))
 
   object `Ex 1 - Batch Insert Normal` {

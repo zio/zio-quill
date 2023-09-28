@@ -45,7 +45,7 @@ class MysqlJAsyncContextSpec extends Spec {
         super.extractActionResult(returningAction, returningExtractor)(result)
     }
     intercept[IllegalStateException] {
-      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (row, session) => 1)(
+      val v = ctx.extractActionResult(ReturnColumns(List("w/e")), (_, _) => 1)(
         new QueryResult(0, "w/e", ResultSetKt.getEMPTY_RESULT_SET)
       )
       ctx.handleSingleResult("<not used>", v)
@@ -54,14 +54,14 @@ class MysqlJAsyncContextSpec extends Spec {
   }
 
   "prepare" in {
-    testContext.prepareParams("", (ps, session) => (Nil, ps ++ List("Sarah", 127))) mustEqual List("'Sarah'", "127")
+    testContext.prepareParams("", (ps, _) => (List.empty, ps ++ List("Sarah", 127))) mustEqual List("'Sarah'", "127")
   }
 
   "provides transaction support" - {
     "success" in {
       await(for {
         _ <- testContext.run(qr4.delete)
-        _ <- testContext.transaction { implicit ec =>
+        _ <- testContext.transaction { _ =>
                testContext.run(qr4.insert(_.i -> 33))
              }
         r <- testContext.run(qr4)
@@ -87,7 +87,7 @@ class MysqlJAsyncContextSpec extends Spec {
       await(for {
         _ <- testContext.run(qr4.delete)
         _ <- testContext.transaction { implicit ec =>
-               testContext.transaction { implicit ec =>
+               testContext.transaction { _ =>
                  testContext.run(qr4.insert(_.i -> 33))
                }
              }

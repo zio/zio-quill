@@ -6,14 +6,14 @@ import io.getquill.base.Spec
 import io.getquill.context.sql.util.StringOps._
 
 class GroupBySpec extends Spec {
-  implicit val naming = new Literal {}
+  implicit val naming: Literal = new Literal {}
 
   import io.getquill.norm.{DisablePhase, OptionalPhase}
   import io.getquill.norm.ConfigList._
 
   "groupBy table expansion" - {
-    case class Country(id: Int, name: String)
-    case class City(name: String, countryId: Int)
+    final case class Country(id: Int, name: String)
+    final case class City(name: String, countryId: Int)
 
     "basic" in {
       val q = quote(
@@ -71,9 +71,9 @@ class GroupBySpec extends Spec {
   }
 
   "Embedded entity expansion" - {
-    case class Language(name: String, dialect: String)
-    case class Country(countryCode: String, language: Language)
-    case class City(countryCode: String, name: String)
+    final case class Language(name: String, dialect: String)
+    final case class Country(countryCode: String, language: Language)
+    final case class City(countryCode: String, name: String)
 
     "simple" in {
       val q = quote(
@@ -201,8 +201,8 @@ class GroupBySpec extends Spec {
   }
 
   "after join" in {
-    case class CountryLanguage(countryCode: String, language: String)
-    case class City(id: Int, name: String, countryCode: String)
+    final case class CountryLanguage(countryCode: String, language: String)
+    final case class City(id: Int, name: String, countryCode: String)
 
     val q = quote(
       query[City]
@@ -216,7 +216,7 @@ class GroupBySpec extends Spec {
   }
 
   "map(transform).groupBy should work with" - {
-    case class Person(id: Int, name: String, age: Int)
+    final case class Person(id: Int, name: String, age: Int)
 
     "work with a groupBy(to-leaf).map.filter" in {
       testContext.run {

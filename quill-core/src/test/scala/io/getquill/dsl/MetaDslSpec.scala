@@ -4,7 +4,6 @@ import io.getquill.MirrorContexts.testContext._
 import io.getquill.context.mirror.{MirrorSession, Row}
 import io.getquill.Query
 import io.getquill.base.Spec
-import io.getquill.util.PrintMac
 
 class MetaDslSpec extends Spec {
 
@@ -53,12 +52,12 @@ class MetaDslSpec extends Spec {
       meta.entity.toString mustEqual """`querySchema`("test_entity", _.i -> "ii")"""
     }
     "custom with embedded" in {
-      case class Entity(emb: EmbValue)
+      final case class Entity(emb: EmbValue)
       val meta = schemaMeta[Entity]("test_entity", _.emb.i -> "ii")
       meta.entity.toString mustEqual """`querySchema`("test_entity", _.emb.i -> "ii")"""
     }
     "custom with optional embedded" in {
-      case class Entity(emb: Option[EmbValue])
+      final case class Entity(emb: Option[EmbValue])
       val meta = schemaMeta[Entity]("test_entity", _.emb.map(_.i) -> "ii")
       meta.entity.toString mustEqual """`querySchema`("test_entity", _.emb.i -> "ii")"""
     }
@@ -67,13 +66,13 @@ class MetaDslSpec extends Spec {
   "query meta" - {
     "materialized" - {
       "simple" in {
-        case class Entity(a: String, b: Int)
+        final case class Entity(a: String, b: Int)
         val meta = materializeQueryMeta[Entity]
         meta.extract(Row("1", 2), MirrorSession.default) mustEqual Entity("1", 2)
       }
       "with embedded" in {
-        case class Nested(i: Int, l: Long)
-        case class Entity(a: String, b: Nested)
+        final case class Nested(i: Int, l: Long)
+        final case class Entity(a: String, b: Nested)
         val meta = materializeQueryMeta[Entity]
         meta.extract(Row("1", 2, 3L), MirrorSession.default) mustEqual Entity("1", Nested(2, 3L))
       }
@@ -82,41 +81,41 @@ class MetaDslSpec extends Spec {
         meta.extract(Row("1", 2), MirrorSession.default) mustEqual (("1", 2))
       }
       "tuple + embedded" in {
-        case class Nested(i: Int, l: Long)
+        final case class Nested(i: Int, l: Long)
         val meta = materializeQueryMeta[(String, Nested)]
         meta.extract(Row("1", 2, 3L), MirrorSession.default) mustEqual (("1", Nested(2, 3L)))
       }
       "tuple + nested embedded" in {
-        case class Nested(i: Int, l: Long)
-        case class Entity(a: String, b: Nested)
+        final case class Nested(i: Int, l: Long)
+        final case class Entity(a: String, b: Nested)
         val meta = materializeQueryMeta[(String, Entity)]
         meta.extract(Row("a", "1", 2, 3L), MirrorSession.default) mustEqual (("a", Entity("1", Nested(2, 3L))))
       }
       "optional nested" - {
         "extracts Some if all columns are defined" in {
-          case class Entity(a: String, b: Int)
+          final case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
           meta.extract(Row("a", "1", 2), MirrorSession.default) mustEqual (("a", Some(Entity("1", 2))))
         }
         "extracts Some if at least one column is defined" in {
-          case class Entity(a: String, b: Int)
+          final case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
           meta.extract(Row("a", "1", null), MirrorSession.default) mustEqual (("a", Some(Entity("1", 0))))
         }
         "extracts Some if at least one column is defined - alternate" in {
-          case class Entity(a: String, b: Int)
+          final case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
           meta.extract(Row("a", null, 2), MirrorSession.default) mustEqual (("a", Some(Entity(null, 2))))
         }
         "extracts None if no columns are defined" in {
-          case class Entity(a: String, b: Int)
+          final case class Entity(a: String, b: Int)
           val meta = materializeQueryMeta[(String, Option[Entity])]
           meta.extract(Row("a", null, null), MirrorSession.default) mustEqual (("a", None))
         }
       }
       "optional deep nested" - {
-        case class Entity1(a: String, b: Int)
-        case class Entity2(a: Option[Int])
+        final case class Entity1(a: String, b: Int)
+        final case class Entity2(a: Option[Int])
         val meta = materializeQueryMeta[(String, Option[(Entity1, Entity2)])]
 
         "extracts Some if all columns are defined" in {
@@ -144,8 +143,8 @@ class MetaDslSpec extends Spec {
       }
     }
     "custom" in {
-      case class Person(id: Int, name: String, age: Int, phone: String)
-      case class Contact(personId: Int, phone: String)
+      final case class Person(id: Int, name: String, age: Int, phone: String)
+      final case class Contact(personId: Int, phone: String)
       implicit val meta =
         queryMeta((q: Query[Person]) =>
           for {
@@ -164,13 +163,13 @@ class MetaDslSpec extends Spec {
   "update meta" - {
     "materialized" - {
       "simple" in {
-        case class Entity(a: String, b: Int)
+        final case class Entity(a: String, b: Int)
         val meta = materializeUpdateMeta[Entity]
         meta.expand.toString mustEqual "(q, value) => q.update(v => v.a -> value.a, v => v.b -> value.b)"
       }
       "with embedded" in {
-        case class Nested(i: Int, l: Long)
-        case class Entity(a: String, b: Nested)
+        final case class Nested(i: Int, l: Long)
+        final case class Entity(a: String, b: Nested)
         val meta = materializeUpdateMeta[Entity]
         meta.expand.toString mustEqual "(q, value) => q.update(v => v.a -> value.a, v => v.b.i -> value.b.i, v => v.b.l -> value.b.l)"
       }
@@ -179,18 +178,18 @@ class MetaDslSpec extends Spec {
         meta.expand.toString mustEqual "(q, value) => q.update(v => v._1 -> value._1, v => v._2 -> value._2)"
       }
       "tuple + embedded" in {
-        case class Nested(i: Int, l: Long)
+        final case class Nested(i: Int, l: Long)
         val meta = materializeUpdateMeta[(String, Nested)]
         meta.expand.toString mustEqual "(q, value) => q.update(v => v._1 -> value._1, v => v._2.i -> value._2.i, v => v._2.l -> value._2.l)"
       }
       "tuple + nested embedded" in {
-        case class Nested(i: Int, l: Long)
-        case class Entity(a: String, b: Nested)
+        final case class Nested(i: Int, l: Long)
+        final case class Entity(a: String, b: Nested)
         val meta = materializeUpdateMeta[(String, Entity)]
         meta.expand.toString mustEqual "(q, value) => q.update(v => v._1 -> value._1, v => v._2.a -> value._2.a, v => v._2.b.i -> value._2.b.i, v => v._2.b.l -> value._2.b.l)"
       }
       "optional nested" in {
-        case class Entity(a: String, b: Int)
+        final case class Entity(a: String, b: Int)
         val meta = materializeUpdateMeta[(String, Option[Entity])]
         meta.expand.toString mustEqual "(q, value) => q.update(v => v._1 -> value._1, v => v._2.map((v) => v.a) -> value._2.map((v) => v.a), v => v._2.map((v) => v.b) -> value._2.map((v) => v.b))"
       }
@@ -200,8 +199,8 @@ class MetaDslSpec extends Spec {
       }
     }
     "custom" - {
-      case class Nested(i: Int, l: Long)
-      case class Entity(a: String, b: Nested, c: Option[Nested])
+      final case class Nested(i: Int, l: Long)
+      final case class Entity(a: String, b: Nested, c: Option[Nested])
 
       "exclude column" in {
         val meta = updateMeta[Entity](_.a)
@@ -234,13 +233,13 @@ class MetaDslSpec extends Spec {
   "insert meta" - {
     "materialized" - {
       "simple" in {
-        case class Entity(a: String, b: Int)
+        final case class Entity(a: String, b: Int)
         val meta = materializeInsertMeta[Entity]
         meta.expand.toString mustEqual "(q, value) => q.insert(v => v.a -> value.a, v => v.b -> value.b)"
       }
       "with embedded" in {
-        case class Nested(i: Int, l: Long)
-        case class Entity(a: String, b: Nested)
+        final case class Nested(i: Int, l: Long)
+        final case class Entity(a: String, b: Nested)
         val meta = materializeInsertMeta[Entity]
         meta.expand.toString mustEqual "(q, value) => q.insert(v => v.a -> value.a, v => v.b.i -> value.b.i, v => v.b.l -> value.b.l)"
       }
@@ -249,18 +248,18 @@ class MetaDslSpec extends Spec {
         meta.expand.toString mustEqual "(q, value) => q.insert(v => v._1 -> value._1, v => v._2 -> value._2)"
       }
       "tuple + embedded" in {
-        case class Nested(i: Int, l: Long)
+        final case class Nested(i: Int, l: Long)
         val meta = materializeInsertMeta[(String, Nested)]
         meta.expand.toString mustEqual "(q, value) => q.insert(v => v._1 -> value._1, v => v._2.i -> value._2.i, v => v._2.l -> value._2.l)"
       }
       "tuple + nested embedded" in {
-        case class Nested(i: Int, l: Long)
-        case class Entity(a: String, b: Nested)
+        final case class Nested(i: Int, l: Long)
+        final case class Entity(a: String, b: Nested)
         val meta = materializeInsertMeta[(String, Entity)]
         meta.expand.toString mustEqual "(q, value) => q.insert(v => v._1 -> value._1, v => v._2.a -> value._2.a, v => v._2.b.i -> value._2.b.i, v => v._2.b.l -> value._2.b.l)"
       }
       "optional nested" in {
-        case class Entity(a: String, b: Int)
+        final case class Entity(a: String, b: Int)
         val meta = materializeInsertMeta[(String, Option[Entity])]
         meta.expand.toString mustEqual "(q, value) => q.insert(v => v._1 -> value._1, v => v._2.map((v) => v.a) -> value._2.map((v) => v.a), v => v._2.map((v) => v.b) -> value._2.map((v) => v.b))"
       }
@@ -270,8 +269,8 @@ class MetaDslSpec extends Spec {
       }
     }
     "custom" - {
-      case class Nested(i: Int, l: Long)
-      case class Entity(a: String, b: Nested, c: Option[Nested])
+      final case class Nested(i: Int, l: Long)
+      final case class Entity(a: String, b: Nested, c: Option[Nested])
 
       "exclude column" in {
         val meta = insertMeta[Entity](_.a)

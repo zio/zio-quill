@@ -95,7 +95,7 @@ class CompatibleDynamicQuerySpec extends Spec {
         cond = false
         test(
           quote(query[TestEntity]).dynamic.map(v0 => if (cond) quote(v0.i) else quote(1)),
-          query[TestEntity].map(v0 => 1)
+          query[TestEntity].map(_ => 1)
         )
       }
     }
@@ -103,19 +103,19 @@ class CompatibleDynamicQuerySpec extends Spec {
     "flatMap" - {
       "simple" in {
         test(
-          quote(query[TestEntity]).dynamic.flatMap(v0 => quote(query[TestEntity]).dynamic),
-          query[TestEntity].flatMap(v0 => query[TestEntity])
+          quote(query[TestEntity]).dynamic.flatMap(_ => quote(query[TestEntity]).dynamic),
+          query[TestEntity].flatMap(_ => query[TestEntity])
         )
       }
       "mixed with static" in {
         test(
-          quote(query[TestEntity]).dynamic.flatMap(v0 => query[TestEntity]),
-          query[TestEntity].flatMap(v0 => query[TestEntity])
+          quote(query[TestEntity]).dynamic.flatMap(_ => query[TestEntity]),
+          query[TestEntity].flatMap(_ => query[TestEntity])
         )
 
         test(
-          query[TestEntity].flatMap(v0 => quote(query[TestEntity]).dynamic),
-          query[TestEntity].flatMap(v0 => query[TestEntity])
+          query[TestEntity].flatMap(_ => quote(query[TestEntity]).dynamic),
+          query[TestEntity].flatMap(_ => query[TestEntity])
         )
       }
       "with map" in {
@@ -323,8 +323,8 @@ class CompatibleDynamicQuerySpec extends Spec {
 
     "size" in {
       test(
-        quote(query[TestEntity]).dynamic.map(v0 => quote(query[TestEntity]).dynamic.size),
-        query[TestEntity].map(v0 => query[TestEntity].size)
+        quote(query[TestEntity]).dynamic.map(_ => quote(query[TestEntity]).dynamic.size),
+        query[TestEntity].map(_ => query[TestEntity].size)
       )
     }
 
@@ -403,15 +403,15 @@ class CompatibleDynamicQuerySpec extends Spec {
 
     "nonEmpty" in {
       test(
-        quote(query[TestEntity]).dynamic.map(v0 => quote(query[TestEntity]).dynamic.nonEmpty),
-        query[TestEntity].map(v0 => query[TestEntity].nonEmpty)
+        quote(query[TestEntity]).dynamic.map(_ => quote(query[TestEntity]).dynamic.nonEmpty),
+        query[TestEntity].map(_ => query[TestEntity].nonEmpty)
       )
     }
 
     "isEmpty" in {
       test(
-        quote(query[TestEntity]).dynamic.map(v0 => quote(query[TestEntity]).dynamic.isEmpty),
-        query[TestEntity].map(v0 => query[TestEntity].isEmpty)
+        quote(query[TestEntity]).dynamic.map(_ => quote(query[TestEntity]).dynamic.isEmpty),
+        query[TestEntity].map(_ => query[TestEntity].isEmpty)
       )
     }
 
@@ -426,8 +426,8 @@ class CompatibleDynamicQuerySpec extends Spec {
       }
       "value" in {
         test(
-          quote(query[TestEntity]).dynamic.map(v0 => quote(query[TestEntity]).dynamic.map(v1 => v1.i).contains(1)),
-          query[TestEntity].map(v0 => query[TestEntity].map(v1 => v1.i).contains(lift(1)))
+          quote(query[TestEntity]).dynamic.map(_ => quote(query[TestEntity]).dynamic.map(v1 => v1.i).contains(1)),
+          query[TestEntity].map(_ => query[TestEntity].map(v1 => v1.i).contains(lift(1)))
         )
       }
     }

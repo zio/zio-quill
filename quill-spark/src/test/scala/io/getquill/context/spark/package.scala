@@ -5,7 +5,7 @@ import io.getquill.QuillSparkContext
 
 package object spark {
 
-  val sparkSession =
+  val sparkSession: SparkSession =
     SparkSession
       .builder()
       .config("spark.sql.shuffle.partitions", 2) // Default shuffle partitions is 200, too much for tests

@@ -18,7 +18,7 @@ class QueryProbingSpec extends Spec {
   }
 
   "fails compilation if the query probing fails" in {
-    case class Fail()
+    final case class Fail()
     import mirrorContextWithQueryProbing._
     "mirrorContextWithQueryProbing.run(query[Fail].delete)" mustNot compile
   }

@@ -24,7 +24,7 @@ class CqlQuerySpec extends Spec {
     }
     "other (not supported)" in {
       val q = quote {
-        qr1.map(t => "s")
+        qr1.map(_ => "s")
       }
       intercept[IllegalStateException] {
         CqlQuery(q.ast)
@@ -82,7 +82,7 @@ class CqlQuerySpec extends Spec {
           "SELECT s, i, l, o, b FROM TestEntity ORDER BY i DESC, s DESC"
       }
       "invalid ordering" in {
-        case class Test(a: (Int, Int))
+        final case class Test(a: (Int, Int))
         val q = quote {
           query[Test].sortBy(_.a)(Ord(Ord.asc, Ord.desc))
         }

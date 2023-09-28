@@ -38,7 +38,7 @@ class SparkDialectSpec extends Spec {
   }
 
   "escapes ' " in {
-    val ast             = query[Test].map(t => "test'").ast
+    val ast             = query[Test].map(_ => "test'").ast
     val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty)(Literal)
     norm mustEqual ast
     stmt.toString mustEqual "SELECT 'test\\'' AS x FROM Test t"
@@ -46,8 +46,8 @@ class SparkDialectSpec extends Spec {
 
   // More comprehensive test in MiscQueriesSpec
   "nested property" in {
-    case class Inner(i: Int)
-    case class Outer(inner: Inner)
+    final case class Inner(i: Int)
+    final case class Outer(inner: Inner)
     val ast             = query[Outer].filter(t => t.inner.i == 1).ast
     val (norm, stmt, _) = SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty)(Literal)
     norm mustEqual ast

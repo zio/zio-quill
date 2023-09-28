@@ -6,15 +6,16 @@ import zio.Console.printLine
 import zio._
 
 import java.sql.SQLException
+import javax.sql.DataSource
 
 object IdiomaticApp extends ZIOAppDefault {
 
-  case class DataService(quill: Quill.Postgres[Literal]) {
+  final case class DataService(quill: Quill.Postgres[Literal]) {
     import quill._
-    val people       = quote(query[Person])
-    def peopleByName = quote((name: String) => people.filter(p => p.name == name))
+    val people: Quoted[EntityQuery[Person]]       = quote(query[Person])
+    def peopleByName: Quoted[String => EntityQuery[Person]] = quote((name: String) => people.filter(p => p.name == name))
   }
-  case class ApplicationLive(dataService: DataService) {
+  final case class ApplicationLive(dataService: DataService) {
     import dataService.quill._
     import dataService.quill
     def getPeopleByName(name: String): ZIO[Any, SQLException, List[Person]] =
@@ -22,19 +23,19 @@ object IdiomaticApp extends ZIOAppDefault {
     def getAllPeople(): ZIO[Any, SQLException, List[Person]] = quill.run(dataService.people)
   }
   object Application {
-    def getPeopleByName(name: String) =
+    def getPeopleByName(name: String): ZIO[ApplicationLive with ApplicationLive,SQLException,List[Person]] =
       ZIO.serviceWithZIO[ApplicationLive](_.getPeopleByName(name))
-    def getAllPeople() =
+    def getAllPeople(): ZIO[ApplicationLive with ApplicationLive,SQLException,List[Person]] =
       ZIO.serviceWithZIO[ApplicationLive](_.getAllPeople())
   }
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 
-  val dataServiceLive = ZLayer.fromFunction(DataService.apply _)
-  val applicationLive = ZLayer.fromFunction(ApplicationLive.apply _)
-  val dataSourceLive  = Quill.DataSource.fromPrefix("testPostgresDB")
-  val postgresLive    = Quill.Postgres.fromNamingStrategy(Literal)
+  val dataServiceLive: ZLayer[Quill.Postgres[Literal],Nothing,DataService] = ZLayer.fromFunction(DataService.apply _)
+  val applicationLive: ZLayer[DataService,Nothing,ApplicationLive] = ZLayer.fromFunction(ApplicationLive.apply _)
+  val dataSourceLive: ZLayer[Any,Throwable,DataSource]  = Quill.DataSource.fromPrefix("testPostgresDB")
+  val postgresLive: ZLayer[DataSource,Nothing,Quill.Postgres[Literal.type]]    = Quill.Postgres.fromNamingStrategy(Literal)
 
-  override def run =
+  override def run: ZIO[Any,Throwable,Unit] =
     (for {
       joes      <- Application.getPeopleByName("Joe")
       _         <- printLine(joes)

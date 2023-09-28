@@ -20,7 +20,7 @@ class FreeVariablesSpec extends Spec {
     }
     "function" in {
       val q =
-        quote { (a: String) =>
+        quote { (_: String) =>
           s
         }
       FreeVariables(q.ast) mustEqual Set(IdentName("s"))
@@ -78,7 +78,7 @@ class FreeVariablesSpec extends Spec {
     "conditional outer join" in {
       val q =
         quote {
-          qr1.leftJoin(qr2).on((a, b) => a.s == s)
+          qr1.leftJoin(qr2).on((a, _) => a.s == s)
         }
       FreeVariables(q.ast) mustEqual Set(IdentName("s"))
     }
@@ -163,14 +163,14 @@ class FreeVariablesSpec extends Spec {
     }
     "option operators" - {
       "map" in {
-        val i = 1
+        
         val q = quote {
           qr1.map(t => t.o.map(_ == t.i))
         }
         FreeVariables(q.ast) mustBe empty
       }
       "forall" in {
-        val i = 1
+        
         val q = quote {
           qr1.filter(t => t.o.forall(_ == t.i))
         }
@@ -178,14 +178,14 @@ class FreeVariablesSpec extends Spec {
 
       }
       "exists" in {
-        val i = 1
+        
         val q = quote {
           qr1.filter(t => t.o.exists(_ == t.i))
         }
         FreeVariables(q.ast) mustBe empty
       }
       "contains" in {
-        val i = 1
+        
         val q = quote {
           qr1.filter(t => t.o.contains(t.i))
         }

@@ -11,7 +11,7 @@ class ProductMysqlJAsyncSpec extends ProductSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     await(testContext.run(quote(query[Product].delete)))
     ()
   }
@@ -57,7 +57,7 @@ class ProductMysqlJAsyncSpec extends ProductSpec {
     }
 
     "Single insert with value class" in {
-      case class Product(id: Id, description: String, sku: Long)
+      final case class Product(id: Id, description: String, sku: Long)
       val prd = Product(Id(0L), "test2", 2L)
       val q1 = quote {
         query[Product].insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returningGenerated(_.id)
@@ -76,7 +76,7 @@ class ProductMysqlJAsyncSpec extends ProductSpec {
 
     "supports casts from string to number" - {
       "toInt" in {
-        case class Product(id: Long, description: String, sku: Int)
+        final case class Product(id: Long, description: String, sku: Int)
         val queried = await {
           testContext.run {
             query[Product].filter(_.sku == lift("1004").toInt)

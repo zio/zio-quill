@@ -27,7 +27,7 @@ class SqlIdiomNamingSpec extends Spec {
 
   "uses the naming strategy" - {
 
-    case class SomeEntity(someColumn: Int)
+    final case class SomeEntity(someColumn: Int)
 
     "one transformation" in {
       val db = new SqlMirrorContext(MirrorSqlDialect, SnakeCase)
@@ -115,7 +115,7 @@ class SqlIdiomNamingSpec extends Spec {
     }
     "queries" - {
       "property empty check" in {
-        case class SomeEntity(optionValue: Option[Int])
+        final case class SomeEntity(optionValue: Option[Int])
         db.run(query[SomeEntity].filter(t => t.optionValue.isEmpty)).string mustEqual
           "SELECT t.option_value AS optionValue FROM some_entity t WHERE t.option_value IS NULL"
       }

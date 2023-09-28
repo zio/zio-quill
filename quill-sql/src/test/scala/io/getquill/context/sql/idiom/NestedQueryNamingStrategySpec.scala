@@ -1,7 +1,6 @@
 package io.getquill.context.sql.idiom
 
 import io.getquill.base.Spec
-import io.getquill.{EntityQuery, Quoted}
 import io.getquill.context.sql.testContextEscapeElements
 
 class NestedQueryNamingStrategySpec extends Spec {

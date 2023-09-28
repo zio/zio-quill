@@ -3,6 +3,7 @@ package io.getquill.context.sql.base
 import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.encoding.ArrayEncoding
+import io.getquill.{ EntityQuery, Quoted }
 
 trait ArrayOpsSpec extends Spec {
 
@@ -12,13 +13,13 @@ trait ArrayOpsSpec extends Spec {
 
   case class ArrayOps(id: Int, numbers: Seq[Int])
 
-  val entriesList = List(
+  val entriesList: List[ArrayOps] = List(
     ArrayOps(1, List(1, 2, 3)),
     ArrayOps(2, List(1, 4, 5)),
     ArrayOps(3, List(1, 4, 6))
   )
 
-  val entity = quote(query[ArrayOps])
+  val entity: Quoted[EntityQuery[ArrayOps]] = quote(query[ArrayOps])
 
   val insertEntries = quote {
     liftQuery(entriesList).foreach(e => entity.insertValue(e))
@@ -37,6 +38,6 @@ trait ArrayOpsSpec extends Spec {
     val `Ex 3 expected`   = List(2, 3)
 
     val `Ex 4 return empty` = quote(idByContains(10))
-    val `Ex 4 expected`     = Nil
+    val `Ex 4 expected`     = List.empty
   }
 }

@@ -26,7 +26,7 @@ class SqlContextSpec extends Spec {
     }
     "filter.map" in {
       val q = quote {
-        qr1.filter(t => t.i == lift(1)).map(t => lift(2L))
+        qr1.filter(t => t.i == lift(1)).map(_ => lift(2L))
       }
       val mirror = testContext.run(q)
       mirror.string mustEqual "SELECT ? FROM TestEntity t WHERE t.i = ?"
@@ -64,9 +64,9 @@ class SqlContextSpec extends Spec {
 
       def probe(sql: String): Try[Any] = null
 
-      def encoder[T]: Encoder[T] = (index: Index, value: T, row: PrepareRow, session: Session) => row
+      def encoder[T]: Encoder[T] = (_: Index, _: T, row: PrepareRow, _: Session) => row
 
-      def decoder[T]: Decoder[T] = (index: Index, row: ResultRow, session: Session) => row(index).asInstanceOf[T]
+      def decoder[T]: Decoder[T] = (index: Index, row: ResultRow, _: Session) => row(index).asInstanceOf[T]
 
       implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] = encoder[Option[T]]
 

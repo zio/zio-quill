@@ -7,7 +7,7 @@ class ProductJdbcSpec extends ProductSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     testContext.run(quote(query[Product].delete))
     ()
   }
@@ -27,7 +27,7 @@ class ProductJdbcSpec extends ProductSpec {
       product.id mustEqual inserted
     }
 
-    case class Foo(id: Long, description: String, sku: Long)
+    final case class Foo(id: Long, description: String, sku: Long)
 
     "Single insert with inlined free variable" in {
       val prd = Product(0L, "test1", 1L)
@@ -63,7 +63,7 @@ class ProductJdbcSpec extends ProductSpec {
 
     "supports casts from string to number" - {
       "toInt" in {
-        case class Product(id: Long, description: String, sku: Int)
+        final case class Product(id: Long, description: String, sku: Int)
         val queried = testContext.run {
           query[Product].filter(_.sku == lift("1004").toInt)
         }.head

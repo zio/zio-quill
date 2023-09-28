@@ -8,18 +8,18 @@ class OrientDBContextSpec extends Spec {
     "sync" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
+      final case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
       val select = quote {
         query[TestEntity].filter(_.id == lift(1))
       }
-      ctx.run(select) mustEqual List()
+      ctx.run(select) mustEqual List.empty
     }
   }
 
   "run non-batched action" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
+    final case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
     val update = quote {
       query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
     }
@@ -29,7 +29,7 @@ class OrientDBContextSpec extends Spec {
   "performIO" in {
     val ctx = orientdb.testSyncDB
     import ctx._
-    case class TestEntity(id: Int)
+    final case class TestEntity(id: Int)
     performIO(runIO(quote(query[TestEntity].filter(_.id == lift(1)))).transactional)
   }
 
@@ -37,8 +37,8 @@ class OrientDBContextSpec extends Spec {
     val ctx = orientdb.testSyncDB
     import ctx._
     val e: Extractor[Int] = (_, _) => 1
-    intercept[IllegalStateException](executeActionReturning("", (x, session) => (Nil, x), e, "")).getMessage mustBe
-      intercept[IllegalStateException](executeBatchActionReturning(Nil, e)).getMessage
+    intercept[IllegalStateException](executeActionReturning("", (x, _) => (List.empty, x), e, "")).getMessage mustBe
+      intercept[IllegalStateException](executeBatchActionReturning(List.empty, e)).getMessage
   }
 
   "probe" in {

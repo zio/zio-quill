@@ -9,23 +9,23 @@ import java.sql.SQLException
 
 object IdiomaticAppPlain {
 
-  case class DataService(quill: Quill.Postgres[Literal]) {
+  final case class DataService(quill: Quill.Postgres[Literal]) {
     import quill._
-    val people       = quote(query[Person])
-    def peopleByName = quote((name: String) => people.filter(p => p.name == name))
+    val people: Quoted[EntityQuery[Person]]       = quote(query[Person])
+    def peopleByName: Quoted[String => EntityQuery[Person]] = quote((name: String) => people.filter(p => p.name == name))
   }
-  case class ApplicationLive(dataService: DataService) {
+  final case class ApplicationLive(dataService: DataService) {
     import dataService.quill._
     def getPeopleByName(name: String): ZIO[Any, SQLException, List[Person]] = run(dataService.peopleByName(lift(name)))
     def getAllPeople(): ZIO[Any, SQLException, List[Person]]                = run(dataService.people)
   }
   object Application {
-    def getPeopleByName(name: String) =
+    def getPeopleByName(name: String): ZIO[ApplicationLive with ApplicationLive,SQLException,List[Person]] =
       ZIO.serviceWithZIO[ApplicationLive](_.getPeopleByName(name))
-    def getAllPeople() =
+    def getAllPeople(): ZIO[ApplicationLive with ApplicationLive,SQLException,List[Person]] =
       ZIO.serviceWithZIO[ApplicationLive](_.getAllPeople())
   }
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 
   def main(args: Array[String]): Unit = {
     val dataServiceLive = ZLayer.fromFunction(DataService.apply _)

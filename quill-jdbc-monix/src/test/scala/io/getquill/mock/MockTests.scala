@@ -14,19 +14,20 @@ import org.scalatest.matchers.should.Matchers._
 
 import scala.reflect.ClassTag
 import scala.util.Try
+import monix.execution.schedulers.SchedulerService
 
 class MockTests extends Spec with AsyncMockitoSugar {
   import scala.reflect.runtime.{universe => ru}
-  implicit val scheduler = Scheduler.io()
+  implicit val scheduler: SchedulerService = Scheduler.io()
 
   object MockResultSet {
-    def apply[T: ClassTag: ru.TypeTag](data: Seq[T]) = {
+    def apply[T: ClassTag: ru.TypeTag](data: Seq[T]): ResultSet = {
       val rs       = mock[ResultSet]
       var rowIndex = -1
 
       def introspection                = new Introspection(data(rowIndex))
       def getIndex(i: Int): Any        = introspection.getIndex(i)
-      def getColumn(name: String): Any = introspection.getField(name)
+      
 
       when(rs.next()) thenAnswer {
         rowIndex += 1
@@ -89,11 +90,11 @@ class MockTests extends Spec with AsyncMockitoSugar {
   }
 
   "stream is correctly closed when ending conn.setAutoCommit returns error but is caught" in {
-    val people = List(Person("Joe", 11), Person("Jack", 22))
+    List(Person("Joe", 11), Person("Jack", 22))
 
     val ds   = mock[MyDataSource]
     val conn = mock[Connection]
-    val stmt = mock[PreparedStatement]
+    mock[PreparedStatement]
 
     when(ds.getConnection) thenReturn conn
     when(conn.getAutoCommit) thenThrow (new SQLException(msg))
@@ -131,7 +132,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((_: Boolean) => ()) andThenThrow (new SQLException(msg))
 
     val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
@@ -176,13 +177,13 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((_: Boolean) => ()) andThenThrow (new SQLException(msg))
 
     val runner = new EffectWrapper {
       override def schedule[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def boundary[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def wrapClose(t: => Unit): Task[Unit] =
-        Task(t).onErrorHandle[Unit](e => ())
+        Task(t).onErrorHandle[Unit](_ => ())
     }
 
     val ctx = new PostgresMonixJdbcContext(Literal, ds, runner)

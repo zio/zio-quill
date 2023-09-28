@@ -11,8 +11,10 @@ import io.getquill.QuillSparkContext._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import io.getquill.{ Query, Quoted }
+import org.apache.spark.sql.SQLContext
 
-case class User(
+final case class User(
   id: String,
   login: String,
   gravatar_id: String,
@@ -20,13 +22,13 @@ case class User(
   avatar_url: String
 )
 
-case class Repo(
+final case class Repo(
   id: String,
   name: String,
   url: String
 )
 
-case class Activity(
+final case class Activity(
   id: String,
   `type`: String,
   actor: User,
@@ -37,7 +39,7 @@ case class Activity(
 
 object GitHubExample extends App {
 
-  val files =
+  val files: IndexedSeq[String] =
     for {
       year  <- 2017 to 2017
       month <- 10 to 10
@@ -45,7 +47,7 @@ object GitHubExample extends App {
       hour  <- 0 to 23
     } yield "%04d-%02d-%02d-%d".format(year, month, day, hour)
 
-  val f = Future.traverse(files) { name =>
+  val f: Future[IndexedSeq[Any]] = Future.traverse(files) { name =>
     Future {
       val file = new File(s"$name.json.gz")
       if (!file.exists()) {
@@ -57,7 +59,7 @@ object GitHubExample extends App {
 
   Await.result(f, 30.seconds)
 
-  implicit val sqlContext =
+  implicit val sqlContext: SQLContext =
     SparkSession
       .builder()
       .master("local[*]")
@@ -67,9 +69,9 @@ object GitHubExample extends App {
 
   import sqlContext.implicits._
 
-  val activities = liftQuery(sqlContext.read.json(files.map(n => s"$n.json.gz"): _*).as[Activity])
+  val activities: Quoted[Query[Activity]] = liftQuery(sqlContext.read.json(files.map(n => s"$n.json.gz"): _*).as[Activity])
 
-  val topStargazers = quote {
+  val topStargazers: Quoted[Query[(String, Long)]] = quote {
     activities
       .groupBy(_.actor)
       .map { case (actor, list) =>
@@ -80,7 +82,7 @@ object GitHubExample extends App {
       }(Ord.desc)
   }
 
-  val topProjects = quote {
+  val topProjects: Quoted[Query[(String, Long)]] = quote {
     activities
       .filter(_.`type` == "WatchEvent")
       .groupBy(_.repo)

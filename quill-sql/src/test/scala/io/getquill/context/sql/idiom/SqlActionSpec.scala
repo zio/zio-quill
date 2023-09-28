@@ -103,14 +103,14 @@ class SqlActionSpec extends Spec {
           val q = quote {
             query[TestEntity].insertValue(lift(TestEntity("s", 1, 2L, Some(1), true))).returning(_.l)
           }
-          val run = ctx.run(q).string mustEqual
+          ctx.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,l,o,b) VALUES (?, ?, ?, ?, ?)"
         }
         "returning generated" in {
           val q = quote {
             query[TestEntity].insertValue(lift(TestEntity("s", 1, 2L, Some(1), true))).returningGenerated(_.l)
           }
-          val run = testContext.run(q).string mustEqual
+          testContext.run(q).string mustEqual
             "INSERT INTO TestEntity (s,i,o,b) VALUES (?, ?, ?, ?)"
         }
         "returning with single column table" in testContext.withDialect(MirrorSqlDialectWithReturnMulti) { ctx =>
@@ -131,8 +131,8 @@ class SqlActionSpec extends Spec {
       }
       "update" - {
         "reuse field name - with no filter" in {
-          case class Timeslot(id: Int, booked: Int)
-          val timeslotId = 123
+          final case class Timeslot(id: Int, booked: Int)
+          
           val q = quote {
             query[Timeslot]
               .update(ts => ts.booked -> (ts.booked + lift(1)))
@@ -141,7 +141,7 @@ class SqlActionSpec extends Spec {
             "UPDATE Timeslot SET booked = (booked + ?)"
         }
         "reuse field name - with filter" in {
-          case class Timeslot(id: Int, booked: Int)
+          final case class Timeslot(id: Int, booked: Int)
           val timeslotId = 123
           val q = quote {
             query[Timeslot]
@@ -154,7 +154,7 @@ class SqlActionSpec extends Spec {
         "reuse field name - with filter (mysql)" in {
           val ctx = new SqlMirrorContext(MySQLDialect, Literal)
           import ctx._
-          case class Timeslot(id: Int, booked: Int)
+          final case class Timeslot(id: Int, booked: Int)
           val timeslotId = 123
           val q = quote {
             query[Timeslot]

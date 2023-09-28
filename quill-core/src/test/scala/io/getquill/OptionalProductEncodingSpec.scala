@@ -9,9 +9,9 @@ class OptionalProductEncodingSpec extends Spec {
   import ctx._
 
   "optional product with optional embedded row" in {
-    case class Name(first: String, last: Int)
-    case class Person(id: Int, name: Option[Name], age: Int)
-    case class Address(owner: Int, street: String)
+    final case class Name(first: String, last: Int)
+    final case class Person(id: Int, name: Option[Name], age: Int)
+    final case class Address(owner: Int, street: String)
 
     val result =
       ctx.run {
@@ -45,10 +45,10 @@ class OptionalProductEncodingSpec extends Spec {
   }
 
   "optional product with multiple nested optional embeds" in {
-    case class InnerName(title: Int, last: String)
-    case class Name(first: String, last: Option[InnerName])
-    case class Address(owner: Int, street: String)
-    case class Person(id: Int, name: Option[Name])
+    final case class InnerName(title: Int, last: String)
+    final case class Name(first: String, last: Option[InnerName])
+    final case class Address(owner: Int, street: String)
+    final case class Person(id: Int, name: Option[Name])
 
     val result =
       ctx.run {
@@ -69,9 +69,9 @@ class OptionalProductEncodingSpec extends Spec {
   }
 
   "optional product with nested optional with optional leaf" in {
-    case class Name(first: String, last: Option[Int])
-    case class Address(owner: Int, street: String)
-    case class Person(id: Int, name: Option[Name], age: Int)
+    final case class Name(first: String, last: Option[Int])
+    final case class Address(owner: Int, street: String)
+    final case class Person(id: Int, name: Option[Name], age: Int)
 
     val result =
       ctx.run {

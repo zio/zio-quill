@@ -4,6 +4,7 @@ import io.getquill.context.cassandra.CollectionsSpec
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
+import io.getquill.{ EntityQuery, Quoted }
 
 class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   val ctx = testDB
@@ -18,7 +19,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     uuidTimestamp: Map[UUID, Instant]
   )
 
-  val e = MapsEntity(
+  val e: MapsEntity = MapsEntity(
     1,
     Map("1"               -> BigDecimal(1)),
     Map(1                 -> 1d, 2 -> 2d, 3 -> 3d),
@@ -26,7 +27,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     Map(true              -> LocalDate.now()),
     Map(UUID.randomUUID() -> Instant.now())
   )
-  val q = quote(query[MapsEntity])
+  val q: Quoted[EntityQuery[MapsEntity]] = quote(query[MapsEntity])
 
   "Map encoders/decoders" in {
     await {
@@ -40,13 +41,13 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Empty maps and optional fields" in {
-    case class Entity(
+    final case class Entity(
       id: Int,
       textDecimal: Option[Map[String, BigDecimal]],
       intDouble: Option[Map[Int, Double]],
       longFloat: Map[Long, Float]
     )
-    val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map())
+    val e = Entity(1, Some(Map("1" -> BigDecimal(1))), None, Map.empty)
     val q = quote(querySchema[Entity]("MapsEntity"))
 
     await {
@@ -60,7 +61,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Mapped encoding for CassandraType" in {
-    case class StrEntity(id: Int, textDecimal: Map[StrWrap, BigDecimal])
+    final case class StrEntity(id: Int, textDecimal: Map[StrWrap, BigDecimal])
     val e = StrEntity(1, Map(StrWrap("1") -> BigDecimal(1)))
     val q = quote(querySchema[StrEntity]("MapsEntity"))
 
@@ -75,7 +76,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   }
 
   "Mapped encoding for CassandraMapper types" in {
-    case class IntEntity(id: Int, intDouble: Map[IntWrap, Double])
+    final case class IntEntity(id: Int, intDouble: Map[IntWrap, Double])
     val e = IntEntity(1, Map(IntWrap(1) -> 1d))
     val q = quote(querySchema[IntEntity]("MapsEntity"))
 
@@ -99,7 +100,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
         res2 <- ctx.run(mapFroz.filter(_.id == lift(Map(1 -> false))))
       } yield {
         res1 mustBe List(e)
-        res2 mustBe Nil
+        res2 mustBe List.empty
       }
     }
     await {
@@ -109,7 +110,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
         res2 <- ctx.run(mapFroz.filter(_.id.contains(2)).allowFiltering)
       } yield {
         res1 mustBe List(e)
-        res2 mustBe Nil
+        res2 mustBe List.empty
       }
     }
   }
@@ -124,7 +125,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
         res2 <- ctx.run(mapFroz.filter(_.id.containsValue(false)).allowFiltering)
       } yield {
         res1 mustBe List(e)
-        res2 mustBe Nil
+        res2 mustBe List.empty
       }
     }
   }

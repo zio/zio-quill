@@ -17,7 +17,7 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
   case class Emb1(e1: Emb2, e2: Option[Emb2])
   case class OptEmd(e1: Emb1, e2: Option[Emb1])
 
-  lazy val optEmdEnt = OptEmd(
+  lazy val optEmdEnt: OptEmd = OptEmd(
     Emb1(
       Emb2(Emb3("111"), Some(Emb3("112"))),
       Some(Emb2(Emb3("121"), Some(Emb3("122"))))
@@ -30,7 +30,7 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
     )
   )
 
-  val qrOptEmd = quote {
+  val qrOptEmd: Quoted[EntityQuery[OptEmd]] = quote {
     querySchema[OptEmd](
       "OptEmd",
       _.e1.e1.e1.value                      -> "value111",

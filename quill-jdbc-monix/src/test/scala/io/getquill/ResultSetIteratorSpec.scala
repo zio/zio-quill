@@ -10,10 +10,11 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers._
 
 import scala.collection.mutable.ArrayBuffer
+import com.zaxxer.hikari.HikariDataSource
 
 class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
 
-  val ds                 = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  val ds: HikariDataSource                 = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
   implicit val scheduler = Scheduler.global
 
   val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.default)
@@ -24,13 +25,13 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
   val peopleInsert =
     quote((p: Person) => query[Person].insertValue(p))
 
-  val peopleEntries = List(
+  val peopleEntries: List[Person] = List(
     Person("Alex", 60),
     Person("Bert", 55),
     Person("Cora", 33)
   )
 
-  override def beforeAll =
+  override def beforeAll: Unit =
     ctx.transaction {
       for {
         _ <- ctx.run(query[Person].delete)
@@ -44,7 +45,7 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
         Task {
           val stmt = conn.prepareStatement("select * from person")
           val rs =
-            new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+            new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, _) => { rs.getString(1) })
           val accum = ArrayBuffer[String]()
           while (rs.hasNext) accum += rs.next()
           accum
@@ -59,7 +60,7 @@ class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfte
       Task(ds.getConnection).bracket { conn =>
         Task {
           val stmt = conn.prepareStatement("select * from person where name = 'Alex'")
-          val rs   = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
+          val rs   = new ResultSetIterator(stmt.executeQuery(), conn, extractor = (rs, _) => { rs.getString(1) })
           rs.head
         }
       }(conn => Task(conn.close())).runSyncUnsafe()

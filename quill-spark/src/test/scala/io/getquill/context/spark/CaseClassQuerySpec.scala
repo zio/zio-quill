@@ -4,25 +4,25 @@ import io.getquill.base.Spec
 import org.apache.spark.sql.Dataset
 import org.scalatest.matchers.should.Matchers._
 
-case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
-case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
-case class AddressableContact(firstName: String, lastName: String, age: Int, street: String, zip: Int)
+final case class Contact(firstName: String, lastName: String, age: Int, addressFk: Int, extraInfo: String)
+final case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
+final case class AddressableContact(firstName: String, lastName: String, age: Int, street: String, zip: Int)
 
-case class ContactSimplifiedWithAddress(firstName: String, lastName: String, addressFk: Int)
-case class ContactSimplifiedRenamed(firstName: String, lastNameRenamed: String, firstReverse: String)
-case class ContactSimplifiedMapped(firstNameMapped: String, lastNameMapped: String, firstReverseMapped: String)
+final case class ContactSimplifiedWithAddress(firstName: String, lastName: String, addressFk: Int)
+final case class ContactSimplifiedRenamed(firstName: String, lastNameRenamed: String, firstReverse: String)
+final case class ContactSimplifiedMapped(firstNameMapped: String, lastNameMapped: String, firstReverseMapped: String)
 
-case class ContactAndAddress(c: Contact, a: Address)
-case class AddressAndOptionalContext(a: Address, c: Option[Contact])
-case class OptionalContextAndOptionalContext(c1: Option[Contact], c2: Option[Contact])
-case class AddressAndOptionalContextHolder(i: Int, aoc: Option[AddressAndOptionalContext])
-case class Note(owner: String, content: String)
+final case class ContactAndAddress(c: Contact, a: Address)
+final case class AddressAndOptionalContext(a: Address, c: Option[Contact])
+final case class OptionalContextAndOptionalContext(c1: Option[Contact], c2: Option[Contact])
+final case class AddressAndOptionalContextHolder(i: Int, aoc: Option[AddressAndOptionalContext])
+final case class Note(owner: String, content: String)
 
 class CaseClassQuerySpec extends Spec {
 
   val context = io.getquill.context.sql.testContext // hello
 
-  val expectedData = Seq(
+  val expectedData: Seq[ContactSimplifiedRenamed] = Seq(
     ContactSimplifiedRenamed("Alex", "Jones", "Alex".reverse),
     ContactSimplifiedRenamed("Bert", "James", "Bert".reverse),
     ContactSimplifiedRenamed("Cora", "Jasper", "Cora".reverse)
@@ -31,21 +31,21 @@ class CaseClassQuerySpec extends Spec {
   import testContext._
   import sqlContext.implicits._
 
-  val peopleList = Seq(
+  val peopleList: Seq[Contact] = Seq(
     Contact("Alex", "Jones", 60, 2, "foo"),
     Contact("Bert", "James", 55, 3, "bar"),
     Contact("Cora", "Jasper", 33, 3, "baz")
   )
   val peopleEntries = liftQuery(peopleList.toDS())
 
-  val addressList = Seq(
+  val addressList: Seq[Address] = Seq(
     Address(1, "123 Fake Street", 11234, "something"),
     Address(2, "456 Old Street", 45678, "something else"),
     Address(3, "789 New Street", 89010, "another thing")
   )
   val addressEntries = liftQuery(addressList.toDS())
 
-  val noteList = Seq(
+  val noteList: Seq[Note] = Seq(
     Note("Alex", "Foo"),
     Note("Alex", "Bar"),
     Note("Bert", "Baz"),
@@ -652,5 +652,5 @@ class CaseClassQuerySpec extends Spec {
   }
 
 }
-case class Person1(id: Long, name: String, age: Long, numeric: Long)
-case class PersonTotalNumerics(id: Long, name: String, numeric: Long)
+final case class Person1(id: Long, name: String, age: Long, numeric: Long)
+final case class PersonTotalNumerics(id: Long, name: String, numeric: Long)

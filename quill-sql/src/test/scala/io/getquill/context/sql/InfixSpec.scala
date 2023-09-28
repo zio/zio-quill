@@ -5,8 +5,6 @@ import io.getquill.MirrorSqlDialect
 import io.getquill.TestEntities
 import io.getquill.Literal
 import io.getquill.base.Spec
-import io.getquill.norm.EnableTrace
-import io.getquill.util.Messages.TraceType
 
 class InfixSpec extends Spec { // //
 
@@ -15,8 +13,8 @@ class InfixSpec extends Spec { // //
     val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal) with TestEntities
     import ctx._
 
-    case class Data(id: Int)
-    case class TwoValue(id: Int, value: Int)
+    final case class Data(id: Int)
+    final case class TwoValue(id: Int, value: Int)
 
     "preserve nesting where needed" in {
       val q = quote {
@@ -36,7 +34,7 @@ class InfixSpec extends Spec { // //
 
     "preserve nesting with single value" in {
       val q = quote {
-        query[Data].map(e => sql"RAND()".as[Int]).filter(r => r > 10).map(r => r + 1)
+        query[Data].map(_ => sql"RAND()".as[Int]).filter(r => r > 10).map(r => r + 1)
       }
       ctx.run(q).string mustEqual "SELECT e.x + 1 FROM (SELECT RAND() AS x FROM Data e) AS e WHERE e.x > 10"
     }
@@ -54,14 +52,14 @@ class InfixSpec extends Spec { // //
 
     "preserve nesting with single value binary op" in {
       val q = quote {
-        query[Data].map(e => sql"RAND()".as[Int] + 1).filter(r => r > 10).map(r => r + 1)
+        query[Data].map(_ => sql"RAND()".as[Int] + 1).filter(r => r > 10).map(r => r + 1)
       }
       ctx.run(q).string mustEqual "SELECT e.x + 1 FROM (SELECT RAND() + 1 AS x FROM Data e) AS e WHERE e.x > 10"
     }
 
     "preserve nesting with single value unary op" in {
       val q = quote {
-        query[Data].map(e => !sql"RAND()".as[Boolean]).filter(r => r == true).map(r => !r)
+        query[Data].map(_ => !sql"RAND()".as[Boolean]).filter(r => r == true).map(r => !r)
       }
       ctx.run(q).string mustEqual "SELECT NOT (e.x) FROM (SELECT NOT (RAND()) AS x FROM Data e) AS e WHERE e.x = true"
     }
@@ -88,7 +86,7 @@ class InfixSpec extends Spec { // //
     }
 
     "preserve nesting of query in query" in {
-      case class ThreeData(id: Int, value: Int, secondValue: Int)
+      final case class ThreeData(id: Int, value: Int, secondValue: Int)
 
       val q1 = quote {
         for {
@@ -105,7 +103,7 @@ class InfixSpec extends Spec { // //
     }
 
     "excluded infix values" - {
-      case class Person(id: Int, name: String, other: String, other2: String)
+      final case class Person(id: Int, name: String, other: String, other2: String)
 
       "should not be dropped" in {
         val q = quote {

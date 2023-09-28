@@ -23,16 +23,15 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
   }
 
   "encodes and decodes uuids" in {
-    case class EncodingUUIDTestEntity(v1: UUID)
+    final case class EncodingUUIDTestEntity(v1: UUID)
     val testUUID = UUID.fromString("e5240c08-6ee7-474a-b5e4-91f79c48338f")
 
     // delete old values
     val q0   = quote(query[EncodingUUIDTestEntity].delete)
-    val rez0 = runSyncUnsafe(testContext.run(q0))
+    runSyncUnsafe(testContext.run(q0))
 
     // insert new uuid
-    val rez1 =
-      runSyncUnsafe(testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
+    runSyncUnsafe(testContext.run(query[EncodingUUIDTestEntity].insertValue(lift(EncodingUUIDTestEntity(testUUID)))))
 
     // verify you can get the uuid back from the db
     val q2   = quote(query[EncodingUUIDTestEntity].map(p => p.v1))
@@ -44,15 +43,15 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
   "fails if the column has the wrong type" - {
     "numeric" in {
       runSyncUnsafe(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
-      case class EncodingTestEntity(v1: Int)
-      val e = intercept[IllegalStateException] {
+      final case class EncodingTestEntity(v1: Int)
+      intercept[IllegalStateException] {
         runSyncUnsafe(testContext.run(query[EncodingTestEntity]))
       }
     }
     "non-numeric" in {
       runSyncUnsafe(testContext.run(liftQuery(insertValues).foreach(e => insert(e))))
-      case class EncodingTestEntity(v1: Date)
-      val e = intercept[IllegalStateException] {
+      final case class EncodingTestEntity(v1: Date)
+      intercept[IllegalStateException] {
         runSyncUnsafe(testContext.run(query[EncodingTestEntity]))
       }
     }
@@ -82,7 +81,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
   }
 
   "decodes LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
+    final case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
     val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)

@@ -7,7 +7,7 @@ class PeopleJdbcSpec extends PeopleSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     testContext.transaction {
       testContext.run(query[Couple].delete)
       testContext.run(query[Person].delete)

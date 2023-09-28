@@ -30,19 +30,19 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
     "decode byte to" - {
       "short" in {
         prepareEncodingTestEntity()
-        case class EncodingTestEntity(v3: Short)
+        final case class EncodingTestEntity(v3: Short)
         val v3List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
         v3List.map(_.v3) must contain theSameElementsAs List(1: Byte, 0: Byte)
       }
       "int" in {
         prepareEncodingTestEntity()
-        case class EncodingTestEntity(v3: Int)
+        final case class EncodingTestEntity(v3: Int)
         val v3List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
         v3List.map(_.v3) must contain theSameElementsAs List(1, 0)
       }
       "long" in {
         prepareEncodingTestEntity()
-        case class EncodingTestEntity(v3: Long)
+        final case class EncodingTestEntity(v3: Long)
         val v3List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
         v3List.map(_.v3) must contain theSameElementsAs List(1L, 0L)
       }
@@ -50,32 +50,32 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
     "decode short to" - {
       "int" in {
         prepareEncodingTestEntity()
-        case class EncodingTestEntity(v5: Int)
+        final case class EncodingTestEntity(v5: Int)
         val v5List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
         v5List.map(_.v5) must contain theSameElementsAs List(23, 0)
       }
       "long" in {
         prepareEncodingTestEntity()
-        case class EncodingTestEntity(v5: Long)
+        final case class EncodingTestEntity(v5: Long)
         val v5List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
         v5List.map(_.v5) must contain theSameElementsAs List(23L, 0L)
       }
     }
     "decode int to long" in {
-      case class EncodingTestEntity(v6: Long)
+      final case class EncodingTestEntity(v6: Long)
       val v6List = Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
       v6List.map(_.v6) must contain theSameElementsAs List(33L, 0L)
     }
 
     "decode and encode any numeric as boolean" in {
-      case class EncodingTestEntity(v3: Boolean, v4: Boolean, v6: Boolean, v7: Boolean)
+      final case class EncodingTestEntity(v3: Boolean, v4: Boolean, v6: Boolean, v7: Boolean)
       Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
       ()
     }
   }
 
   "decode date types" in {
-    case class DateEncodingTestEntity(v1: Date, v2: Date, v3: Date)
+    final case class DateEncodingTestEntity(v1: Date, v2: Date, v3: Date)
     val entity = DateEncodingTestEntity(new Date, new Date, new Date)
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)
@@ -87,7 +87,7 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
   }
 
   "decode LocalDate and LocalDateTime types" in {
-    case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: LocalDateTime)
+    final case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: LocalDateTime)
     val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now, LocalDateTime.now)
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)
@@ -100,15 +100,15 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
   "fails if the column has the wrong type" - {
     "numeric" in {
       Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
-      case class EncodingTestEntity(v1: Int)
-      val e = intercept[IllegalStateException] {
+      final case class EncodingTestEntity(v1: Int)
+      intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }
     "non-numeric" in {
       Await.result(testContext.run(liftQuery(insertValues).foreach(e => insert(e))), Duration.Inf)
-      case class EncodingTestEntity(v1: Date)
-      val e = intercept[IllegalStateException] {
+      final case class EncodingTestEntity(v1: Date)
+      intercept[IllegalStateException] {
         Await.result(testContext.run(query[EncodingTestEntity]), Duration.Inf)
       }
     }

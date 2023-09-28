@@ -27,7 +27,7 @@ class TransactionalExecutionContextSpec extends Spec {
     val ec = new ExecutionContext {
       def execute(r: Runnable) = ???
       def reportFailure(t: Throwable) = {
-        val r = reported += t
+        reported += t
       }
     }
     val exception = new IllegalStateException

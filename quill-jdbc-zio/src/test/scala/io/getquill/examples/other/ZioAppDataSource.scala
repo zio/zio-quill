@@ -4,17 +4,19 @@ import io.getquill._
 import io.getquill.util.LoadConfig
 import zio.Console.printLine
 import zio.{ZEnvironment, ZIOAppDefault}
+import com.zaxxer.hikari.HikariDataSource
+import zio.{ ExitCode, URIO }
 
 object ZioAppDataSource extends ZIOAppDefault {
 
   object MyPostgresContext extends PostgresZioJdbcContext(Literal)
   import MyPostgresContext._
 
-  case class Person(name: String, age: Int)
+  final case class Person(name: String, age: Int)
 
-  def dataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  def dataSource: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  override def run = {
+  override def run: URIO[Any,ExitCode] = {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }

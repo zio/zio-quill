@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
+import java.nio.file.Path
 
 object SchemaNames {
   val simpleSnake   = `schema_snakecase`
@@ -31,7 +32,7 @@ object CodegenTestCaseRunner {
     }
   }
 
-  def apply(dbPrefix: ConfigPrefix, path: String) =
+  def apply(dbPrefix: ConfigPrefix, path: String): List[Path] =
     CodegenTestCases(dbPrefix).map { gen =>
       logger.info(s"Generating files for: ${dbPrefix.value} (${dbPrefix.packagePath}) with ${gen}")
       // Since auto-commit in enabled, need to wait for each test-case individually. Otherwise tests

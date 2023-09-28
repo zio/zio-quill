@@ -8,10 +8,11 @@ import org.apache.spark.sql.functions.{count => fcount, _}
 import io.getquill.QuillSparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.{ Row, SQLContext }
 
 object TopHashtagsExample extends App {
 
-  implicit val sqlContext =
+  implicit val sqlContext: SQLContext =
     SparkSession
       .builder()
       .master("local[*]")
@@ -19,7 +20,7 @@ object TopHashtagsExample extends App {
       .getOrCreate()
       .sqlContext
 
-  case class Tweet(text: String)
+  final case class Tweet(text: String)
 
   import sqlContext.implicits._
 
@@ -80,12 +81,12 @@ object TopHashtagsExample extends App {
       }
   }
 
-  val tweets = List(Tweet("some #hashTAG #h2"), Tweet("dds #h2 #hashtag #h2 #h3")).toDS()
+  val tweets: Dataset[Tweet] = List(Tweet("some #hashTAG #h2"), Tweet("dds #h2 #hashtag #h2 #h3")).toDS()
 
-  val rddR = rdd.topHashtags(tweets.rdd, 10).toList
-  val dfR  = dataframe.topHashtags(tweets.toDF(), 10).rdd.toLocalIterator.toList
-  val dsR  = dataset.topHashtags(tweets, 10).rdd.toLocalIterator.toList
-  val qR   = quill.topHashtags(tweets, 10).rdd.toLocalIterator.toList
+  val rddR: List[(String, BigInt)] = rdd.topHashtags(tweets.rdd, 10).toList
+  val dfR: List[Row]  = dataframe.topHashtags(tweets.toDF(), 10).rdd.toLocalIterator.toList
+  val dsR: List[(String, BigInt)]  = dataset.topHashtags(tweets, 10).rdd.toLocalIterator.toList
+  val qR: List[(String, Long)]   = quill.topHashtags(tweets, 10).rdd.toLocalIterator.toList
 
   println("rddR: " + rddR)
   println("dfR: " + dfR)

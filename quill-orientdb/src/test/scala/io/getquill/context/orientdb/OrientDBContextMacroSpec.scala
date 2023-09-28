@@ -44,7 +44,7 @@ class OrientDBContextMacroSpec extends Spec {
       val mirrorContext = orientdb.mirrorContext
       import mirrorContext._
       val q = quote {
-        qr1.filter(t => t.i == lift(1)).map(t => lift(2L))
+        qr1.filter(t => t.i == lift(1)).map(_ => lift(2L))
       }
       val mirror = mirrorContext.run(q)
       mirror.string mustEqual "SELECT ? FROM TestEntity WHERE i = ?"

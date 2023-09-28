@@ -22,7 +22,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
   }
 
   "Java8 times" in {
-    case class Java8Times(timestamps: Seq[LocalDateTime], dates: Seq[LocalDate])
+    final case class Java8Times(timestamps: Seq[LocalDateTime], dates: Seq[LocalDate])
     val jE = Java8Times(Seq(LocalDateTime.now()), Seq(LocalDate.now()))
     val jQ = quote(querySchema[Java8Times]("ArraysTestEntity"))
     await(ctx.run(jQ.insertValue(lift(jE))))
@@ -43,13 +43,13 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     val actual2 = await(ctx.run(q.filter(_.texts == lift(List("test2")))))
     baseEntityDeepCheck(actual1.head, e)
     actual1 mustEqual List(e)
-    actual2 mustEqual List()
+    actual2 mustEqual List.empty
   }
 
   // Need to have an actual value in the table in order for the decoder to go off. Previously,
   // there was guaranteed to be information there due to ordering of build artifacts but not anymore.
   "fail if found not an array" in {
-    case class RealEncodingTestEntity(
+    final case class RealEncodingTestEntity(
       v1: String,
       v2: BigDecimal,
       v3: Boolean,
@@ -119,7 +119,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
     }
     await(ctx.run(realEntity.insertValue(lift(insertValue))))
 
-    case class EncodingTestEntity(v1: List[String])
+    final case class EncodingTestEntity(v1: List[String])
     intercept[IllegalStateException](await(ctx.run(query[EncodingTestEntity])))
   }
 

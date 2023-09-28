@@ -18,7 +18,7 @@ object Quill {
       ZLayer.fromFunction((session: CassandraZioSession) => new Cassandra[N](naming, session))
   }
 
-  final case class Cassandra[+N <: NamingStrategy](val naming: N, session: CassandraZioSession)
+  class Cassandra[+N <: NamingStrategy](val naming: N, session: CassandraZioSession)
       extends CassandraRowContext[N]
       with ZioContext[CqlIdiom, N]
       with Context[CqlIdiom, N]

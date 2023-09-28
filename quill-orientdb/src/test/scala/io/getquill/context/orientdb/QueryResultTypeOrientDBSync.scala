@@ -7,7 +7,7 @@ class QueryResultTypeOrientDBSync extends Spec {
 
   case class OrderTestEntity(id: Int, i: Int)
 
-  val entries = List(
+  val entries: List[OrderTestEntity] = List(
     OrderTestEntity(1, 1),
     OrderTestEntity(2, 2),
     OrderTestEntity(3, 3)

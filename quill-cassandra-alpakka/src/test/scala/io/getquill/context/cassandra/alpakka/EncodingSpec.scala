@@ -39,18 +39,18 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
 
   "mappedEncoding" in {
     import testDB._
-    case class A()
-    case class B()
-    val a1: Encoder[A] = encoder((b, c, d, s) => d)
-    val a2: Decoder[A] = decoder((b, c, s) => A())
+    final case class A()
+    final case class B()
+    val a1: Encoder[A] = encoder((_, _, d, _) => d)
+    val a2: Decoder[A] = decoder((_, _, _) => A())
     mappedDecoder(MappedEncoding[A, B](_ => B()), a2).isInstanceOf[CassandraDecoder[B]] mustBe true
     mappedEncoder(MappedEncoding[B, A](_ => A()), a1).isInstanceOf[CassandraEncoder[B]] mustBe true
   }
 
   "date and timestamps" - {
     import testDB._
-    case class Java8Types(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
-    case class CasTypes(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
+    final case class Java8Types(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
+    final case class CasTypes(v9: LocalDate, v11: Instant, o9: Option[ZonedDateTime], id: Int = 1, v1: String = "")
 
     "mirror" in {
       implicitly[Encoder[LocalDate]]

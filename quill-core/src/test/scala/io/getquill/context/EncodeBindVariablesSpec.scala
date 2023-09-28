@@ -27,8 +27,8 @@ class EncodeBindVariablesSpec extends Spec {
   }
 
   "fails if there isn't an encoder for the bound value" in {
-    val q = quote { (i: Thread) =>
-      qr1.map(t => i)
+    quote { (i: Thread) =>
+      qr1.map(_ => i)
     }
     "testContext.run(q)(new Thread)" mustNot compile
   }
@@ -37,15 +37,15 @@ class EncodeBindVariablesSpec extends Spec {
     implicit val doubleEncoder = testContext.encoder[Double]
     val d                      = 1d
     val q = quote {
-      qr1.map(t => lift(d))
+      qr1.map(_ => lift(d))
     }
     testContext.run(q).prepareRow mustEqual Row(1d)
   }
 
   "fails for not value class without encoder" in {
-    case class NotValueClass(value: Int)
-    case class Entity(x: NotValueClass)
-    val q = quote { (x: NotValueClass) =>
+    final case class NotValueClass(value: Int)
+    final case class Entity(x: NotValueClass)
+    quote { (x: NotValueClass) =>
       query[Entity].filter(_.x == x)
     }
     "testContext.run(q)(NotValueClass(1))" mustNot compile

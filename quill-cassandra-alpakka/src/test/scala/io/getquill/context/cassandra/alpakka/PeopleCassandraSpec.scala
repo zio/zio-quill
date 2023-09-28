@@ -9,7 +9,7 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
 
   case class Person(id: Int, name: String, age: Int)
 
-  val entries = List(
+  val entries: List[Person] = List(
     Person(1, "Bob", 30),
     Person(2, "Gus", 40),
     Person(3, "Pet", 20),
@@ -17,7 +17,7 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
     Person(5, "Dre", 60)
   )
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     await {
       testDB.run(query[Person].delete)
     }
@@ -27,11 +27,11 @@ class PeopleCassandraSpec extends CassandraAlpakkaSpec {
     ()
   }
 
-  val qByIds = quote { (ids: Query[Int]) =>
+  val qByIds: Quoted[Query[Int] => EntityQuery[Person]] = quote { (ids: Query[Int]) =>
     query[Person].filter(p => ids.contains(p.id))
   }
 
-  val q = quote {
+  val q: Quoted[EntityQuery[Person]] = quote {
     query[Person]
   }
 

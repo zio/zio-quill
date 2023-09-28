@@ -8,7 +8,7 @@ import io.getquill.Ord
 
 class SqliteDialectSpec extends OnConflictSpec {
 
-  val ctx = new SqlMirrorContext(SqliteDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[SqliteDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(SqliteDialect, Literal) with TestEntities
   import ctx._
 
   "sortBy doesn't specify nulls ordering" - {
@@ -31,7 +31,7 @@ class SqliteDialectSpec extends OnConflictSpec {
   }
 
   "transforms boolean literals into 0/1" in {
-    ctx.run(qr1.map(t => (true, false))).string mustEqual
+    ctx.run(qr1.map(_ => (true, false))).string mustEqual
       "SELECT 1 AS _1, 0 AS _2 FROM TestEntity t"
   }
 

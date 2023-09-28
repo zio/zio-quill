@@ -1,6 +1,7 @@
 package io.getquill.context.sql
 
 import io.getquill.base.Spec
+import io.getquill.Quoted
 
 trait OptionQuerySpec extends Spec {
 
@@ -17,7 +18,7 @@ trait OptionQuerySpec extends Spec {
   val peopleInsert =
     quote((p: Contact) => query[Contact].insertValue(p))
 
-  val peopleEntries = List(
+  val peopleEntries: List[Contact] = List(
     Contact("Alex", "Jones", 60, Option(1), "foo"),
     Contact("Bert", "James", 55, Option(2), "bar"),
     Contact("Cora", "Jasper", 33, None, "baz")
@@ -26,7 +27,7 @@ trait OptionQuerySpec extends Spec {
   val addressInsert =
     quote((c: Address) => query[Address].insertValue(c))
 
-  val addressEntries = List(
+  val addressEntries: List[Address] = List(
     Address(1, "123 Fake Street", 11234, Some("something")),
     Address(2, "456 Old Street", 45678, Some("something else")),
     Address(3, "789 New Street", 89010, None),
@@ -35,7 +36,7 @@ trait OptionQuerySpec extends Spec {
 
   val taskInsert = quote((t: Task) => query[Task].insertValue(t))
 
-  val taskEntries = List(
+  val taskEntries: List[Task] = List(
     Task(Some("Feed the dogs"), Some("Feed the cats")),
     Task(Some("Feed the dogs"), None),
     Task(None, Some("Feed the cats")),
@@ -119,7 +120,7 @@ trait OptionQuerySpec extends Spec {
 
   case class NormalizedContact(name: String, addressFk: Option[Int])
 
-  def normalizeAddress = quote { (addressFk: Option[Int]) =>
+  def normalizeAddress: Quoted[Option[Int] => Int] = quote { (addressFk: Option[Int]) =>
     addressFk.getOrElse(111)
   }
 

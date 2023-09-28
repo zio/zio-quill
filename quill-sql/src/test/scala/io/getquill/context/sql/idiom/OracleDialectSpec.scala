@@ -5,7 +5,7 @@ import io.getquill.base.Spec
 
 class OracleDialectSpec extends Spec {
 
-  val ctx = new SqlMirrorContext(OracleDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[OracleDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(OracleDialect, Literal) with TestEntities
   import ctx._
 
   "uses 'mod' function" in {
@@ -57,13 +57,13 @@ class OracleDialectSpec extends Spec {
         "INSERT INTO TestEntity (s,o,b) VALUES (?, ?, ?)"
     }
     "returning - multiple fields + operations - should not compile" in {
-      val q = quote {
+      quote {
         qr1.insertValue(lift(TestEntity("s", 1, 2L, Some(3), true)))
       }
       "ctx.run(q.returning(r => (r.i, r.l + 1))).string" mustNot compile
     }
     "returning generated - multiple fields + operations - should not compile" in {
-      val q = quote {
+      quote {
         qr1.insertValue(lift(TestEntity("s", 1, 2L, Some(3), true)))
       }
       "ctx.run(q.returningGenerated(r => (r.i, r.l + 1))).string" mustNot compile
@@ -112,15 +112,15 @@ class OracleDialectSpec extends Spec {
   "literal booleans" - {
     "boolean expressions" - {
       "uses 1 = 1 instead of true" in {
-        ctx.run(qr4.filter(t => true)).string mustEqual
+        ctx.run(qr4.filter(_ => true)).string mustEqual
           "SELECT t.i FROM TestEntity4 t WHERE 1 = 1"
       }
       "uses 1 = 0 instead of false" in {
-        ctx.run(qr4.filter(t => false)).string mustEqual
+        ctx.run(qr4.filter(_ => false)).string mustEqual
           "SELECT t.i FROM TestEntity4 t WHERE 1 = 0"
       }
       "uses 1 = 0 and 1 = 1 altogether" in {
-        ctx.run(qr4.filter(t => false).filter(t => true)).string mustEqual
+        ctx.run(qr4.filter(_ => false).filter(_ => true)).string mustEqual
           "SELECT t.i FROM TestEntity4 t WHERE 1 = 0 AND 1 = 1"
       }
     }
@@ -139,13 +139,13 @@ class OracleDialectSpec extends Spec {
       }
     }
     "boolean values and expressions together" in {
-      ctx.run(qr4.filter(t => true).filter(t => false).map(t => (t.i, false, true))).string mustEqual
+      ctx.run(qr4.filter(_ => true).filter(_ => false).map(t => (t.i, false, true))).string mustEqual
         """SELECT t.i AS "_1", 0 AS "_2", 1 AS "_3" FROM TestEntity4 t WHERE 1 = 1 AND 1 = 0"""
     }
     "if" - {
       "simple booleans" in {
         val q = quote {
-          qr1.map(t => if (true) true else false)
+          qr1.map(_ => if (true) true else false)
         }
         ctx.run(q).string mustEqual
           "SELECT CASE WHEN 1 = 1 THEN 1 ELSE 0 END FROM TestEntity t"
@@ -153,7 +153,7 @@ class OracleDialectSpec extends Spec {
       "nested conditions" - {
         "inside then" in {
           val q = quote {
-            qr1.map(t =>
+            qr1.map(_ =>
               if (true) {
                 if (false) true else false
               } else true
@@ -164,14 +164,14 @@ class OracleDialectSpec extends Spec {
         }
         "inside else" in {
           val q = quote {
-            qr1.map(t => if (true) true else if (false) true else false)
+            qr1.map(_ => if (true) true else if (false) true else false)
           }
           ctx.run(q).string mustEqual
             "SELECT CASE WHEN 1 = 1 THEN 1 WHEN 1 = 0 THEN 1 ELSE 0 END FROM TestEntity t"
         }
         "inside both" in {
           val q = quote {
-            qr1.map(t =>
+            qr1.map(_ =>
               if (true) {
                 if (false) true else false
               } else {

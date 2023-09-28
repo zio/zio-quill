@@ -31,7 +31,7 @@ class StreamResultsOrBlowUpSpec extends Spec {
   // that will force jdbc to load the entire ResultSet into memory and crash this test.
   val doBlowUp = false
 
-  val ctx = new PostgresMonixJdbcContext(Literal, "testPostgresDB", EffectWrapper.default) {
+  val ctx: PostgresMonixJdbcContext[Literal.type] = new PostgresMonixJdbcContext(Literal, "testPostgresDB", EffectWrapper.default) {
     override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
       val stmt =
         conn.prepareStatement(

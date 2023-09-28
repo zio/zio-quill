@@ -19,7 +19,7 @@ trait WithStandardCodegen {
     entityNamingStrategy: NameParser = LiteralNames,
     entityNamespacer: Namespacer[JdbcTableMeta] = ts => ts.tableSchema.getOrElse(defaultNamespace),
     entityMemberNamer: JdbcQuerySchemaNaming = ts => ts.tableName.snakeToLowerCamel
-  ) =
+  ): JdbcGeneratorBase =
     new JdbcGeneratorBase(() => {
       DriverManager.getConnection(
         s"jdbc:h2:mem:sample;INIT=RUNSCRIPT FROM 'classpath:h2_schema_precursor.sql'\\;RUNSCRIPT FROM 'classpath:${schemaConfig.fileName}'",

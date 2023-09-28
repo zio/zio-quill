@@ -7,9 +7,9 @@ import io.getquill.MirrorContexts.testContext._
 
 import scala.language.reflectiveCalls
 
-case class CustomValue(i: Int) extends AnyVal
+final case class CustomValue(i: Int) extends AnyVal
 
-case class CustomGenericValue[T](v: T) extends AnyVal
+final case class CustomGenericValue[T](v: T) extends AnyVal
 
 class CustomPrivateConstructorValue private (val i: Int) extends AnyVal
 
@@ -18,9 +18,9 @@ object CustomPrivateConstructorValue {
 }
 
 // Tests self lifting of `AnyVal`
-case class Address(id: AddressId)
+final case class Address(id: AddressId)
 
-case class AddressId(value: Long) extends AnyVal {
+final case class AddressId(value: Long) extends AnyVal {
 
   def `inside quotation` = quote {
     query[Address].filter(_.id == lift(this))

@@ -3,6 +3,7 @@ package io.getquill.context.sql.base
 import io.getquill.context.sql.SqlContext
 import io.getquill.Query
 import io.getquill.base.Spec
+import io.getquill.Quoted
 
 trait DepartmentsSpec extends Spec {
 
@@ -21,7 +22,7 @@ trait DepartmentsSpec extends Spec {
       query[Department].insertValue(dpt)
     }
 
-  val departmentEntries =
+  val departmentEntries: List[Department] =
     List(
       Department("Product"),
       Department("Quality"),
@@ -34,7 +35,7 @@ trait DepartmentsSpec extends Spec {
       query[Employee].insertValue(emp)
     }
 
-  val employeeEntries =
+  val employeeEntries: List[Employee] =
     List(
       Employee("Alex", "Product"),
       Employee("Bert", "Product"),
@@ -49,7 +50,7 @@ trait DepartmentsSpec extends Spec {
       query[Task].insertValue(tsk)
     }
 
-  val taskEntries =
+  val taskEntries: List[Task] =
     List(
       Task("Alex", "build"),
       Task("Bert", "build"),
@@ -85,7 +86,7 @@ trait DepartmentsSpec extends Spec {
 
   val `Example 8 expected result` = List("Quality", "Research")
 
-  def any[T] =
+  def any[T]: Quoted[Query[T] => ((T => Boolean) => Boolean)] =
     quote { (xs: Query[T]) => (p: T => Boolean) =>
       (for {
         x <- xs if (p(x))

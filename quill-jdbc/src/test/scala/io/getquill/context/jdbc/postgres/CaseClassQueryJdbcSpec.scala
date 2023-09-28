@@ -8,7 +8,7 @@ class CaseClassQueryJdbcSpec extends CaseClassQuerySpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     testContext.transaction {
       testContext.run(query[Contact].delete)
       testContext.run(query[Address].delete)

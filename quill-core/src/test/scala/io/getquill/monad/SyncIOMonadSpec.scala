@@ -7,7 +7,7 @@ class SyncIOMonadSpec extends IOMonadSpec {
   override val ctx = MirrorContexts.testContext
   import ctx._
 
-  override def eval[T](io: IO[T, _]) =
+  override def eval[T](io: IO[T, _]): T =
     performIO[T](io)
 
   override def resultValue[T](x: T): Result[T] = x

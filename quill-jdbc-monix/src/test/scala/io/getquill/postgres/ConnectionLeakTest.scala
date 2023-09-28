@@ -9,17 +9,18 @@ import io.getquill.util.LoadConfig
 import monix.execution.Scheduler
 
 import scala.util.Random
+import com.zaxxer.hikari.HikariDataSource
 
 class ConnectionLeakTest extends ProductSpec {
 
   implicit val scheduler = Scheduler.global
 
-  val dataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
+  val dataSource: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
 
   val context = new PostgresMonixJdbcContext(Literal, dataSource, EffectWrapper.default)
   import context._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     context.run(quote(query[Product].delete)).runSyncUnsafe()
     ()
   }

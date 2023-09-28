@@ -72,7 +72,7 @@ class QuillServiceSpec extends ZioSpec {
       testContext
         .prepareParams(
           "select * from Person where name=? and age > ?",
-          (ps, session) => (List("Sarah", 127), ps)
+          (ps, _) => (List("Sarah", 127), ps)
         )
         .runSyncUnsafe() mustEqual List("127", "'Sarah'")
     }

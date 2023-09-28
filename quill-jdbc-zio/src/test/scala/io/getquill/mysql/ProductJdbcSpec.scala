@@ -9,7 +9,7 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
   val context = testContext
   import testContext._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     super.beforeAll()
     testContext.run(quote(query[Product].delete)).runSyncUnsafe()
     ()

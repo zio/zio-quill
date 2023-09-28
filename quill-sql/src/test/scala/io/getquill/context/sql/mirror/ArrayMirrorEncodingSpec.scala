@@ -5,13 +5,14 @@ import java.util.Date
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
 import io.getquill.context.sql.testContext
+import io.getquill.{ EntityQuery, Quoted }
 
 class ArrayMirrorEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext
 
   import ctx._
 
-  val q = quote(query[ArraysTestEntity])
+  val q: Quoted[EntityQuery[ArraysTestEntity]] = quote(query[ArraysTestEntity])
 
   "Support all sql base types and `Seq` implementers" in {
     val insertStr = ctx.run(q.insertValue(lift(e))).string

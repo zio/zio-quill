@@ -2,8 +2,9 @@ package io.getquill.context.sql
 
 import io.getquill.Query
 import io.getquill.base.Spec
+import io.getquill.{ ActionReturning, EntityQuery, Quoted }
 
-case class Id(value: Long) extends AnyVal
+final case class Id(value: Long) extends AnyVal
 
 trait ProductSpec extends Spec {
 
@@ -13,7 +14,7 @@ trait ProductSpec extends Spec {
 
   case class Product(id: Long, description: String, sku: Long)
 
-  val product = quote {
+  val product: Quoted[EntityQuery[Product]] = quote {
     query[Product]
   }
 
@@ -25,17 +26,17 @@ trait ProductSpec extends Spec {
     b.foreach(p => productInsert.apply(p))
   }
 
-  def productById = quote { (id: Long) =>
+  def productById: Quoted[Long => EntityQuery[Product]] = quote { (id: Long) =>
     product.filter(_.id == id)
   }
 
-  val productEntries = List(
+  val productEntries: List[Product] = List(
     Product(0L, "Notebook", 1001L),
     Product(0L, "Soap", 1002L),
     Product(0L, "Pencil", 1003L)
   )
 
-  val productSingleInsert = quote {
+  val productSingleInsert: Quoted[ActionReturning[Product,Long]] = quote {
     product.insert(_.id -> 0, _.description -> "Window", _.sku -> 1004L).returningGenerated(_.id)
   }
 }

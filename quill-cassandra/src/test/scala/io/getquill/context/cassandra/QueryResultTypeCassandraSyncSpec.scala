@@ -6,7 +6,7 @@ class QueryResultTypeCassandraSyncSpec extends QueryResultTypeCassandraSpec {
 
   import context._
 
-  override def beforeAll = {
+  override def beforeAll: Unit = {
     context.run(deleteAll)
     context.run(liftQuery(entries).foreach(e => insert(e)))
     ()

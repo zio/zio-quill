@@ -1,8 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
 import io.getquill.context.sql.base.BatchUpdateValuesSpec
-import io.getquill.norm.EnableTrace
-import io.getquill.util.Messages.TraceType
 
 class BatchUpdateValuesJdbcSpec extends BatchUpdateValuesSpec { //
 
