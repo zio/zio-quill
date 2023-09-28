@@ -11,7 +11,7 @@ trait Encoders {
   type EncoderSqlType = SqlTypes.SqlTypes
 
   case class AsyncEncoder[T](sqlType: DecoderSqlType)(implicit encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session): PrepareRow =
       encoder.apply(index, value, row, session)
   }
 

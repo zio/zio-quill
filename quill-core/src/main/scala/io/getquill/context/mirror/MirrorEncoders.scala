@@ -14,12 +14,12 @@ trait MirrorEncoders {
   override type Session    = MirrorSession
 
   case class MirrorEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session): PrepareRow =
       encoder(index, value, row, session)
   }
 
   def encoder[T]: Encoder[T] =
-    MirrorEncoder((index: Index, value: T, row: PrepareRow, session: Session) => row.add(value))
+    MirrorEncoder((_: Index, value: T, row: PrepareRow, _: Session) => row.add(value))
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], e: Encoder[O]): Encoder[I] =
     MirrorEncoder((index: Index, value: I, row: PrepareRow, session: Session) =>

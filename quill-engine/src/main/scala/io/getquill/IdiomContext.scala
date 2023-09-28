@@ -4,12 +4,12 @@ import io.getquill.ast.{Ast, CollectAst}
 import io.getquill.norm.TranspileConfig
 import io.getquill.ast
 
-case class IdiomContext(config: TranspileConfig, queryType: IdiomContext.QueryType) {
+final case class IdiomContext(config: TranspileConfig, queryType: IdiomContext.QueryType) {
   def traceConfig = config.traceConfig
 }
 
 object IdiomContext {
-  def Empty = IdiomContext(TranspileConfig.Empty, QueryType.Insert)
+  def Empty: IdiomContext = IdiomContext(TranspileConfig.Empty, QueryType.Insert)
   sealed trait QueryType {
     def isBatch: Boolean
     def batchAlias: Option[String]
@@ -20,8 +20,8 @@ object IdiomContext {
     case object Update extends Regular
     case object Delete extends Regular
 
-    case class BatchInsert(foreachAlias: String) extends Batch { val batchAlias = Some(foreachAlias) }
-    case class BatchUpdate(foreachAlias: String) extends Batch { val batchAlias = Some(foreachAlias) }
+    final case class BatchInsert(foreachAlias: String) extends Batch { val batchAlias: Some[String] = Some(foreachAlias) }
+    final case class BatchUpdate(foreachAlias: String) extends Batch { val batchAlias: Some[String] = Some(foreachAlias) }
 
     sealed trait Regular extends QueryType { val isBatch = false; val batchAlias = None }
     sealed trait Batch   extends QueryType { val isBatch = true                         }
@@ -35,7 +35,7 @@ object IdiomContext {
     }
 
     object Batch {
-      def unapply(qt: QueryType) =
+      def unapply(qt: QueryType): Option[String] =
         qt match {
           case BatchInsert(foreachAlias) => Some(foreachAlias)
           case BatchUpdate(foreachAlias) => Some(foreachAlias)

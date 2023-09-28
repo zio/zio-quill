@@ -7,7 +7,6 @@ import io.getquill.util.Messages.fail
 import java.time.{LocalDate, LocalDateTime, ZoneId}
 import java.util
 import java.util.Date
-import scala.collection.compat._
 import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 

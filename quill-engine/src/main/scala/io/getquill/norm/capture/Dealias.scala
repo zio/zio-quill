@@ -5,7 +5,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.{Interpolator, TraceConfig}
 import io.getquill.util.Messages.TraceType
 
-case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends StatefulTransformer[Option[Ident]] {
+final case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends StatefulTransformer[Option[Ident]] {
 
   val interp = new Interpolator(TraceType.Standard, traceConfig, 3)
   import interp._
@@ -80,14 +80,14 @@ case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends State
 }
 
 object Dealias {
-  def apply(query: Query)(traceConfig: TraceConfig) =
+  def apply(query: Query)(traceConfig: TraceConfig): Query =
     new Dealias(None, traceConfig)(query) match {
       case (q, _) => q
     }
 }
 
 class DealiasApply(traceConfig: TraceConfig) {
-  def apply(query: Query) =
+  def apply(query: Query): Query =
     new Dealias(None, traceConfig)(query) match {
       case (q, _) => q
     }

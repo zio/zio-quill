@@ -12,7 +12,7 @@ import io.getquill.util.TraceConfig
 
 class AdHocReduction(traceConfig: TraceConfig) {
 
-  def unapply(q: Query) =
+  def unapply(q: Query): Option[Query] =
     q match {
 
       // ---------------------------

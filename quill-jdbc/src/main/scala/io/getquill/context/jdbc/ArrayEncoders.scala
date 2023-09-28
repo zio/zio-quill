@@ -6,7 +6,6 @@ import java.time.LocalDate
 import java.util.Date
 
 import io.getquill.context.sql.encoding.ArrayEncoding
-import scala.collection.compat._
 
 trait ArrayEncoders extends ArrayEncoding {
   self: JdbcContextTypes[_, _] =>

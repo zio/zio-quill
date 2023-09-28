@@ -8,9 +8,9 @@ trait CollectionDecoders {
   this: OrientDBSessionContext[_] =>
 
   implicit def listDecoder[T]: Decoder[List[T]] =
-    decoder((index, row, session) => row.field[java.util.List[T]](row.fieldNames()(index)).asScala.toList)
+    decoder((index, row, _) => row.field[java.util.List[T]](row.fieldNames()(index)).asScala.toList)
   implicit def setDecoder[T]: Decoder[Set[T]] =
-    decoder((index, row, session) => row.field[OTrackedSet[T]](row.fieldNames()(index)).asScala.toSet)
+    decoder((index, row, _) => row.field[OTrackedSet[T]](row.fieldNames()(index)).asScala.toSet)
   implicit def mapDecoder[K, V]: Decoder[Map[K, V]] =
-    decoder((index, row, session) => row.field[java.util.Map[K, V]](row.fieldNames()(index)).asScala.toMap[K, V])
+    decoder((index, row, _) => row.field[java.util.Map[K, V]](row.fieldNames()(index)).asScala.toMap[K, V])
 }

@@ -2,7 +2,6 @@ package io.getquill.context.monix
 
 import io.getquill.NamingStrategy
 import io.getquill.context.{Context, ExecutionInfo, ContextVerbStream}
-import io.getquill.mirrorContextWithQueryProbing.Runner
 import monix.eval.Task
 import monix.reactive.Observable
 

@@ -98,8 +98,8 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
         super.apply(q, level)
     }
 
-  case class FlattenNestedProperty(from: List[FromContext]) {
-    val inContext = InContext(from)
+  final case class FlattenNestedProperty(from: List[FromContext]) {
+    val inContext: InContext = InContext(from)
 
     def apply(p: Ast): Ast =
       p match {
@@ -122,7 +122,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
         case other => other
       }
 
-    def inside(ast: Ast) =
+    def inside(ast: Ast): Ast =
       Transform(ast) { case p: Property =>
         apply(p)
       }

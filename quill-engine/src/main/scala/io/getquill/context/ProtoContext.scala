@@ -79,7 +79,7 @@ class ExecutionInfo(val executionType: ExecutionType, queryAst: => Ast, queryTop
 object ExecutionInfo {
   def apply(executionType: ExecutionType, ast: => Ast, topLevelQuat: => Quat) =
     new ExecutionInfo(executionType, ast, topLevelQuat)
-  val unknown = ExecutionInfo(ExecutionType.Unknown, io.getquill.ast.NullValue, Quat.Unknown)
+  val unknown: ExecutionInfo = ExecutionInfo(ExecutionType.Unknown, io.getquill.ast.NullValue, Quat.Unknown)
 }
 
 trait AstSplicing

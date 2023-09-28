@@ -5,7 +5,7 @@ import io.getquill.util.TraceConfig
 
 class OrderTerms(traceConfig: TraceConfig) {
 
-  def unapply(q: Query) =
+  def unapply(q: Query): Option[Query] =
     q match {
 
       case Take(Map(a: GroupBy, b, c), d) => None

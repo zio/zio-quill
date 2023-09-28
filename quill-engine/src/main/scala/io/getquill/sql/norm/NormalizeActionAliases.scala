@@ -1,7 +1,6 @@
 package io.getquill.sql.norm
 
 import io.getquill.ast._
-import io.getquill.norm.BetaReduction
 
 object NormalizeFilteredActionAliases {
   private[getquill] def chooseAlias(entityName: String, batchAlias: Option[String]) = {
@@ -39,7 +38,7 @@ object HideInnerProperties extends StatelessTransformer {
     }
 }
 
-case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends StatelessTransformer {
+final case class NormalizeFilteredActionAliases(batchAlias: Option[String]) extends StatelessTransformer {
 
   override def apply(e: Action): Action =
     e match {

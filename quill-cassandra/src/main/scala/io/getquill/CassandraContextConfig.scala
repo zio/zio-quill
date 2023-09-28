@@ -4,7 +4,7 @@ import com.datastax.oss.driver.api.core.{CqlSession, CqlSessionBuilder}
 import com.typesafe.config.Config
 import io.getquill.context.cassandra.cluster.SessionBuilder
 
-case class CassandraContextConfig(config: Config) {
+final case class CassandraContextConfig(config: Config) {
   def preparedStatementCacheSize: Long =
     if (config.hasPath("preparedStatementCacheSize"))
       config.getLong("preparedStatementCacheSize")

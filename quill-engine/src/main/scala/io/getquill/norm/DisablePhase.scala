@@ -4,9 +4,9 @@ import io.getquill.norm.ConfigList._
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.TraceConfig
 
-case class TranspileConfig(disablePhases: List[OptionalPhase], traceConfig: TraceConfig)
+final case class TranspileConfig(disablePhases: List[OptionalPhase], traceConfig: TraceConfig)
 object TranspileConfig {
-  val Empty = TranspileConfig(List(), TraceConfig(List()))
+  val Empty: TranspileConfig = TranspileConfig(List.empty, TraceConfig(List.empty))
 }
 
 sealed trait OptionalPhase
@@ -14,7 +14,7 @@ object OptionalPhase {
   sealed trait ApplyMap extends OptionalPhase
   case object ApplyMap  extends ApplyMap
 
-  val all = List(ApplyMap)
+  val all: List[ApplyMap.type] = List(ApplyMap)
 }
 
 trait DisablePhase {

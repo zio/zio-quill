@@ -1,6 +1,6 @@
 package io.getquill.context.mirror
 
-case class MirrorSession(name: String)
+final case class MirrorSession(name: String)
 object MirrorSession {
-  def default = MirrorSession("DefaultMirrorSession")
+  def default: MirrorSession = MirrorSession("DefaultMirrorSession")
 }

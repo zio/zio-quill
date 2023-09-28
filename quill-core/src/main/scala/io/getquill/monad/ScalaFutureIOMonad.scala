@@ -33,7 +33,7 @@ trait ScalaFutureIOMonad extends IOMonad {
 
   def flatten[Y, M[X] <: IterableOnce[X]](
     seq: Sequence[Y, M, Effect]
-  )(implicit ec: ExecutionContext) = {
+  )(implicit ec: ExecutionContext): Future[M[Y]] = {
     val builder = seq.cbfResultToValue.newBuilder
     seq.in.iterator
       .foldLeft(Future.successful(builder)) { (fr, ioa) =>

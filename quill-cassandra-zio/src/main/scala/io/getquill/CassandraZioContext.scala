@@ -45,7 +45,7 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
     with Context[CqlIdiom, N]
     with Probing {
 
-  private val logger = ContextLogger(classOf[CassandraZioContext[_]])
+  ContextLogger(classOf[CassandraZioContext[_]])
 
   override type Error       = Throwable
   override type Environment = CassandraZioSession
@@ -94,7 +94,7 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
     cql: String,
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
-  )(info: ExecutionInfo, dc: Runner) = {
+  )(info: ExecutionInfo, dc: Runner): ZStream[CassandraZioSession,Throwable,T] = {
     val stream =
       for {
         csession <- ZStream.service[CassandraZioSession]

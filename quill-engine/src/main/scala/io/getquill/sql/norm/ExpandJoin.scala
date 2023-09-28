@@ -19,9 +19,9 @@ import io.getquill.norm.Normalize
  */
 class ExpandJoin(normalize: Normalize) {
 
-  def apply(q: Ast) = expand(q, None)
+  def apply(q: Ast): Ast = expand(q, None)
 
-  def expand(q: Ast, id: Option[Ident]) =
+  def expand(q: Ast, id: Option[Ident]): Ast =
     Transform(q) {
       case q @ Join(
             _,

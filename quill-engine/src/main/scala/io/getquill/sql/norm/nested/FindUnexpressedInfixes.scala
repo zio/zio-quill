@@ -31,7 +31,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect], traceConfig: TraceConf
   val interp = new Interpolator(NestedQueryExpansion, traceConfig, 3)
   import interp._
 
-  def apply(refs: List[OrderedSelect]) = {
+  def apply(refs: List[OrderedSelect]): List[OrderedSelect] = {
 
     def pathExists(path: List[Int]) =
       refs.map(_.order).contains(path)
@@ -44,7 +44,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect], traceConfig: TraceConf
       trace"Searching for infix: $ast in the sub-path $parentOrder".andLog()
       if (pathExists(parentOrder))
         trace"No infixes found" andContinue
-          List()
+          List.empty
       else
         ast match {
           case Tuple(values) =>
@@ -63,7 +63,7 @@ class FindUnexpressedInfixes(select: List[OrderedSelect], traceConfig: TraceConf
             trace"Found unexpressed infix inside $other in $parentOrder".andLog()
             List((other, parentOrder))
           case _ =>
-            List()
+            List.empty
         }
     }
 

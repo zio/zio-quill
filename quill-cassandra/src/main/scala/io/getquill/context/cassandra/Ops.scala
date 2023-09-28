@@ -2,6 +2,8 @@ package io.getquill.context.cassandra
 
 import io.getquill.{Action, Delete, EntityQuery, Insert, Query, Update}
 
+@SuppressWarnings(Array("scalafix:ExplicitResultTypes"))
+// noinspection TypeAnnotation
 trait Ops {
   this: CassandraContext[_] =>
 

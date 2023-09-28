@@ -46,7 +46,7 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
   override type NullChecker                      = JasyncNullChecker
   type Runner                                    = Unit
 
-  protected val dateTimeZone = ZoneId.systemDefault()
+  protected val dateTimeZone: ZoneId = ZoneId.systemDefault()
 
   class JasyncNullChecker extends BaseNullChecker {
     override def apply(index: Int, row: RowData): Boolean =
@@ -61,12 +61,12 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
     override def invoke(t: T): R = f(t)
   }
 
-  override def close = {
+  override def close: Unit = {
     Await.result(pool.disconnect(), Duration.Inf)
     ()
   }
 
-  protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext) =
+  protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext): Future[T] =
     ec match {
       case TransactionalExecutionContext(ec, conn) => f(conn)
       case other                                   => f(pool)
@@ -78,12 +78,12 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
 
   protected def expandAction(sql: String, returningAction: ReturnAction) = sql
 
-  def probe(sql: String) =
+  def probe(sql: String): Try[QueryResult] =
     Try {
       Await.result(pool.sendQuery(sql), Duration.Inf)
     }
 
-  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext) =
+  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext): CompletableFuture[T] =
     ec match {
       case tec: TransactionalExecutionContext => toCompletableFuture(f(tec))
       case _ =>
@@ -102,7 +102,7 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
     info: ExecutionInfo,
     dc: Runner
   )(implicit ec: ExecutionContext): Future[List[T]] = {
-    val (params, values) = prepare(Nil, ())
+    val (params, values) = prepare(List.empty, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values.asJava))
       .map(_.getRows.asScala.iterator.map(row => extractor(row, ())).toList)
@@ -118,7 +118,7 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
   def executeAction(sql: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner)(implicit
     ec: ExecutionContext
   ): Future[Long] = {
-    val (params, values) = prepare(Nil, ())
+    val (params, values) = prepare(List.empty, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(sql, values.asJava)).map(_.getRowsAffected)
   }
@@ -138,7 +138,7 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
     returningAction: ReturnAction
   )(info: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[List[T]] = {
     val expanded         = expandAction(sql, returningAction)
-    val (params, values) = prepare(Nil, ())
+    val (params, values) = prepare(List.empty, ())
     logger.logQuery(sql, params)
     withConnection(_.sendPreparedStatement(expanded, values.asJava))
       .map(extractActionResult(returningAction, extractor))
@@ -176,6 +176,6 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
     }.map(_.flatten.toList)
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): Seq[String] =
-    prepare(Nil, ())._2.map(prepareParam)
+    prepare(List.empty, ())._2.map(prepareParam)
 
 }

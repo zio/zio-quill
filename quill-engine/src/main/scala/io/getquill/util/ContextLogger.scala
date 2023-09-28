@@ -6,14 +6,14 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 
 class ContextLogger(name: String) {
-  val underlying = Logger(LoggerFactory.getLogger(name))
+  val underlying: Logger = Logger(LoggerFactory.getLogger(name))
 
   private def bindsEnabled = io.getquill.util.Messages.logBinds || underlying.underlying.isTraceEnabled
   private val nullToken    = "null"
   private def maxQueryLen  = Messages.queryTooLongForLogs
 
   private implicit class TrimQueryOps(str: String) {
-    def trimTooLong = trimQuery(str)
+    def trimTooLong: String = trimQuery(str)
   }
 
   private def trimQuery(query: String) =

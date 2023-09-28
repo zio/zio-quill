@@ -1,7 +1,5 @@
 package io.getquill.context.cassandra.encoding
 
-import com.datastax.oss.driver.api.core.`type`.reflect.GenericType
-import com.datastax.oss.driver.shaded.guava.common.reflect.{TypeParameter, TypeToken}
 import io.getquill.context.cassandra.CassandraRowContext
 import io.getquill.context.cassandra.util.ClassTagConversions.asClassOf
 

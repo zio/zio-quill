@@ -36,7 +36,7 @@ class RenameProperties(traceConfig: TraceConfig) {
   val ApplyRenamesToPropsPhase = new ApplyRenamesToProps(traceConfig)
   val RepropagateQuatsPhase    = new RepropagateQuats(traceConfig)
 
-  def apply(ast: Ast) =
+  def apply(ast: Ast): Ast =
     (identity[Ast] _)
       .andThen(SeedRenames.apply(_: Ast)) // Stage field renames into the Quats of entities
       .andThen(demarcate("SeedRenames"))
@@ -82,7 +82,7 @@ class ApplyRenamesToProps(traceConfig: TraceConfig) extends StatelessTransformer
   override def apply(p: Property): Property =
     applyProperty(p)
 
-  def applyProperty(p: Property) =
+  def applyProperty(p: Property): Property =
     p match {
       case p @ Property.Opinionated(ast, name, renameable, visibility) =>
         val newAst = apply(ast)

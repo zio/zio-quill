@@ -94,7 +94,7 @@ object RuntimeEntityQuat {
 
   object CaseClass {
     // Common methods to exclude from object fields
-    val exclude = classOf[Product].getMethods.map(_.getName).toSet ++ classOf[Object].getMethods.map(_.getName).toSet
+    val exclude: Set[String] = classOf[Product].getMethods.map(_.getName).toSet ++ classOf[Object].getMethods.map(_.getName).toSet
 
     def unapply(cls: Class[_]): Option[List[Method]] =
       if (cls.getInterfaces.contains(classOf[Product])) {
@@ -374,13 +374,13 @@ trait QuatMakingBase extends MacroUtilUniverse {
     case other => other
   }
 
-  def isNone(tpe: Type) = {
+  def isNone(tpe: Type): Boolean = {
     val era = tpe.erasure
     era =:= typeOf[None.type]
   }
 
   // Note. Used in other places beside here where None needs to be included in option type.
-  def isOptionType(tpe: Type) = {
+  def isOptionType(tpe: Type): Boolean = {
     val era = tpe.erasure
     era =:= typeOf[Option[Any]] || era =:= typeOf[Some[Any]] || era =:= typeOf[None.type]
   }

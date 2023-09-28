@@ -6,13 +6,13 @@ object Show {
   }
 
   object Show {
-    def apply[T](f: T => String) = new Show[T] {
+    def apply[T](f: T => String): Show[T] = new Show[T] {
       def show(v: T) = f(v)
     }
   }
 
   implicit class Shower[T](v: T)(implicit shower: Show[T]) {
-    def show = shower.show(v)
+    def show: String = shower.show(v)
   }
 
   implicit def listShow[T](implicit shower: Show[T]): Show[List[T]] = Show[List[T]] { case list =>

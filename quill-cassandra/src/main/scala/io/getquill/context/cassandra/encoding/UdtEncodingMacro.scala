@@ -222,7 +222,7 @@ class UdtEncodingMacro(val c: MacroContext) {
     !(tpe.baseType(t.tpe.typeSymbol) =:= NoType)
 
   private def makeTypeDef(name: String) =
-    TypeDef(Modifiers(Flag.PARAM), TypeName(name), Nil, TypeBoundsTree(EmptyTree, EmptyTree))
+    TypeDef(Modifiers(Flag.PARAM), TypeName(name), List.empty, TypeBoundsTree(EmptyTree, EmptyTree))
 
   private def buildUdtMeta(tpe: Type): Tree = {
     val meta = OptionalTypecheck(c)(q"implicitly[$prefix.UdtMeta[$tpe]]") getOrElse {

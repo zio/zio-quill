@@ -10,8 +10,8 @@ import scala.util.{Failure, Success, Try}
 
 object mirrorContextWithQueryProbing extends MirrorContext(MirrorIdiom, Literal) with QueryProbing
 
-case class BatchActionMirrorGeneric[A](groups: List[(String, List[A])], info: ExecutionInfo)
-case class BatchActionReturningMirrorGeneric[T, PrepareRow, Extractor[_]](
+final case class BatchActionMirrorGeneric[A](groups: List[(String, List[A])], info: ExecutionInfo)
+final case class BatchActionReturningMirrorGeneric[T, PrepareRow, Extractor[_]](
   groups: List[(String, ReturnAction, List[PrepareRow])],
   extractor: Extractor[T],
   info: ExecutionInfo
@@ -97,17 +97,17 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(
     info: ExecutionInfo,
     dc: Runner
-  ) =
+  ): Result[RunQueryResult[T]] =
     QueryMirror(string, prepare(Row(), session)._2, extractor, info)
 
   def executeQuerySingle[T](
     string: String,
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
-  )(info: ExecutionInfo, dc: Runner) =
+  )(info: ExecutionInfo, dc: Runner): Result[RunQuerySingleResult[T]] =
     QueryMirror(string, prepare(Row(), session)._2, extractor, info)
 
-  def executeAction(string: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner) =
+  def executeAction(string: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): ActionMirror =
     ActionMirror(string, prepare(Row(), session)._2, info)
 
   def executeActionReturning[O](
@@ -115,7 +115,7 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     prepare: Prepare = identityPrepare,
     extractor: Extractor[O],
     returningBehavior: ReturnAction
-  )(info: ExecutionInfo, dc: Runner) =
+  )(info: ExecutionInfo, dc: Runner): Result[RunActionReturningResult[O]] =
     ActionReturningMirror[O, O](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
 
   def executeActionReturningMany[O](
@@ -123,10 +123,10 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     prepare: Prepare = identityPrepare,
     extractor: Extractor[O],
     returningBehavior: ReturnAction
-  )(info: ExecutionInfo, dc: Runner) =
+  )(info: ExecutionInfo, dc: Runner): ActionReturningMirror[O,List[O]] =
     ActionReturningMirror[O, List[O]](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
 
-  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner) =
+  def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): BatchActionMirrorGeneric[Row] =
     BatchActionMirror(
       groups.map { case BatchGroup(string, prepare) =>
         (string, prepare.map(_(Row(), session)._2))
@@ -146,10 +146,10 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
       info
     )
 
-  def prepareAction(string: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner) =
+  def prepareAction(string: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Session => PrepareRow =
     (session: Session) => prepare(Row(), session)._2
 
-  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner) =
+  def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Session => List[PrepareRow] =
     (session: Session) =>
       groups.flatMap { case BatchGroup(string, prepare) =>
         prepare.map(_(Row(), session)._2)

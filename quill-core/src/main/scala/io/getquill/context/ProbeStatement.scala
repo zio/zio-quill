@@ -16,7 +16,7 @@ object ProbeStatement {
 
   private val cache = new Cache[Types#Type, Context[Idiom, NamingStrategy]]
 
-  def apply(statement: String, c: MacroContext) = {
+  def apply(statement: String, c: MacroContext): Unit = {
     import c.universe.{Try => _, _}
 
     def resolveContext(tpe: Type) =

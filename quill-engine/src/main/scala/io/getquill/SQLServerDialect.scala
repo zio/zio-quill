@@ -25,11 +25,11 @@ trait SQLServerDialect
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
-  override def querifyAst(ast: Ast, idiomContext: TraceConfig) = AddDropToNestedOrderBy(
+  override def querifyAst(ast: Ast, idiomContext: TraceConfig): SqlQuery = AddDropToNestedOrderBy(
     new SqlQueryApply(idiomContext)(ast)
   )
 
-  override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
+  override def emptySetContainsToken(field: Token): StringToken = StringToken("1 <> 1")
 
   override def prepareForProbing(string: String) = string
 
@@ -39,7 +39,7 @@ trait SQLServerDialect
 
   override protected def limitOffsetToken(
     query: Statement
-  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (Some(limit), None)         => stmt"TOP (${limit.token}) $query"
       case (Some(limit), Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS FETCH FIRST ${limit.token} ROWS ONLY"

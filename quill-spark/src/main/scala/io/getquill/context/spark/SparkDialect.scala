@@ -31,12 +31,13 @@ import io.getquill.idiom.Token
 import io.getquill.util.Messages.trace
 import io.getquill.context.{CannotReturn, ExecutionType}
 import io.getquill.quat.Quat
+import io.getquill.idiom.Statement
 
 class SparkDialect extends SparkIdiom
 
 trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
-  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext) =
+  def parentTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[SqlQuery] =
     super.sqlQueryTokenizer
 
   def liftingPlaceholder(index: Int): String = "?"
@@ -50,7 +51,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
     implicit naming: NamingStrategy
-  ) = {
+  ): (Ast, Statement, ExecutionType) = {
     val normalizedAst = EscapeQuestionMarks(SqlNormalize(ast, idiomContext.config))
 
     implicit val implicitIdiomContext: IdiomContext = idiomContext

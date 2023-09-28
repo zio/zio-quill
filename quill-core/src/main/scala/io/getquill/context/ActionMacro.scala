@@ -291,7 +291,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
 
   object ExtractLiftings {
     def of(ast: Ast): (Ast, List[(String, ScalarLift)]) = {
-      val (outputAst, extracted) = ExtractLiftings(List())(ast)
+      val (outputAst, extracted) = ExtractLiftings(List.empty)(ast)
       (outputAst, extracted.state.map { case (tag, lift) => (tag.uid, lift) })
     }
   }

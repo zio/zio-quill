@@ -9,7 +9,7 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.TraceType
 import io.getquill.util.{EnableReflectiveCalls, Interpolator, Messages}
 
-case class QuotedAst(ast: Ast) extends StaticAnnotation
+final case class QuotedAst(ast: Ast) extends StaticAnnotation
 
 abstract class LiftUnlift(numQuatFields: Int) extends Liftables with Unliftables {
   lazy val serializeQuats: Boolean = numQuatFields > Messages.maxQuatFields
@@ -21,7 +21,7 @@ trait Quotation extends Parsing with ReifyLiftings {
 
   private val quoted = TermName("quoted")
 
-  def quote[T](body: Tree)(implicit t: WeakTypeTag[T]) = {
+  def quote[T](body: Tree)(implicit t: WeakTypeTag[T]): Tree = {
     val interp = new Interpolator(TraceType.Quotation, transpileConfig.traceConfig, 1)
     import interp._
 
@@ -61,18 +61,18 @@ trait Quotation extends Parsing with ReifyLiftings {
     }
   }
 
-  def doubleQuote[T: WeakTypeTag](body: Expr[Any]) =
+  def doubleQuote[T: WeakTypeTag](body: Expr[Any]): Tree =
     body.tree match {
       case q"null" => c.fail("Can't quote null")
       case tree    => q"${c.prefix}.unquote($tree)"
     }
 
-  def quotedFunctionBody(func: Expr[Any]) =
+  def quotedFunctionBody(func: Expr[Any]): Tree =
     func.tree match {
       case q"(..$p) => $b" => q"${c.prefix}.quote((..$p) => ${c.prefix}.unquote($b))"
     }
 
-  protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) = {
+  protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]): Option[T] = {
     val unlift = new { override val mctx: c.type = c } with Unliftables
     import unlift._
     astTree(tree).flatMap(astUnliftable.unapply).map { case ast: T =>

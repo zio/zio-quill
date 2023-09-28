@@ -17,9 +17,9 @@ trait SqliteDialect
     with CanInsertWithMultiValues
     with CanInsertReturningWithSingleValue {
 
-  override def emptySetContainsToken(field: Token) = StringToken("0")
+  override def emptySetContainsToken(field: Token): StringToken = StringToken("0")
 
-  override def prepareForProbing(string: String) = s"sqlite3_prepare_v2($string)"
+  override def prepareForProbing(string: String): String = s"sqlite3_prepare_v2($string)"
 
   override def astTokenizer(implicit
     astTokenizer: Tokenizer[Ast],

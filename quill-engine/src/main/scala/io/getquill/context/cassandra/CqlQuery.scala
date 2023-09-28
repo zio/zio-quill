@@ -3,7 +3,7 @@ package io.getquill.context.cassandra
 import io.getquill.ast._
 import io.getquill.util.Messages.fail
 
-case class CqlQuery(
+final case class CqlQuery(
   entity: Entity,
   filter: Option[Ast],
   orderBy: List[OrderByCriteria],
@@ -12,7 +12,7 @@ case class CqlQuery(
   distinct: Boolean
 )
 
-case class OrderByCriteria(
+final case class OrderByCriteria(
   property: Property,
   ordering: PropertyOrdering
 )
@@ -34,7 +34,7 @@ object CqlQuery {
       case Aggregation(AggregationOperator.`size`, q: Query) =>
         apply(q, List(Aggregation(AggregationOperator.`size`, Constant.auto(1))), distinct)
       case other =>
-        apply(q, List(), distinct)
+        apply(q, List.empty, distinct)
     }
 
   private def apply(q: Query, select: List[Ast], distinct: Boolean): CqlQuery =
@@ -50,7 +50,7 @@ object CqlQuery {
       case SortBy(q: Query, x, p, o) =>
         apply(q, orderByCriteria(p, o), limit, select, distinct)
       case other =>
-        apply(q, List(), limit, select, distinct)
+        apply(q, List.empty, limit, select, distinct)
     }
 
   private def apply(
@@ -95,7 +95,7 @@ object CqlQuery {
       case Tuple(values)        => values.flatMap(select)
       case CaseClass(_, values) => values.flatMap(v => select(v._2))
       case p: Property          => List(p)
-      case i: Ident             => List()
+      case i: Ident             => List.empty
       case l: Lift              => List(l)
       case l: ScalarTag         => List(l)
       case other                => fail(s"Cql supports only properties as select elements. Found: $other")

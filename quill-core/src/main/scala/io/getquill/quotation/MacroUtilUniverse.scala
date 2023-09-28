@@ -18,32 +18,32 @@ trait MacroUtilUniverse {
   import u.{Block => _, Constant => _, Function => _, Ident => _, If => _, _}
 
   object QuotedType {
-    def unapply(tpe: Type) =
+    def unapply(tpe: Type): Option[Type] =
       paramOf(tpe, typeOf[Quoted[Any]])
   }
 
   object QueryType {
-    def unapply(tpe: Type) =
+    def unapply(tpe: Type): Option[Type] =
       paramOf(tpe, typeOf[io.getquill.Query[Any]])
   }
 
   object BatchType {
-    def unapply(tpe: Type) =
+    def unapply(tpe: Type): Option[Type] =
       paramOf(tpe, typeOf[io.getquill.BatchAction[_]])
   }
 
   // Note: These will not match if they are not existential
   object ActionType {
     object Insert {
-      def unapply(tpe: Type) =
+      def unapply(tpe: Type): Option[Type] =
         paramOf(tpe, typeOf[io.getquill.Insert[_]])
     }
     object Update {
-      def unapply(tpe: Type) =
+      def unapply(tpe: Type): Option[Type] =
         paramOf(tpe, typeOf[io.getquill.Update[_]])
     }
     object Delete {
-      def unapply(tpe: Type) =
+      def unapply(tpe: Type): Option[Type] =
         paramOf(tpe, typeOf[io.getquill.Delete[_]])
     }
   }

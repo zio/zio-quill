@@ -250,7 +250,7 @@ abstract class MonixJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   /**
    * Override to enable specific vendor options needed for streaming
    */
-  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
+  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]): PreparedStatement = {
     val stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
     fetchSize.foreach { size =>
       stmt.setFetchSize(size)
@@ -286,8 +286,8 @@ abstract class MonixJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
 object MonixJdbcContext {
   object EffectWrapper {
-    def default = new EffectWrapper {}
-    def using(scheduler: Scheduler) = new EffectWrapper {
+    def default: EffectWrapper = new EffectWrapper {}
+    def using(scheduler: Scheduler): EffectWrapper = new EffectWrapper {
       override def schedule[T](t: Task[T]): Task[T]                       = t.executeOn(scheduler, true)
       override def boundary[T](t: Task[T]): Task[T]                       = t.executeOn(scheduler, true)
       override def scheduleObservable[T](o: Observable[T]): Observable[T] = o.executeOn(scheduler, true)

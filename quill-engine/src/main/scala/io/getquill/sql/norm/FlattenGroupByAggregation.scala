@@ -18,9 +18,9 @@ import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.fail
 import io.getquill.ast.ConcatMap
 
-case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
+final case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransformer {
 
-  override def apply(ast: Ast) =
+  override def apply(ast: Ast): Ast =
     ast match {
       case q: Query if (isGroupByAggregation(q)) =>
         q match {

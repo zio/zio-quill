@@ -2,7 +2,6 @@ package io.getquill.quotation
 
 import scala.reflect.ClassTag
 import io.getquill.ast._
-import io.getquill.Embedded
 import io.getquill.context._
 import io.getquill.norm.{BetaReduction, TypeBehavior}
 import io.getquill.util.MacroContextExt.RichContext
@@ -31,7 +30,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 
-    def apply(tree: Tree) =
+    def apply(tree: Tree): T =
       unapply(tree).getOrElse {
         lazy val errorDetail =
           if (Messages.errorDetail)
@@ -103,7 +102,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       path.foldLeft(tuple) { case (t, i) =>
         Property(t, s"_${i + 1}")
       }
-    def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] =
+    def reductions(ast: Ast, path: List[Int] = List.empty): List[(Ident, Ast)] =
       ast match {
         case ident: Ident => List(ident -> property(path))
         case Tuple(elems) =>
@@ -200,8 +199,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Entity("unused", Nil, quat)
 
     case q"$pack.querySchema[$t](${name: String}, ..$properties)" =>
-      val ttpe     = q"$t".tpe
-      val inferred = inferQuat(q"$t".tpe)
+      q"$t".tpe
+      inferQuat(q"$t".tpe)
       val quat     = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity.Opinionated(name, properties.map(propertyAliasParser(_)), quat, Fixed)
@@ -378,10 +377,10 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Quat.improveInfixQuat(value)
   }
 
-  val impureInfixParser = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
+  val impureInfixParser: Parser[Ast] = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
 
   object InfixMatch {
-    def unapply(tree: Tree) =
+    def unapply(tree: Tree): Option[(List[String], List[Tree])] =
       tree match {
         case q"$pack.InfixInterpolator(scala.StringContext.apply(..${parts: List[String]})).infix(..$params)" =>
           Some((parts, params))
@@ -411,7 +410,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
         val fused =
           (elements
-            .foldLeft(List[Either[Tree, Tree]]()) {
+            .foldLeft(List.empty[Either[Tree, Tree]]) {
               case (Left(a) :: tail, Left(b)) =>
                 Left(q"$a + $b") :: tail
               case (list, b) =>
@@ -759,7 +758,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   private object operator {
-    def unapply(t: TermName) =
+    def unapply(t: TermName): Option[BinaryOperator] =
       t.decodedName.toString match {
         case ">"  => Some(NumericOperator.`>`)
         case ">=" => Some(NumericOperator.`>=`)
@@ -770,7 +769,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   private object IsExtensionClass {
-    def unapply(tree: Tree) =
+    def unapply(tree: Tree): Option[(Tree, Tree)] =
       tree match {
         case cls @ q"$extension($a)" if (cls.tpe.baseClasses.contains(typeOf[Ordered[Any]].typeSymbol)) =>
           Some((extension, a))
@@ -836,11 +835,10 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     symbol.isClass && symbol.asClass.isCaseClass
   }
 
-  private def isTypeTuple(tpe: Type) =
-    tpe.typeSymbol.fullName startsWith "scala.Tuple"
+  
 
   object ClassTypeRefMatch {
-    def unapply(tpe: Type) = tpe match {
+    def unapply(tpe: Type): Option[(ClassSymbol, List[Type])] = tpe match {
       case TypeRef(_, cls, args) if (cls.isClass) => Some((cls.asClass, args))
       case _                                      => None
     }
@@ -963,7 +961,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   implicit class InsertReturnCapabilityExtension(capability: ReturningCapability) {
-    def verifyAst(returnBody: Ast) = capability match {
+    def verifyAst(returnBody: Ast): Unit = capability match {
       case OutputClauseSupported =>
         returnBody match {
           case _: Query =>
@@ -1231,7 +1229,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         case false => maybeQuoted
         case true  => q"unquote($maybeQuoted)"
       }
-    val t = TypeName(c.freshName("T"))
+    TypeName(c.freshName("T"))
     try
       c.typecheck(unquoted(tree), c.TYPEmode)
     catch {

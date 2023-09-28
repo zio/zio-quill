@@ -10,7 +10,7 @@ import io.getquill.quat.Quat
 class CqlNormalize(transpileConfig: TranspileConfig) {
   val NormalizePhase = new Normalize(transpileConfig)
 
-  def apply(ast: Ast) =
+  def apply(ast: Ast): Ast =
     normalize(ast)
 
   /**

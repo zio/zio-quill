@@ -12,7 +12,7 @@ class DefaultJdbcTyper(
   numericPreference: NumericPreference
 ) extends (JdbcTypeInfo => Option[ClassTag[_]]) {
 
-  private val logger                  = ContextLogger(classOf[DefaultJdbcTyper])
+  ContextLogger(classOf[DefaultJdbcTyper])
   private[getquill] val MaxIntDigits  = 9
   private[getquill] val MaxLongDigits = 18
 

@@ -1,13 +1,11 @@
 package io.getquill.context.jdbc
 
-import io.getquill.{NamingStrategy, ReturnAction}
-import io.getquill.ReturnAction.{ReturnColumns, ReturnNothing, ReturnRecord}
-import io.getquill.context.{Context, ExecutionInfo}
+import io.getquill.NamingStrategy
+import io.getquill.context.Context
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.util.ContextLogger
 
-import java.sql.{Connection, JDBCType, PreparedStatement, ResultSet, Statement}
+import java.sql.{Connection, JDBCType, PreparedStatement, ResultSet}
 import java.util.TimeZone
 
 trait JdbcContextTypes[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]

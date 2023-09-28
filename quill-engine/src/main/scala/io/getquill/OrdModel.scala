@@ -2,7 +2,7 @@ package io.getquill
 
 import io.getquill.ast.{Asc, AscNullsFirst, AscNullsLast, Desc, DescNullsFirst, DescNullsLast, Ordering, TupleOrdering}
 
-case class Ord[T](ord: Ordering)
+final case class Ord[T](ord: Ordering)
 
 object Ord {
 

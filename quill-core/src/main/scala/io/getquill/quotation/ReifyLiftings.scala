@@ -12,8 +12,8 @@ import io.getquill.util.{Interpolator, OptionalTypecheck}
 import io.getquill.util.MacroContextExt._
 import io.getquill.util.Messages.TraceType
 
-case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
-case class CaseClassValueLifting[T](value: T)
+final case class ScalarValueLifting[T, U](value: T, encoder: EncodingDsl#Encoder[U])
+final case class CaseClassValueLifting[T](value: T)
 
 trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
   val c: MacroContext
@@ -80,7 +80,7 @@ trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
       }
     }
 
-    override def apply(ast: Ast) =
+    override def apply(ast: Ast): (Ast, StatefulTransformer[Map[TermName,Reified]]) =
       ast match {
 
         case ast: Lift =>

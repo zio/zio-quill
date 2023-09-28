@@ -5,6 +5,10 @@ import scala.collection.immutable.ListSet
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
+val scala_v_12 = "2.12.18"
+val scala_v_13 = "2.13.12"
+val scala_v_30 = "3.3.1"
+
 inThisBuild(
   List(
     organization := "io.getquill",
@@ -17,9 +21,19 @@ inThisBuild(
     scmInfo := Some(
       ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
     ),
-    scalafmtCheck     := true,
-    scalafmtSbtCheck  := true,
-    scalafmtOnCompile := !insideCI.value
+    scalaVersion := scala_v_13,
+    crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
+    scalafmtCheck := true,
+    scalafmtSbtCheck := true,
+    scalafmtOnCompile := !insideCI.value,
+    semanticdbEnabled := scalaVersion.value.startsWith("2.13"),
+    semanticdbOptions += "-P:semanticdb:synthetics:on",
+    semanticdbVersion := scalafixSemanticdb.revision, // use Scalafix compatible version
+    scalafixScalaBinaryVersion := CrossVersion.binaryScalaVersion(scalaVersion.value),
+    scalafixDependencies ++= List(
+      "com.github.vovapolu" %% "scaluzzi" % "0.1.23",
+      "io.github.ghostbuster91.scalafix-unified" %% "unified" % "0.0.9"
+    )
   )
 )
 
@@ -618,10 +632,6 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.18"
-val scala_v_13 = "2.13.12"
-val scala_v_30 = "3.3.1"
-
 val scalaCollectionCompatVersion = "2.11.0"
 
 lazy val loggingSettings = Seq(
@@ -632,8 +642,6 @@ lazy val loggingSettings = Seq(
 
 lazy val basicSettings = excludeFilterSettings ++ Seq(
   Test / testOptions += Tests.Argument("-oI"),
-  scalaVersion       := scala_v_13,
-  crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
     "org.scalatest"           %% "scalatest"               % "3.2.17" % Test,
     "org.scala-lang.modules"  %% "scala-collection-compat" % scalaCollectionCompatVersion,
@@ -666,7 +674,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) =>
-        Seq("-Ypatmat-exhaust-depth", "40")
+        Seq("-Ypatmat-exhaust-depth", "40", "-Ywarn-unused")
       case Some((2, 12)) =>
         Seq(
           // "-Xfatal-warnings",

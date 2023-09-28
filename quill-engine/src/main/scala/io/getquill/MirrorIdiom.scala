@@ -215,13 +215,13 @@ trait MirrorIdiomBase extends Idiom {
     case o                      => stmt"${o.toString.token}"
   }
 
-  def tokenizeName(name: String, renameable: Renameable) =
+  def tokenizeName(name: String, renameable: Renameable): String =
     renameable match {
       case ByStrategy => name
       case Fixed      => s"`${name}`"
     }
 
-  def bracketIfHidden(name: String, visibility: Visibility) =
+  def bracketIfHidden(name: String, visibility: Visibility): String =
     (distinguishHidden, visibility) match {
       case (true, Hidden) => s"[$name]"
       case _              => name

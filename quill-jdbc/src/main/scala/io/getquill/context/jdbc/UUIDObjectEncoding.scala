@@ -8,5 +8,5 @@ trait UUIDObjectEncoding {
   implicit val uuidEncoder: Encoder[UUID] =
     encoder(Types.OTHER, (index, value, row) => row.setObject(index, value, Types.OTHER))
   implicit val uuidDecoder: Decoder[UUID] =
-    decoder((index, row, conn) => UUID.fromString(row.getObject(index).toString))
+    decoder((index, row, _) => UUID.fromString(row.getObject(index).toString))
 }

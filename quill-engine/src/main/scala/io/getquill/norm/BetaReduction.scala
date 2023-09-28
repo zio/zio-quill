@@ -38,7 +38,7 @@ object EmptyProductQuatBehavior {
   case object Ignore extends EmptyProductQuatBehavior
 }
 
-case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyBehavior: EmptyProductQuatBehavior)
+final case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyBehavior: EmptyProductQuatBehavior)
     extends StatelessTransformer {
 
   override def apply(ast: Ast): Ast =

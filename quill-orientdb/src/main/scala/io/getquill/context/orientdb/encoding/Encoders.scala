@@ -10,20 +10,20 @@ trait Encoders extends CollectionEncoders {
   type Encoder[T] = OrientDBEncoder[T]
 
   case class OrientDBEncoder[T](encoder: BaseEncoder[T]) extends BaseEncoder[T] {
-    override def apply(index: Index, value: T, row: PrepareRow, session: Session) =
+    override def apply(index: Index, value: T, row: PrepareRow, session: Session): PrepareRow =
       encoder(index, value, row, session)
   }
 
   def encoder[T](e: BaseEncoder[T]): Encoder[T] = OrientDBEncoder(e)
 
   def encoder[T](f: PrepareRow => (Index, T) => PrepareRow): Encoder[T] =
-    encoder((index, value, row, session) => f(row)(index, value))
+    encoder((index, value, row, _) => f(row)(index, value))
 
   def encoder[T](f: (Index, T, PrepareRow) => PrepareRow): Encoder[T] =
-    encoder((index, value, row, session) => f(index, value, row))
+    encoder((index, value, row, _) => f(index, value, row))
 
   private[this] val nullEncoder: Encoder[Null] =
-    encoder { (index, value, row, session) => row.insert(index, null); row }
+    encoder { (index, _, row, _) => row.insert(index, null); row }
 
   implicit def optionEncoder[T](implicit d: Encoder[T]): Encoder[Option[T]] =
     encoder { (index, value, row, session) =>

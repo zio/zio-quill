@@ -24,7 +24,7 @@ import io.getquill.sql.norm.{
   RemoveUnusedSelects
 }
 import io.getquill.util.{Interleave, Interpolator, Messages, TraceConfig}
-import io.getquill.util.Messages.{TraceType, fail, trace}
+import io.getquill.util.Messages.{TraceType, fail}
 
 trait SqlIdiom extends Idiom {
 
@@ -46,13 +46,13 @@ trait SqlIdiom extends Idiom {
     concatBehavior: ConcatBehavior,
     equalityBehavior: EqualityBehavior,
     idiomContext: IdiomContext
-  ) =
+  ): Ast =
     SqlNormalize(ast, idiomContext.config, concatBehavior, equalityBehavior)
 
   def querifyAst(ast: Ast, traceConfig: TraceConfig) = new SqlQueryApply(traceConfig)(ast)
 
   // See HideTopLevelFilterAlias for more detail on how this works
-  def querifyAction(ast: Action, batchAlias: Option[String]) = {
+  def querifyAction(ast: Action, batchAlias: Option[String]): Action = {
     val norm1 = new NormalizeFilteredActionAliases(batchAlias)(ast)
     val norm2 = io.getquill.sql.norm.HideInnerProperties(norm1)
     useActionTableAliasAs match {
@@ -172,7 +172,7 @@ trait SqlIdiom extends Idiom {
             val (l, e) = flatten(b)
             ((cond, a) +: l, e)
           case other =>
-            (List(), other)
+            (List.empty, other)
         }
 
       val (l, e) = flatten(ast)
@@ -196,13 +196,13 @@ trait SqlIdiom extends Idiom {
 
     import q._
 
-    def selectTokenizer =
+    def selectTokenizer: Token =
       select match {
         case Nil => stmt"*"
         case _   => select.token
       }
 
-    def distinctTokenizer = (
+    def distinctTokenizer = (: Statement
       distinct match {
         case DistinctKind.Distinct          => stmt"DISTINCT "
         case DistinctKind.DistinctOn(props) => stmt"DISTINCT ON (${props.token}) "
@@ -210,9 +210,9 @@ trait SqlIdiom extends Idiom {
       }
     )
 
-    def withDistinct = stmt"$distinctTokenizer${selectTokenizer}"
+    def withDistinct: Statement = stmt"$distinctTokenizer${selectTokenizer}"
 
-    def withFrom =
+    def withFrom: Statement =
       from match {
         case Nil => withDistinct
         case head :: tail =>
@@ -226,27 +226,27 @@ trait SqlIdiom extends Idiom {
           stmt"$withDistinct FROM $t"
       }
 
-    def withWhere =
+    def withWhere: Statement =
       where match {
         case None        => withFrom
         case Some(where) => stmt"$withFrom WHERE ${where.token}"
       }
 
-    def withGroupBy =
+    def withGroupBy: Statement =
       groupBy match {
         case None          => withWhere
         case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
       }
 
-    def withOrderBy =
+    def withOrderBy: Statement =
       orderBy match {
         case Nil     => withGroupBy
         case orderBy => stmt"$withGroupBy ${tokenOrderBy(orderBy)}"
       }
 
-    def withLimitOffset = limitOffsetToken(withOrderBy).token((limit, offset))
+    def withLimitOffset: Token = limitOffsetToken(withOrderBy).token((limit, offset))
 
-    def apply = stmt"SELECT $withLimitOffset"
+    def apply: Statement = stmt"SELECT $withLimitOffset"
   }
 
   implicit def sqlQueryTokenizer(implicit
@@ -262,13 +262,13 @@ trait SqlIdiom extends Idiom {
       stmt"SELECT ${op.token} (${q.token})"
   }
 
-  protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable) =
+  protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable): String =
     renameable match {
       case Fixed => tokenizeFixedColumn(strategy, column)
       case _     => strategy.column(column)
     }
 
-  protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable) =
+  protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable): String =
     renameable match {
       case Fixed => table
       case _     => strategy.table(table)
@@ -389,7 +389,7 @@ trait SqlIdiom extends Idiom {
     case UnionAllOperation => stmt"UNION ALL"
   }
 
-  protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (None, None)                => query
       case (Some(limit), None)         => stmt"$query LIMIT ${limit.token}"
@@ -399,7 +399,7 @@ trait SqlIdiom extends Idiom {
 
   protected def tokenOrderBy(
     criteria: List[OrderByCriteria]
-  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Statement =
     stmt"ORDER BY ${criteria.token}"
 
   implicit def sourceTokenizer(implicit
@@ -536,7 +536,7 @@ trait SqlIdiom extends Idiom {
       strategy: NamingStrategy,
       renameable: Renameable,
       prefixRenameable: Renameable = Renameable.neutral
-    ) =
+    ): Token =
       prefixRenameable match {
         case Renameable.Fixed =>
           // Typically this happens in a nested query on an multi-level select e.g.
@@ -615,7 +615,7 @@ trait SqlIdiom extends Idiom {
     astTokenizer: Tokenizer[Ast],
     strategy: NamingStrategy,
     idiomContext: IdiomContext
-  ) =
+  ): Tokenizer[Ast] =
     Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy, idiomContext)) {
       case q: Query => astTokenizer.token(q)
       case Property(Property.Opinionated(_, name, renameable, _), "isEmpty") =>
@@ -736,7 +736,7 @@ trait SqlIdiom extends Idiom {
     astTokenizer: Tokenizer[Ast],
     strategy: NamingStrategy,
     idiomContext: IdiomContext
-  ) =
+  ): Token =
     returnListTokenizer.token(ExpandReturning(r, alias)(this, strategy, idiomContext).map(_._1))
 
   private def insertInfo(
@@ -768,7 +768,7 @@ trait SqlIdiom extends Idiom {
       tokenizeTable(strategy, name, renameable).token
     }
 
-  protected def scopedTokenizer(ast: Ast)(implicit tokenizer: Tokenizer[Ast]) =
+  protected def scopedTokenizer(ast: Ast)(implicit tokenizer: Tokenizer[Ast]): Token =
     ast match {
       case _: Query           => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"
@@ -801,7 +801,7 @@ object SqlIdiom {
       override def productAggregationToken: ProductAggregationToken = parent.productAggregationToken
     }
 
-  case class InsertUpdateStmt(action: Statement, where: Statement)
+  final case class InsertUpdateStmt(action: Statement, where: Statement)
   private[getquill] def withActionAlias(parentIdiom: SqlIdiom, action: Action, alias: Ident)(implicit
     strategy: NamingStrategy,
     idiomContext: IdiomContext

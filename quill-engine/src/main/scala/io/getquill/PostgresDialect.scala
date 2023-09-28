@@ -1,21 +1,19 @@
 package io.getquill
 
 import java.util.concurrent.atomic.AtomicInteger
-import io.getquill.ast.{Action, Query, _}
+import io.getquill.ast._
 import io.getquill.ast
-import io.getquill.context.sql.idiom
-import io.getquill.context.sql.idiom.SqlIdiom.{InsertUpdateStmt, copyIdiom}
 import io.getquill.context.{CanInsertReturningWithMultiValues, CanInsertWithMultiValues, CanReturnClause}
 import io.getquill.context.sql.idiom._
-import io.getquill.idiom.{ScalarTagToken, Statement, Token, ValuesClauseToken}
+import io.getquill.idiom.{Statement, ValuesClauseToken}
 import io.getquill.idiom.StatementInterpolator._
-import io.getquill.norm.{BetaReduction, ExpandReturning, ProductAggregationToken}
-import io.getquill.quat.Quat
+import io.getquill.norm.{BetaReduction, ProductAggregationToken}
 import io.getquill.sql.norm.NormalizeFilteredActionAliases
 import io.getquill.util.Messages.fail
 
 import scala.annotation.tailrec
-import scala.collection.immutable.{ListMap, ListSet, Queue}
+import scala.collection.immutable.ListMap
+import scala.collection.immutable
 
 trait PostgresDialect
     extends SqlIdiom
@@ -51,7 +49,7 @@ trait PostgresDialect
 
   private[getquill] val preparedStatementId = new AtomicInteger
 
-  override def prepareForProbing(string: String) = {
+  override def prepareForProbing(string: String): String = {
     var i = 0
     val query = string.flatMap(x =>
       if (x != '?') s"$x"
@@ -112,7 +110,7 @@ trait PostgresDialect
     astTokenizer: Tokenizer[Ast],
     strategy: NamingStrategy,
     idiomContext: IdiomContext
-  ) =
+  ): Tokenizer[Ast] =
     Tokenizer.withFallback[Ast](this.astTokenizer(_, strategy, idiomContext)) { case p: Property =>
       this.propertyTokenizer.token(p)
     }
@@ -178,7 +176,7 @@ trait PostgresDialect
           //   Originally was `WHERE ps.id = STag(uid:3)`
           //   (replacedWhere: `WHERE ps.id = p.id1`, additionalColumns: [id] /*and any other column names of STags in WHERE*/, additionalLifts: [STag(uid:3)])
           val (Update(Filter(table: Entity, tableAlias, replacedWhere), assignments), valuesColumns, valuesLifts) =
-            ReplaceLiftings.of(clause)(batchAlias, List())
+            ReplaceLiftings.of(clause)(batchAlias, List.empty)
           if (valuesLifts.nonEmpty) {
             // The SET columns/values i.e. ([name, id], [STag(uid:1), STag(uid:2)]
             val columnsAndValues = columnsAndValuesTogether(assignments)
@@ -197,7 +195,7 @@ trait PostgresDialect
 
         case (clause @ Update(_: Entity, _), IdiomContext.QueryType.Batch(batchAlias)) =>
           val (Update(table: Entity, assignments), valuesColumns, valuesLifts) =
-            ReplaceLiftings.of(clause)(batchAlias, List())
+            ReplaceLiftings.of(clause)(batchAlias, List.empty)
 
           // Choose table alias based on how assignments clauses were realized. Batch-Alias should mean the same thing as when NormalizeFilteredActionAliases was run in Idiom should the
           // value should be the same thing as the clauses that were realiased.
@@ -222,12 +220,12 @@ trait PostgresDialect
 
 object PostgresDialect extends PostgresDialect
 
-case class ReplaceAssignmentAliases(newAlias: Ident) extends StatelessTransformer {
+final case class ReplaceAssignmentAliases(newAlias: Ident) extends StatelessTransformer {
   override def apply(e: Assignment): Assignment =
     Assignment(newAlias, BetaReduction(e.property, e.alias -> newAlias), BetaReduction(e.value, e.alias -> newAlias))
 }
 
-case class ReplaceLiftings(
+final case class ReplaceLiftings(
   foreachIdentName: String,
   existingColumnNames: List[String],
   state: ListMap[String, ScalarTag]
@@ -236,7 +234,7 @@ case class ReplaceLiftings(
   private def columnExists(col: String) =
     existingColumnNames.contains(col) || state.keySet.contains(col)
 
-  def freshIdent(newCol: String) = {
+  def freshIdent(newCol: String): String = {
     @tailrec
     def loop(id: String, n: Int): String = {
       val fresh = s"${id}${n}"
@@ -251,8 +249,7 @@ case class ReplaceLiftings(
       loop(newCol, 1)
   }
 
-  private def parseName(name: String) =
-    name.replace(".", "_")
+  
 
   override def apply(e: Ast): (Ast, StatefulTransformer[ListMap[String, ScalarTag]]) =
     e match {
@@ -267,7 +264,7 @@ case class ReplaceLiftings(
     }
 }
 object ReplaceLiftings {
-  def of(ast: Ast)(foreachIdent: String, existingColumnNames: List[String]) = {
+  def of(ast: Ast)(foreachIdent: String, existingColumnNames: List[String]): (Ast, immutable.Iterable[String], immutable.Iterable[ScalarTag]) = {
     val (newAst, transform) = new ReplaceLiftings(foreachIdent, existingColumnNames, ListMap()).apply(ast)
     (newAst, transform.state.map(_._1), transform.state.map(_._2))
   }

@@ -9,7 +9,7 @@ class Cache[K, V <: Closeable] {
 
   private case class Entry(value: Option[V], expiration: Long)
 
-  private var cache = Map[K, Entry]()
+  private var cache = Map.empty[K, Entry]
 
   def getOrElseUpdate(key: K, value: => Option[V], ttl: Duration): Option[V] =
     synchronized {

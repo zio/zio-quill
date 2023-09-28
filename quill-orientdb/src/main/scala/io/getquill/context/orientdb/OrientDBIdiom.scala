@@ -109,7 +109,7 @@ trait OrientDBIdiom extends Idiom {
             val (l, e) = flatten(b)
             ((cond, a) +: l, e)
           case other =>
-            (List(), other)
+            (List.empty, other)
         }
 
       val (l, e) = flatten(ast)
@@ -210,7 +210,7 @@ trait OrientDBIdiom extends Idiom {
 
   protected def tokenOrderBy(
     criteria: List[OrderByCriteria]
-  )(implicit strategy: NamingStrategy, idiomContext: IdiomContext) =
+  )(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Statement =
     stmt"ORDER BY ${criteria.token}"
 
   implicit def sourceTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[FromContext] =
@@ -375,7 +375,7 @@ trait OrientDBIdiom extends Idiom {
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 
-  protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]) =
+  protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]): Token =
     ast match {
       case _: Query           => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"

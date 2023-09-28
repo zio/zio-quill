@@ -4,9 +4,9 @@ import io.getquill.ast._
 import io.getquill.ast.Implicits._
 import collection.immutable.Set
 
-case class State(seen: Set[IdentName], free: Set[IdentName])
+final case class State(seen: Set[IdentName], free: Set[IdentName])
 
-case class FreeVariables(state: State) extends StatefulTransformer[State] {
+final case class FreeVariables(state: State) extends StatefulTransformer[State] {
 
   override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
     ast match {

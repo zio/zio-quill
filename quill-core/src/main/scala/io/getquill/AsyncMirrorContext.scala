@@ -97,19 +97,19 @@ class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
   def executeQuery[T](string: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(
     executionInfo: ExecutionInfo,
     dc: Runner
-  )(implicit ec: ExecutionContext) =
+  )(implicit ec: ExecutionContext): Future[QueryMirror[T]] =
     Future(QueryMirror(string, prepare(Row(), session)._2, extractor, executionInfo))
 
   def executeQuerySingle[T](
     string: String,
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
-  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
+  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[QueryMirror[T]] =
     Future(QueryMirror(string, prepare(Row(), session)._2, extractor, executionInfo))
 
   def executeAction(string: String, prepare: Prepare = identityPrepare)(executionInfo: ExecutionInfo, dc: Runner)(
     implicit ec: ExecutionContext
-  ) =
+  ): Future[ActionMirror] =
     Future(ActionMirror(string, prepare(Row(), session)._2, executionInfo))
 
   def executeActionReturning[O](
@@ -117,7 +117,7 @@ class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     prepare: Prepare = identityPrepare,
     extractor: Extractor[O],
     returningBehavior: ReturnAction
-  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
+  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[ActionReturningMirror[O,O]] =
     Future(ActionReturningMirror[O, O](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo))
 
   def executeActionReturningMany[O](
@@ -125,14 +125,14 @@ class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     prepare: Prepare = identityPrepare,
     extractor: Extractor[O],
     returningBehavior: ReturnAction
-  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
+  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[ActionReturningMirror[O,List[O]]] =
     Future(
       ActionReturningMirror[O, List[O]](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo)
     )
 
   def executeBatchAction(
     groups: List[BatchGroup]
-  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
+  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[BatchActionMirror] =
     Future {
       BatchActionMirror(
         groups.map { case BatchGroup(string, prepare) =>
@@ -145,7 +145,7 @@ class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
   def executeBatchActionReturning[T](
     groups: List[BatchGroupReturning],
     extractor: Extractor[T]
-  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
+  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[BatchActionReturningMirror[T]] =
     Future {
       BatchActionReturningMirror[T](
         groups.map { case BatchGroupReturning(string, returningBehavior, prepare) =>

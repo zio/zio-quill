@@ -3,7 +3,7 @@ package io.getquill.codegen.gen
 import io.getquill.codegen.model._
 import io.getquill.codegen.util.StringUtil.{indent, _}
 
-case class EmitterSettings[TableMeta, ColumnMeta](
+final case class EmitterSettings[TableMeta, ColumnMeta](
   caseClassTables: Seq[TableStereotype[TableMeta, ColumnMeta]],
   querySchemaTables: Seq[TableStereotype[TableMeta, ColumnMeta]],
   codeWrapper: CodeWrapper
@@ -35,7 +35,7 @@ abstract class AbstractCodeEmitter {
       def code: String
       def tableName: String
       def schemaName: Option[String]
-      def fullTableName = schemaName.map(_ + ".").getOrElse("") + tableName
+      def fullTableName: String = schemaName.map(_ + ".").getOrElse("") + tableName
       def rawCaseClassName: String
       def actualCaseClassName: String
 
@@ -53,7 +53,7 @@ abstract class AbstractCodeEmitter {
 
 trait ObjectGen {
   def objectName: Option[String]
-  def surroundByObject(innerCode: String) =
+  def surroundByObject(innerCode: String): String =
     objectName match {
       case None => innerCode
       case Some(objectNameActual) =>
@@ -76,7 +76,7 @@ trait PackageGen {
   }
 
   def codeWrapper: CodeWrapper
-  def surroundByPackage(innerCode: String) =
+  def surroundByPackage(innerCode: String): String =
     codeWrapper match {
       case NoWrapper => innerCode
       case PackageHeader(packageName) => {

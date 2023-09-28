@@ -28,7 +28,7 @@ class ApplyMap(traceConfig: TraceConfig) {
 
   object InfixedTailOperation {
 
-    def hasImpureInfix(ast: Ast) =
+    def hasImpureInfix(ast: Ast): Boolean =
       CollectAst(ast) { case i @ Infix(_, _, false, _, _) =>
         i
       }.nonEmpty

@@ -4,7 +4,6 @@ import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcContextVerbExecute
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.{ContextVerbStream, ExecutionInfo}
-import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.util.ContextLogger
 import io.getquill.{NamingStrategy, ReturnAction}
 import zio.Exit.{Failure, Success}
@@ -174,7 +173,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
   /**
    * Override to enable specific vendor options needed for streaming
    */
-  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
+  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]): PreparedStatement = {
     val stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
     fetchSize.foreach { size =>
       stmt.setFetchSize(size)

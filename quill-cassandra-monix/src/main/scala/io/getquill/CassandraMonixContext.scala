@@ -7,7 +7,6 @@ import io.getquill.context.ExecutionInfo
 import io.getquill.context.cassandra.CqlIdiom
 import io.getquill.context.monix.MonixContext
 import io.getquill.util.{ContextLogger, LoadConfig}
-import io.getquill.context.cassandra.util.FutureConversions._
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
@@ -64,7 +63,7 @@ class CassandraMonixContext[+N <: NamingStrategy](
     dc: Runner
   ): Task[List[T]] =
     streamQuery[T](None, cql, prepare, extractor)(info, dc)
-      .foldLeftL(List[T]()) { case (l, r) => r +: l }
+      .foldLeftL(List.empty[T]) { case (l, r) => r +: l }
       .map(_.reverse)
 
   def executeQuerySingle[T](

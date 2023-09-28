@@ -20,13 +20,13 @@ trait CqlIdiom extends Idiom {
 
   override def liftingPlaceholder(idx: Int) = "?"
 
-  override def emptySetContainsToken(field: Token) = stmt"$field IN ()"
+  override def emptySetContainsToken(field: Token): Statement = stmt"$field IN ()"
 
   override def prepareForProbing(string: String) = string
 
   override def translate(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
     implicit naming: NamingStrategy
-  ) = {
+  ): (Ast, Statement, ExecutionType) = {
     val cqlNormalize  = new CqlNormalize(idiomContext.config)
     val normalizedAst = cqlNormalize(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
@@ -34,7 +34,7 @@ trait CqlIdiom extends Idiom {
 
   override def translateCached(ast: Ast, topLevelQuat: Quat, executionType: ExecutionType, idiomContext: IdiomContext)(
     implicit naming: NamingStrategy
-  ) = {
+  ): (Ast, Statement, ExecutionType) = {
     val cqlNormalize  = new CqlNormalize(idiomContext.config)
     val normalizedAst = NormalizeCaching(cqlNormalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)

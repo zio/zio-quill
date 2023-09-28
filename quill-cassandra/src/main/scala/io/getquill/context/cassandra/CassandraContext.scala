@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import java.util.{Date, UUID}
+import java.util.UUID
 import io.getquill.NamingStrategy
 import io.getquill.context.Context
 import io.getquill.context.cassandra.encoding.{CassandraMapper, Encodings}

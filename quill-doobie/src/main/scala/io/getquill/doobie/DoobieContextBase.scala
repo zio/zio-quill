@@ -206,7 +206,7 @@ trait DoobieContextBase[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     ex: Extractor[A]
   )(implicit
     connection: Connection
-  ): Read[A] = new Read[A](Nil, (rs, _) => ex(rs, connection))
+  ): Read[A] = new Read[A](List.empty, (rs, _) => ex(rs, connection))
 
   // Nothing to do here.
   override def close(): Unit = ()

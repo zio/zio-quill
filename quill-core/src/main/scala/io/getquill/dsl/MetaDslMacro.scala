@@ -92,7 +92,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           )
       }
 
-    case class FieldExpansion(lookup: Tree, nullChecker: Tree)
+    final case class FieldExpansion(lookup: Tree, nullChecker: Tree)
 
     def expandRecurse(value: Value): FieldExpansion =
       value match {

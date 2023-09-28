@@ -12,14 +12,13 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
   val interp = new Interpolator(TraceType.FlattenOptionOperation, traceConfig, 2)
   import interp._
 
-  private def emptyOrNot(b: Boolean, ast: Ast) =
-    if (b) OptionIsEmpty(ast) else OptionNonEmpty(ast)
+  
 
-  def validateContainsOrElse(containsNon: Boolean, succeedWith: () => Ast, orElse: () => Ast) =
+  def validateContainsOrElse(containsNon: Boolean, succeedWith: () => Ast, orElse: () => Ast): Ast =
     if (containsNon) succeedWith()
     else orElse()
 
-  def uncheckedReduction(ast: Ast, alias: Ident, body: Ast, validateBody: Ast => Boolean) =
+  def uncheckedReduction(ast: Ast, alias: Ident, body: Ast, validateBody: Ast => Boolean): Ast =
     validateContainsOrElse(
       validateBody(body),
       () => {
@@ -29,7 +28,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
       () => apply(BetaReduction(body, alias -> ast))
     )
 
-  def uncheckedForall(ast: Ast, alias: Ident, body: Ast, validateBody: Ast => Boolean) =
+  def uncheckedForall(ast: Ast, alias: Ident, body: Ast, validateBody: Ast => Boolean): Ast =
     validateContainsOrElse(
       validateBody(body),
       () => {
@@ -42,7 +41,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
       }
     )
 
-  def containsNonFallthroughElement(ast: Ast) =
+  def containsNonFallthroughElement(ast: Ast): Boolean =
     CollectAst(ast) {
       case If(_, _, _)                                                                    => true
       case Infix(_, _, _, _, _)                                                           => true

@@ -22,7 +22,7 @@ trait SnakeCaseNames extends NameParser {
 object LiteralNames   extends LiteralNames
 object SnakeCaseNames extends SnakeCaseNames
 
-case class CustomNames(
+final case class CustomNames(
   columnParser: JdbcColumnMeta => String = cm => cm.columnName.snakeToLowerCamel,
   tableParser: JdbcTableMeta => String = tm => tm.tableName.snakeToUpperCamel
 ) extends NameParser {
@@ -31,7 +31,7 @@ case class CustomNames(
   def parseTable(tm: JdbcTableMeta): String   = tableParser(tm)
 }
 
-case class SnakeCaseCustomTable(
+final case class SnakeCaseCustomTable(
   tableParser: JdbcTableMeta => String
 ) extends NameParser {
   def generateQuerySchemas                    = true

@@ -1,10 +1,10 @@
 package io.getquill.codegen.util
 
 object ScalaLangUtil {
-  def escape(str: String) =
+  def escape(str: String): String =
     if (isKeyword(str)) s"`${str}`" else str
 
-  def isKeyword(word: String) = keywords.contains(word.trim)
+  def isKeyword(word: String): Boolean = keywords.contains(word.trim)
   private val keywords = Set(
     "abstract",
     "case",

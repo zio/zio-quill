@@ -16,7 +16,7 @@ object ExpandReturning {
 
   def applyMap(
     returning: ReturningAction
-  )(f: (Ast, Statement) => String)(idiom: Idiom, naming: NamingStrategy, idiomContext: IdiomContext) =
+  )(f: (Ast, Statement) => String)(idiom: Idiom, naming: NamingStrategy, idiomContext: IdiomContext): ReturnAction =
     idiom.idiomReturningCapability match {
       case ReturningClauseSupported | OutputClauseSupported =>
         ReturnAction.ReturnRecord

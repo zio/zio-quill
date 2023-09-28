@@ -5,11 +5,11 @@ import io.getquill.context.sql._
 import io.getquill.quotation.FreeVariables
 import io.getquill.quat.Quat
 
-case class Error(free: List[Ident], ast: Ast)
-case class InvalidSqlQuery(errors: List[Error]) {
-  override def toString = {
+final case class Error(free: List[Ident], ast: Ast)
+final case class InvalidSqlQuery(errors: List[Error]) {
+  override def toString: String = {
     val allVars  = errors.flatMap(_.free).distinct
-    val firstVar = errors.headOption.flatMap(_.free.headOption).getOrElse("someVar")
+    errors.headOption.flatMap(_.free.headOption).getOrElse("someVar")
     s"""
        |When synthesizing Joins, Quill found some variables that could not be traced back to their
        |origin: ${allVars.map(_.name)}. Typically this happens when there are some flatMapped
@@ -54,7 +54,7 @@ object VerifySqlQuery {
           )
           nav
       }
-    loop(q.from, Set())
+    loop(q.from, Set.empty)
   }
 
   private def verify(query: FlattenSqlQuery): Option[InvalidSqlQuery] = {

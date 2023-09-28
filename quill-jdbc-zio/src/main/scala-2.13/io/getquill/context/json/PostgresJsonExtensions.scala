@@ -37,7 +37,7 @@ trait PostgresJsonExtensions { this: Encoders with Decoders =>
     )
 
   def astDecoder[Wrapper](valueFromString: Json => Wrapper): Decoder[Wrapper] =
-    decoder { (index, row, session) =>
+    decoder { (index, row, _) =>
       val obj        = row.getObject(index, classOf[org.postgresql.util.PGobject])
       val jsonString = obj.getValue
       Json.decoder.decodeJson(jsonString) match {
@@ -72,7 +72,7 @@ trait PostgresJsonExtensions { this: Encoders with Decoders =>
     jsonType: String,
     jsonDecoder: JsonDecoder[JsValue]
   ): Decoder[Wrapper] =
-    decoder { (index, row, session) =>
+    decoder { (index, row, _) =>
       val obj        = row.getObject(index, classOf[org.postgresql.util.PGobject])
       val jsonString = obj.getValue
       jsonDecoder.decodeJson(jsonString) match {
