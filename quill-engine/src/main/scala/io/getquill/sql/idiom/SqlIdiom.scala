@@ -202,13 +202,12 @@ trait SqlIdiom extends Idiom {
         case _   => select.token
       }
 
-    def distinctTokenizer = (: Statement
+    def distinctTokenizer: Statement =
       distinct match {
         case DistinctKind.Distinct          => stmt"DISTINCT "
         case DistinctKind.DistinctOn(props) => stmt"DISTINCT ON (${props.token}) "
         case DistinctKind.None              => stmt""
       }
-    )
 
     def withDistinct: Statement = stmt"$distinctTokenizer${selectTokenizer}"
 
@@ -389,7 +388,9 @@ trait SqlIdiom extends Idiom {
     case UnionAllOperation => stmt"UNION ALL"
   }
 
-  protected def limitOffsetToken(query: Statement)(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
+  protected def limitOffsetToken(
+    query: Statement
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (None, None)                => query
       case (Some(limit), None)         => stmt"$query LIMIT ${limit.token}"
