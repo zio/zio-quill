@@ -94,9 +94,9 @@ jobs:
           java-version: '8'
           check-latest: true
       - run: |
-          sbt ++2.12.x -Dquill.scala.version=2.12.x ci-release
-          sbt ++2.13.x -Dquill.scala.version=2.13.x ci-release
-          sbt ++3.3.x -Dquill.scala.version=3.3.x ci-release
+          sbt ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
+          sbt ++2.13.x -Dquill.scala.version=2.13.x -Dquill.macro.log=false ci-release
+          sbt ++3.3.x -Dquill.scala.version=3.3.x -Dquill.macro.log=false ci-release
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
