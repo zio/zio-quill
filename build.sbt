@@ -72,26 +72,14 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 lazy val allModules =
   baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
 
-lazy val scala213Modules =
-  baseModules ++ dbModules ++ codegenModules ++ Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-    `quill-cassandra`,
-    `quill-cassandra-alpakka`,
-    `quill-cassandra-monix`,
-    `quill-cassandra-zio`,
-    `quill-orientdb`,
-    `quill-jasync`,
-    `quill-jasync-postgres`,
-    `quill-jasync-mysql`,
-    `quill-jasync-zio`,
-    `quill-jasync-zio-postgres`,
-    `quill-spark`
-  )
+lazy val scala212Modules =
+  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine`, `quill-util`)
 
-def isScala213 = {
+def isScala212 = {
   val scalaVersion = sys.props.get("quill.scala.version")
-  scalaVersion.map(_.startsWith("2.13")).getOrElse(false)
+  scalaVersion.map(_.startsWith("2.12")).getOrElse(false)
 }
 
 def isScala3 = {
@@ -150,9 +138,9 @@ lazy val filteredModules = {
         .map(matchModules)
         .flatMap(seq => ListSet(seq: _*))
 
-    if (isScala213) {
-      println("SBT =:> Compiling 2.13 Modules Only")
-      modules.filter(scala213Modules.contains(_))
+    if (isScala212) {
+      println("SBT =:> Compiling 2.12 Modules Only")
+      modules.filter(scala212Modules.contains(_))
     } else if (isScala3) {
       println("SBT =:> Compiling 3 Modules Only")
       modules.filter(scala3Modules.contains(_))
@@ -713,13 +701,13 @@ lazy val docs = project
     projectName    := "ZIO Quill",
     mainModuleName := (`quill-core` / moduleName).value,
     // With Scala 2.12, these projects doc isn't compiling.
-    ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(
-      `quill-engine`,
-      `quill-core`,
-      `quill-cassandra-monix`,
-      `quill-orientdb`,
-      `quill-doobie`
-    ),
+    //ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(
+    //  `quill-engine`,
+    //  `quill-core`,
+    //  `quill-cassandra-monix`,
+    //  `quill-orientdb`,
+    //  `quill-doobie`
+    //),
     projectStage                          := ProjectStage.ProductionReady,
     checkArtifactBuildProcessWorkflowStep := None,
     docsPublishBranch                     := "master",
