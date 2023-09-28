@@ -47,8 +47,6 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
   val idiom  = SparkDialect
   val naming = Literal
 
-  __
-
   def liftQuery[T](ds: Dataset[T]) =
     quote {
       sql"${lift(ds)}".pure.as[Query[T]]
