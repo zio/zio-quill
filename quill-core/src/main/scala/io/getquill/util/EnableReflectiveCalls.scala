@@ -7,8 +7,9 @@ object EnableReflectiveCalls {
 
   def apply(c: Context): List[c.universe.SymTree with Trees.`<refinement>`] = {
     import c.universe._
-    q"import _root_.scala.language.reflectiveCalls" ::
-      q"Nil.asInstanceOf[{ def size }].size" ::
-      List.empty
+    List(
+      q"import _root_.scala.language.reflectiveCalls",
+      q"Nil.asInstanceOf[{ def size }].size"
+    )
   }
 }
