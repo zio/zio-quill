@@ -51,11 +51,7 @@ object StatementInterpolator {
 
   implicit def liftTokenizer: Tokenizer[Lift] =
     Tokenizer[Lift] {
-      case tag: ScalarTag    => ScalarTagToken(tag)
-      case tag: QuotationTag => QuotationTagToken(tag)
-      case lift: ScalarLift  => ScalarLiftToken(lift)
-      // TODO Longer Explanation
-      case lift: Tag => fail("Cannot tokenizer a non-scalar tagging.")
+      case lift: ScalarLift => ScalarLiftToken(lift)
       case lift: Lift =>
         fail(
           s"Can't tokenize a non-scalar lifting. ${lift.name}\n" +
