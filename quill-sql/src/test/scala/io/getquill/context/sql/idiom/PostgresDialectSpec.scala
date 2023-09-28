@@ -7,7 +7,8 @@ import io.getquill.TestEntities
 
 class PostgresDialectSpec extends OnConflictSpec {
 
-  val ctx: SqlMirrorContext[PostgresDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[PostgresDialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
   import ctx._
 
   "applies explicit casts" - {

@@ -185,7 +185,7 @@ class OrientDBQuerySpec extends Spec {
 
   import OrientDBIdiom._
   implicit val n = Literal
-  val i: Ident          = Ident("i")
+  val i: Ident   = Ident("i")
 
   "tokenizers" - {
     "if" in {
@@ -198,7 +198,9 @@ class OrientDBQuerySpec extends Spec {
     }
     "query" in {
       val t = implicitly[Tokenizer[AstQuery]]
-      t.token(Entity("name", List.empty, QEP)) mustBe new SqlQueryApply(TraceConfig.Empty)(Entity("name", List.empty, QEP)).token
+      t.token(Entity("name", List.empty, QEP)) mustBe new SqlQueryApply(TraceConfig.Empty)(
+        Entity("name", List.empty, QEP)
+      ).token
     }
     "sql query" in {
       val t = implicitly[Tokenizer[SqlQuery]]

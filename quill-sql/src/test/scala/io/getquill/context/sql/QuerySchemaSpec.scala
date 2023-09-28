@@ -5,7 +5,8 @@ import io.getquill.{Literal, PostgresDialect, SqlMirrorContext, TestEntities}
 
 class QuerySchemaSpec extends Spec {
 
-  val ctx: SqlMirrorContext[PostgresDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[PostgresDialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
   import ctx._
 
   "OnConflict Should work correct with" - {

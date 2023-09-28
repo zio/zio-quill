@@ -3,7 +3,7 @@ package io.getquill.base
 import io.getquill.context.Context
 
 import java.util.Date
-import io.getquill.{ Delete, Insert, Quoted }
+import io.getquill.{Delete, Insert, Quoted}
 import org.scalatest.Assertion
 
 trait EncodingSpec extends Spec {
@@ -41,7 +41,32 @@ trait EncodingSpec extends Spec {
     query[EncodingTestEntity].delete
   }
 
-  val insert: Quoted[(String, BigDecimal, Boolean, Byte, Short, Int, Long, Float, Double, Array[Byte], Date, Option[String], Option[BigDecimal], Option[Boolean], Option[Byte], Option[Short], Option[Int], Option[Long], Option[Float], Option[Double], Option[Array[Byte]], Option[Date]) => Insert[EncodingTestEntity]] = quote {
+  val insert: Quoted[
+    (
+      String,
+      BigDecimal,
+      Boolean,
+      Byte,
+      Short,
+      Int,
+      Long,
+      Float,
+      Double,
+      Array[Byte],
+      Date,
+      Option[String],
+      Option[BigDecimal],
+      Option[Boolean],
+      Option[Byte],
+      Option[Short],
+      Option[Int],
+      Option[Long],
+      Option[Float],
+      Option[Double],
+      Option[Array[Byte]],
+      Option[Date]
+    ) => Insert[EncodingTestEntity]
+  ] = quote {
     (
       v1: String,
       v2: BigDecimal,
@@ -92,7 +117,32 @@ trait EncodingSpec extends Spec {
       )
   }
 
-  val insertValues: List[(String, BigDecimal, Boolean, Byte, Short, Int, Long, Float, Double, Array[Byte], Date, Option[String], Option[BigDecimal], Option[Boolean], Option[Byte], Option[Short], Option[Int], Option[Long], Option[Float], Option[Double], Option[Array[Byte]], Option[Date])] =
+  val insertValues: List[
+    (
+      String,
+      BigDecimal,
+      Boolean,
+      Byte,
+      Short,
+      Int,
+      Long,
+      Float,
+      Double,
+      Array[Byte],
+      Date,
+      Option[String],
+      Option[BigDecimal],
+      Option[Boolean],
+      Option[Byte],
+      Option[Short],
+      Option[Int],
+      Option[Long],
+      Option[Float],
+      Option[Double],
+      Option[Array[Byte]],
+      Option[Date]
+    )
+  ] =
     List[
       (
         String,

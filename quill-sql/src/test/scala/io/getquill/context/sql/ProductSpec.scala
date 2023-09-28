@@ -2,7 +2,7 @@ package io.getquill.context.sql
 
 import io.getquill.Query
 import io.getquill.base.Spec
-import io.getquill.{ ActionReturning, EntityQuery, Quoted }
+import io.getquill.{ActionReturning, EntityQuery, Quoted}
 
 final case class Id(value: Long) extends AnyVal
 
@@ -36,7 +36,7 @@ trait ProductSpec extends Spec {
     Product(0L, "Pencil", 1003L)
   )
 
-  val productSingleInsert: Quoted[ActionReturning[Product,Long]] = quote {
+  val productSingleInsert: Quoted[ActionReturning[Product, Long]] = quote {
     product.insert(_.id -> 0, _.description -> "Window", _.sku -> 1004L).returningGenerated(_.id)
   }
 }

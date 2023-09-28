@@ -22,7 +22,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     ContactBase("Caboose", "Castle", 66),
     ContactBase("E", "E", 111)
   )
-  val updatePeople: List[String]                             = List("Joe", "Jan", "James", "Dale", "Caboose")
+  val updatePeople: List[String]               = List("Joe", "Jan", "James", "Dale", "Caboose")
   def includeInUpdate(name: String): Boolean   = updatePeople.contains(name)
   def includeInUpdate(c: ContactBase): Boolean = includeInUpdate(c.firstName)
   val updateBase: List[ContactBase] =

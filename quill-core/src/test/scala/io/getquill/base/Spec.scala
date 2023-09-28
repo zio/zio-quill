@@ -13,7 +13,7 @@ import scala.concurrent.{Await, Future}
 import io.getquill.context.ExecutionType
 
 abstract class Spec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
-  val QV                                = Quat.Value
+  val QV                                              = Quat.Value
   val QEP: Quat.Product                               = Quat.Product.empty("Product")
   def QP(name: String, fields: String*): Quat.Product = Quat.LeafProduct(name, fields: _*)
 

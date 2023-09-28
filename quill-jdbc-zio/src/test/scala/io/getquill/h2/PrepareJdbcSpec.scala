@@ -18,8 +18,9 @@ class PrepareJdbcSpec extends PrepareZioJdbcSpecBase with BeforeAndAfter {
     testContext.run(query[Product].delete).runSyncUnsafe()
   }
 
-  def productExtractor: (ResultSet, Connection) => Product = (rs: ResultSet, conn: Connection) => materializeQueryMeta[Product].extract(rs, conn)
-  val prepareQuery: ZioJdbc.QCIO[PreparedStatement]     = prepare(query[Product])
+  def productExtractor: (ResultSet, Connection) => Product = (rs: ResultSet, conn: Connection) =>
+    materializeQueryMeta[Product].extract(rs, conn)
+  val prepareQuery: ZioJdbc.QCIO[PreparedStatement] = prepare(query[Product])
 
   "single" in {
     val prepareInsert = prepare(query[Product].insertValue(lift(productEntries.head)))

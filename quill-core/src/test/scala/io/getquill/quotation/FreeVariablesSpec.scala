@@ -163,14 +163,14 @@ class FreeVariablesSpec extends Spec {
     }
     "option operators" - {
       "map" in {
-        
+
         val q = quote {
           qr1.map(t => t.o.map(_ == t.i))
         }
         FreeVariables(q.ast) mustBe empty
       }
       "forall" in {
-        
+
         val q = quote {
           qr1.filter(t => t.o.forall(_ == t.i))
         }
@@ -178,14 +178,14 @@ class FreeVariablesSpec extends Spec {
 
       }
       "exists" in {
-        
+
         val q = quote {
           qr1.filter(t => t.o.exists(_ == t.i))
         }
         FreeVariables(q.ast) mustBe empty
       }
       "contains" in {
-        
+
         val q = quote {
           qr1.filter(t => t.o.contains(t.i))
         }

@@ -11,7 +11,7 @@ import io.getquill.QuillSparkContext._
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import io.getquill.{ Query, Quoted }
+import io.getquill.{Query, Quoted}
 import org.apache.spark.sql.SQLContext
 
 final case class User(
@@ -69,7 +69,9 @@ object GitHubExample extends App {
 
   import sqlContext.implicits._
 
-  val activities: Quoted[Query[Activity]] = liftQuery(sqlContext.read.json(files.map(n => s"$n.json.gz"): _*).as[Activity])
+  val activities: Quoted[Query[Activity]] = liftQuery(
+    sqlContext.read.json(files.map(n => s"$n.json.gz"): _*).as[Activity]
+  )
 
   val topStargazers: Quoted[Query[(String, Long)]] = quote {
     activities

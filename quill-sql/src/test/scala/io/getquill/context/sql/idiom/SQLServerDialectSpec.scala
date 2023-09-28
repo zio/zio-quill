@@ -10,7 +10,8 @@ class SQLServerDialectSpec extends Spec {
     SQLServerDialect.emptySetContainsToken(StringToken("w/e")) mustBe StringToken("1 <> 1")
   }
 
-  val ctx: SqlMirrorContext[SQLServerDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[SQLServerDialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities
   import ctx._
 
   "uses + instead of ||" in {

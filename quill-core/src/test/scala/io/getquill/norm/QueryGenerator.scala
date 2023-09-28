@@ -32,7 +32,7 @@ class QueryGenerator(seed: Int) {
   def apply(i: Int): Query =
     if (i <= 2) {
       Quat.Product("Test")
-      val s    = string(3)
+      val s = string(3)
       Entity(s, List.empty, Quat.Product("Test", (1 to 20).map(_ => (string(3), Quat.Value)).toList.distinct: _*))
     } else {
       random.nextInt(8) match {

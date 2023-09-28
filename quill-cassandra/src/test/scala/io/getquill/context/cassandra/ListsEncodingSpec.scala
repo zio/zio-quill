@@ -2,7 +2,7 @@ package io.getquill.context.cassandra
 
 import java.util.UUID
 import java.time.{Instant, LocalDate}
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 class ListsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB

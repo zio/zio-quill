@@ -2,7 +2,7 @@ package io.getquill.context.sql.mirror
 
 import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 class ObservationMirrorSpec extends Spec {
 

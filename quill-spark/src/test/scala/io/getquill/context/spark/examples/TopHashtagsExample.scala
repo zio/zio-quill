@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions.{count => fcount, _}
 import io.getquill.QuillSparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.Dataset
-import org.apache.spark.sql.{ Row, SQLContext }
+import org.apache.spark.sql.{Row, SQLContext}
 
 object TopHashtagsExample extends App {
 
@@ -84,9 +84,9 @@ object TopHashtagsExample extends App {
   val tweets: Dataset[Tweet] = List(Tweet("some #hashTAG #h2"), Tweet("dds #h2 #hashtag #h2 #h3")).toDS()
 
   val rddR: List[(String, BigInt)] = rdd.topHashtags(tweets.rdd, 10).toList
-  val dfR: List[Row]  = dataframe.topHashtags(tweets.toDF(), 10).rdd.toLocalIterator.toList
+  val dfR: List[Row]               = dataframe.topHashtags(tweets.toDF(), 10).rdd.toLocalIterator.toList
   val dsR: List[(String, BigInt)]  = dataset.topHashtags(tweets, 10).rdd.toLocalIterator.toList
-  val qR: List[(String, Long)]   = quill.topHashtags(tweets, 10).rdd.toLocalIterator.toList
+  val qR: List[(String, Long)]     = quill.topHashtags(tweets, 10).rdd.toLocalIterator.toList
 
   println("rddR: " + rddR)
   println("dfR: " + dfR)

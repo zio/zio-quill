@@ -13,7 +13,7 @@ object PlainApp {
 
   final case class Person(name: String, age: Int)
 
-  val zioDS: ZLayer[Any,Throwable,DataSource] = Quill.DataSource.fromPrefix("testPostgresDB")
+  val zioDS: ZLayer[Any, Throwable, DataSource] = Quill.DataSource.fromPrefix("testPostgresDB")
 
   def main(args: Array[String]): Unit = {
     val people = quote {

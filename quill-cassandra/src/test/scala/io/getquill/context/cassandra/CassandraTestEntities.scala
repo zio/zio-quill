@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra
 
 import io.getquill.TestEntities
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 trait CassandraTestEntities extends TestEntities {
   this: CassandraContext[_] =>

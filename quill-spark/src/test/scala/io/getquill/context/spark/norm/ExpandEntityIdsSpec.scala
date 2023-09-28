@@ -2,7 +2,7 @@ package io.getquill.context.spark.norm
 
 import io.getquill.base.Spec
 import io.getquill.context.spark.{sqlContext, testContext}
-import io.getquill.{ Query, Quoted }
+import io.getquill.{Query, Quoted}
 
 final case class Test(i: Int, j: Int, s: String)
 final case class TestHolder(ta: Test, tb: Test)
@@ -22,7 +22,7 @@ class ExpandEntityIdsSpec extends Spec {
   import testContext._
   import sqlContext.implicits._
 
-  val ent: Test      = Test(1, 2, "3")
+  val ent: Test           = Test(1, 2, "3")
   val entities: Seq[Test] = Seq(ent)
 
   val qr1: Quoted[Query[Test]] = liftQuery(entities.toDS)
@@ -30,9 +30,11 @@ class ExpandEntityIdsSpec extends Spec {
   val qr3: Quoted[Query[Test]] = liftQuery(entities.toDS)
   val qr4: Quoted[Query[Test]] = liftQuery(entities.toDS)
 
-  val s0: Quoted[Query[Tuple1[Int]]] = liftQuery(Seq(Tuple1(1), Tuple1(2)).toDS)
+  val s0: Quoted[Query[Tuple1[Int]]]   = liftQuery(Seq(Tuple1(1), Tuple1(2)).toDS)
   val s1: Quoted[Query[SingleElement]] = liftQuery(Seq(SingleElement(1), SingleElement(2)).toDS)
-  val s2: Quoted[Query[SingleElementSingleHolder]] = liftQuery(Seq(SingleElementSingleHolder(SingleElement(1)), SingleElementSingleHolder(SingleElement(2))).toDS)
+  val s2: Quoted[Query[SingleElementSingleHolder]] = liftQuery(
+    Seq(SingleElementSingleHolder(SingleElement(1)), SingleElementSingleHolder(SingleElement(2))).toDS
+  )
   val s3: Quoted[Query[SingleElementMultiHolder]] = liftQuery(
     Seq(
       SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(1)),

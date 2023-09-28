@@ -14,8 +14,8 @@ import com.zaxxer.hikari.HikariDataSource
 
 class ResultSetIteratorSpec extends AnyFreeSpec with Matchers with BeforeAndAfterAll {
 
-  val ds: HikariDataSource                 = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
-  implicit val scheduler = Scheduler.global
+  val ds: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
+  implicit val scheduler   = Scheduler.global
 
   val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.default)
   import ctx._

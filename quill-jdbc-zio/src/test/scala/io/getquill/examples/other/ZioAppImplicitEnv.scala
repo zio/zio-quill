@@ -9,7 +9,7 @@ import zio.ZIOAppDefault
 import javax.sql.DataSource
 import com.zaxxer.hikari.HikariDataSource
 import java.sql.SQLException
-import zio.{ ExitCode, IO, URIO }
+import zio.{ExitCode, IO, URIO}
 
 object ZioAppImplicitEnv extends ZIOAppDefault {
 
@@ -23,12 +23,12 @@ object ZioAppImplicitEnv extends ZIOAppDefault {
     import Ctx._
     implicit val env: Implicit[DataSource] = Implicit(ds)
 
-    val joes: IO[SQLException,List[Person]]   = Ctx.run(query[Person].filter(p => p.name == "Joe")).implicitly
-    val jills: IO[SQLException,List[Person]]  = Ctx.run(query[Person].filter(p => p.name == "Jill")).implicitly
-    val alexes: IO[SQLException,List[Person]] = Ctx.run(query[Person].filter(p => p.name == "Alex")).implicitly
+    val joes: IO[SQLException, List[Person]]   = Ctx.run(query[Person].filter(p => p.name == "Joe")).implicitly
+    val jills: IO[SQLException, List[Person]]  = Ctx.run(query[Person].filter(p => p.name == "Jill")).implicitly
+    val alexes: IO[SQLException, List[Person]] = Ctx.run(query[Person].filter(p => p.name == "Alex")).implicitly
   }
 
-  override def run: URIO[Any,ExitCode] =
+  override def run: URIO[Any, ExitCode] =
     MyQueryService(dataSource).joes
       .tap(result => printLine(result.toString))
       .exitCode

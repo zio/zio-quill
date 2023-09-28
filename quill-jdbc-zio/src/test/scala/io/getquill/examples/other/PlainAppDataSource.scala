@@ -18,7 +18,7 @@ object PlainAppDataSource {
 
   def config: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  val zioDS: ZLayer[Any,Throwable,DataSource] = Quill.DataSource.fromDataSource(new HikariDataSource(config))
+  val zioDS: ZLayer[Any, Throwable, DataSource] = Quill.DataSource.fromDataSource(new HikariDataSource(config))
 
   def main(args: Array[String]): Unit = {
     val people = quote {

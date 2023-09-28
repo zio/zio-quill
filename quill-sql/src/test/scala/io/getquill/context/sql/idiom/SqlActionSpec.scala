@@ -132,7 +132,7 @@ class SqlActionSpec extends Spec {
       "update" - {
         "reuse field name - with no filter" in {
           final case class Timeslot(id: Int, booked: Int)
-          
+
           val q = quote {
             query[Timeslot]
               .update(ts => ts.booked -> (ts.booked + lift(1)))

@@ -9,13 +9,14 @@ import scala.util.Try
 
 class OffsetWithoutLimitWorkaroundSpec extends Spec {
 
-  val ctx: SqlMirrorContext[MySQLDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(MySQLDialect, Literal) with TestEntities {
-    override def probe(statement: String) =
-      Try {
-        statement mustEqual
-          "PREPARE p603247403 FROM 'SELECT x.s, x.i, x.l, x.o FROM TestEntity x LIMIT 18446744073709551610 OFFSET 1'"
-      }
-  }
+  val ctx: SqlMirrorContext[MySQLDialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(MySQLDialect, Literal) with TestEntities {
+      override def probe(statement: String) =
+        Try {
+          statement mustEqual
+            "PREPARE p603247403 FROM 'SELECT x.s, x.i, x.l, x.o FROM TestEntity x LIMIT 18446744073709551610 OFFSET 1'"
+        }
+    }
   import ctx._
 
   "creates a synthetic limit" in {

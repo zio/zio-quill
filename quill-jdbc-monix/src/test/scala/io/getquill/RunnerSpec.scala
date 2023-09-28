@@ -12,9 +12,9 @@ import scala.util.Failure
 class RunnerSpec extends Spec {
 
   class SideEffect {
-    private var state = 0
-    def apply(): Unit       = state = 1
-    def applied: Boolean       = state == 1
+    private var state    = 0
+    def apply(): Unit    = state = 1
+    def applied: Boolean = state == 1
   }
 
   implicit val scheduler = Scheduler.global

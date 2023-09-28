@@ -6,7 +6,7 @@ import zio.{ZIOAppDefault, ZLayer}
 import zio.Console.printLine
 
 import javax.sql.DataSource
-import zio.{ ExitCode, URIO }
+import zio.{ExitCode, URIO}
 
 object ZioAppManual extends ZIOAppDefault {
 
@@ -16,7 +16,7 @@ object ZioAppManual extends ZIOAppDefault {
   final case class Person(name: String, age: Int)
   lazy val ds: DataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  override def run: URIO[Any,ExitCode] = {
+  override def run: URIO[Any, ExitCode] = {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }

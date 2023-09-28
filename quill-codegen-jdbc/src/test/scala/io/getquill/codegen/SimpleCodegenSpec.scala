@@ -25,7 +25,12 @@ class SimpleCodegenSpec extends AnyFreeSpec with Matchers {
 
   case class QuerySchema(defName: String, tableName: String, fields: Seq[(String, String)])
 
-  def assertStandardObject(objectCode: String, objectName: String, ccName: String, querySchemas: Seq[QuerySchema]): Unit = {
+  def assertStandardObject(
+    objectCode: String,
+    objectName: String,
+    ccName: String,
+    querySchemas: Seq[QuerySchema]
+  ): Unit = {
     val tb = runtimeMirror(this.getClass.getClassLoader).mkToolBox()
     val ob = tb.parse(objectCode)
     ob match {

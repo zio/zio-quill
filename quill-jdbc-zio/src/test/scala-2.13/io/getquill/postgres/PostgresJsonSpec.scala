@@ -16,9 +16,9 @@ class PostgresJsonSpec extends ZioSpec {
   case class JsonbEntity(name: String, value: JsonbValue[PersonJsonb])
 
   val jsonJoe: JsonValue[PersonJson]    = JsonValue(PersonJson("Joe", 123))
-  val jsonValue: JsonEntity  = JsonEntity("JoeEntity", jsonJoe)
-  val jsonbJoe: JsonbValue[PersonJsonb]   = JsonbValue(PersonJsonb("Joe", 123))
-  val jsonbValue: JsonbEntity = JsonbEntity("JoeEntity", jsonbJoe)
+  val jsonValue: JsonEntity             = JsonEntity("JoeEntity", jsonJoe)
+  val jsonbJoe: JsonbValue[PersonJsonb] = JsonbValue(PersonJsonb("Joe", 123))
+  val jsonbValue: JsonbEntity           = JsonbEntity("JoeEntity", jsonbJoe)
 
   case class JsonAstEntity(name: String, value: JsonValue[Json])
   case class JsonbAstEntity(name: String, value: JsonbValue[Json])

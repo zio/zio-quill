@@ -3,7 +3,8 @@ package io.getquill.context.sql.idiom
 import io.getquill._
 
 class MySQL5DialectSpec extends AbstractMySQLDialectSpec {
-  lazy val ctx: SqlMirrorContext[MySQL5Dialect.type,Literal.type] with TestEntities = new SqlMirrorContext(MySQL5Dialect, Literal) with TestEntities
+  lazy val ctx: SqlMirrorContext[MySQL5Dialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(MySQL5Dialect, Literal) with TestEntities
 
   import ctx._
 

@@ -2,17 +2,9 @@ package io.getquill.context.sql
 
 import io.getquill.base.Spec
 
-import java.time.{
-  LocalDate,
-  LocalDateTime,
-  OffsetDateTime,
-  OffsetTime,
-  ZoneId,
-  ZoneOffset,
-  ZonedDateTime
-}
+import java.time.{LocalDate, LocalDateTime, OffsetDateTime, OffsetTime, ZoneId, ZoneOffset, ZonedDateTime}
 import java.util.{Date, UUID}
-import io.getquill.{ Delete, Quoted }
+import io.getquill.{Delete, Quoted}
 import org.scalatest.Assertion
 
 final case class EncodingTestType(value: String)
@@ -236,8 +228,8 @@ trait EncodingSpec extends Spec {
 
   case class BarCode(description: String, uuid: Option[UUID] = None)
 
-  val insertBarCode = quote((b: BarCode) => query[BarCode].insertValue(b).returningGenerated(_.uuid))
-  val barCodeEntry: BarCode  = BarCode("returning UUID")
+  val insertBarCode         = quote((b: BarCode) => query[BarCode].insertValue(b).returningGenerated(_.uuid))
+  val barCodeEntry: BarCode = BarCode("returning UUID")
 
   def findBarCodeByUuid(uuid: UUID) = quote(query[BarCode].filter(_.uuid.forall(_ == lift(uuid))))
 

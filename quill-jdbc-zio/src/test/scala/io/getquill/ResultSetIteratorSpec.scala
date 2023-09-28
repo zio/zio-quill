@@ -10,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
 class ResultSetIteratorSpec extends ZioProxySpec {
 
   implicit val pool: Implicit[DataSource] = Implicit(io.getquill.postgres.pool)
-  val ctx           = new PostgresZioJdbcContext(Literal)
+  val ctx                                 = new PostgresZioJdbcContext(Literal)
   import ctx._
 
   case class Person(name: String, age: Int)

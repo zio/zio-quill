@@ -31,19 +31,20 @@ class StreamResultsOrBlowUpSpec extends Spec {
   // that will force jdbc to load the entire ResultSet into memory and crash this test.
   val doBlowUp = false
 
-  val ctx: PostgresMonixJdbcContext[Literal.type] = new PostgresMonixJdbcContext(Literal, "testPostgresDB", EffectWrapper.default) {
-    override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
-      val stmt =
-        conn.prepareStatement(
-          sql,
-          if (doBlowUp) ResultSet.TYPE_SCROLL_SENSITIVE
-          else ResultSet.TYPE_FORWARD_ONLY,
-          ResultSet.CONCUR_READ_ONLY
-        )
-      fetchSize.foreach(stmt.setFetchSize(_))
-      stmt
+  val ctx: PostgresMonixJdbcContext[Literal.type] =
+    new PostgresMonixJdbcContext(Literal, "testPostgresDB", EffectWrapper.default) {
+      override protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
+        val stmt =
+          conn.prepareStatement(
+            sql,
+            if (doBlowUp) ResultSet.TYPE_SCROLL_SENSITIVE
+            else ResultSet.TYPE_FORWARD_ONLY,
+            ResultSet.CONCUR_READ_ONLY
+          )
+        fetchSize.foreach(stmt.setFetchSize(_))
+        stmt
+      }
     }
-  }
   import ctx.{run => runQuill, _}
 
   val numRows = 1000000L

@@ -26,11 +26,12 @@ class VariableShadowSpec extends Spec {
   val americans: Quoted[Query[American]] = quote(liftQuery(americansList.toDS()))
   val addresses: Quoted[Query[Address1]] = quote(liftQuery(addressesList.toDS()))
 
-  val addressToSomeone: Quoted[Query[HumanoidLivingSomewhere] => Query[HumanoidLivingSomewhere]] = quote { (hum: Query[HumanoidLivingSomewhere]) =>
-    for {
-      t <- hum
-      a <- addresses if (a.id == t.whereHeLives_id)
-    } yield t
+  val addressToSomeone: Quoted[Query[HumanoidLivingSomewhere] => Query[HumanoidLivingSomewhere]] = quote {
+    (hum: Query[HumanoidLivingSomewhere]) =>
+      for {
+        t <- hum
+        a <- addresses if (a.id == t.whereHeLives_id)
+      } yield t
   }
 
   val americanClients: Quoted[Query[HumanoidLivingSomewhere]] = quote {

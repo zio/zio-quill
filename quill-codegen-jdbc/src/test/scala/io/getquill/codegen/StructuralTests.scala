@@ -8,7 +8,7 @@ import io.getquill.codegen.util.SchemaConfig._
 
 class StructuralTests extends SimpleCodegenSpec with WithStandardCodegen {
 
-  def LOG: Logger                               = Logger(getClass)
+  def LOG: Logger                       = Logger(getClass)
   override def defaultNamespace: String = "schema"
 
   "simple end to end tests" - {

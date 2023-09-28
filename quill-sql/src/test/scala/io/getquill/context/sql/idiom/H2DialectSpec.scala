@@ -3,7 +3,8 @@ package io.getquill.context.sql.idiom
 import io.getquill.{H2Dialect, Literal, SqlMirrorContext, TestEntities}
 
 class H2DialectSpec extends OnConflictSpec {
-  val ctx: SqlMirrorContext[H2Dialect.type,Literal.type] with TestEntities = new SqlMirrorContext(H2Dialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[H2Dialect.type, Literal.type] with TestEntities = new SqlMirrorContext(H2Dialect, Literal)
+    with TestEntities
   import ctx._
   "OnConflict" - `onConflict with all` { i =>
     "no target - ignore" in {

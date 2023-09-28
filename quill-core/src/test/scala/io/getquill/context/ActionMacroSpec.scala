@@ -53,9 +53,8 @@ class ActionMacroSpec extends Spec {
         r.prepareRow mustEqual Row()
         r.returningBehavior mustEqual ReturnRecord
       }
-      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) {
-        _ =>
-          "import ctx._; ctx.run(qr1.insert(t => t.i -> 1).returning(t => t.l))" mustNot compile
+      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) { _ =>
+        "import ctx._; ctx.run(qr1.insert(t => t.i -> 1).returning(t => t.l))" mustNot compile
       }
       "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
         import ctx._
@@ -173,9 +172,8 @@ class ActionMacroSpec extends Spec {
         r.prepareRow mustEqual Row()
         r.returningBehavior mustEqual ReturnRecord
       }
-      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) {
-        _ =>
-          "import ctx._; ctx.run(qr1.update(t => t.i -> 1).returning(t => t.l))" mustNot compile
+      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) { _ =>
+        "import ctx._; ctx.run(qr1.update(t => t.i -> 1).returning(t => t.l))" mustNot compile
       }
       "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
         import ctx._
@@ -226,9 +224,8 @@ class ActionMacroSpec extends Spec {
         r.prepareRow mustEqual Row()
         r.returningBehavior mustEqual ReturnRecord
       }
-      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) {
-        _ =>
-          "import ctx._; ctx.delete.returning(t => t.l))" mustNot compile
+      "returning value - with single - should not compile" in testContext.withDialect(MirrorIdiomReturningSingle) { _ =>
+        "import ctx._; ctx.delete.returning(t => t.l))" mustNot compile
       }
       "returning value - with multi" in testContext.withDialect(MirrorIdiomReturningMulti) { ctx =>
         import ctx._

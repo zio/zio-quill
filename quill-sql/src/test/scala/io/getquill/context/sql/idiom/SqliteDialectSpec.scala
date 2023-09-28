@@ -8,7 +8,8 @@ import io.getquill.Ord
 
 class SqliteDialectSpec extends OnConflictSpec {
 
-  val ctx: SqlMirrorContext[SqliteDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(SqliteDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[SqliteDialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(SqliteDialect, Literal) with TestEntities
   import ctx._
 
   "sortBy doesn't specify nulls ordering" - {

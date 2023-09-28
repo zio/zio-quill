@@ -8,7 +8,7 @@ import scala.concurrent.duration.DurationInt
 class CacheSpec extends Spec {
 
   class Value extends Closeable {
-    var closes         = 0
+    var closes               = 0
     override def close: Unit = closes += 1
   }
 

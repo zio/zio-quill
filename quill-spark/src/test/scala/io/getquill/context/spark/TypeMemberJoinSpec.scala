@@ -39,8 +39,8 @@ class TypeMemberJoinSpec extends Spec {
   }
 
   object Data {
-    val parent: Parent     = Parent("Joe", 1)
-    val child: Child      = Child("Jack", 1)
+    val parent: Parent         = Parent("Joe", 1)
+    val child: Child           = Child("Jack", 1)
     val grandChild: GrandChild = GrandChild("James", 1)
   }
   val parents           = List(Data.parent).toDS

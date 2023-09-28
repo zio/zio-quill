@@ -11,7 +11,7 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext
   import ctx._
 
-  val q         = quote(query[ArraysTestEntity])
+  val q                           = quote(query[ArraysTestEntity])
   val corrected: ArraysTestEntity = e.copy(timestamps = e.timestamps.map(d => new Timestamp(d.getTime)))
 
   "Support all sql base types and `Seq` implementers" in {
@@ -55,9 +55,6 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
     final case class Entity(uuids: List[UUID])
     val e = Entity(List(UUID.randomUUID(), UUID.randomUUID()))
     val q = quote(querySchema[Entity]("ArraysTestEntity"))
-
-    
-    
 
     ctx.run(q.insertValue(lift(e)))
     ctx.run(q).head.uuids mustBe e.uuids

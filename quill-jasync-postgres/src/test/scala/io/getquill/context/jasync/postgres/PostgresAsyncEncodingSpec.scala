@@ -32,7 +32,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
     val testUUID = UUID.fromString("e5240c08-6ee7-474a-b5e4-91f79c48338f")
 
     // delete old values
-    val q0   = quote(query[EncodingUUIDTestEntity].delete)
+    val q0 = quote(query[EncodingUUIDTestEntity].delete)
     Await.result(testContext.run(q0), Duration.Inf)
 
     // insert new uuid

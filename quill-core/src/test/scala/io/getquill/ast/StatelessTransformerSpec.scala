@@ -387,7 +387,10 @@ class StatelessTransformerSpec extends Spec {
           Val(Ident("b"), Entity("b", List.empty, QEP))
         )
       )
-      Subject(Entity("a", List.empty, QEP) -> Entity("b", List.empty, QEP), Entity("b", List.empty, QEP) -> Entity("c", List.empty, QEP))(
+      Subject(
+        Entity("a", List.empty, QEP) -> Entity("b", List.empty, QEP),
+        Entity("b", List.empty, QEP) -> Entity("c", List.empty, QEP)
+      )(
         ast
       ) mustEqual
         Block(

@@ -5,7 +5,7 @@ import io.getquill.util.LoadConfig
 import zio.Console.printLine
 import zio.{ZEnvironment, ZIOAppDefault}
 import com.zaxxer.hikari.HikariDataSource
-import zio.{ ExitCode, URIO }
+import zio.{ExitCode, URIO}
 
 object ZioAppDataSource extends ZIOAppDefault {
 
@@ -16,7 +16,7 @@ object ZioAppDataSource extends ZIOAppDefault {
 
   def dataSource: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresDB")).dataSource
 
-  override def run: URIO[Any,ExitCode] = {
+  override def run: URIO[Any, ExitCode] = {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }

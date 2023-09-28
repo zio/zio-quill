@@ -6,7 +6,8 @@ import io.getquill.context.sql.{TestDecoders, TestEncoders}
 
 class AddDropToNestedOrderBySpec extends Spec {
 
-  val ctx: SqlMirrorContext[SQLServerDialect.type,Literal.type] with TestEntities with TestEncoders with TestDecoders = new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities with TestEncoders with TestDecoders
+  val ctx: SqlMirrorContext[SQLServerDialect.type, Literal.type] with TestEntities with TestEncoders with TestDecoders =
+    new SqlMirrorContext(SQLServerDialect, Literal) with TestEntities with TestEncoders with TestDecoders
 
   import ctx._
   val q2Sorted: Quoted[Query[TestEntity2]] = quote(qr2.sortBy(r => r.i))

@@ -6,7 +6,7 @@ import io.getquill.context.sql.testContext._
 import io.getquill.context.sql.testContext
 import io.getquill.Query
 import io.getquill.base.Spec
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 class RenamePropertiesSpec extends Spec {
 

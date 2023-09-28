@@ -5,7 +5,7 @@ import io.getquill.jdbczio.Quill
 import zio.Console.printLine
 import zio.ZIOAppDefault
 import javax.sql.DataSource
-import zio.{ ExitCode, URIO, ZLayer }
+import zio.{ExitCode, URIO, ZLayer}
 
 object ZioApp extends ZIOAppDefault {
 
@@ -14,9 +14,9 @@ object ZioApp extends ZIOAppDefault {
 
   final case class Person(name: String, age: Int)
 
-  val zioDS: ZLayer[Any,Throwable,DataSource] = Quill.DataSource.fromPrefix("testPostgresDB")
+  val zioDS: ZLayer[Any, Throwable, DataSource] = Quill.DataSource.fromPrefix("testPostgresDB")
 
-  override def run: URIO[Any,ExitCode] = {
+  override def run: URIO[Any, ExitCode] = {
     val people = quote {
       query[Person].filter(p => p.name == "Alex")
     }

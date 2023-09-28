@@ -14,7 +14,7 @@ class Issue1067 extends AnyFreeSpec with Matchers {
 
   import cats.effect.unsafe.implicits.global
 
-  lazy val xa: transactor.Transactor.Aux[IO,Unit] = Transactor.fromDriverManager[IO](
+  lazy val xa: transactor.Transactor.Aux[IO, Unit] = Transactor.fromDriverManager[IO](
     "org.postgresql.Driver",
     s"jdbc:postgresql://${System.getenv("POSTGRES_HOST")}:${System.getenv("POSTGRES_PORT")}/doobie_test",
     "postgres",

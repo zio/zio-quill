@@ -35,8 +35,8 @@ class JdbcEncodingSpec extends EncodingSpec {
   }
 
   def emptyAsNull(e: EncodingTestType): EncodingTestType = e.copy(value = if (e.value == "") null else e.value)
-  def emptyAsNull(str: String): String         = if (str == "") null else str
-  def emptyAsNull(bytes: Array[Byte]): Array[Byte]  = if (bytes == null || bytes.isEmpty) null else bytes
+  def emptyAsNull(str: String): String                   = if (str == "") null else str
+  def emptyAsNull(bytes: Array[Byte]): Array[Byte]       = if (bytes == null || bytes.isEmpty) null else bytes
 
   /**
    * Since oracle encodes "" as null, need to modify verification in order to

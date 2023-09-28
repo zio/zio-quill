@@ -25,9 +25,8 @@ class MockTests extends Spec with AsyncMockitoSugar {
       val rs       = mock[ResultSet]
       var rowIndex = -1
 
-      def introspection                = new Introspection(data(rowIndex))
-      def getIndex(i: Int): Any        = introspection.getIndex(i)
-      
+      def introspection         = new Introspection(data(rowIndex))
+      def getIndex(i: Int): Any = introspection.getIndex(i)
 
       when(rs.next()) thenAnswer {
         rowIndex += 1

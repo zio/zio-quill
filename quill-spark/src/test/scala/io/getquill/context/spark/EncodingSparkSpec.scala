@@ -1,7 +1,7 @@
 package io.getquill.context.spark
 
 import io.getquill.base.Spec
-import io.getquill.{ Query, Quoted }
+import io.getquill.{Query, Quoted}
 import org.scalatest.Assertion
 
 final case class EncodingTestEntity(

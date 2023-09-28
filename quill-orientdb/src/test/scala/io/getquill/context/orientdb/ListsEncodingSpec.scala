@@ -16,7 +16,8 @@ class ListsEncodingSpec extends Spec {
     doubles: List[Double],
     timestamps: List[Date]
   )
-  val e: ListsEntity = ListsEntity(1, List("c"), List(true), List(1, 2), List(2, 3), List(1.2f, 3.2f), List(5.1d), List(new Date()))
+  val e: ListsEntity =
+    ListsEntity(1, List("c"), List(true), List(1, 2), List(2, 3), List(1.2f, 3.2f), List(5.1d), List(new Date()))
 
   private def verify(expected: ListsEntity, actual: ListsEntity): Boolean = {
     expected.id mustEqual actual.id

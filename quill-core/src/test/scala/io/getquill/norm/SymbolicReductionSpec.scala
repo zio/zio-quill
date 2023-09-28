@@ -11,7 +11,8 @@ import io.getquill.ast.Query
 
 class SymbolicReductionSpec extends Spec { // hello
 
-  def symbolicReduction: Query => Option[Query] = (new SymbolicReduction(TraceConfig.Empty).unapply _).andThen(o => o.map(replaceTempIdent(_)))
+  def symbolicReduction: Query => Option[Query] =
+    (new SymbolicReduction(TraceConfig.Empty).unapply _).andThen(o => o.map(replaceTempIdent(_)))
 
   "a.filter(b => c).flatMap(d => e.$)" - {
     "e is an entity" in {

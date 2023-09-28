@@ -3,7 +3,7 @@ package io.getquill.context.sql.base
 import io.getquill.base.Spec
 import io.getquill.context.sql.SqlContext
 import io.getquill.context.sql.encoding.ArrayEncoding
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 trait ArrayOpsSpec extends Spec {
 

@@ -3,7 +3,7 @@ package io.getquill.context.sql.base
 import io.getquill.context.sql.SqlContext
 import io.getquill.TestEntities
 import io.getquill.base.Spec
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 trait OnConflictSpec extends Spec {
   val ctx: SqlContext[_, _] with TestEntities

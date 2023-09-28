@@ -29,7 +29,8 @@ sealed trait CodegenTestCases {
     sym.name.decodedName.toString + "-lib"
   }
 
-  def schemaMakerCoordinates(dbPrefix: ConfigPrefix): SchemaMakerCoordinates = SchemaMakerCoordinates(dbPrefix, naming, schemaConfig)
+  def schemaMakerCoordinates(dbPrefix: ConfigPrefix): SchemaMakerCoordinates =
+    SchemaMakerCoordinates(dbPrefix, naming, schemaConfig)
 
   def generateWithSchema(dbPrefix: ConfigPrefix, basePath: String): Future[Seq[Path]] =
     SchemaMaker.withContext(schemaMakerCoordinates(dbPrefix))({

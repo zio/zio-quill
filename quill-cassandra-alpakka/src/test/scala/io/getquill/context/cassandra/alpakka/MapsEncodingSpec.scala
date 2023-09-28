@@ -4,7 +4,7 @@ import io.getquill.context.cassandra.CollectionsSpec
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
   val ctx = testDB

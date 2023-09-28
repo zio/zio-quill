@@ -5,7 +5,8 @@ import io.getquill.base.Spec
 
 class EmbeddedSpec extends Spec {
 
-  val ctx: SqlMirrorContext[MirrorSqlDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(MirrorSqlDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[MirrorSqlDialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(MirrorSqlDialect, Literal) with TestEntities
   import ctx._
 
   "queries with embedded entities should" - {

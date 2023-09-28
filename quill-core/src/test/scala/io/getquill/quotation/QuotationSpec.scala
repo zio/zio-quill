@@ -1366,7 +1366,10 @@ class QuotationSpec extends Spec {
         val q = quote {
           qr1.isEmpty
         }
-        quote(unquote(q)).ast mustEqual UnaryOperation(SetOperator.`isEmpty`, Entity("TestEntity", List.empty, TestEntityQuat))
+        quote(unquote(q)).ast mustEqual UnaryOperation(
+          SetOperator.`isEmpty`,
+          Entity("TestEntity", List.empty, TestEntityQuat)
+        )
       }
       "toUpperCase" in {
         val q = quote {
@@ -1778,7 +1781,11 @@ class QuotationSpec extends Spec {
         }
         "nested" in {
           def test[T: SchemaMeta] = quote(query[T].map(_ => 1))
-          test[TestEntity].ast mustEqual Map(Entity("TestEntity", List.empty, TestEntityQuat), Ident("t"), Constant.auto(1))
+          test[TestEntity].ast mustEqual Map(
+            Entity("TestEntity", List.empty, TestEntityQuat),
+            Ident("t"),
+            Constant.auto(1)
+          )
         }
       }
       "forced" in {
@@ -2107,7 +2114,7 @@ class QuotationSpec extends Spec {
   }
 
   "doesn't double quote" in {
-    val q               = quote(1)
+    val q = quote(1)
     quote(q)
   }
 

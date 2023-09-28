@@ -10,7 +10,7 @@ import io.getquill.util.TraceConfig
 
 class FlattenOptionOperationSpec extends Spec { // hello
 
-  def o: Ident      = Ident("o")
+  def o: Ident         = Ident("o")
   def c1: Constant     = Constant.auto(1)
   def c2: Constant     = Constant.auto(2)
   def cFoo: Constant   = Constant.auto("foo")

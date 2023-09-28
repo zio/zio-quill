@@ -5,7 +5,7 @@ import java.util.Date
 
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
 import io.getquill.context.sql.testContext
-import io.getquill.{ EntityQuery, Quoted }
+import io.getquill.{EntityQuery, Quoted}
 
 class ArrayMirrorEncodingSpec extends ArrayEncodingBaseSpec {
   val ctx = testContext

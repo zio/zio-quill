@@ -6,7 +6,7 @@ import scala.reflect.runtime.{universe => ru}
 class Introspection[T](t: T)(implicit tt: ru.TypeTag[T], ct: ClassTag[T]) {
   import ru._
 
-  val rm: Mirror             = runtimeMirror(getClass.getClassLoader)
+  val rm: Mirror                     = runtimeMirror(getClass.getClassLoader)
   val instanceMirror: InstanceMirror = rm.reflect(t)
 
   val fieldsAndValues: List[(String, Any)] =

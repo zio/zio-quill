@@ -16,10 +16,12 @@ import zio.ZLayer
 
 class ConnectionLeakTest extends ProductSpec with ZioProxySpec {
 
-  implicit val pool: Implicit[ZLayer[Any,Throwable,DataSource]] = Implicit(Quill.DataSource.fromPrefix("testPostgresDB"))
+  implicit val pool: Implicit[ZLayer[Any, Throwable, DataSource]] = Implicit(
+    Quill.DataSource.fromPrefix("testPostgresDB")
+  )
 
   val dataSource: HikariDataSource = JdbcContextConfig(LoadConfig("testPostgresLeakDB")).dataSource
-  val context    = new PostgresZioJdbcContext(Literal)
+  val context                      = new PostgresZioJdbcContext(Literal)
   import context._
 
   override def beforeAll: Unit = {

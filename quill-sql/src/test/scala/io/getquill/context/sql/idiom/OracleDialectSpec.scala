@@ -5,7 +5,8 @@ import io.getquill.base.Spec
 
 class OracleDialectSpec extends Spec {
 
-  val ctx: SqlMirrorContext[OracleDialect.type,Literal.type] with TestEntities = new SqlMirrorContext(OracleDialect, Literal) with TestEntities
+  val ctx: SqlMirrorContext[OracleDialect.type, Literal.type] with TestEntities =
+    new SqlMirrorContext(OracleDialect, Literal) with TestEntities
   import ctx._
 
   "uses 'mod' function" in {
