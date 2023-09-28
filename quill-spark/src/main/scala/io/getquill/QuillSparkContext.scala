@@ -40,17 +40,21 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
 
   private[getquill] val queryCounter = new AtomicInteger(0)
 
-  def close(): Unit = {}
+  def close(): Unit = ()
 
   def probe(statement: String): Try[_] = Success(())
 
   val idiom  = SparkDialect
   val naming = Literal
 
-  def liftQuery[T](ds: Dataset[T]) =
+  def liftQuery[T](ds: Dataset[T]) = {
+    implicit val datasetEncoder: (Index, Dataset[T], List[Binding], ResultRow) => List[Binding] =
+      (_: Int, ds: Dataset[T], row: List[Binding], _: Session) => row :+ DatasetBinding(ds)
+
     quote {
       sql"${lift(ds)}".pure.as[Query[T]]
     }
+  }
 
   // Helper class for the percolateNullArrays method
   case class StructElement(column: Column, structField: StructField) {
