@@ -218,7 +218,7 @@ trait OrientDBIdiom extends Idiom {
       case TableContext(name, _)  => stmt"${name.token}"
       case QueryContext(query, _) => stmt"(${query.token})"
       case InfixContext(infix, _) => stmt"(${(infix: Ast).token})"
-      case _                          => fail("OrientDB sql doesn't support joins")
+      case _                      => fail("OrientDB sql doesn't support joins")
     }
 
   implicit def orderByCriteriaTokenizer(implicit
@@ -266,14 +266,14 @@ trait OrientDBIdiom extends Idiom {
     def tokenValue(ast: Ast) =
       ast match {
         case Aggregation(op, Ident(_, _)) => stmt"${op.token}(*)"
-        case Aggregation(_, _: Query)    => scopedTokenizer(ast)
+        case Aggregation(_, _: Query)     => scopedTokenizer(ast)
         case Aggregation(op, ast)         => stmt"${op.token}(${ast.token})"
         case _                            => ast.token
       }
     Tokenizer[SelectValue] {
       case SelectValue(ast, Some(alias), false)    => stmt"${tokenValue(ast)} ${strategy.column(alias).token}"
       case SelectValue(Ident("?", _), None, false) => "?".token
-      case SelectValue(_: Ident, None, false)    => stmt"*" // stmt"${tokenValue(ast)}.*"
+      case SelectValue(_: Ident, None, false)      => stmt"*" // stmt"${tokenValue(ast)}.*"
       case SelectValue(ast, None, false)           => tokenValue(ast)
       case SelectValue(_, _, true)                 => fail("OrientDB doesn't support `concatMap`")
     }

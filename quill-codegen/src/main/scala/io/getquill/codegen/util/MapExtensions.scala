@@ -5,8 +5,8 @@ import scala.collection.immutable.{ListMap, ListSet}
 object MapExtensions {
 
   implicit class MapOps[K, V](m: Map[K, V]) {
-    def zipOnKeys(o: Map[K, V]): Map[K,(Option[V], Option[V])]        = zipMapsOnKeys(m, o)
-    def zipOnKeysOrdered(o: Map[K, V]): ListMap[K,(Option[V], Option[V])] = zipMapsOnKeysOrdered(m, o)
+    def zipOnKeys(o: Map[K, V]): Map[K, (Option[V], Option[V])]            = zipMapsOnKeys(m, o)
+    def zipOnKeysOrdered(o: Map[K, V]): ListMap[K, (Option[V], Option[V])] = zipMapsOnKeysOrdered(m, o)
   }
 
   def zipMapsOnKeys[K, V](one: Map[K, V], two: Map[K, V]): Map[K, (Option[V], Option[V])] =

@@ -9,9 +9,10 @@ trait QuatUnliftable {
   val mctx: Context
   import mctx.universe.{Constant => _, Function => _, Ident => _, If => _, _}
 
-  def unliftQuat(v: Tree): Quat                                         = quatUnliftable.unapply(v).getOrElse(mctx.fail(s"Can't unlift $v"))
-  def unliftQuats(v: Seq[Tree]): Seq[Quat]                                   = v.map(unliftQuat(_))
-  def unliftString(v: Tree)(implicit u: Unliftable[String]): String       = u.unapply(v).getOrElse(mctx.fail(s"Can't unlift $v"))
+  def unliftQuat(v: Tree): Quat            = quatUnliftable.unapply(v).getOrElse(mctx.fail(s"Can't unlift $v"))
+  def unliftQuats(v: Seq[Tree]): Seq[Quat] = v.map(unliftQuat(_))
+  def unliftString(v: Tree)(implicit u: Unliftable[String]): String =
+    u.unapply(v).getOrElse(mctx.fail(s"Can't unlift $v"))
   def unliftStrings(v: Seq[Tree])(implicit u: Unliftable[String]): Seq[String] = v.map(unliftString(_))
 
   implicit val quatProductUnliftable: Unliftable[Quat.Product] = Unliftable[Quat.Product] {

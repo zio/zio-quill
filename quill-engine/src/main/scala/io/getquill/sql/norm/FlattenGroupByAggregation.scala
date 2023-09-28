@@ -53,19 +53,19 @@ final case class FlattenGroupByAggregation(agg: Ident) extends StatelessTransfor
 
   private[this] def isGroupByAggregation(ast: Ast): Boolean =
     ast match {
-      case Aggregation(_, b)         => isGroupByAggregation(b)
-      case Map(a, _, _)              => isGroupByAggregation(a)
-      case FlatMap(a, _, _)          => isGroupByAggregation(a)
-      case ConcatMap(a, _, _)        => isGroupByAggregation(a)
-      case Filter(a, _, _)           => isGroupByAggregation(a)
-      case SortBy(a, _, _, _)        => isGroupByAggregation(a)
-      case Take(a, _)                => isGroupByAggregation(a)
-      case Drop(a, _)                => isGroupByAggregation(a)
-      case Union(a, b)               => isGroupByAggregation(a) || isGroupByAggregation(b)
-      case UnionAll(a, b)            => isGroupByAggregation(a) || isGroupByAggregation(b)
+      case Aggregation(_, b)      => isGroupByAggregation(b)
+      case Map(a, _, _)           => isGroupByAggregation(a)
+      case FlatMap(a, _, _)       => isGroupByAggregation(a)
+      case ConcatMap(a, _, _)     => isGroupByAggregation(a)
+      case Filter(a, _, _)        => isGroupByAggregation(a)
+      case SortBy(a, _, _, _)     => isGroupByAggregation(a)
+      case Take(a, _)             => isGroupByAggregation(a)
+      case Drop(a, _)             => isGroupByAggregation(a)
+      case Union(a, b)            => isGroupByAggregation(a) || isGroupByAggregation(b)
+      case UnionAll(a, b)         => isGroupByAggregation(a) || isGroupByAggregation(b)
       case Join(_, a, b, _, _, _) => isGroupByAggregation(a) || isGroupByAggregation(b)
-      case `agg`                     => true
-      case _                     => false
+      case `agg`                  => true
+      case _                      => false
     }
 
 }

@@ -105,8 +105,8 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
       case i: Infix =>
         val content =
           List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure") else List.empty) ++ (if (i.transparent)
-                                                                                                List("transparent")
-                                                                                              else List.empty)
+                                                                                                    List("transparent")
+                                                                                                  else List.empty)
         Tree.Apply("Infix", treemake(content: _*).withQuat(i.bestQuat).make)
 
       case e: Entity if (!traceOpinions) =>

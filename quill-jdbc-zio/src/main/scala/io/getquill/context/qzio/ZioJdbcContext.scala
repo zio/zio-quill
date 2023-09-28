@@ -217,7 +217,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
                }
           // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
           _ <- ZIO.addFinalizerExit {
-                 case Success(_)     => blocking(ZIO.succeed(connection.commit()))
+                 case Success(_) => blocking(ZIO.succeed(connection.commit()))
                  case Failure(_) => blocking(ZIO.succeed(connection.rollback()))
                }
         } yield ()

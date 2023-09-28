@@ -14,16 +14,16 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
-    case liftUnliftable(ast)                                                        => ast
-    case tagUnliftable(ast)                                                         => ast
-    case queryUnliftable(ast)                                                       => ast
-    case actionUnliftable(ast)                                                      => ast
-    case valueUnliftable(ast)                                                       => ast
-    case identUnliftable(ast)                                                       => ast
-    case orderingUnliftable(ast)                                                    => ast
-    case optionOperationUnliftable(ast)                                             => ast
-    case traversableOperationUnliftable(ast)                                        => ast
-    case propertyUnliftable(ast)                                                    => ast
+    case liftUnliftable(ast)                                                     => ast
+    case tagUnliftable(ast)                                                      => ast
+    case queryUnliftable(ast)                                                    => ast
+    case actionUnliftable(ast)                                                   => ast
+    case valueUnliftable(ast)                                                    => ast
+    case identUnliftable(ast)                                                    => ast
+    case orderingUnliftable(ast)                                                 => ast
+    case optionOperationUnliftable(ast)                                          => ast
+    case traversableOperationUnliftable(ast)                                     => ast
+    case propertyUnliftable(ast)                                                 => ast
     case q"$_.Function.apply(${a: List[Ident]}, ${b: Ast})"                      => Function(a, b)
     case q"$_.FunctionApply.apply(${a: Ast}, ${b: List[Ast]})"                   => FunctionApply(a, b)
     case q"$_.BinaryOperation.apply(${a: Ast}, ${b: BinaryOperator}, ${c: Ast})" => BinaryOperation(a, b, c)
@@ -34,7 +34,7 @@ trait Unliftables extends QuatUnliftable {
     case q"$_.If.apply(${a: Ast}, ${b: Ast}, ${c: Ast})" => If(a, b, c)
     case q"$_.OnConflict.Excluded.apply(${a: Ident})"    => OnConflict.Excluded(a)
     case q"$_.OnConflict.Existing.apply(${a: Ident})"    => OnConflict.Existing(a)
-    case q"$tree.ast"                                       => Dynamic(tree)
+    case q"$tree.ast"                                    => Dynamic(tree)
   }
 
   implicit val optionOperationUnliftable: Unliftable[OptionOperation] = Unliftable[OptionOperation] {

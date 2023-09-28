@@ -12,7 +12,7 @@ class UdtValueOps(val udt: UdtValue) extends AnyVal {
   def getScalaSet[A](name: String, cls: Class[A]): mutable.Set[A] =
     udt.getSet(name, cls).asScala
 
-  def getScalaMap[K, V](name: String, kcls: Class[K], vcls: Class[V]): mutable.Map[K,V] =
+  def getScalaMap[K, V](name: String, kcls: Class[K], vcls: Class[V]): mutable.Map[K, V] =
     udt.getMap(name, kcls, vcls).asScala
 
   def setScalaList[A](name: String, v: Seq[A], cls: Class[A]): UdtValue =

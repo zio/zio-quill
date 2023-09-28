@@ -67,8 +67,8 @@ trait Decoders {
     AsyncDecoder(d.sqlType)(new BaseDecoder[Option[T]] {
       def apply(index: Index, row: ResultRow, session: Session) =
         row.get(index) match {
-          case null  => None
-          case _ => Some(d(index, row, session))
+          case null => None
+          case _    => Some(d(index, row, session))
         }
     })
 

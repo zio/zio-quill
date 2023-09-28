@@ -94,7 +94,8 @@ object RuntimeEntityQuat {
 
   object CaseClass {
     // Common methods to exclude from object fields
-    val exclude: Set[String] = classOf[Product].getMethods.map(_.getName).toSet ++ classOf[Object].getMethods.map(_.getName).toSet
+    val exclude: Set[String] =
+      classOf[Product].getMethods.map(_.getName).toSet ++ classOf[Object].getMethods.map(_.getName).toSet
 
     def unapply(cls: Class[_]): Option[List[Method]] =
       if (cls.getInterfaces.contains(classOf[Product])) {

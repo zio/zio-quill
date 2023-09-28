@@ -21,8 +21,8 @@ object CanDoBatchedInsert {
         } yield ()
 
       validations match {
-        case Right(_)  => true
-        case Left(_) => false
+        case Right(_) => true
+        case Left(_)  => false
       }
     }
   }

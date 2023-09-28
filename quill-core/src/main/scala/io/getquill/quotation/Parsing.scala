@@ -51,7 +51,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   val astParser: Parser[Ast] = Parser[Ast] {
-    case q"$i: $_"                         => astParser(i)
+    case q"$i: $_"                           => astParser(i)
     case `queryParser`(value)                => value
     case `liftParser`(value)                 => value
     case `valParser`(value)                  => value
@@ -201,7 +201,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$_.querySchema[$t](${name: String}, ..$properties)" =>
       q"$t".tpe
       inferQuat(q"$t".tpe)
-      val quat     = inferQuat(q"$t".tpe).probit
+      val quat = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity.Opinionated(name, properties.map(propertyAliasParser(_)), quat, Fixed)
 
@@ -230,8 +230,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
     case q"$source.groupBy[$_](($alias) => $body)" if (is[DslQuery[Any]](source)) =>
       GroupBy(astParser(source), identParser(alias), astParser(body))
-    case q"$source.groupByMap[$_, $_](($byAlias) => $byBody)(($mapAlias) => $mapBody)"
-        if (is[DslQuery[Any]](source)) =>
+    case q"$source.groupByMap[$_, $_](($byAlias) => $byBody)(($mapAlias) => $mapBody)" if (is[DslQuery[Any]](source)) =>
       GroupByMap(astParser(source), identParser(byAlias), astParser(byBody), identParser(mapAlias), astParser(mapBody))
 
     case q"$_.min[$_]($a)" =>
@@ -332,21 +331,21 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   // which may not be the same as getquill.Ord.asc. Need to cover these cases separately.
   implicit val orderingParser: Parser[Ordering] = Parser[Ordering] {
     case q"$_.implicitOrd[$_]"           => AscNullsFirst
-    case q"implicitOrd[$_]"                 => AscNullsFirst
+    case q"implicitOrd[$_]"              => AscNullsFirst
     case q"$_.Ord.apply[..$_](..$elems)" => TupleOrdering(elems.map(orderingParser(_)))
-    case q"Ord.apply[..$_](..$elems)"       => TupleOrdering(elems.map(orderingParser(_)))
+    case q"Ord.apply[..$_](..$elems)"    => TupleOrdering(elems.map(orderingParser(_)))
     case q"$_.Ord.asc[$_]"               => Asc
-    case q"Ord.asc[$_]"                     => Asc
+    case q"Ord.asc[$_]"                  => Asc
     case q"$_.Ord.desc[$_]"              => Desc
-    case q"Ord.desc[$_]"                    => Desc
+    case q"Ord.desc[$_]"                 => Desc
     case q"$_.Ord.ascNullsFirst[$_]"     => AscNullsFirst
-    case q"Ord.ascNullsFirst[$_]"           => AscNullsFirst
+    case q"Ord.ascNullsFirst[$_]"        => AscNullsFirst
     case q"$_.Ord.descNullsFirst[$_]"    => DescNullsFirst
-    case q"Ord.descNullsFirst[$_]"          => DescNullsFirst
+    case q"Ord.descNullsFirst[$_]"       => DescNullsFirst
     case q"$_.Ord.ascNullsLast[$_]"      => AscNullsLast
-    case q"Ord.ascNullsLast[$_]"            => AscNullsLast
+    case q"Ord.ascNullsLast[$_]"         => AscNullsLast
     case q"$_.Ord.descNullsLast[$_]"     => DescNullsLast
-    case q"Ord.descNullsLast[$_]"           => DescNullsLast
+    case q"Ord.descNullsLast[$_]"        => DescNullsLast
   }
 
   val joinCallParser: Parser[(JoinType, Ast, Option[Ast])] = Parser[(JoinType, Ast, Option[Ast])] {
@@ -377,7 +376,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Quat.improveInfixQuat(value)
   }
 
-  val impureInfixParser: Parser[Ast] = combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
+  val impureInfixParser: Parser[Ast] =
+    combinedInfixParser(false, Quat.Value) // TODO Verify Quat in what cases does this come up?
 
   object InfixMatch {
     def unapply(tree: Tree): Option[(List[String], List[Tree])] =
@@ -465,7 +465,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case t: ValDef =>
       identClean(Ident(t.name.decodedName.toString, inferQuat(t.symbol.typeSignature)))
     case id @ c.universe.Ident(TermName(name)) => identClean(Ident(name, inferQuat(id.symbol.typeSignature)))
-    case t @ q"$_.this.$i"                   => identClean(Ident(i.decodedName.toString, inferQuat(t.symbol.typeSignature)))
+    case t @ q"$_.this.$i"                     => identClean(Ident(i.decodedName.toString, inferQuat(t.symbol.typeSignature)))
     case t @ c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       identClean(
         Ident(name, inferQuat(t.symbol.typeSignature))
@@ -835,8 +835,6 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     symbol.isClass && symbol.asClass.isCaseClass
   }
 
-  
-
   object ClassTypeRefMatch {
     def unapply(tpe: Type): Option[(ClassSymbol, List[Type])] = tpe match {
       case TypeRef(_, cls, args) if (cls.isClass) => Some((cls.asClass, args))
@@ -872,8 +870,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       CaseClass(ccTerm.symbol.fullName.toString.split('.').last, params.zip(values))
     }
     case q"(($_.Predef.ArrowAssoc[$_]($v1).$_[$_]($v2)))" => Tuple(List(astParser(v1), astParser(v2)))
-    case q"io.getquill.dsl.UnlimitedTuple.apply($v)"               => astParser(v)
-    case q"io.getquill.dsl.UnlimitedTuple.apply(..$v)"             => Tuple(v.map(astParser(_)))
+    case q"io.getquill.dsl.UnlimitedTuple.apply($v)"      => astParser(v)
+    case q"io.getquill.dsl.UnlimitedTuple.apply(..$v)"    => Tuple(v.map(astParser(_)))
     case q"$ccCompanion(..$v)"
         if (
           ccCompanion.tpe != null &&

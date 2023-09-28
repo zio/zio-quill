@@ -94,7 +94,7 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
     cql: String,
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
-  )(info: ExecutionInfo, dc: Runner): ZStream[CassandraZioSession,Throwable,T] = {
+  )(info: ExecutionInfo, dc: Runner): ZStream[CassandraZioSession, Throwable, T] = {
     val stream =
       for {
         csession <- ZStream.service[CassandraZioSession]

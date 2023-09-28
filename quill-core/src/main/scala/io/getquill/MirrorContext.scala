@@ -123,7 +123,7 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     prepare: Prepare = identityPrepare,
     extractor: Extractor[O],
     returningBehavior: ReturnAction
-  )(info: ExecutionInfo, dc: Runner): ActionReturningMirror[O,List[O]] =
+  )(info: ExecutionInfo, dc: Runner): ActionReturningMirror[O, List[O]] =
     ActionReturningMirror[O, List[O]](string, prepare(Row(), session)._2, extractor, returningBehavior, info)
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): BatchActionMirrorGeneric[Row] =
@@ -146,7 +146,10 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
       info
     )
 
-  def prepareAction(string: String, prepare: Prepare = identityPrepare)(info: ExecutionInfo, dc: Runner): Session => PrepareRow =
+  def prepareAction(string: String, prepare: Prepare = identityPrepare)(
+    info: ExecutionInfo,
+    dc: Runner
+  ): Session => PrepareRow =
     (session: Session) => prepare(Row(), session)._2
 
   def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Session => List[PrepareRow] =

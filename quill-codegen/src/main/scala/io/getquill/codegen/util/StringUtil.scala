@@ -12,7 +12,7 @@ object StringUtil {
 
   implicit class StringExtensions(str: String) {
     def snakeToUpperCamel: String = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString
-    def snakeToLowerCamel = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
+    def snakeToLowerCamel         = str.split("_").map(_.toLowerCase).map(_.capitalize).mkString.uncapitalize
     def lowerCamelToSnake: String = str.split("(?=[A-Z])").mkString("_").toLowerCase
     def uncapitalize =
       new String(
@@ -21,9 +21,9 @@ object StringUtil {
           case Nil          => Nil
         }).toArray
       )
-    def unquote: String   = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
-    def trimFront: String = str.dropWhile(_ == '\n')
-    def notEmpty: Option[String]  = if (str.trim == "") None else Some(str)
+    def unquote: String          = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
+    def trimFront: String        = str.dropWhile(_ == '\n')
+    def notEmpty: Option[String] = if (str.trim == "") None else Some(str)
     def inSetNocase(seq: String*): Boolean =
       seq.map(_.toLowerCase).toSeq.contains(str.toLowerCase)
   }

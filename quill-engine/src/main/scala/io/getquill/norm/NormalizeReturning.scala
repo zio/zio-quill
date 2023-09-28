@@ -72,7 +72,7 @@ class NormalizeReturning(normalize: Normalize) {
     def unapply(ast: Property): Option[Ast] =
       ast match {
         case Property(subAst, _) => Some(innerMost(subAst))
-        case _                       => None
+        case _                   => None
       }
 
     private def innerMost(ast: Ast): Ast = ast match {

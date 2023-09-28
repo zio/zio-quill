@@ -37,8 +37,8 @@ trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
       lift match {
         case ScalarValueLift(_, _, value: Tree, encoder: Tree, _) => Reified(value, Some(encoder))
         case CaseClassValueLift(_, _, value: Tree, _)             => Reified(value, None)
-        case ScalarQueryLift(_, value: Tree, encoder: Tree, _)             => Reified(value, Some(encoder))
-        case CaseClassQueryLift(_, value: Tree, _)                         => Reified(value, None)
+        case ScalarQueryLift(_, value: Tree, encoder: Tree, _)    => Reified(value, Some(encoder))
+        case CaseClassQueryLift(_, value: Tree, _)                => Reified(value, None)
       }
 
     private def unparse(ast: Ast): Unparsed =
@@ -80,7 +80,7 @@ trait ReifyLiftings extends QuatMaking with TranspileConfigSummoning {
       }
     }
 
-    override def apply(ast: Ast): (Ast, StatefulTransformer[Map[TermName,Reified]]) =
+    override def apply(ast: Ast): (Ast, StatefulTransformer[Map[TermName, Reified]]) =
       ast match {
 
         case ast: Lift =>

@@ -107,6 +107,6 @@ object CqlQuery {
       case (Tuple(properties), TupleOrdering(ord)) =>
         properties.zip(ord).flatMap { case (a, o) => orderByCriteria(a, o) }
       case (a: Property, o: PropertyOrdering) => List(OrderByCriteria(a, o))
-      case _                              => fail(s"Invalid order by criteria $ast")
+      case _                                  => fail(s"Invalid order by criteria $ast")
     }
 }

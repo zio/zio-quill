@@ -32,7 +32,7 @@ trait ZIOMonad extends IOMonad {
 
   def flatten[Y, M[X] <: IterableOnce[X]](
     seq: Sequence[Y, M, Effect]
-  ): ZIO[ZioJAsyncConnection,Throwable,M[Y]] = {
+  ): ZIO[ZioJAsyncConnection, Throwable, M[Y]] = {
     val builder = seq.cbfResultToValue.newBuilder
     ZIO
       .foldLeft(seq.in.iterator.toIterable)(builder) { (r, ioa) =>

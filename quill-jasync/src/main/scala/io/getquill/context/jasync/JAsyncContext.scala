@@ -69,7 +69,7 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
   protected def withConnection[T](f: Connection => Future[T])(implicit ec: ExecutionContext): Future[T] =
     ec match {
       case TransactionalExecutionContext(_, conn) => f(conn)
-      case _                                   => f(pool)
+      case _                                      => f(pool)
     }
 
   protected def extractActionResult[O](returningAction: ReturnAction, extractor: Extractor[O])(
@@ -83,7 +83,9 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
       Await.result(pool.sendQuery(sql), Duration.Inf)
     }
 
-  def transaction[T](f: TransactionalExecutionContext => Future[T])(implicit ec: ExecutionContext): CompletableFuture[T] =
+  def transaction[T](
+    f: TransactionalExecutionContext => Future[T]
+  )(implicit ec: ExecutionContext): CompletableFuture[T] =
     ec match {
       case tec: TransactionalExecutionContext => toCompletableFuture(f(tec))
       case _ =>

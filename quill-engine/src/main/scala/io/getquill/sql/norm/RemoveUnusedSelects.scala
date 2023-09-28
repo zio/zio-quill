@@ -123,7 +123,7 @@ final case class References(val state: State) extends StatefulTransformer[State]
   override def apply(a: Ast): (Ast, StatefulTransformer[State]) =
     a match {
       case `reference`(p) => (p, References(State(ident, references :+ p)))
-      case _          => super.apply(a)
+      case _              => super.apply(a)
     }
 
   object reference {
@@ -131,7 +131,7 @@ final case class References(val state: State) extends StatefulTransformer[State]
       p match {
         case Property(`ident`, _)      => Some(p)
         case Property(reference(_), _) => Some(p)
-        case _                        => None
+        case _                         => None
       }
   }
 }

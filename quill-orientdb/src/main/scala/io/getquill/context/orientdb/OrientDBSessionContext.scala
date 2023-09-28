@@ -36,7 +36,7 @@ abstract class OrientDBSessionContext[+N <: NamingStrategy](
   }
   implicit val nullChecker: NullChecker = new OrientDBNullChecker()
 
-  protected val session   = new OPartitionedDatabasePool(dbUrl, username, password)
+  protected val session                        = new OPartitionedDatabasePool(dbUrl, username, password)
   protected val oDatabase: ODatabaseDocumentTx = session.acquire()
 
   val idiom = OrientDBIdiom

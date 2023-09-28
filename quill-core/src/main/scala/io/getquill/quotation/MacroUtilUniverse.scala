@@ -52,20 +52,20 @@ trait MacroUtilUniverse {
     def unapply(tpe: Type): Option[Type] =
       tpe.typeSymbol.typeSignature.typeParams match {
         case head :: _ => Some(head.typeSignature)
-        case Nil          => None
+        case Nil       => None
       }
   }
 
   def parseQueryType(tpe: Type): Option[IdiomContext.QueryType] = {
     println(s"Trying to match: ${show(tpe)}")
     tpe match {
-      case QuotedType(tpe)        => parseQueryType(tpe)
-      case BatchType(tpe)         => parseQueryType(tpe)
+      case QuotedType(tpe)      => parseQueryType(tpe)
+      case BatchType(tpe)       => parseQueryType(tpe)
       case QueryType(_)         => Some(IdiomContext.QueryType.Select)
       case ActionType.Insert(_) => Some(IdiomContext.QueryType.Insert)
       case ActionType.Update(_) => Some(IdiomContext.QueryType.Update)
       case ActionType.Delete(_) => Some(IdiomContext.QueryType.Delete)
-      case _                      => None
+      case _                    => None
     }
   }
 

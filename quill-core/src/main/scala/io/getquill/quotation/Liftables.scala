@@ -40,7 +40,7 @@ trait Liftables extends QuatLiftable {
     case If(a, b, c)                                                           => q"$pack.If($a, $b, $c)"
     case Dynamic(tree: Tree, _) if (tree.tpe <:< mctx.weakTypeOf[Quoted[Any]]) => q"$tree.ast"
     case Dynamic(tree: Tree, quat)                                             => q"$pack.Constant($tree, $quat)"
-    case QuotedReference(_: Tree, ast)                                      => q"$ast"
+    case QuotedReference(_: Tree, ast)                                         => q"$ast"
     case OnConflict.Excluded(a)                                                => q"$pack.OnConflict.Excluded($a)"
     case OnConflict.Existing(a)                                                => q"$pack.OnConflict.Existing($a)"
   }

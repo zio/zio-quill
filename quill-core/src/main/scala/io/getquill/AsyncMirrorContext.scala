@@ -117,7 +117,7 @@ class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     prepare: Prepare = identityPrepare,
     extractor: Extractor[O],
     returningBehavior: ReturnAction
-  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[ActionReturningMirror[O,O]] =
+  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[ActionReturningMirror[O, O]] =
     Future(ActionReturningMirror[O, O](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo))
 
   def executeActionReturningMany[O](
@@ -125,7 +125,9 @@ class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     prepare: Prepare = identityPrepare,
     extractor: Extractor[O],
     returningBehavior: ReturnAction
-  )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext): Future[ActionReturningMirror[O,List[O]]] =
+  )(executionInfo: ExecutionInfo, dc: Runner)(implicit
+    ec: ExecutionContext
+  ): Future[ActionReturningMirror[O, List[O]]] =
     Future(
       ActionReturningMirror[O, List[O]](string, prepare(Row(), session)._2, extractor, returningBehavior, executionInfo)
     )

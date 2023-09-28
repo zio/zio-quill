@@ -249,8 +249,6 @@ final case class ReplaceLiftings(
       loop(newCol, 1)
   }
 
-  
-
   override def apply(e: Ast): (Ast, StatefulTransformer[ListMap[String, ScalarTag]]) =
     e match {
       case lift @ ScalarTag(_, External.Source.UnparsedProperty(propNameRaw)) =>
@@ -264,7 +262,10 @@ final case class ReplaceLiftings(
     }
 }
 object ReplaceLiftings {
-  def of(ast: Ast)(foreachIdent: String, existingColumnNames: List[String]): (Ast, immutable.Iterable[String], immutable.Iterable[ScalarTag]) = {
+  def of(ast: Ast)(
+    foreachIdent: String,
+    existingColumnNames: List[String]
+  ): (Ast, immutable.Iterable[String], immutable.Iterable[ScalarTag]) = {
     val (newAst, transform) = new ReplaceLiftings(foreachIdent, existingColumnNames, ListMap()).apply(ast)
     (newAst, transform.state.map(_._1), transform.state.map(_._2))
   }

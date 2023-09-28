@@ -22,7 +22,7 @@ trait CodeGeneratorComponents extends HasBasicMeta with QuerySchemaNaming {
   type ColumnGetter      = ColumnMeta => String
 
   def defaultExcludedSchemas: Set[String] = Set.empty[String]
-  def querySchemaImports     = ""
+  def querySchemaImports                  = ""
   def nameParser: NameParser
   def unrecognizedTypeStrategy: UnrecognizedTypeStrategy
   def typer: Typer

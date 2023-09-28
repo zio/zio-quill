@@ -8,7 +8,7 @@ import io.getquill.quat.Quat
 final case class Error(free: List[Ident], ast: Ast)
 final case class InvalidSqlQuery(errors: List[Error]) {
   override def toString: String = {
-    val allVars  = errors.flatMap(_.free).distinct
+    val allVars = errors.flatMap(_.free).distinct
     errors.headOption.flatMap(_.free.headOption).getOrElse("someVar")
     s"""
        |When synthesizing Joins, Quill found some variables that could not be traced back to their
@@ -29,7 +29,7 @@ object VerifySqlQuery {
 
   private def verify(query: SqlQuery): Option[InvalidSqlQuery] =
     query match {
-      case q: FlattenSqlQuery             => verify(q)
+      case q: FlattenSqlQuery            => verify(q)
       case SetOperationSqlQuery(a, _, b) => verify(a).orElse(verify(b))
       case UnaryOperationSqlQuery(_, q)  => verify(q)
     }
@@ -146,7 +146,7 @@ object VerifySqlQuery {
           throw new IllegalArgumentException("Cannot use table or embedded case class as a result of a condition")
 
         case cond: If => checkIllegalIdents(cond.condition)
-        case _    => None
+        case _        => None
       })
   }
 }
