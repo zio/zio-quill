@@ -1,11 +1,10 @@
 package io.getquill.util
 
-import scala.reflect.macros.blackbox.Context
-import scala.reflect.api.Trees
+import scala.reflect.macros.blackbox
 
 object EnableReflectiveCalls {
 
-  def apply(c: Context): List[c.universe.SymTree with Trees.`<refinement>`] = {
+  def apply(c: blackbox.Context): List[c.universe.Tree] = {
     import c.universe._
     List(
       q"import _root_.scala.language.reflectiveCalls",
