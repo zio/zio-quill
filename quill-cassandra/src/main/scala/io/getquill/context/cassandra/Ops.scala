@@ -1,15 +1,15 @@
 package io.getquill.context.cassandra
 
 import io.getquill.{Action, Delete, EntityQuery, Insert, Query, Update}
-import io.getquill.Quoted
 
+@SuppressWarnings(Array("scalafix:ExplicitResultTypes"))
 trait Ops {
   this: CassandraContext[_] =>
 
   abstract class Options[A](q: A) {
-    def usingTimestamp(ts: Int): Quoted[A]  = quote(sql"$q USING TIMESTAMP $ts".as[A])
-    def usingTtl(ttl: Int): Quoted[A]       = quote(sql"$q USING TTL $ttl".as[A])
-    def using(ts: Int, ttl: Int): Quoted[A] = quote(sql"$q USING TIMESTAMP $ts AND TTL $ttl".as[A])
+    def usingTimestamp(ts: Int)  = quote(sql"$q USING TIMESTAMP $ts".as[A])
+    def usingTtl(ttl: Int)       = quote(sql"$q USING TTL $ttl".as[A])
+    def using(ts: Int, ttl: Int) = quote(sql"$q USING TIMESTAMP $ts AND TTL $ttl".as[A])
   }
 
   implicit class QueryOps[Q <: Query[_]](q: Q) {
@@ -19,15 +19,15 @@ trait Ops {
   implicit class EntityOps[A <: EntityQuery[_]](q: A) extends Options(q)
 
   implicit class InsertOps[A <: Insert[_]](q: A) extends Options(q) {
-    def ifNotExists: Quoted[A] = quote(sql"$q IF NOT EXISTS".as[A])
+    def ifNotExists = quote(sql"$q IF NOT EXISTS".as[A])
   }
 
   implicit class UpdateOps[A <: Update[_]](q: A) extends Options(q) {
-    def ifExists: Quoted[A] = quote(sql"$q IF EXISTS".as[A])
+    def ifExists = quote(sql"$q IF EXISTS".as[A])
   }
 
   implicit class DeleteOps[A <: Delete[_]](q: A) extends Options(q) {
-    def ifExists: Quoted[A] = quote(sql"$q IF EXISTS".as[A])
+    def ifExists = quote(sql"$q IF EXISTS".as[A])
   }
 
   implicit class ActionOps[T](q: Action[T]) {
