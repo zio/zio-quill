@@ -14,7 +14,7 @@ object OptionalPhase {
   sealed trait ApplyMap extends OptionalPhase
   case object ApplyMap  extends ApplyMap
 
-  val all: List[ApplyMap.type] = List(ApplyMap)
+  val all: List[OptionalPhase] = List(ApplyMap)
 }
 
 trait DisablePhase {
@@ -37,7 +37,7 @@ object ConfigList {
   sealed trait HList[+H]
   final case class ::[+H, +T <: HList[_]](head: H, tail: T) extends HList[H]
   sealed trait HNil extends HList[Nothing] {
-    def ::[H](h: H) = ConfigList.::[H, HNil](h, this)
+    def ::[H](h: H): HList[H] = ConfigList.::[H, HNil](h, this)
   }
   case object HNil extends HNil
 }
