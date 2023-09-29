@@ -31,7 +31,7 @@ class SetsEncodingSpec extends CollectionsSpec {
     Set(1f, 3f),
     Set(5d),
     Set(LocalDate.now()),
-    Set(Instant.now().truncatedTo(ChronoUnit.MICROS)), // https://stackoverflow.com/a/74781779/2431728
+    Set(Instant.now().truncatedTo(ChronoUnit.MICROS)), // See https://stackoverflow.com/a/74781779/2431728
     Set(UUID.randomUUID())
   )
   val q = quote(query[SetsEntity])

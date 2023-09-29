@@ -34,7 +34,7 @@ class ListsEncodingSpec extends CollectionsSpec {
     List(1f, 3f),
     List(5d),
     List(LocalDate.now()),
-    List(Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS)), // https://stackoverflow.com/a/74781779/2431728
+    List(Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS)), // See https://stackoverflow.com/a/74781779/2431728
     List(UUID.randomUUID())
   )
 
