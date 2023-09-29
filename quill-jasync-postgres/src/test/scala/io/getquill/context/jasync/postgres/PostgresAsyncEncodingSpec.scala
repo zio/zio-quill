@@ -1,7 +1,6 @@
 package io.getquill.context.jasync.postgres
 
 import java.time.{LocalDate, LocalDateTime}
-
 import io.getquill.context.sql.EncodingSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -10,6 +9,8 @@ import scala.concurrent.duration.Duration
 import java.util.Date
 import java.util.UUID
 import io.getquill.Query
+
+import java.time.temporal.ChronoUnit
 
 class PostgresAsyncEncodingSpec extends EncodingSpec {
 
@@ -92,7 +93,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "decodes LocalDate and LocalDateTime types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now.truncatedTo(ChronoUnit.MICROS)) // https://stackoverflow.com/a/74781779/2431728
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)
       _      <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
