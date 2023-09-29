@@ -1,7 +1,8 @@
 package io.getquill.context.cassandra
 
+import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate}
-import java.util.{Date, UUID}
+import java.util.UUID
 
 class SetsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB
@@ -30,7 +31,7 @@ class SetsEncodingSpec extends CollectionsSpec {
     Set(1f, 3f),
     Set(5d),
     Set(LocalDate.now()),
-    Set(Instant.now()),
+    Set(Instant.now().truncatedTo(ChronoUnit.MICROS)), // https://stackoverflow.com/a/74781779/2431728
     Set(UUID.randomUUID())
   )
   val q = quote(query[SetsEntity])
