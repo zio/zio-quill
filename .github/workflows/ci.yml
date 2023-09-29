@@ -9,7 +9,10 @@ on:
     types: [ published ] # Triggers the CI when a new Github Release is published
 
 env:
-  JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC # See https://stackoverflow.com/a/73708006
+  # See:
+  #  - https://stackoverflow.com/a/73708006
+  #  - https://stackoverflow.com/questions/73465937/apache-spark-3-3-0-breaks-on-java-17-with-cannot-access-class-sun-nio-ch-direct
+  JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC --add-exports java.base/sun.nio.ch=ALL-UNNAMED
 
 jobs:
   build:
