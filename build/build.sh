@@ -177,14 +177,6 @@ function db_build() {
     ./build/aware_run.sh "sbt -Dmodules=db $SBT_ARGS test"
 }
 
-function js_build() {
-    echo "build.sh =:> JS Build Specified"
-    show_mem
-    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation "
-    echo "build.sh =:> Starting JS Build Primary"
-    sbt -Dmodules=js $SBT_ARGS test
-}
-
 function async_build() {
     echo "build.sh =:> Async Build Specified"
     wait_for_mysql_postgres
