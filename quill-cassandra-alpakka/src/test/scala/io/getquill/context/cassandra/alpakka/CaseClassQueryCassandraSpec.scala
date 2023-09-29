@@ -8,7 +8,7 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
 
   val peopleInsert =
-    quote((p: Contact) => query[Contact].insert(p))
+    quote((p: Contact) => query[Contact].insertValue(p))
 
   val peopleEntries = List(
     Contact(1, "Alex", "Jones", 60, 2, "foo"),
@@ -17,7 +17,7 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
   )
 
   val addressInsert =
-    quote((c: Address) => query[Address].insert(c))
+    quote((c: Address) => query[Address].insertValue(c))
 
   val addressEntries = List(
     Address(1, "123 Fake Street", 11234, "something"),
@@ -45,7 +45,7 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
     query[Contact].filter(p => p.id == filtrationObject.idFilter)
   }
 
-  val `Ex 3 Inline Record Usage exepected result` = List(
+  val `Ex 3 Inline Record Usage expected result` = List(
     new Contact(1, "Alex", "Jones", 60, 2, "foo")
   )
 
@@ -66,13 +66,15 @@ class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
 
   "Example 1 - Single Case Class Mapping" in {
     await {
-      testDB.run(`Ex 1 CaseClass Record Output`).map(res => res mustEqual `Ex 1 CaseClass Record Output expected result`)
+      testDB
+        .run(`Ex 1 CaseClass Record Output`)
+        .map(res => res mustEqual `Ex 1 CaseClass Record Output expected result`)
     }
   }
 
   "Example 2 - Inline Record as Filter" in {
     await {
-      testDB.run(`Ex 3 Inline Record Usage`).map(res => res mustEqual `Ex 3 Inline Record Usage exepected result`)
+      testDB.run(`Ex 3 Inline Record Usage`).map(res => res mustEqual `Ex 3 Inline Record Usage expected result`)
     }
   }
 }

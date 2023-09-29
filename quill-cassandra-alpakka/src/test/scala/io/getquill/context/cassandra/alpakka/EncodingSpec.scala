@@ -3,7 +3,7 @@ package io.getquill.context.cassandra.alpakka
 import io.getquill.Query
 import io.getquill.context.cassandra.EncodingSpecHelper
 
-import java.time.{ Instant, LocalDate, ZoneId, ZonedDateTime }
+import java.time.{Instant, LocalDate, ZoneId, ZonedDateTime}
 
 class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
 
@@ -11,8 +11,8 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
     await {
       import testDB._
       for {
-        _ <- testDB.run(query[EncodingTestEntity].delete)
-        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _      <- testDB.run(query[EncodingTestEntity].delete)
+        _      <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         result <- testDB.run(query[EncodingTestEntity])
       } yield {
         verify(result)
@@ -22,14 +22,13 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
 
   "encodes collections" in {
     import testDB._
-    val q = quote {
-      (list: Query[Int]) =>
-        query[EncodingTestEntity].filter(t => list.contains(t.id))
+    val q = quote { (list: Query[Int]) =>
+      query[EncodingTestEntity].filter(t => list.contains(t.id))
     }
     await {
       for {
         _ <- testDB.run(query[EncodingTestEntity].delete)
-        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insert(e)))
+        _ <- testDB.run(liftQuery(insertValues).foreach(e => query[EncodingTestEntity].insertValue(e)))
         r <- testDB.run(q(liftQuery(insertValues.map(_.id))))
       } yield {
         verify(r)
@@ -66,20 +65,20 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
       val ctx = testDB
       import ctx._
 
-      val epoh = System.currentTimeMillis()
-      val epohDay = epoh / 86400000L
-      val instant = Instant.ofEpochMilli(epoh)
+      val epoch         = System.currentTimeMillis()
+      val epochDay      = epoch / 86400000L
+      val instant       = Instant.ofEpochMilli(epoch)
       val zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault)
 
       val jq = quote(querySchema[Java8Types]("EncodingTestEntity"))
-      val j = Java8Types(LocalDate.ofEpochDay(epohDay), instant, Some(zonedDateTime))
+      val j  = Java8Types(LocalDate.ofEpochDay(epochDay), instant, Some(zonedDateTime))
       val cq = quote(querySchema[CasTypes]("EncodingTestEntity"))
-      val c = CasTypes(LocalDate.ofEpochDay(epohDay), Instant.ofEpochMilli(epoh), Some(zonedDateTime))
+      val c  = CasTypes(LocalDate.ofEpochDay(epochDay), Instant.ofEpochMilli(epoch), Some(zonedDateTime))
 
       await {
         for {
           _ <- ctx.run(jq.delete)
-          _ <- ctx.run(jq.insert(lift(j)))
+          _ <- ctx.run(jq.insertValue(lift(j)))
           r <- ctx.run(cq)
         } yield {
           r.headOption mustBe Some(c)
@@ -89,7 +88,7 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
       await {
         for {
           _ <- ctx.run(cq.delete)
-          _ <- ctx.run(cq.insert(lift(c)))
+          _ <- ctx.run(cq.insertValue(lift(c)))
           r <- ctx.run(jq)
         } yield {
           r.headOption mustBe Some(j)
@@ -98,4 +97,3 @@ class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
     }
   }
 }
-

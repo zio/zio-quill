@@ -7,7 +7,7 @@ import io.getquill.ast._
 import io.getquill.util.MacroContextExt._
 import io.getquill.norm.BetaReduction
 import io.getquill.util.Messages.TraceType
-import io.getquill.util.{ EnableReflectiveCalls, Interpolator, Messages }
+import io.getquill.util.{EnableReflectiveCalls, Interpolator, Messages}
 
 case class QuotedAst(ast: Ast) extends StaticAnnotation
 
@@ -22,12 +22,12 @@ trait Quotation extends Parsing with ReifyLiftings {
   private val quoted = TermName("quoted")
 
   def quote[T](body: Tree)(implicit t: WeakTypeTag[T]) = {
-    val interp = new Interpolator(TraceType.Quotation, 1)
+    val interp = new Interpolator(TraceType.Quotation, transpileConfig.traceConfig, 1)
     import interp._
 
     val ast = BetaReduction(trace"Parsing Quotation Body" andReturn (astParser(body)))
 
-    val id = TermName(s"id${ast.hashCode.abs}")
+    val id                     = TermName(s"id${ast.hashCode.abs}")
     val (reifiedAst, liftings) = reifyLiftings(ast)
 
     val liftUnlift = new { override val mctx: c.type = c } with LiftUnlift(reifiedAst.countQuatFields)
@@ -75,15 +75,22 @@ trait Quotation extends Parsing with ReifyLiftings {
   protected def unquote[T](tree: Tree)(implicit ct: ClassTag[T]) = {
     val unlift = new { override val mctx: c.type = c } with Unliftables
     import unlift._
-    astTree(tree).flatMap(astUnliftable.unapply).map {
-      case ast: T => ast
+    astTree(tree).flatMap(astUnliftable.unapply).map { case ast: T =>
+      ast
     }
   }
 
   private def astTree(tree: Tree) =
     for {
-      method <- tree.tpe.decls.find(_.name == quoted)
+      method     <- tree.tpe.decls.find(_.name == quoted)
       annotation <- method.annotations.headOption
-      astTree <- annotation.tree.children.lastOption
+      astTree    <- annotation.tree.children.lastOption
     } yield astTree
+
+  def makeQuat[T: c.WeakTypeTag]: c.Tree = {
+    val quat             = inferQuat(implicitly[c.WeakTypeTag[T]].tpe)
+    val liftUnlift       = new { override val mctx: c.type = c } with LiftUnlift(quat.countFields)
+    val quatExpr: c.Tree = liftUnlift.quatLiftable(quat)
+    q"${quatExpr}"
+  }
 }

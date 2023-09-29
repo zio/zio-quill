@@ -1,9 +1,10 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted, Spec }
+import io.getquill.{EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted}
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -59,17 +60,17 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None, true)))
+          e.filter(t => t.i == 999).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContextUpper.run(q).string mustEqual
-          "UPDATE test_entity SET field_s = ?, field_i = ?, L = ?, O = ?, B = ? WHERE field_i = 999"
+          "UPDATE test_entity AS t SET field_s = ?, field_i = ?, L = ?, O = ?, B = ? WHERE t.field_i = 999"
       }
       "delete" in {
         val q = quote {
-          e.filter(_.i == 999).delete
+          e.filter(t => t.i == 999).delete
         }
         testContextUpper.run(q).string mustEqual
-          "DELETE FROM test_entity WHERE field_i = 999"
+          "DELETE FROM test_entity AS t WHERE t.field_i = 999"
       }
       "returning" - {
         "returning - alias" in testContextUpper.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -248,7 +249,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
 
     "join" - {
-      "both sidess" in {
+      "both sides" in {
         val q = quote {
           e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
         }
@@ -311,8 +312,8 @@ class RenamePropertiesOverrideSpec extends Spec {
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContextUpper.run(q).string mustEqual
@@ -345,16 +346,16 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
   }
 
-  "respects the schema definition for embeddeds" - {
+  "respects the schema definition for embedded" - {
     "query" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         testContextUpper.run(query[A]).string mustEqual
           "SELECT x.C AS c FROM A x"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC")
@@ -363,15 +364,15 @@ class RenamePropertiesOverrideSpec extends Spec {
           "SELECT x.bC FROM A x"
       }
     }
-    "query for Option embeddeds" - {
+    "query for Option embedded" - {
       "without schema" in {
-        case class B(c1: Int, c2: Int) extends Embedded
+        case class B(c1: Int, c2: Int)
         case class A(b: Option[B])
         testContextUpper.run(query[A]).string mustEqual
           "SELECT x.C1 AS c1, x.C2 AS c2 FROM A x"
       }
       "with schema" in {
-        case class B(c1: Int, c2: Int) extends Embedded
+        case class B(c1: Int, c2: Int)
         case class A(b: Option[B])
         val q = quote {
           querySchema[A]("A", _.b.map(_.c1) -> "bC1", _.b.map(_.c2) -> "bC2")
@@ -382,7 +383,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "update" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           query[A].update(_.b.c -> 1)
@@ -391,7 +392,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "UPDATE A SET C = 1"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").update(_.b.c -> 1)
@@ -402,7 +403,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "insert" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           query[A].insert(_.b.c -> 1)
@@ -411,7 +412,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "INSERT INTO A (C) VALUES (1)"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").insert(_.b.c -> 1)
@@ -421,12 +422,12 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
     }
 
-    "infix" - {
-      case class B(b: Int) extends Embedded
+    "sql" - {
+      case class B(b: Int)
       case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+          sql"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual
@@ -434,7 +435,7 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "with filter" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
+          sql"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual

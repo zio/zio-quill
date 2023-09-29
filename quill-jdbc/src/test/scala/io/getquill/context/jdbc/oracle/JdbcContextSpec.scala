@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.oracle
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class JdbcContextSpec extends Spec {
 
@@ -50,7 +50,8 @@ class JdbcContextSpec extends Spec {
     }
     "prepare" in {
       testContext.prepareParams(
-        "select * from Person where name=? and age > ?", (ps, _) => (List("Sarah", 127), ps)
+        "select * from Person where name=? and age > ?",
+        (ps, _) => (List("Sarah", 127), ps)
       ) mustEqual List("127", "'Sarah'")
     }
   }
@@ -89,7 +90,7 @@ class JdbcContextSpec extends Spec {
       testContext.run(qr4.insertValue(lift(TestEntity4(8))))
 
       val updated = testContext.run {
-        qr4.update(lift(TestEntity4(0))).returning(_.i)
+        qr4.updateValue(lift(TestEntity4(0))).returning(_.i)
       }
       testContext.run(qr4.filter(_.i == lift(updated))).head.i mustBe updated
     }
@@ -99,7 +100,7 @@ class JdbcContextSpec extends Spec {
       testContext.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = testContext.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => (r.i, r.s, r.o))
       }
       (1, "foo", Some(123)) mustBe updated
     }
@@ -110,7 +111,7 @@ class JdbcContextSpec extends Spec {
       testContext.run(qr1.insertValue(lift(TestEntity("baz", 6, 42L, Some(456), true))))
 
       val updated = testContext.run {
-        qr1.update(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
+        qr1.updateValue(lift(TestEntity("foo", 1, 18L, Some(123), true))).returning(r => Return(r.i, r.s, r.o))
       }
       Return(1, "foo", Some(123)) mustBe updated
     }

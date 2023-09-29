@@ -1,11 +1,11 @@
 package io.getquill.norm
 
-import io.getquill.Spec
 import io.getquill.ast._
 import io.getquill.ast.Implicits._
-import io.getquill.norm.EqualityBehavior.{ AnsiEquality, NonAnsiEquality }
-import io.getquill.testContext.{ quote, unquote }
-import io.getquill.testContext.extras._
+import io.getquill.base.Spec
+import io.getquill.norm.EqualityBehavior.{AnsiEquality, NonAnsiEquality}
+import io.getquill.MirrorContexts.testContext.{quote, unquote}
+import io.getquill.MirrorContexts.testContext.extras._
 
 class SimplifyNullChecksSpec extends Spec {
 
@@ -17,7 +17,7 @@ class SimplifyNullChecksSpec extends Spec {
   val it = Ident("t")
   val ca = Constant.auto("a")
 
-  val SimplifyNullChecksAnsi = new SimplifyNullChecks(AnsiEquality)
+  val SimplifyNullChecksAnsi    = new SimplifyNullChecks(AnsiEquality)
   val SimplifyNullChecksNonAnsi = new SimplifyNullChecks(NonAnsiEquality)
 
   "center rule must" - {
@@ -29,8 +29,10 @@ class SimplifyNullChecksSpec extends Spec {
           Ident("o")
         )
       ) mustEqual If(
-          IsNotNullCheck(Ident("a")) +&&+ IsNotNullCheck(Ident("t")), Ident("t"), Ident("o")
-        )
+        IsNotNullCheck(Ident("a")) +&&+ IsNotNullCheck(Ident("t")),
+        Ident("t"),
+        Ident("o")
+      )
     }
 
     "apply left rule" in {
@@ -46,55 +48,67 @@ class SimplifyNullChecksSpec extends Spec {
     }
 
     "reduces when Option == Option(constant)" in {
-      val q = quote {
-        (a: Option[Int]) => a == Option(1)
+      val q = quote { (a: Option[Int]) =>
+        a == Option(1)
       }
-      SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsDefined(ia) +&&+ (ia +==+ OptionApply(Constant.auto(1))))
+      SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsDefined(ia) +&&+ (ia +==+ OptionApply(
+        Constant.auto(1)
+      )))
     }
 
     "reduces when Option(constant) == Option" in {
-      val q = quote {
-        (a: Option[Int]) => Option(1) == a
+      val q = quote { (a: Option[Int]) =>
+        Option(1) == a
       }
-      SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsDefined(ia) +&&+ (OptionApply(Constant.auto(1)) +==+ ia))
+      SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsDefined(ia) +&&+ (OptionApply(
+        Constant.auto(1)
+      ) +==+ ia))
     }
 
     "reduces when Option != Option(constant)" in {
-      val q = quote {
-        (a: Option[Int]) => a != Option(1)
+      val q = quote { (a: Option[Int]) =>
+        a != Option(1)
       }
-      SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsEmpty(ia) +||+ (ia +!=+ OptionApply(Constant.auto(1))))
+      SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsEmpty(ia) +||+ (ia +!=+ OptionApply(
+        Constant.auto(1)
+      )))
     }
 
     "reduces when Option(constant) != Option" in {
-      val q = quote {
-        (a: Option[Int]) => Option(1) != a
+      val q = quote { (a: Option[Int]) =>
+        Option(1) != a
       }
-      SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsEmpty(ia) +||+ (OptionApply(Constant.auto(1)) +!=+ ia))
+      SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual (OptionIsEmpty(ia) +||+ (OptionApply(
+        Constant.auto(1)
+      ) +!=+ ia))
     }
 
     "with ansi enabled" - {
       "Ignores regular comparison - Int/Int" in {
-        val q = quote {
-          (a: Int, b: Int) => a === b
+        val q = quote { (a: Int, b: Int) =>
+          a === b
         }
-        SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
+        SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(
+          Ident("a"),
+          EqualityOperator.`_==`,
+          Ident("b")
+        )
       }
       "reduces when Option/Option" in {
-        val q = quote {
-          (a: Option[Int], b: Option[Int]) => a === b
+        val q = quote { (a: Option[Int], b: Option[Int]) =>
+          a === b
         }
         SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual (ia +==+ ib)
       }
       "succeeds when Option/T" in {
-        val q = quote {
-          (a: Option[Int], b: Int) => a === b
+        val q = quote { (a: Option[Int], b: Int) =>
+          a === b
         }
         SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual (ia +==+ ib)
       }
       "succeeds when T/Option" in {
-        val q = quote {
-          (a: Int, b: Option[Int]) => a === b
+        val q = quote { (a: Int, b: Option[Int]) =>
+          a === b
         }
         SimplifyNullChecksAnsi(quote(unquote(q)).ast.body) mustEqual (ia +==+ ib)
       }
@@ -102,26 +116,32 @@ class SimplifyNullChecksSpec extends Spec {
 
     "without ansi enabled" - {
       "Ignores regular comparison - Int/Int" in {
-        val q = quote {
-          (a: Int, b: Int) => a === b
+        val q = quote { (a: Int, b: Int) =>
+          a === b
         }
-        SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(Ident("a"), EqualityOperator.`_==`, Ident("b"))
+        SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual BinaryOperation(
+          Ident("a"),
+          EqualityOperator.`_==`,
+          Ident("b")
+        )
       }
       "reduces when Option/Option" in {
-        val q = quote {
-          (a: Option[Int], b: Option[Int]) => a === b
+        val q = quote { (a: Option[Int], b: Option[Int]) =>
+          a === b
         }
-        SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual OptionIsDefined(ia) +&&+ OptionIsDefined(ib) +&&+ (ia +==+ ib)
+        SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual OptionIsDefined(ia) +&&+ OptionIsDefined(
+          ib
+        ) +&&+ (ia +==+ ib)
       }
       "succeeds when Option/T" in {
-        val q = quote {
-          (a: Option[Int], b: Int) => a === b
+        val q = quote { (a: Option[Int], b: Int) =>
+          a === b
         }
         SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual OptionIsDefined(ia) +&&+ (ia +==+ ib)
       }
       "succeeds when T/Option" in {
-        val q = quote {
-          (a: Int, b: Option[Int]) => a === b
+        val q = quote { (a: Int, b: Option[Int]) =>
+          a === b
         }
         SimplifyNullChecksNonAnsi(quote(unquote(q)).ast.body) mustEqual OptionIsDefined(ib) +&&+ (ia +==+ ib)
       }

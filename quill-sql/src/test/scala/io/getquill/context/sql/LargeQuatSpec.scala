@@ -1,19 +1,19 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class LargeQuatSpec extends Spec {
 
   case class Large(
-    rec1:  String,
-    rec2:  String,
-    rec3:  String,
-    rec4:  String,
-    rec5:  String,
-    rec6:  String,
-    rec7:  String,
-    rec8:  String,
-    rec9:  String,
+    rec1: String,
+    rec2: String,
+    rec3: String,
+    rec4: String,
+    rec5: String,
+    rec6: String,
+    rec7: String,
+    rec8: String,
+    rec9: String,
     rec10: String,
     rec11: String,
     rec12: String,

@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.context.monix.MonixJdbcContext
-import io.getquill.context.sql.PeopleSpec
+import io.getquill.context.sql.base.PeopleSpec
 import monix.execution.Scheduler
 import monix.reactive.Observable
 
@@ -14,10 +14,10 @@ trait PeopleMonixSpec extends PeopleSpec {
   import context._
 
   def collect[T](o: Observable[T]) =
-    o.foldLeft(List[T]())({ case (l, elem) => elem +: l })
+    o.foldLeft(List[T]()) { case (l, elem) => elem +: l }
       .firstL
       .runSyncUnsafe()
 
-  val `Ex 11 query` = quote(query[Person])
+  val `Ex 11 query`    = quote(query[Person])
   val `Ex 11 expected` = peopleEntries
 }

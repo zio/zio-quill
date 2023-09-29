@@ -4,12 +4,12 @@ import io.getquill.ast.Visibility.Hidden
 import io.getquill.ast._
 import io.getquill.quat.Quat
 import io.getquill.quat.QuatNestingHelper._
-import io.getquill.util.Interpolator
+import io.getquill.util.{Interpolator, TraceConfig}
 import io.getquill.util.Messages.TraceType
 
-object ExpandDistinct {
+class ExpandDistinct(traceConfig: TraceConfig) {
 
-  val interp = new Interpolator(TraceType.ExpandDistinct, 3)
+  val interp = new Interpolator(TraceType.ExpandDistinct, traceConfig, 3)
   import interp._
 
   def apply(q: Ast): Ast =
@@ -17,6 +17,7 @@ object ExpandDistinct {
       case Distinct(q) =>
         trace"ExpandDistinct Distinct(inside)" andReturn
           Distinct(apply(q))
+
       case q =>
         Transform(q) {
           case Aggregation(op, Distinct(q)) =>
@@ -25,11 +26,14 @@ object ExpandDistinct {
 
           case Distinct(Map(q, x, cc @ Tuple(values))) =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
-            trace"ExpandDistinct Map(q, _, Tuple)" andReturn
-              Map(Distinct(Map(q, x, cc)), newIdent,
-                Tuple(values.zipWithIndex.map {
-                  case (_, i) => Property(newIdent, s"_${i + 1}")
-                }))
+            trace"ExpandDistinct Distinct(Map(q, _, Tuple))" andReturn
+              Map(
+                Distinct(Map(q, x, cc)),
+                newIdent,
+                Tuple(values.zipWithIndex.map { case (_, i) =>
+                  Property(newIdent, s"_${i + 1}")
+                })
+              )
 
           // Situations like this:
           //    case class AdHocCaseClass(id: Int, name: String)
@@ -37,13 +41,19 @@ object ExpandDistinct {
           //      query[SomeTable].map(st => AdHocCaseClass(st.id, st.name)).distinct
           //    }
           // ... need some special treatment. Otherwise their values will not be correctly expanded.
-          case Distinct(Map(q, x, cc @ CaseClass(values))) =>
+          case Distinct(Map(q, x, cc @ CaseClass(n, values))) =>
             val newIdent = Ident(x.name, valueQuat(cc.quat))
             trace"ExpandDistinct Distinct(Map(q, _, CaseClass))" andReturn
-              Map(Distinct(Map(q, x, cc)), newIdent,
-                CaseClass(values.map {
-                  case (name, _) => (name, Property(newIdent, name))
-                }))
+              Map(
+                Distinct(Map(q, x, cc)),
+                newIdent,
+                CaseClass(
+                  n,
+                  values.map { case (name, _) =>
+                    (name, Property(newIdent, name))
+                  }
+                )
+              )
 
           // Need some special handling to address issues with distinct returning a single embedded entity i.e:
           // query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id))
@@ -68,8 +78,8 @@ object ExpandDistinct {
           // the distinct is "expanded" adding an outer map, Ident's representing a Table will end up in invalid places
           // such as "ORDER BY tableIdent" etc...
           case Distinct(Map(q, x, p)) =>
-            val newMap = Map(q, x, Tuple(List(p)))
-            val newQuat = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
+            val newMap   = Map(q, x, Tuple(List(p)))
+            val newQuat  = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
             val newIdent = Ident(x.name, newQuat)
             trace"ExpandDistinct Distinct(Map(other))" andReturn
               Map(Distinct(newMap), newIdent, Property(newIdent, "_1"))

@@ -23,7 +23,8 @@ private[getquill] object QuatOps {
             quat.lookup(head, true) match {
               case p: Quat.Product => p
               case _ =>
-                QuatException(s"Quat at ${curr.mkString("/", ".", "")} is not a product but we need to go into ${tail.mkString("./", ".", "")} and write renames: [${renames.mkString(",")}]")
+                QuatException(s"Quat at ${curr.mkString("/", ".", "")} is not a product but we need to go into ${tail
+                    .mkString("./", ".", "")} and write renames: [${renames.mkString(",")}]")
             }
           val newSubQuat = renameQuatAtPathRecurse(tail, curr :+ head, goInto)
           // Make a copy of the current quat with the one at the recursed field replaced.
@@ -36,7 +37,7 @@ private[getquill] object QuatOps {
           val newFields = quat.fields.map(kv => if (kv._1 == head) (kv._1, newSubQuat) else kv)
           // Re-create the quat with the new fields. Can't use copy since it would not copy the renames
           // along with the object.
-          Quat.Product.WithRenames(quat.tpe, newFields, quat.renames)
+          Quat.Product.WithRenames(quat.name, quat.tpe, newFields, quat.renames)
       }
 
     renameQuatAtPathRecurse(path, List(), rootQuat)

@@ -2,12 +2,12 @@ package io.getquill.norm.capture
 
 import io.getquill.ast._
 import io.getquill.norm.BetaReduction
-import io.getquill.util.Interpolator
+import io.getquill.util.{Interpolator, TraceConfig}
 import io.getquill.util.Messages.TraceType
 
-case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Ident]] {
+case class Dealias(state: Option[Ident], traceConfig: TraceConfig) extends StatefulTransformer[Option[Ident]] {
 
-  val interp = new Interpolator(TraceType.Standard, 3)
+  val interp = new Interpolator(TraceType.Standard, traceConfig, 3)
   import interp._
 
   override def apply(q: Query): (Query, StatefulTransformer[Option[Ident]]) =
@@ -32,6 +32,17 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
         dealias(a, b, c)(SortBy(_, _, _, d))
       case GroupBy(a, b, c) =>
         dealias(a, b, c)(GroupBy)
+      case g @ GroupByMap(qry, b, c, d, e) =>
+        apply(qry) match {
+          case (an, t @ Dealias(Some(alias), traceConfig)) =>
+            val b1 = alias.copy(quat = b.quat)
+            val d1 = alias.copy(quat = d.quat)
+            (GroupByMap(an, b1, BetaReduction(c, b -> b1), d1, BetaReduction(e, d -> d1)), t)
+          case other =>
+            (g, Dealias(Some(b), traceConfig))
+        }
+      case DistinctOn(a, b, c) =>
+        dealias(a, b, c)(DistinctOn)
       case Take(a, b) =>
         val (an, ant) = apply(a)
         (Take(an, b), ant)
@@ -41,36 +52,43 @@ case class Dealias(state: Option[Ident]) extends StatefulTransformer[Option[Iden
       case Union(a, b) =>
         val (an, _) = apply(a)
         val (bn, _) = apply(b)
-        (Union(an, bn), Dealias(None))
+        (Union(an, bn), Dealias(None, traceConfig))
       case UnionAll(a, b) =>
         val (an, _) = apply(a)
         val (bn, _) = apply(b)
-        (UnionAll(an, bn), Dealias(None))
+        (UnionAll(an, bn), Dealias(None, traceConfig))
       case Join(t, a, b, iA, iB, o) =>
-        val ((an, iAn, on), _) = dealias(a, iA, o)((_, _, _))
+        val ((an, iAn, on), _)  = dealias(a, iA, o)((_, _, _))
         val ((bn, iBn, onn), _) = dealias(b, iB, on)((_, _, _))
-        (Join(t, an, bn, iAn, iBn, onn), Dealias(None))
+        (Join(t, an, bn, iAn, iBn, onn), Dealias(None, traceConfig))
       case FlatJoin(t, a, iA, o) =>
         val ((an, iAn, on), ont) = dealias(a, iA, o)((_, _, _))
-        (FlatJoin(t, an, iAn, on), Dealias(Some(iA)))
+        (FlatJoin(t, an, iAn, on), Dealias(Some(iA), traceConfig))
       case _: Entity | _: Distinct | _: Aggregation | _: Nested =>
-        (q, Dealias(None))
+        (q, Dealias(None, traceConfig))
     }
 
   private def dealias[T](a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => T) =
     apply(a) match {
-      case (an, t @ Dealias(Some(alias))) =>
+      case (an, t @ Dealias(Some(alias), traceConfig)) =>
         val retypedAlias = alias.copy(quat = b.quat)
         trace"Dealias $b into $retypedAlias".andLog()
         (f(an, retypedAlias, BetaReduction(c, b -> retypedAlias)), t)
       case other =>
-        (f(a, b, c), Dealias(Some(b)))
+        (f(a, b, c), Dealias(Some(b), traceConfig))
     }
 }
 
 object Dealias {
+  def apply(query: Query)(traceConfig: TraceConfig) =
+    new Dealias(None, traceConfig)(query) match {
+      case (q, _) => q
+    }
+}
+
+class DealiasApply(traceConfig: TraceConfig) {
   def apply(query: Query) =
-    new Dealias(None)(query) match {
+    new Dealias(None, traceConfig)(query) match {
       case (q, _) => q
     }
 }

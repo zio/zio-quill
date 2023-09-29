@@ -23,7 +23,7 @@ export CASSANDRA_DC=datacenter1
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms3g -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 
 modules=$1
 echo "Start build modules: $modules"
@@ -71,8 +71,8 @@ fi
 function wait_for_databases() {
     show_mem
 
-    #sbt scalariformFormat test:scalariformFormat
-    #sbt checkUnformattedFiles
+    #sbt scalafmtAll
+    #sbt scalafmtCheckAll
 
     # Start sbt compilation and database setup in parallel
     echo "build.sh =:> Base Compile in wait_for_databases"
@@ -105,8 +105,8 @@ function wait_for_databases() {
 function wait_for_mysql_postgres() {
     show_mem
 
-    #sbt scalariformFormat test:scalariformFormat
-    #sbt checkUnformattedFiles
+    #sbt scalafmtAll
+    #sbt scalafmtCheckAll
 
     # Start sbt compilation and database setup in parallel
     echo "build.sh =:> Base Compile in wait_for_mysql_postgres"
@@ -138,9 +138,9 @@ function wait_for_mysql_postgres() {
 function wait_for_bigdata() {
     show_mem
 
-    sbt scalariformFormat test:scalariformFormat
-    sbt checkUnformattedFiles
-    sbt $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
+    sbt scalafmtAll
+    sbt scalafmtCheckAll
+    sbt $SBT_ARGS quill-core/Test/compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
 
     wait $SETUP
@@ -164,7 +164,7 @@ function wait_for_bigdata() {
 
 function base_build() {
     echo "build.sh =:> Base Build Specified"
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting Base Build Primary"
     sbt "sbt -Dmodules=base $SBT_ARGS test"
 }
@@ -172,7 +172,7 @@ function base_build() {
 function db_build() {
     echo "build.sh =:> DB Build Specified"
     wait_for_databases
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting DB Build Primary"
     ./build/aware_run.sh "sbt -Dmodules=db $SBT_ARGS test"
 }
@@ -180,7 +180,7 @@ function db_build() {
 function js_build() {
     echo "build.sh =:> JS Build Specified"
     show_mem
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
     echo "build.sh =:> Starting JS Build Primary"
     sbt -Dmodules=js $SBT_ARGS test
 }

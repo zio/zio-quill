@@ -17,61 +17,55 @@ object Implicits {
 }
 
 object +||+ {
-  def unapply(a: Ast): Option[(Ast, Ast)] = {
+  def unapply(a: Ast): Option[(Ast, Ast)] =
     a match {
       case BinaryOperation(one, BooleanOperator.`||`, two) => Some((one, two))
-      case _ => None
+      case _                                               => None
     }
-  }
 }
 
 object +&&+ {
-  def unapply(a: Ast): Option[(Ast, Ast)] = {
+  def unapply(a: Ast): Option[(Ast, Ast)] =
     a match {
       case BinaryOperation(one, BooleanOperator.`&&`, two) => Some((one, two))
-      case _ => None
+      case _                                               => None
     }
-  }
 }
 
 object +==+ {
-  def unapply(a: Ast): Option[(Ast, Ast)] = {
+  def unapply(a: Ast): Option[(Ast, Ast)] =
     a match {
       case BinaryOperation(one, EqualityOperator.`_==`, two) => Some((one, two))
-      case _ => None
+      case _                                                 => None
     }
-  }
 }
 
 object +!=+ {
-  def unapply(a: Ast): Option[(Ast, Ast)] = {
+  def unapply(a: Ast): Option[(Ast, Ast)] =
     a match {
       case BinaryOperation(one, EqualityOperator.`_!=`, two) => Some((one, two))
-      case _ => None
+      case _                                                 => None
     }
-  }
 }
 
 object IsNotNullCheck {
   def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`_!=`, NullValue)
 
-  def unapply(ast: Ast): Option[Ast] = {
+  def unapply(ast: Ast): Option[Ast] =
     ast match {
       case BinaryOperation(cond, EqualityOperator.`_!=`, NullValue) => Some(cond)
-      case _ => None
+      case _                                                        => None
     }
-  }
 }
 
 object IsNullCheck {
   def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`_==`, NullValue)
 
-  def unapply(ast: Ast): Option[Ast] = {
+  def unapply(ast: Ast): Option[Ast] =
     ast match {
       case BinaryOperation(cond, EqualityOperator.`_==`, NullValue) => Some(cond)
-      case _ => None
+      case _                                                        => None
     }
-  }
 }
 
 object IfExistElseNull {

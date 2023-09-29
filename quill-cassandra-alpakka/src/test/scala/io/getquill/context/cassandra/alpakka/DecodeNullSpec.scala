@@ -9,8 +9,8 @@ class DecodeNullSpec extends CassandraAlpakkaSpec {
 
     val result =
       for {
-        _ <- testDB.run(writeEntities.delete)
-        _ <- testDB.run(writeEntities.insert(lift(insertValue)))
+        _      <- testDB.run(writeEntities.delete)
+        _      <- testDB.run(writeEntities.insertValue(lift(insertValue)))
         result <- testDB.run(query[DecodeNullTestEntity])
       } yield {
         result

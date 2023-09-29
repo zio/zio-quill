@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.mirror.Row
 import io.getquill.context.cassandra.mirrorContext._
 

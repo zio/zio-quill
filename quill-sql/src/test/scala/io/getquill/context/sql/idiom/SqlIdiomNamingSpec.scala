@@ -1,12 +1,12 @@
 package io.getquill.context.sql.idiom
 
-import io.getquill.Spec
 import io.getquill.Escape
 import io.getquill.SnakeCase
 import io.getquill.UpperCase
 import io.getquill.MirrorSqlDialect
 import io.getquill.SqlMirrorContext
 import io.getquill.NamingStrategy
+import io.getquill.base.Spec
 
 trait CustomTableStrategy extends SnakeCase {
   override def table(s: String): String = s"t_$s".toLowerCase
@@ -35,7 +35,7 @@ class SqlIdiomNamingSpec extends Spec {
       db.run(query[SomeEntity]).string mustEqual
         "SELECT x.some_column AS someColumn FROM some_entity x"
     }
-    "mutiple transformations" in {
+    "multiple transformations" in {
       val db = new SqlMirrorContext(MirrorSqlDialect, NamingStrategy(SnakeCase, UpperCase, Escape))
       import db._
       db.run(query[SomeEntity]).string mustEqual
@@ -105,7 +105,7 @@ class SqlIdiomNamingSpec extends Spec {
           "INSERT INTO some_entity (some_column) VALUES (?)"
       }
       "update" in {
-        db.run(query[SomeEntity].update(lift(SomeEntity(1)))).string mustEqual
+        db.run(query[SomeEntity].updateValue(lift(SomeEntity(1)))).string mustEqual
           "UPDATE some_entity SET some_column = ?"
       }
       "delete" in {

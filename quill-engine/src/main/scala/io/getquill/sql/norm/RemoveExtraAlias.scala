@@ -1,14 +1,14 @@
 package io.getquill.sql.norm
 
 import io.getquill.NamingStrategy
-import io.getquill.ast.{ Property, Renameable }
-import io.getquill.context.sql.{ FlattenSqlQuery, SelectValue }
+import io.getquill.ast.{Property, Renameable}
+import io.getquill.context.sql.{FlattenSqlQuery, SelectValue}
 
 /**
- * Remove aliases at the top level of the AST since they are not needed
- * (quill uses select row indexes to figure out what data corresponds to what encodeable object)
- * as well as entities whose aliases are the same as their selection e.g. "select x.foo as foo"
- * since this just adds syntactic noise.
+ * Remove aliases at the top level of the AST since they are not needed (quill
+ * uses select row indexes to figure out what data corresponds to what encodable
+ * object) as well as entities whose aliases are the same as their selection
+ * e.g. "select x.foo as foo" since this just adds syntactic noise.
  */
 case class RemoveExtraAlias(strategy: NamingStrategy) extends StatelessQueryTransformer {
   // Remove aliases that are the same as as the select values. Since a strategy may change the name,
@@ -35,8 +35,8 @@ case class RemoveExtraAlias(strategy: NamingStrategy) extends StatelessQueryTran
         value
     }
 
-  override protected def expandNested(q: FlattenSqlQuery, isTopLevel: Boolean): FlattenSqlQuery = {
-    val from = q.from.map(expandContext(_))
+  override protected def expandNested(q: FlattenSqlQuery, level: QueryLevel): FlattenSqlQuery = {
+    val from   = q.from.map(expandContext(_))
     val select = q.select.map(removeUnneededAlias(_))
     q.copy(select = select, from = from)(q.quat)
   }

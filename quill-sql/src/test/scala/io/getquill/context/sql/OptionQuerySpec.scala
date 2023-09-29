@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 trait OptionQuerySpec extends Spec {
 
@@ -12,6 +12,7 @@ trait OptionQuerySpec extends Spec {
   case class HasAddressContact(firstName: String, lastName: String, age: Int, addressFk: Int)
   case class Contact(firstName: String, lastName: String, age: Int, addressFk: Option[Int], extraInfo: String)
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: Option[String])
+  case class Task(emp: Option[String], tsk: Option[String])
 
   val peopleInsert =
     quote((p: Contact) => query[Contact].insertValue(p))
@@ -32,6 +33,15 @@ trait OptionQuerySpec extends Spec {
     Address(111, "111 Default Address", 12345, None)
   )
 
+  val taskInsert = quote((t: Task) => query[Task].insertValue(t))
+
+  val taskEntries = List(
+    Task(Some("Feed the dogs"), Some("Feed the cats")),
+    Task(Some("Feed the dogs"), None),
+    Task(None, Some("Feed the cats")),
+    Task(None, None)
+  )
+
   val `Simple Map with Condition` = quote {
     query[Address].map(a => (a.street, a.otherExtraInfo.map(info => if (info == "something") "one" else "two")))
   }
@@ -43,9 +53,7 @@ trait OptionQuerySpec extends Spec {
   )
 
   val `Simple Map with GetOrElse` = quote {
-    query[Address].map(
-      a => (a.street, a.otherExtraInfo.map(info => info + " suffix").getOrElse("baz"))
-    )
+    query[Address].map(a => (a.street, a.otherExtraInfo.map(info => info + " suffix").getOrElse("baz")))
   }
   val `Simple Map with GetOrElse Result` = List(
     ("123 Fake Street", "something suffix"),
@@ -55,8 +63,8 @@ trait OptionQuerySpec extends Spec {
   )
 
   val `Simple Map with Condition and GetOrElse` = quote {
-    query[Address].map(
-      a => (a.street, a.otherExtraInfo.map(info => if (info == "something") "foo" else "bar").getOrElse("baz"))
+    query[Address].map(a =>
+      (a.street, a.otherExtraInfo.map(info => if (info == "something") "foo" else "bar").getOrElse("baz"))
     )
   }
   val `Simple Map with Condition and GetOrElse Result` = List(
@@ -77,8 +85,9 @@ trait OptionQuerySpec extends Spec {
   )
 
   val `LeftJoin with FlatMap` = quote {
-    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.exists(_ == a.id))
-      .map({ case (c, a) => (a.map(_.id), a.flatMap(_.otherExtraInfo)) })
+    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.exists(_ == a.id)).map { case (c, a) =>
+      (a.map(_.id), a.flatMap(_.otherExtraInfo))
+    }
   }
   val `LeftJoin with FlatMap Result` = List(
     (Some(1), Some("something")),
@@ -87,8 +96,9 @@ trait OptionQuerySpec extends Spec {
   )
 
   val `LeftJoin with Flatten` = quote {
-    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.exists(_ == a.id))
-      .map({ case (c, a) => (a.map(_.id), a.map(_.otherExtraInfo).flatten) })
+    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.exists(_ == a.id)).map { case (c, a) =>
+      (a.map(_.id), a.map(_.otherExtraInfo).flatten)
+    }
   }
   val `LeftJoin with Flatten Result` = List(
     (Some(1), Some("something")),
@@ -97,8 +107,9 @@ trait OptionQuerySpec extends Spec {
   )
 
   val `Map+getOrElse LeftJoin` = quote {
-    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.getOrElse(-1) == a.id)
-      .map({ case (c, a) => (a.map(_.id), a.flatMap(_.otherExtraInfo)) })
+    query[Contact].leftJoin(query[Address]).on((c, a) => c.addressFk.getOrElse(-1) == a.id).map { case (c, a) =>
+      (a.map(_.id), a.flatMap(_.otherExtraInfo))
+    }
   }
   val `Map+getOrElse LeftJoin Result` = List(
     (Some(1), Some("something")),
@@ -108,8 +119,8 @@ trait OptionQuerySpec extends Spec {
 
   case class NormalizedContact(name: String, addressFk: Option[Int])
 
-  def normalizeAddress = quote {
-    (addressFk: Option[Int]) => addressFk.getOrElse(111)
+  def normalizeAddress = quote { (addressFk: Option[Int]) =>
+    addressFk.getOrElse(111)
   }
 
   val `Option+Some+None Normalize` = quote {
@@ -117,11 +128,11 @@ trait OptionQuerySpec extends Spec {
     val c2 = querySchema[HasAddressContact]("Contact").map(c => (c.firstName, Some(c.addressFk)))
     val c3 = query[Contact].map(c => (c.firstName, c.addressFk))
 
-    val normalized = (c1 ++ c2 ++ c3).map({ case (name, address) => (name, normalizeAddress(address)) })
+    val normalized = (c1 ++ c2 ++ c3).map { case (name, address) => (name, normalizeAddress(address)) }
 
     for {
       (name, addressFk) <- normalized
-      address <- query[Address] if address.id == addressFk
+      address           <- query[Address] if address.id == addressFk
     } yield (name, address.street)
   }
 
@@ -137,4 +148,54 @@ trait OptionQuerySpec extends Spec {
     ("Cora", "111 Default Address")
   )
 
+  val `Simple OrElse` = quote {
+    query[Address].map(a => (a.street, a.otherExtraInfo.orElse(Some("yet something else"))))
+  }
+  val `Simple OrElse Result` = List(
+    ("123 Fake Street", Some("something")),
+    ("456 Old Street", Some("something else")),
+    ("789 New Street", Some("yet something else")),
+    ("111 Default Address", Some("yet something else"))
+  )
+
+  val `Simple Map with OrElse` = quote {
+    query[Address].map(a => (a.street, a.otherExtraInfo.map(info => info + " suffix").orElse(Some("baz"))))
+  }
+  val `Simple Map with OrElse Result` = List(
+    ("123 Fake Street", Some("something suffix")),
+    ("456 Old Street", Some("something else suffix")),
+    ("789 New Street", Some("baz")),
+    ("111 Default Address", Some("baz"))
+  )
+
+  val `Simple Map with Condition and OrElse` = quote {
+    query[Address].map(a =>
+      (a.street, a.otherExtraInfo.map(info => if (info == "something") "foo" else "bar").orElse(Some("baz")))
+    )
+  }
+  val `Simple Map with Condition and OrElse Result` = List(
+    ("123 Fake Street", Some("foo")),
+    ("456 Old Street", Some("bar")),
+    ("789 New Street", Some("baz")),
+    ("111 Default Address", Some("baz"))
+  )
+
+  val `Filter with OrElse and Forall` = quote {
+    query[Task].filter(t => t.emp.orElse(t.tsk).forall(_ == "Feed the dogs"))
+  }
+
+  val `Filter with OrElse and Forall Result` = List(
+    Task(Some("Feed the dogs"), Some("Feed the cats")),
+    Task(Some("Feed the dogs"), None),
+    Task(None, None)
+  )
+
+  val `Filter with OrElse and Exists` = quote {
+    query[Task].filter(t => t.emp.orElse(t.tsk).contains("Feed the dogs"))
+  }
+
+  val `Filter with OrElse and Exists Result` = List(
+    Task(Some("Feed the dogs"), Some("Feed the cats")),
+    Task(Some("Feed the dogs"), None)
+  )
 }

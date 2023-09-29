@@ -1,7 +1,7 @@
 package io.getquill
 
 import io.getquill.context.Context
-import io.getquill.context.zio.PostgresZioJAsyncContext
+import io.getquill.context.qzio.PostgresZioJAsyncContext
 
 // Testing we are passing type params explicitly into AsyncContext, otherwise
 // this file will fail to compile
