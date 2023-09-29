@@ -9,7 +9,6 @@ on:
     types: [ published ] # Triggers the CI when a new Github Release is published
 
 env:
-  JAVA_OPTS: -Xms6G -Xmx6G -XX:+UseG1GC
   JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC # See https://stackoverflow.com/a/73708006
 
 jobs:
@@ -68,7 +67,7 @@ jobs:
       uses: actions/setup-java@v3.12.0
       with:
         distribution: temurin
-        java-version: '8'
+        java-version: '17'
         check-latest: true
 
     - name: Build modules
@@ -91,7 +90,7 @@ jobs:
         uses: actions/setup-java@v3.12.0
         with:
           distribution: temurin
-          java-version: '8'
+          java-version: '17'
           check-latest: true
       - run: |
           sbt ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release

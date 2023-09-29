@@ -587,7 +587,7 @@ lazy val excludeFilterSettings = Seq(
 
     excludeTests match {
       case ExcludeTests.Include =>
-        excludePaths(List())
+        excludePaths(List.empty)
       case _ =>
         excludePaths(paths)
     }
@@ -666,8 +666,9 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
+  javacOptions := Seq("-source", "11", "-target", "11"),
   scalacOptions ++= Seq(
-    "-release:8",
+    "-release:11",
     "-encoding",
     "UTF-8",
     "-feature",
