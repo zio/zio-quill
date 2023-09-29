@@ -68,7 +68,7 @@ docker-compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
 
 Run all tests in specific sub-project:
 ```bash
-docker-compose run --rm sbt sbt "project quill-async" test
+docker-compose run --rm sbt sbt "project quill-jdbc-zio" test
 ```
 
 Run specific test in specific sub-project:

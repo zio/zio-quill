@@ -46,14 +46,6 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc-zio`
 )
 
-lazy val jasyncModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
-  `quill-jasync`,
-  `quill-jasync-postgres`,
-  `quill-jasync-mysql`,
-  `quill-jasync-zio`,
-  `quill-jasync-zio-postgres`
-)
-
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-codegen`,
   `quill-codegen-jdbc`,
@@ -70,10 +62,10 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 )
 
 lazy val allModules =
-  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules ++ docsModules
+  baseModules ++ dbModules ++ codegenModules ++ bigdataModules ++ docsModules
 
 lazy val scala213Modules =
-  baseModules ++ dbModules ++ jasyncModules ++ codegenModules ++ bigdataModules
+  baseModules ++ dbModules ++ codegenModules ++ bigdataModules
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine`, `quill-util`)
 
@@ -112,15 +104,12 @@ lazy val filteredModules = {
       case "db" =>
         println("SBT =:> Compiling Database Modules")
         dbModules
-      case "async" =>
-        println("SBT =:> Compiling Async Database Modules")
-        jasyncModules
       case "codegen" =>
         println("SBT =:> Compiling Code Generator Modules")
         codegenModules
       case "nocodegen" =>
         println("Compiling Not-Code Generator Modules")
-        baseModules ++ dbModules ++ jasyncModules ++ bigdataModules
+        baseModules ++ dbModules ++ bigdataModules
       case "bigdata" =>
         println("SBT =:> Compiling Big Data Modules")
         bigdataModules
@@ -419,71 +408,6 @@ lazy val `quill-spark` =
       excludeDependencies ++= Seq("ch.qos.logback" % "logback-classic")
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync` =
-  (project in file("quill-jasync"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
-      )
-    )
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync-postgres` =
-  (project in file("quill-jasync-postgres"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.4"
-      )
-    )
-    .dependsOn(`quill-jasync` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync-mysql` =
-  (project in file("quill-jasync-mysql"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-mysql" % "2.2.4"
-      )
-    )
-    .dependsOn(`quill-jasync` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync-zio` =
-  (project in file("quill-jasync-zio"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql"   % "jasync-common"      % "2.2.4",
-        "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1",
-        "dev.zio"                %% "zio"                % Version.zio,
-        "dev.zio"                %% "zio-streams"        % Version.zio
-      )
-    )
-    .dependsOn(`quill-zio` % "compile->compile;test->test")
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jasync-zio-postgres` =
-  (project in file("quill-jasync-zio-postgres"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        "com.github.jasync-sql" % "jasync-postgresql" % "2.2.4"
-      )
-    )
-    .dependsOn(`quill-jasync-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra` =

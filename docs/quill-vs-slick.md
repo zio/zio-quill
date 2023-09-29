@@ -98,7 +98,7 @@ The feedback cycle using Slick is typically longer. Some factors like normalizat
 
 ## Non-blocking IO ##
 
-Slick provides an asynchronous wrapper on top of jdbc's blocking interface, making it harder to scale applications using it. On the other hand, quill provides fully asynchronous non-blocking database access through quill-async and quill-finagle-mysql.
+Slick provides an asynchronous wrapper on top of jdbc's blocking interface, making it harder to scale applications using it. On the other hand, quill provides fully asynchronous non-blocking database access through quill-zio.
 
 ## Extensibility ##
 
