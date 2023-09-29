@@ -77,16 +77,6 @@ lazy val scala213Modules =
 
 lazy val scala3Modules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](`quill-engine`, `quill-util`)
 
-def javaMainVersion = {
-  val javaVersion = System.getProperty("java.version")
-  val versionSplit = javaVersion.split('.')
-  if (versionSplit.head.equals("1")) {
-    versionSplit(1).toInt
-  } else {
-    versionSplit(0).toInt
-  }
-}
-
 def isScala213 = {
   val scalaVersion = sys.props.get("quill.scala.version")
   scalaVersion.map(_.startsWith("2.13")).getOrElse(false)
@@ -221,12 +211,7 @@ lazy val `quill-engine` =
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.4.0",
         "com.lihaoyi"                  %% "pprint"        % "0.8.1",
-        // caffeine 3.x doesn't support Java version lower than 11
-        if (javaMainVersion >= 11) {
-          "com.github.ben-manes.caffeine" % "caffeine" % "3.1.8"
-        } else {
-          "com.github.ben-manes.caffeine" % "caffeine" % "2.9.3"
-        }
+        "com.github.ben-manes.caffeine" % "caffeine"      % "3.1.8"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
