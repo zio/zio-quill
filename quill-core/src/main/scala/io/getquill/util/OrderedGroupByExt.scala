@@ -25,7 +25,7 @@ object OrderedGroupByExt {
         }
         builder += i
       }
-      map.view.mapValues(_.result).toMap
+      map.mapValues(_.result).toMap
     }
   }
 }
