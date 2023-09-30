@@ -18,11 +18,13 @@ class MapsEncodingSpec extends CollectionsSpec {
   )
   val e = MapsEntity(
     1,
-    Map("1"               -> BigDecimal(1)),
-    Map(1                 -> 1d, 2 -> 2d, 3 -> 3d),
-    Map(1L                -> 3f),
-    Map(true              -> LocalDate.now()),
-    Map(UUID.randomUUID() -> Instant.now().truncatedTo(ChronoUnit.MICROS)) // See https://stackoverflow.com/a/74781779/2431728
+    Map("1"  -> BigDecimal(1)),
+    Map(1    -> 1d, 2 -> 2d, 3 -> 3d),
+    Map(1L   -> 3f),
+    Map(true -> LocalDate.now()),
+    Map(
+      UUID.randomUUID() -> Instant.now().truncatedTo(ChronoUnit.MILLIS)
+    ) // See https://stackoverflow.com/a/74781779/2431728
   )
   val q = quote(query[MapsEntity])
 

@@ -26,7 +26,7 @@ class MapsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     Map(1L   -> 3f),
     Map(true -> LocalDate.now()),
     Map(
-      UUID.randomUUID() -> Instant.now().truncatedTo(ChronoUnit.MICROS)
+      UUID.randomUUID() -> Instant.now().truncatedTo(ChronoUnit.MILLIS)
     ) // See https://stackoverflow.com/a/74781779/2431728
   )
   val q = quote(query[MapsEntity])
