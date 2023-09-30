@@ -4,15 +4,15 @@ package io.getquill.ast
 case class IdentName(name: String)
 
 object Implicits {
-  implicit class IdentOps(id: Ident) {
-    def idName = IdentName(id.name)
+  implicit final class IdentOps(private val id: Ident) extends AnyVal {
+    def idName: IdentName = IdentName(id.name)
   }
 
-  implicit class AstOpsExt(body: Ast) {
-    def +||+(other: Ast) = BinaryOperation(body, BooleanOperator.`||`, other)
-    def +&&+(other: Ast) = BinaryOperation(body, BooleanOperator.`&&`, other)
-    def +==+(other: Ast) = BinaryOperation(body, EqualityOperator.`_==`, other)
-    def +!=+(other: Ast) = BinaryOperation(body, EqualityOperator.`_!=`, other)
+  implicit final class AstOpsExt(private val body: Ast) extends AnyVal {
+    def +||+(other: Ast): BinaryOperation = BinaryOperation(body, BooleanOperator.`||`, other)
+    def +&&+(other: Ast): BinaryOperation = BinaryOperation(body, BooleanOperator.`&&`, other)
+    def +==+(other: Ast): BinaryOperation = BinaryOperation(body, EqualityOperator.`_==`, other)
+    def +!=+(other: Ast): BinaryOperation = BinaryOperation(body, EqualityOperator.`_!=`, other)
   }
 }
 
@@ -49,7 +49,7 @@ object +!=+ {
 }
 
 object IsNotNullCheck {
-  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`_!=`, NullValue)
+  def apply(ast: Ast): BinaryOperation = BinaryOperation(ast, EqualityOperator.`_!=`, NullValue)
 
   def unapply(ast: Ast): Option[Ast] =
     ast match {
@@ -59,7 +59,7 @@ object IsNotNullCheck {
 }
 
 object IsNullCheck {
-  def apply(ast: Ast) = BinaryOperation(ast, EqualityOperator.`_==`, NullValue)
+  def apply(ast: Ast): BinaryOperation = BinaryOperation(ast, EqualityOperator.`_==`, NullValue)
 
   def unapply(ast: Ast): Option[Ast] =
     ast match {
@@ -69,20 +69,20 @@ object IsNullCheck {
 }
 
 object IfExistElseNull {
-  def apply(exists: Ast, `then`: Ast) =
+  def apply(exists: Ast, `then`: Ast): If =
     If(IsNotNullCheck(exists), `then`, NullValue)
 
-  def unapply(ast: Ast) = ast match {
+  def unapply(ast: Ast): Option[(Ast, Ast)] = ast match {
     case If(IsNotNullCheck(exists), t, NullValue) => Some((exists, t))
     case _                                        => None
   }
 }
 
 object IfExist {
-  def apply(exists: Ast, `then`: Ast, otherwise: Ast) =
+  def apply(exists: Ast, `then`: Ast, otherwise: Ast): If =
     If(IsNotNullCheck(exists), `then`, otherwise)
 
-  def unapply(ast: Ast) = ast match {
+  def unapply(ast: Ast): Option[(Ast, Ast, Ast)] = ast match {
     case If(IsNotNullCheck(exists), t, e) => Some((exists, t, e))
     case _                                => None
   }

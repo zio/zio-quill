@@ -12,7 +12,7 @@ import scala.util.matching.Regex
 
 case class TraceConfig(enabledTraces: List[TraceType])
 object TraceConfig {
-  val Empty = new TraceConfig(List())
+  val Empty = new TraceConfig(List.empty)
 }
 
 class Interpolator(
@@ -22,13 +22,13 @@ class Interpolator(
   color: Boolean = Messages.traceColors,
   qprint: AstPrinter = Messages.qprint,
   out: PrintStream = System.out,
-  globalTracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled(_)
+  globalTracesEnabled: (TraceType) => Boolean = Messages.tracesEnabled
 ) {
-  implicit class InterpolatorExt(sc: StringContext) {
+  implicit final class InterpolatorExt(sc: StringContext) {
     def trace(elements: Any*) = new Traceable(sc, elements)
   }
 
-  def tracesEnabled(traceType: TraceType) =
+  def tracesEnabled(traceType: TraceType): Boolean =
     traceConfig.enabledTraces.contains(traceType) || globalTracesEnabled(traceType)
 
   class Traceable(sc: StringContext, elementsSeq: Seq[Any]) {

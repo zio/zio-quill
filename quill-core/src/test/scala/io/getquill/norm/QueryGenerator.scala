@@ -8,8 +8,8 @@ class QueryGenerator(seed: Int) {
 
   private val random = new Random(seed)
 
-  implicit class IdentExt(id: Ident) {
-    def randomProperty =
+  implicit final class IdentExt(id: Ident) {
+    def randomProperty: Ast =
       id.quat match {
         case Quat.Product(fields) =>
           Property(id, fields.toList(random.nextInt(fields.size))._1)

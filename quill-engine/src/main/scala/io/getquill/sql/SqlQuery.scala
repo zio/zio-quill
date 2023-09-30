@@ -66,7 +66,7 @@ case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean =
 }
 
 case class FlattenSqlQuery(
-  from: List[FromContext] = List(),
+  from: List[FromContext] = List.empty,
   where: Option[Ast] = None,
   groupBy: Option[Ast] = None,
   orderBy: List[OrderByCriteria] = Nil,
@@ -532,8 +532,8 @@ class SqlQueryApply(traceConfig: TraceConfig) {
   private def collectTableAliases(contexts: List[FromContext]): List[String] =
     contexts.flatMap {
       case c: TableContext             => List(c.alias)
-      case c: QueryContext             => List()
-      case c: InfixContext             => List()
+      case c: QueryContext             => List.empty
+      case c: InfixContext             => List.empty
       case JoinContext(_, a, b, _)     => collectAliases(List(a)) ++ collectAliases(List(b))
       case FlatJoinContext(_, from, _) => collectAliases(List(from))
     }

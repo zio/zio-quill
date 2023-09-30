@@ -7,11 +7,13 @@ import io.getquill.util.Messages.TraceType
 import scala.collection.mutable
 
 object LinkedHashMapOps {
-  implicit class LinkedHashMapExt[K, V](m1: mutable.LinkedHashMap[K, V]) {
-    def zipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, V, Option[V]), R]) =
+  implicit final class LinkedHashMapExt[K, V](private val m1: mutable.LinkedHashMap[K, V]) extends AnyVal {
+    def zipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, V, Option[V]), R]): List[R] =
       LinkedHashMapOps.zipWith(m1, m2, f)
 
-    def outerZipWith[R](m2: mutable.LinkedHashMap[K, V])(f: PartialFunction[(K, Option[V], Option[V]), R]) =
+    def outerZipWith[R](m2: mutable.LinkedHashMap[K, V])(
+      f: PartialFunction[(K, Option[V], Option[V]), R]
+    ): mutable.LinkedHashSet[R] =
       LinkedHashMapOps.outerZipWith(m1, m2, f)
   }
 
@@ -19,14 +21,14 @@ object LinkedHashMapOps {
     m1: mutable.LinkedHashMap[K, V],
     m2: mutable.LinkedHashMap[K, V],
     f: PartialFunction[(K, V, Option[V]), R]
-  ) =
+  ): List[R] =
     m1.toList.map(r => (r._1, r._2, m2.get(r._1))).collect(f)
 
   def outerZipWith[K, V, R](
     m1: mutable.LinkedHashMap[K, V],
     m2: mutable.LinkedHashMap[K, V],
     f: PartialFunction[(K, Option[V], Option[V]), R]
-  ) =
+  ): mutable.LinkedHashSet[R] =
     mutable.LinkedHashSet((m1.keySet.toList ++ m2.keySet.toList): _*).map(k => (k, m1.get(k), m2.get(k))).collect(f)
 }
 
@@ -48,21 +50,21 @@ object LinkedHashMapOps {
  * assumed that all operations Quats have referential transparency.
  */
 sealed trait Quat {
-  def isAbstract =
+  def isAbstract: Boolean =
     this match {
       case Quat.Generic => true
       case Quat.Unknown => true
       case _            => false
     }
 
-  def isPrimitive        = false
-  def isProduct          = false
-  def applyRenames: Quat = this
+  def isPrimitive: Boolean = false
+  def isProduct: Boolean   = false
+  def applyRenames: Quat   = this
   def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat
   def withRenames(renames: List[(String, String)]): Quat =
     withRenames(mutable.LinkedHashMap(renames: _*))
 
-  def serialize = BooQuatSerializer.serialize(this)
+  def serialize: String = BooQuatSerializer.serialize(this)
 
   /** Recursively count the fields of the Quat */
   def countFields: Int =
@@ -77,7 +79,7 @@ sealed trait Quat {
    * Either convert to a Product or make the Quat into an error if it is
    * anything else.
    */
-  def probit =
+  def probit: Quat.Product =
     this match {
       case p: Quat.Product => p
       case other           => QuatException(s"Was expecting SQL-level type must be a Product but found `${other}`")
@@ -191,7 +193,7 @@ object Quat {
    * This is needed to propagate the Quat of an Infix param to the infix quat itself.
    * See here for more details: https://github.com/zio/zio-quill/pull/2420
    */
-  def improveInfixQuat(ast: Ast) =
+  def improveInfixQuat(ast: Ast): Ast =
     ast match {
       // Possibly improve the quat if an infix clause if it has exactly one inner Ast element and the type of it's quat is Generic
       case i @ Infix(parts, List(param), pure, transparent, _) if (transparent) =>
@@ -221,13 +223,13 @@ object Quat {
     override def isProduct = true
     private val id         = Product.Id(fields)
 
-    override def equals(that: Any) =
+    override def equals(that: Any): Boolean =
       that match {
         case e: Quat.Product => this.id == e.id
         case _               => false
       }
 
-    override def hashCode = id.hashCode()
+    override def hashCode: Int = id.hashCode()
 
     def copy(
       name: String = this.name,
