@@ -18,11 +18,11 @@ object StringUtil {
       new String(
         (str.toList match {
           case head :: tail => head.toLower :: tail
-          case Nil => Nil
+          case Nil          => Nil
         }).toArray
       )
-    def unquote: String = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
-    def trimFront: String = str.dropWhile(_ == '\n')
+    def unquote: String          = str.replaceFirst("^\"", "").replaceFirst("\"$", "")
+    def trimFront: String        = str.dropWhile(_ == '\n')
     def notEmpty: Option[String] = if (str.trim == "") None else Some(str)
     def inSetNocase(seq: String*): Boolean =
       seq.map(_.toLowerCase).toSeq.contains(str.toLowerCase)

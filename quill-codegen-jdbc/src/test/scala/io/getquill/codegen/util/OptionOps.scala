@@ -9,7 +9,7 @@ object OptionOps {
       case None        => Failure(e)
     }
   }
-  implicit final class StringOptionExt(private val opt: Option[String]) extends AnyVal  {
+  implicit final class StringOptionExt(private val opt: Option[String]) extends AnyVal {
     def andNotEmpty: Option[String] = opt.flatMap(s => if (s.trim.isEmpty) None else Some(s))
   }
 }

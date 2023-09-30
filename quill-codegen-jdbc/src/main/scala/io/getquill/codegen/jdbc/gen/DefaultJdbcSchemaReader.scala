@@ -24,7 +24,7 @@ class DefaultJdbcSchemaReader(
   private[getquill] def schemaPattern(schema: String): String =
     databaseType match {
       case Oracle => schema // Oracle meta fetch takes minutes to hours if schema is not specified
-      case _ => null
+      case _      => null
     }
 
   def jdbcEntityFilter(ts: JdbcTableMeta): Boolean =

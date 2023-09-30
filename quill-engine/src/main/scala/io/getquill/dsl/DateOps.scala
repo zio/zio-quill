@@ -37,7 +37,8 @@ trait DateOps {
     def compare(that: java.time.OffsetTime): Int = value.compareTo(that)
   }
 
-  implicit final class OffsetDateTimeOps(val value: java.time.OffsetDateTime) extends Ordered[java.time.OffsetDateTime] {
+  implicit final class OffsetDateTimeOps(val value: java.time.OffsetDateTime)
+      extends Ordered[java.time.OffsetDateTime] {
     def compare(that: java.time.OffsetDateTime): Int = value.compareTo(that)
   }
 }

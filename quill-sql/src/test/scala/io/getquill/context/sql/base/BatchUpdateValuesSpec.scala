@@ -38,11 +38,11 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
       def adapt: List[Row] = list.map(makeData)
     }
     lazy val updateData: List[Row] = updateBase.adapt
-    lazy val expect: List[Row] = expectBase.adapt
-    lazy val data: List[Row] = dataBase.adapt
+    lazy val expect: List[Row]     = expectBase.adapt
+    lazy val data: List[Row]       = dataBase.adapt
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 1 - Simple Contact` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
@@ -59,7 +59,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     val get = quote(query[Contact])
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 1.1 - Simple Contact With Lift` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
@@ -77,7 +77,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     override lazy val expect = data.map(p => if (p.firstName == "Joe") p.copy(lastName = p.lastName + "U") else p)
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 1.2 - Simple Contact Mixed Lifts` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
@@ -98,7 +98,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
       data.map(p => if (p.firstName == "Joe" || p.firstName == "Jan") p.copy(lastName = p.lastName + "U Jr.") else p)
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 1.3 - Simple Contact with Multi-Lift-Kinds` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
@@ -124,7 +124,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     )
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 2 - Optional Embedded with Renames` extends Adaptable {
     case class Name(first: String, last: String)
     case class ContactTable(name: Option[Name], age: Int)
@@ -148,7 +148,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     val get = quote(contacts)
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 3 - Deep Embedded Optional` extends Adaptable {
     case class FirstName(firstName: Option[String])
     case class LastName(lastName: Option[String])
@@ -171,7 +171,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     val get = quote(query[Contact])
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 4 - Returning` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
@@ -189,7 +189,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     val get            = quote(query[Contact])
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 4 - Returning Multiple` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
@@ -207,7 +207,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     val get            = quote(query[Contact])
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 5 - Append Data` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
@@ -238,7 +238,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     val get = quote(query[Contact])
   }
 
-  //noinspection TypeAnnotation
+  // noinspection TypeAnnotation
   object `Ex 6 - Append Data No Condition` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact

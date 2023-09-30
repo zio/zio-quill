@@ -85,7 +85,8 @@ object ZioJdbc {
       } yield q).refineToOrDie[SQLException]
   }
 
-  implicit final class QuillZioSomeDataSourceExt[T, R](private val qzio: ZIO[DataSource with R, Throwable, T]) extends AnyVal {
+  implicit final class QuillZioSomeDataSourceExt[T, R](private val qzio: ZIO[DataSource with R, Throwable, T])
+      extends AnyVal {
     def implicitSomeDS(implicit tag: Tag[R], implicitEnv: Implicit[DataSource]): ZIO[R, SQLException, T] =
       (for {
         r <- ZIO.environment[R]

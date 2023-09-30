@@ -7,7 +7,7 @@ object IndentUtil {
       str.split("\n").map(elem => indent.prefix + prefix + elem).mkString("\n")
   }
 
-  implicit final class IndentOps(private val i: Int) extends AnyVal  {
+  implicit final class IndentOps(private val i: Int) extends AnyVal {
     def prefix: String = indentOf(i)
   }
 
