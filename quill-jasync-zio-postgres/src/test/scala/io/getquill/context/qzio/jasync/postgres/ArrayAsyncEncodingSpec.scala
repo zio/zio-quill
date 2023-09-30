@@ -3,6 +3,7 @@ package io.getquill.context.qzio.jasync.postgres
 import io.getquill.context.sql.EncodingTestType
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
 
+import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime}
 import java.util.{Date, UUID}
 
@@ -20,7 +21,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
 
   "Java8 times" in {
     case class Java8Times(timestamps: Seq[LocalDateTime], dates: Seq[LocalDate])
-    val jE = Java8Times(Seq(LocalDateTime.now()), Seq(LocalDate.now()))
+    val jE = Java8Times(Seq(LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)), Seq(LocalDate.now()))
     val jQ = quote(querySchema[Java8Times]("ArraysTestEntity"))
     runSyncUnsafe(context.run(jQ.insertValue(lift(jE))))
     val actual = runSyncUnsafe(context.run(jQ)).head

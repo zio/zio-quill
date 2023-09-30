@@ -10,6 +10,6 @@ object OptionOps {
     }
   }
   implicit class StringOptionExt(opt: Option[String]) {
-    def andNotEmpty = opt.flatMap(s => if (s.trim.isEmpty) None else Some(s))
+    def andNotEmpty: Option[String] = opt.flatMap(s => if (s.trim.isEmpty) None else Some(s))
   }
 }
