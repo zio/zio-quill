@@ -165,7 +165,7 @@ trait SqlIdiom extends Idiom {
     }
 
   implicit def ifTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[If] =
-    Tokenizer[If] { ast: If =>
+    Tokenizer[If] { case ast: If =>
       def flatten(ast: Ast): (List[(Ast, Ast)], Ast) =
         ast match {
           case If(cond, a, b) =>
