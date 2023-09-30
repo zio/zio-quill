@@ -220,10 +220,10 @@ object Quat {
     override val renames: mutable.LinkedHashMap[String, String],
     val tpe: Quat.Product.Type
   ) extends Quat {
-    override def isProduct = true
-    private val id         = Product.Id(fields)
+    override def isProduct: scala.Boolean = true
+    private val id: Quat.Product.Id       = Product.Id(fields)
 
-    override def equals(that: Any): Boolean =
+    override def equals(that: Any): scala.Boolean =
       that match {
         case e: Quat.Product => this.id == e.id
         case _               => false
@@ -236,7 +236,7 @@ object Quat {
       fields: mutable.LinkedHashMap[String, Quat] = this.fields,
       renames: mutable.LinkedHashMap[String, String] = this.renames,
       tpe: Quat.Product.Type = this.tpe
-    ) =
+    ): Product =
       new Product(name, fields, renames, tpe)
 
     def withRenamesFrom(other: Quat): Quat =
