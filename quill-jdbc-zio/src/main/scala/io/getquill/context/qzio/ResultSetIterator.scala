@@ -9,7 +9,7 @@ import java.sql.{Connection, ResultSet}
  * straightforward implementation of a hasNext method.
  */
 class ResultSetIterator[T](rs: ResultSet, conn: Connection, extractor: (ResultSet, Connection) => T)
-    extends BufferedIterator[T] {
+    extends scala.collection.BufferedIterator[T] {
 
   private[this] var state     = 0 // 0: no data, 1: cached, 2: finished
   private[this] var cached: T = null.asInstanceOf[T]

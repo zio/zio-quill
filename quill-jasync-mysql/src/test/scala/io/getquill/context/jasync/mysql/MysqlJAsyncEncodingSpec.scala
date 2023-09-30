@@ -1,14 +1,16 @@
 package io.getquill.context.jasync.mysql
 
 import java.time.{LocalDate, LocalDateTime}
-
 import io.getquill.context.sql.EncodingSpec
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import java.util.Date
 import io.getquill.Query
+import io.getquill.context.jasync.mysql
+
+import java.time.temporal.ChronoUnit
 
 class MysqlJAsyncEncodingSpec extends EncodingSpec {
 
@@ -88,7 +90,11 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
 
   "decode LocalDate and LocalDateTime types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime, v3: LocalDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now, LocalDateTime.now)
+    val entity = DateEncodingTestEntity(
+      LocalDate.now,
+      LocalDateTime.now.truncatedTo(ChronoUnit.MILLIS),
+      LocalDateTime.now.truncatedTo(ChronoUnit.MILLIS)
+    )
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)
       _      <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
@@ -131,7 +137,7 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
 
   "encodes custom type inside singleton object" in {
     object Singleton {
-      def apply()(implicit c: TestContext) = {
+      def apply()(implicit c: TestContext): Future[Seq[Long]] = {
         import c._
         for {
           _      <- c.run(query[EncodingTestEntity].delete)
@@ -144,7 +150,7 @@ class MysqlJAsyncEncodingSpec extends EncodingSpec {
     Await.result(Singleton(), Duration.Inf)
   }
 
-  private def prepareEncodingTestEntity() = {
+  private def prepareEncodingTestEntity(): Unit = {
     val prepare = for {
       _ <- testContext.run(delete)
       _ <- testContext.run(liftQuery(insertValues).foreach(e => insert(e)))
