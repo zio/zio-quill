@@ -553,7 +553,7 @@ lazy val `quill-orientdb` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "4.0.3" exclude ("org.slf4j", "*"),
+    "com.zaxxer"              % "HikariCP"                % "5.0.1" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "8.1.0"      % Test,
     "com.h2database"          % "h2"                      % "2.2.224"    % Test,
     "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
@@ -627,7 +627,7 @@ val scalaCollectionCompatVersion = "2.11.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.3.11" % Test
+    "ch.qos.logback" % "logback-classic" % "1.4.11" % Test
   )
 )
 
