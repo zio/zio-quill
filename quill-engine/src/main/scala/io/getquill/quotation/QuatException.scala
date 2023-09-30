@@ -9,7 +9,7 @@ object QuatException {
 }
 
 object QuatExceptionOps {
-  implicit final class QuatExceptionOpsExt(private val quat: => Quat) extends AnyVal {
+  implicit final class QuatExceptionOpsExt(quat: => Quat) {
     def suppress(additionalMessage: String = ""): String =
       try { quat.shortString }
       catch {
