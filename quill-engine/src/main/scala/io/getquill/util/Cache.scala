@@ -6,7 +6,7 @@ import scala.concurrent.duration.Duration
 
 final class Cache[K, V <: Closeable] {
 
-  private case class Entry(value: Option[V], expiration: Long)
+  private case class Entry(value: V, expiration: Long)
 
   private val cache = mutable.Map.empty[K, Entry]
 
@@ -18,10 +18,10 @@ final class Cache[K, V <: Closeable] {
       cache.get(key) match {
         case Some(entry) =>
           cache += key -> entry.copy(expiration = expiration)
-          entry.value
+          Some(entry.value)
         case None =>
           val v = value
-          cache += key -> Entry(v, expiration)
+          v.foreach(vv => cache += key -> Entry(vv, expiration))
           v
       }
     }
@@ -29,7 +29,7 @@ final class Cache[K, V <: Closeable] {
   private def evict(now: Long): Unit =
     for ((key, Entry(value, expiration)) <- cache)
       if (now > expiration) {
-        value.foreach(_.close)
+        value.close()
         cache -= key
       }
 }
