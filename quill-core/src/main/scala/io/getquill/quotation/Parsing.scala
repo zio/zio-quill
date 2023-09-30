@@ -199,8 +199,6 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Entity("unused", Nil, quat)
 
     case q"$pack.querySchema[$t](${name: String}, ..$properties)" =>
-      q"$t".tpe
-      inferQuat(q"$t".tpe)
       val quat = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity.Opinionated(name, properties.map(propertyAliasParser(_)), quat, Fixed)
