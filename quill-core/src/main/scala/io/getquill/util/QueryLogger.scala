@@ -10,10 +10,10 @@ import java.time.format.DateTimeFormatter
 
 class QueryLogger(logToFile: LogToFile) {
 
-  val runtime =
-    Unsafe.unsafe { implicit u =>
-      logToFile match {
-        case LogToFile.Enabled(logFile) =>
+  val runtime: Option[Runtime.Scoped[Unit]] =
+    logToFile match {
+      case LogToFile.Enabled(logFile) =>
+        Unsafe.unsafe { implicit u =>
           Some(
             Runtime.unsafe.fromLayer(
               fileLogger(
@@ -25,8 +25,8 @@ class QueryLogger(logToFile: LogToFile) {
               )
             )
           )
-        case LogToFile.Disabled => None
-      }
+        }
+      case LogToFile.Disabled => None
     }
 
   def apply(queryString: String, sourcePath: String, line: Int, column: Int): Unit =
