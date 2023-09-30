@@ -9,29 +9,29 @@ class TransactionalExecutionContextSpec extends Spec {
   "uses the wrapped context to execute runnables" in {
     val executed = ListBuffer[Runnable]()
     val ec = new ExecutionContext {
-      def execute(r: Runnable) = {
+      def execute(r: Runnable): Unit = {
         executed += r
-        r.run
+        r.run()
       }
-      def reportFailure(t: Throwable) = ???
+      def reportFailure(t: Throwable): Unit = ???
     }
     val runnable = new Runnable {
-      override def run = {}
+      override def run() = {}
     }
     TransactionalExecutionContext(ec, null).execute(runnable)
-    executed.result mustEqual List(runnable)
+    executed.result() mustEqual List(runnable)
   }
 
   "uses the wrapped context to report errors" in {
     val reported = ListBuffer[Throwable]()
     val ec = new ExecutionContext {
-      def execute(r: Runnable) = ???
-      def reportFailure(t: Throwable) = {
+      def execute(r: Runnable): Unit = ???
+      def reportFailure(t: Throwable): Unit = {
         val r = reported += t
       }
     }
     val exception = new IllegalStateException
     TransactionalExecutionContext(ec, null).reportFailure(exception)
-    reported.result mustEqual List(exception)
+    reported.result() mustEqual List(exception)
   }
 }

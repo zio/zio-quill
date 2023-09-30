@@ -7,6 +7,8 @@ import java.util.Date
 import java.util.UUID
 import io.getquill.Query
 
+import java.time.temporal.ChronoUnit
+
 class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
 
   import context._
@@ -83,7 +85,7 @@ class PostgresAsyncEncodingSpec extends EncodingSpec with ZioSpec {
 
   "decodes LocalDate and LocalDateTime types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now)
+    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now.truncatedTo(ChronoUnit.MICROS))
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)
       _      <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))

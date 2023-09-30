@@ -16,12 +16,12 @@ trait BatchValuesSpec extends Spec with BeforeAndAfterEach {
     quote((p: Product) => query[Product].insertValue(p))
 
   def makeProducts(maxRows: Int = 22) =
-    (1 to maxRows).map(i => Product(i, s"Product-${i}", i * 100))
+    (1 to maxRows).map(i => Product(i, s"Product-$i", i.toLong * 100))
 
   object `Ex 1 - Batch Insert Normal` {
-    implicit val meta = insertMeta[Product](_.id)
-    val products      = makeProducts(22)
-    val batchSize     = 5
+    implicit val meta: context.InsertMeta[Product] = insertMeta[Product](_.id)
+    val products                                   = makeProducts(22)
+    val batchSize                                  = 5
     def opExt = quote { (transform: Insert[Product] => Insert[Product]) =>
       liftQuery(products).foreach(p => transform(query[Product].insertValue(p)))
     }

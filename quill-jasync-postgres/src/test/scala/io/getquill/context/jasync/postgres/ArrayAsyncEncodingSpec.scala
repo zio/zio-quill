@@ -8,10 +8,12 @@ import java.time.{LocalDate, LocalDateTime}
 import java.util.{Date, UUID}
 
 class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec {
-  val ctx = testContext
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  private val ctx = testContext
   import ctx._
 
-  val q = quote(query[ArraysTestEntity])
+  private val q = quote(query[ArraysTestEntity])
 
   "Support all sql base types and `Iterable` implementers" in {
     await(ctx.run(q.insertValue(lift(e))))

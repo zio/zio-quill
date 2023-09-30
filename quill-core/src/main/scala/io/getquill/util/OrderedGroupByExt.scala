@@ -1,19 +1,19 @@
 package io.getquill.util
 
-import collection.immutable.ListSet
-import collection.mutable.{LinkedHashMap => MMap, Builder}
-import scala.language.higherKinds
+import scala.collection.immutable.ListSet
+import scala.collection.mutable
+import scala.collection.mutable.{LinkedHashMap => MMap}
 
 object OrderedGroupByExt {
-  implicit class GroupByOrderedImplicitImpl[A](val t: Traversable[A]) extends AnyVal {
+  implicit final class GroupByOrderedImplicitImpl[A](private val t: Iterable[A]) extends AnyVal {
     def groupByOrderedUnique[K](f: A => K): Map[K, ListSet[A]] =
       groupByGen(ListSet.newBuilder[A])(f)
 
     def groupByOrdered[K](f: A => K): Map[K, List[A]] =
       groupByGen(List.newBuilder[A])(f)
 
-    def groupByGen[K, C[_]](makeBuilder: => Builder[A, C[A]])(f: A => K): Map[K, C[A]] = {
-      val map = MMap[K, Builder[A, C[A]]]()
+    def groupByGen[K, C[_]](makeBuilder: => mutable.Builder[A, C[A]])(f: A => K): Map[K, C[A]] = {
+      val map = MMap[K, mutable.Builder[A, C[A]]]()
       for (i <- t) {
         val key = f(i)
         val builder = map.get(key) match {
@@ -25,7 +25,7 @@ object OrderedGroupByExt {
         }
         builder += i
       }
-      map.mapValues(_.result).toMap
+      map.view.mapValues(_.result).toMap
     }
   }
 }

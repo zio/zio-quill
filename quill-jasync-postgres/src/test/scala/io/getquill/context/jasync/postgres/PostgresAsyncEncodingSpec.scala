@@ -93,7 +93,10 @@ class PostgresAsyncEncodingSpec extends EncodingSpec {
 
   "decodes LocalDate and LocalDateTime types" in {
     case class DateEncodingTestEntity(v1: LocalDate, v2: LocalDateTime)
-    val entity = DateEncodingTestEntity(LocalDate.now, LocalDateTime.now.truncatedTo(ChronoUnit.MICROS)) // https://stackoverflow.com/a/74781779/2431728
+    val entity = DateEncodingTestEntity(
+      LocalDate.now,
+      LocalDateTime.now.truncatedTo(ChronoUnit.MICROS)
+    ) // https://stackoverflow.com/a/74781779/2431728
     val r = for {
       _      <- testContext.run(query[DateEncodingTestEntity].delete)
       _      <- testContext.run(query[DateEncodingTestEntity].insertValue(lift(entity)))
