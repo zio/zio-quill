@@ -1226,7 +1226,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         case false => maybeQuoted
         case true  => q"unquote($maybeQuoted)"
       }
-    TypeName(c.freshName("T"))
+
     try
       c.typecheck(unquoted(tree), c.TYPEmode)
     catch {
