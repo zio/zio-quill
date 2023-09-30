@@ -1,6 +1,6 @@
 package io.getquill.context.sql.dsl
 
-import io.getquill.{Query, Quoted}
+import io.getquill.Query
 import io.getquill.context.sql.SqlContext
 
 //noinspection TypeAnnotation
