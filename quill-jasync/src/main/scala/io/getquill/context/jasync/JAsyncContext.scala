@@ -46,7 +46,7 @@ abstract class JAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: ConcreteC
   override type NullChecker                      = JasyncNullChecker
   type Runner                                    = Unit
 
-  protected val dateTimeZone = ZoneId.systemDefault()
+  protected val dateTimeZone: ZoneId = ZoneId.systemDefault()
 
   class JasyncNullChecker extends BaseNullChecker {
     override def apply(index: Int, row: RowData): Boolean =
