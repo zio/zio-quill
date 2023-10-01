@@ -69,7 +69,7 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
     val actual1 = ctx.run(q.filter(_.texts == lift(List("test"))))
     val actual2 = ctx.run(q.filter(_.texts == lift(List("test2"))))
     actual1 mustEqual List(corrected)
-    actual2 mustEqual List()
+    actual2 mustEqual List.empty
   }
 
   "empty array on found null" in {

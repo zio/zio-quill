@@ -103,7 +103,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       path.foldLeft(tuple) { case (t, i) =>
         Property(t, s"_${i + 1}")
       }
-    def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] =
+    def reductions(ast: Ast, path: List[Int] = List.empty): List[(Ident, Ast)] =
       ast match {
         case ident: Ident => List(ident -> property(path))
         case Tuple(elems) =>
@@ -962,7 +962,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     }
   }
 
-  implicit class InsertReturnCapabilityExtension(capability: ReturningCapability) {
+  implicit final class InsertReturnCapabilityExtension(capability: ReturningCapability) {
     def verifyAst(returnBody: Ast) = capability match {
       case OutputClauseSupported =>
         returnBody match {

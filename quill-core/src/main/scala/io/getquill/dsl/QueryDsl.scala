@@ -18,7 +18,7 @@ private[getquill] trait QueryDsl {
   @compileTimeOnly(NonQuotedException.message)
   def impliedQuerySchema[T](entity: String, columns: (T => (Any, String))*): EntityQuery[T] = NonQuotedException()
 
-  implicit class NullableColumnExtensions[A](o: Option[A]) {
+  implicit final class NullableColumnExtensions[A](o: Option[A]) {
     @compileTimeOnly(NonQuotedException.message)
     def getOrNull: A =
       throw new IllegalArgumentException(
@@ -38,13 +38,13 @@ private[getquill] trait QueryDsl {
   def sum[A](a: Option[A])(implicit n: Numeric[A]): Option[A]          = NonQuotedException()
 
   object extras extends LowPriorityExtras with DateOps {
-    implicit class NumericOptionOps[A: Numeric](a: Option[A]) {
+    implicit final class NumericOptionOps[A: Numeric](a: Option[A]) {
       def ===[B: Numeric](b: Option[B]): Boolean = a.exists(av => b.exists(bv => av == bv))
       def ===[B: Numeric](b: B): Boolean         = a.exists(av => av == b)
       def =!=[B: Numeric](b: Option[B]): Boolean = a.exists(av => b.exists(bv => av != bv))
       def =!=[B: Numeric](b: B): Boolean         = a.exists(av => av != b)
     }
-    implicit class NumericRegOps[A: Numeric](a: A) {
+    implicit final class NumericRegOps[A: Numeric](a: A) {
       def ===[B: Numeric](b: Option[B]): Boolean = b.exists(bv => bv == a)
       def ===[B: Numeric](b: B): Boolean         = a == b
       def =!=[B: Numeric](b: Option[B]): Boolean = b.exists(bv => bv != a)
@@ -53,13 +53,13 @@ private[getquill] trait QueryDsl {
   }
 
   trait LowPriorityExtras {
-    implicit class OptionOps[T](a: Option[T]) {
+    implicit final class OptionOps[T](a: Option[T]) {
       def ===(b: Option[T]): Boolean = a.exists(av => b.exists(bv => av == bv))
       def ===(b: T): Boolean         = a.exists(av => av == b)
       def =!=(b: Option[T]): Boolean = a.exists(av => b.exists(bv => av != bv))
       def =!=(b: T): Boolean         = a.exists(av => av != b)
     }
-    implicit class RegOps[T](a: T) {
+    implicit final class RegOps[T](a: T) {
       def ===(b: Option[T]): Boolean = b.exists(bv => bv == a)
       def ===(b: T): Boolean         = a == b
       def =!=(b: Option[T]): Boolean = b.exists(bv => bv != a)
