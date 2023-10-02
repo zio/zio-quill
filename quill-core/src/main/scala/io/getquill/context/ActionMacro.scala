@@ -37,7 +37,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
     translateBatchQueryPrettyPrint(quoted, q"false")
 
   def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
-    expandBatchActionNew(quoted, false) {
+    expandBatchActionNew(quoted, isReturning = false) {
       case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
         q"""
           ..${EnableReflectiveCalls(c)}
@@ -119,7 +119,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
     batchActionRows(quoted, method, q"1")
 
   def batchActionRows(quoted: Tree, method: String, numRows: Tree): Tree =
-    expandBatchActionNew(quoted, false) {
+    expandBatchActionNew(quoted, isReturning = false) {
       case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
         q"""
           ..${EnableReflectiveCalls(c)}
@@ -177,7 +177,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
     batchActionReturningRows(quoted, numRows)
 
   def batchActionReturningRows[T](quoted: Tree, numRows: Tree)(implicit t: WeakTypeTag[T]): Tree =
-    expandBatchActionNew(quoted, true) {
+    expandBatchActionNew(quoted, isReturning = true) {
       case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
         q"""
           ..${EnableReflectiveCalls(c)}
