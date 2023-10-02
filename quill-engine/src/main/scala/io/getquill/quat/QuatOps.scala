@@ -5,15 +5,15 @@ import io.getquill.quotation.QuatException
 
 private[getquill] object QuatOps {
   object Implicits {
-    implicit class QuatOpsExt(quat: Quat.Product) {
-      def renameAtPath(path: List[String], renames: List[(String, String)]) =
+    implicit final class QuatOpsExt(private val quat: Quat.Product) extends AnyVal {
+      def renameAtPath(path: List[String], renames: List[(String, String)]): Quat.Product =
         QuatOps.renameQuatAtPath(path, renames, quat)
     }
   }
 
   // Grouping renames at particular paths allows us to
   // Apply a set of renames in a particular path to a Quat
-  def renameQuatAtPath(path: List[String], renames: List[(String, String)], rootQuat: Quat.Product) = {
+  def renameQuatAtPath(path: List[String], renames: List[(String, String)], rootQuat: Quat.Product): Quat.Product = {
     def renameQuatAtPathRecurse(path: List[String], curr: List[String], quat: Quat.Product): Quat.Product =
       path match {
         case Nil =>
@@ -40,7 +40,7 @@ private[getquill] object QuatOps {
           Quat.Product.WithRenames(quat.name, quat.tpe, newFields, quat.renames)
       }
 
-    renameQuatAtPathRecurse(path, List(), rootQuat)
+    renameQuatAtPathRecurse(path, List.empty, rootQuat)
   }
 
   object HasBooleanQuat {

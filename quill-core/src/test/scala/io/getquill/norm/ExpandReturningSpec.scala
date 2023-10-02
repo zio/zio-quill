@@ -155,7 +155,7 @@ class ExpandReturningSpec extends Spec {
 
     def insert = Insert(
       Map(
-        Entity.Opinionated("Person", List(), QEP, renameable),
+        Entity.Opinionated("Person", List.empty, QEP, renameable),
         Ident("p"),
         Tuple(
           List(
