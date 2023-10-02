@@ -6,6 +6,7 @@ import io.getquill.util.Messages._
 
 import scala.collection.mutable.ListBuffer
 
+//noinspection ConvertExpressionToSAM
 object StatementInterpolator {
 
   trait Tokenizer[T] {
@@ -13,24 +14,26 @@ object StatementInterpolator {
   }
 
   object Tokenizer {
-    def apply[T](f: T => Token) = new Tokenizer[T] {
-      def token(v: T) = f(v)
-    }
+    def apply[T](f: T => Token): Tokenizer[T] =
+      new Tokenizer[T] {
+        def token(v: T): Token = f(v)
+      }
+
     def withFallback[T](
       fallback: Tokenizer[T] => Tokenizer[T]
-    )(pf: PartialFunction[T, Token]) =
+    )(pf: PartialFunction[T, Token]): Tokenizer[T] =
       new Tokenizer[T] {
-        private val stable       = fallback(this)
-        override def token(v: T) = pf.applyOrElse(v, stable.token)
+        private lazy val stable: Tokenizer[T] = fallback(this)
+        override def token(v: T): Token  = pf.applyOrElse(v, stable.token)
       }
   }
 
-  implicit class TokenImplicit[T](v: T)(implicit tokenizer: Tokenizer[T]) {
-    def token = tokenizer.token(v)
+  implicit final class TokenImplicit[T](private val v: T) extends AnyVal {
+    def token(implicit tokenizer: Tokenizer[T]): Token = tokenizer.token(v)
   }
 
-  implicit def stringTokenizer: Tokenizer[String] =
-    Tokenizer[String] { case string =>
+  implicit val stringTokenizer: Tokenizer[String] =
+    Tokenizer[String] { string =>
       StringToken(string)
     }
 
@@ -43,19 +46,15 @@ object StatementInterpolator {
       case lift: Lift => liftTokenizer.token(lift)
     }
 
-  implicit def tagTokenizer: Tokenizer[Tag] =
+  implicit val tagTokenizer: Tokenizer[Tag] =
     Tokenizer[Tag] {
       case tag: ScalarTag    => ScalarTagToken(tag)
       case tag: QuotationTag => QuotationTagToken(tag)
     }
 
-  implicit def liftTokenizer: Tokenizer[Lift] =
+  implicit val liftTokenizer: Tokenizer[Lift] =
     Tokenizer[Lift] {
-      case tag: ScalarTag    => ScalarTagToken(tag)
-      case tag: QuotationTag => QuotationTagToken(tag)
-      case lift: ScalarLift  => ScalarLiftToken(lift)
-      // TODO Longer Explanation
-      case lift: Tag => fail("Cannot tokenizer a non-scalar tagging.")
+      case lift: ScalarLift => ScalarLiftToken(lift)
       case lift: Lift =>
         fail(
           s"Can't tokenize a non-scalar lifting. ${lift.name}\n" +
@@ -93,30 +92,28 @@ object StatementInterpolator {
         )
     }
 
-  implicit def tokenTokenizer: Tokenizer[Token] = Tokenizer[Token](identity)
-  implicit def statementTokenizer: Tokenizer[Statement] =
+  implicit val tokenTokenizer: Tokenizer[Token] = Tokenizer[Token](identity)
+  implicit val statementTokenizer: Tokenizer[Statement] =
     Tokenizer[Statement](identity)
-  implicit def stringTokenTokenizer: Tokenizer[StringToken] =
+  implicit val stringTokenTokenizer: Tokenizer[StringToken] =
     Tokenizer[StringToken](identity)
-  implicit def liftingTokenTokenizer: Tokenizer[ScalarLiftToken] =
+  implicit val liftingTokenTokenizer: Tokenizer[ScalarLiftToken] =
     Tokenizer[ScalarLiftToken](identity)
 
-  implicit class TokenList[T](list: List[T]) {
-    def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]) = {
+  implicit final class TokenList[T](private val list: List[T]) extends AnyVal {
+    def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]): Statement = {
       val l1 = list.map(_.token)
       val l2 = List.fill(l1.size - 1)(StringToken(sep))
       Statement(Interleave(l1, l2))
     }
   }
 
-  implicit def listTokenizer[T](implicit
-    tokenize: Tokenizer[T]
-  ): Tokenizer[List[T]] =
-    Tokenizer[List[T]] { case list =>
+  implicit def listTokenizer[T](implicit tokenize: Tokenizer[T]): Tokenizer[List[T]] =
+    Tokenizer[List[T]] { list =>
       list.mkStmt()
     }
 
-  implicit class Impl(sc: StringContext) {
+  implicit final class Impl(private val sc: StringContext) extends AnyVal {
 
     private def flatten(tokens: List[Token]): List[Token] = {
 
@@ -147,7 +144,7 @@ object StatementInterpolator {
       }
 
       (unnestStatements _)
-        .andThen(mergeStringTokens _)
+        .andThen(mergeStringTokens)
         .apply(tokens)
     }
 

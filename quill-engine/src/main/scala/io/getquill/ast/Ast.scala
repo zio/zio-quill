@@ -687,7 +687,7 @@ case class Block(statements: List[Ast]) extends Ast {
   private lazy val computedQuat     = statements.last.quat
   def quat                          = computedQuat
   private lazy val bestComputedQuat = statements.last.bestQuat
-  def bestQuat                      = computedQuat
+  def bestQuat                      = bestComputedQuat
 } // Note. Assuming Block is not Empty
 
 case class Val(name: Ident, body: Ast) extends Ast {

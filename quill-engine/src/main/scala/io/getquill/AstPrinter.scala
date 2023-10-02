@@ -10,7 +10,7 @@ import pprint.{Renderer, Tree, Truncated}
 
 object AstPrinter {
   object Implicits {
-    implicit class FansiStrExt(str: Str) {
+    implicit final class FansiStrExt(private val str: Str) extends AnyVal {
       def string(color: Boolean): String =
         if (color) str.render
         else str.plainText
@@ -27,7 +27,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
   val escapeUnicode                 = false
   val showFieldNames                = false
 
-  val traceAllQuats = traceQuats == QuatTrace.All
+  val traceAllQuats: Boolean = traceQuats == QuatTrace.All
 
   private def printRenameable(r: Renameable) =
     r match {
@@ -60,7 +60,7 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
           traceQuats match {
             case QuatTrace.Full | QuatTrace.All => List(Tree.Literal(e.q.shortString))
             case QuatTrace.Short                => List(Tree.Literal(e.q.shortString.take(10)))
-            case QuatTrace.None                 => List()
+            case QuatTrace.None                 => List.empty
           }
         case treemake.Elem(value)   => List(treeify(value, escapeUnicode, showFieldNames))
         case treemake.Tree(value)   => List(value)
@@ -73,14 +73,14 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
     private case class Elem(any: Any)                 extends treemake
     private case class Tree(any: pprint.Tree)         extends treemake
     private case class Content(list: List[treemake]) extends treemake {
-      def andWith(elem: treemake) =
+      def andWith(elem: treemake): Content =
         elem match {
           case c: Content => Content(list ++ c.list)
           case other      => Content(list :+ other)
         }
     }
 
-    def apply(list: Any*): treemake = Content(list.toList.map(Elem(_)))
+    def apply(list: Any*): treemake = Content(list.toList.map(Elem.apply))
   }
 
   override def treeify(x: Any, escapeUnicode: Boolean, showFieldNames: Boolean): Tree =
@@ -98,15 +98,16 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
             if (traceOpinions)
               List(printVisibility(i.visibility))
             else
-              List()
+              List.empty
           )).iterator
         )
 
       case i: Infix =>
         val content =
-          List(i.parts.toList, i.params.toList) ++ (if (i.pure) List("pure") else List()) ++ (if (i.transparent)
-                                                                                                List("transparent")
-                                                                                              else List())
+          List(i.parts, i.params) ++
+            (if (i.pure) List("pure") else List.empty) ++
+            (if (i.transparent) List("transparent") else List.empty)
+
         Tree.Apply("Infix", treemake(content: _*).withQuat(i.bestQuat).make)
 
       case e: Entity if (!traceOpinions) =>

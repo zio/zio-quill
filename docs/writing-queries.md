@@ -30,7 +30,7 @@ val pi = quote(3.14159)
 And be used within another quotation:
 
 ```scala
-case class Circle(radius: Float)
+final case class Circle(radius: Float)
 
 val areas = quote {
   query[Circle].map(c => pi * c.radius * c.radius)
@@ -80,7 +80,7 @@ val q = quote {
 You can also use implicit classes to extend things in quotations.
 
 ```scala
-implicit class Ext(q: Query[Person]) {
+implicit final class Ext(private val q: Query[Person]) extends AnyVal {
   def olderThan(age: Int) = quote {
     query[Person].filter(p => p.age > lift(age))
   }
@@ -165,7 +165,7 @@ ctx.run(insertValues(List(Circle(1.1F), Circle(1.2F))))
 The database schema is represented by case classes. By default, quill uses the class and field names as the database identifiers:
 
 ```scala
-case class Circle(radius: Float)
+final case class Circle(radius: Float)
 
 val q = quote {
   query[Circle].filter(c => c.radius > 1)
@@ -194,8 +194,8 @@ ctx.run(q)
 If multiple tables require custom identifiers, it is good practice to define a `schema` object with all table queries to be reused across multiple queries:
 
 ```scala
-case class Circle(radius: Int)
-case class Rectangle(length: Int, width: Int)
+final case class Circle(radius: Int)
+final case class Rectangle(length: Int, width: Int)
 object schema {
   val circles = quote {
     querySchema[Circle](
@@ -219,7 +219,7 @@ Database generated values can be returned from an insert query by using `.return
 will also be excluded from the insertion since they are database generated.
 
 ```scala
-case class Product(id: Int, description: String, sku: Long)
+final case class Product(id: Int, description: String, sku: Long)
 
 val q = quote {
   query[Product].insertValue(lift(Product(0, "My Product", 1011L))).returningGenerated(_.id)
@@ -361,7 +361,7 @@ ctx.run(q.returning(r => udf(r.id))) //: List[Int]
 
 Use the return value of `sku` to issue a query:
 ```scala
-case class Supplier(id: Int, clientSku: Long)
+final case class Supplier(id: Int, clientSku: Long)
 ctx.run {
   q.returning(r => query[Supplier].filter(s => s.sku == r.sku).map(_.id).max)
 } //: List[Option[Long]]
@@ -430,8 +430,8 @@ Quill supports nested embedded case classes.
 > In previous iterations of Quill would need to extend the `Embedded` trait but this is no longer necessary.
 
 ```scala
-case class Contact(phone: String, address: String) /* The embedded class */
-case class Person(id: Int, name: String, contact: Contact)
+final case class Contact(phone: String, address: String) /* The embedded class */
+final case class Person(id: Int, name: String, contact: Contact)
 
 ctx.run(query[Person])
 // SELECT x.id, x.name, x.phone, x.address FROM Person x
@@ -440,8 +440,8 @@ ctx.run(query[Person])
 Note that default naming behavior uses the name of the nested case class properties. It's possible to override this default behavior using a custom `schema`:
 
 ```scala
-case class Contact(phone: String, address: String) extends Embedded
-case class Person(id: Int, name: String, homeContact: Contact, workContact: Option[Contact])
+final case class Contact(phone: String, address: String) extends Embedded
+final case class Person(id: Int, name: String, homeContact: Contact, workContact: Option[Contact])
 
 val q = quote {
   querySchema[Person](
@@ -462,8 +462,8 @@ ctx.run(q)
 The overall abstraction of quill queries uses database tables as if they were in-memory collections. Scala for-comprehensions provide syntactic sugar to deal with these kinds of monadic operations:
 
 ```scala
-case class Person(id: Int, name: String, age: Int)
-case class Contact(personId: Int, phone: String)
+final case class Person(id: Int, name: String, age: Int)
+final case class Contact(personId: Int, phone: String)
 
 val q = quote {
   for {
@@ -586,7 +586,7 @@ run(q)
 
 You can also map to a case class instead of a tuple. This will give you a `Query[YourCaseClass]` that you can further compose.
 ```scala
-case class NameAge(name: String, age: Int)
+final case class NameAge(name: String, age: Int)
 // Will return Query[NameAge]
 val q = quote {
   query[Person].groupByMap(p => p.name)(p => NameAge(p.name, max(p.age)))
@@ -772,7 +772,7 @@ ctx.run(q)
 ```
 You can also use multiple fields in the `DISTINCT ON` criteria:
 ```scala
-// case class Person(firstName: String, lastName: String, age: Int)
+// final case class Person(firstName: String, lastName: String, age: Int)
 val q = quote {
   query[Person].distinctOn(p => (p.firstName, p.lastName))
 }
@@ -796,8 +796,8 @@ Joins are arguably the largest source of complexity in most SQL queries.
 Quill offers a few different syntaxes so you can choose the right one for your use-case!
 
 ```scala
-case class A(id: Int)
-case class B(fk: Int)
+final case class A(id: Int)
+final case class B(fk: Int)
 
 // Applicative Joins:
 quote {
@@ -823,8 +823,8 @@ quote {
 
 Let's see them one by one assuming the following schema:
 ```scala
-case class Person(id: Int, name: String)
-case class Address(street: String, zip: Int, fk: Int)
+final case class Person(id: Int, name: String)
+final case class Address(street: String, zip: Int, fk: Int)
 ```
 (Note: If your use case involves lots and lots of joins, both inner and outer. Skip right to the flat-joins section!)
 
@@ -876,7 +876,7 @@ ctx.run(q) //: List[(Option[Person], Option[Address])]
 What about joining more than two tables with the applicative syntax?
 Here's how to do that:
 ```scala
-case class Company(zip: Int)
+final case class Company(zip: Int)
 
 // All is well for two tables but for three or more, the nesting mess begins:
 val q = quote {
@@ -984,7 +984,7 @@ With Quill the following multi-join queries are equivalent, use them according t
 
 ```scala
 
-case class Employer(id: Int, personId: Int, name: String)
+final case class Employer(id: Int, personId: Int, name: String)
 
 val qFlat = quote {
   for{
@@ -1058,9 +1058,9 @@ CREATE TABLE Company(
 ```
 This would encode to the following:
 ```scala
-case class Person(id:Int, name:Option[String])
-case class Address(fk:Option[Int], street:String, zip:Int)
-case class Company(name:String, zip:Int)
+final case class Person(id:Int, name:Option[String])
+final case class Address(fk:Option[Int], street:String, zip:Int)
+final case class Company(name:String, zip:Int)
 ```
 
 Some important notes regarding Optionals and nullable fields.
@@ -1152,7 +1152,7 @@ ctx.run(q)
 
 It also works for regular fields.
 ```scala
-// case class Person(name: String, age: Int, title: Option[String])
+// final case class Person(name: String, age: Int, title: Option[String])
 val q = quote {
   query[Person].filter(p => p.title.filterIfDefined(_ == "The Honorable"))
 }
@@ -1318,7 +1318,7 @@ Left         | Right        | Equality   | Result
 `None      ` | `None`       | `!=`       | `false`
 
 ```scala
-case class Node(id:Int, status:Option[String], otherStatus:Option[String])
+final case class Node(id:Int, status:Option[String], otherStatus:Option[String])
 
 val q = quote { query[Node].filter(n => n.id == 123) }
 ctx.run(q)
@@ -1425,9 +1425,9 @@ ctx.run(union)
 Case Classes can also be used inside quotations as output values:
 
 ```scala
-case class Person(id: Int, name: String, age: Int)
-case class Contact(personId: Int, phone: String)
-case class ReachablePerson(name:String, phone: String)
+final case class Person(id: Int, name: String, age: Int)
+final case class Contact(personId: Int, phone: String)
+final case class ReachablePerson(name:String, phone: String)
 
 val q = quote {
   for {
@@ -1445,7 +1445,7 @@ ctx.run(q)
 As well as in general:
 
 ```scala
-case class IdFilter(id:Int)
+final case class IdFilter(id:Int)
 
 val q = quote {
   val idFilter = new IdFilter(999)
@@ -1532,7 +1532,7 @@ Just as in regular queries use the extended insert/update syntaxes to achieve fi
 For example, if the ID is a generated value you can skip ID insertion like this:
 (This can also be accomplished with an insert-meta).
 ```scala
-// case class Person(id: Int, name: String, age: Int)
+// final case class Person(id: Int, name: String, age: Int)
 val a = quote {
   liftQuery(List(Person(0, "John", 31),Person(0, "name2", 32))).foreach(e => query[Person].insert(_.name -> p.name, _.age -> p.age))
 }
@@ -1543,7 +1543,7 @@ ctx.run(a)
 
 Batch queries can also have a returning/returningGenerated clause:
 ```scala
-// case class Person(id: Int, name: String, age: Int)
+// final case class Person(id: Int, name: String, age: Int)
 val a = quote {
   liftQuery(List(Person(0, "John", 31),Person(0, "name2", 32))).foreach(e => query[Person].insert(_.name -> p.name, _.age -> p.age)).returning(_.id)
 }
@@ -1557,8 +1557,8 @@ Note that the `liftQuery[Something]` and the query[Something]` values do not nec
 (In fact the liftQuery value can even be a constant!)
 For example:
 ```scala
-// case class Person(name: String, age: Int)
-// case class Vip(first: String, last: String, age: Int)
+// final case class Person(name: String, age: Int)
+// final case class Vip(first: String, last: String, age: Int)
 // val vips: List[Vip] = ...
 val q = quote {
   liftQuery(vips).foreach(v => query[Person].insertValue(Person(v.first + v.last, v.age)))
@@ -1760,7 +1760,7 @@ the impact of this is highly significant:
 In order to alleviate this problem Quill can take advantage of the ability of most database dialects to use multiple
 VALUES-clauses to batch-insert rows. Conceptually, this works in the following way:
 ```scala
-case class Person(name: String, age: Int)
+final case class Person(name: String, age: Int)
 val people = List(Person("Joe", 22), Person("Jack", 33), Person("Jill", 44))
 val q = quote { liftQuery(people).foreach(p => query[Person].insertValue(p)) }
 run(q, 2) // i.e. insert rows from the `people` list in batches of 2
@@ -1844,7 +1844,7 @@ Quill provides an IO monad that allows the user to express multiple computations
 ```scala
 // this code using Future
 
-case class Person(id: Int, name: String, age: Int)
+final case class Person(id: Int, name: String, age: Int)
 
 val p = Person(0, "John", 22)
 ctx.run(query[Person].insertValue(lift(p))).flatMap { _ =>
@@ -2034,7 +2034,7 @@ Quill provides SQL Arrays support. In Scala we represent them as any collection 
 ```scala
 import java.util.Date
 
-case class Book(id: Int, notes: List[String], pages: Vector[Int], history: Seq[Date])
+final case class Book(id: Int, notes: List[String], pages: Vector[Int], history: Seq[Date])
 
 ctx.run(query[Book])
 // SELECT x.id, x.notes, x.pages, x.history FROM Book x
@@ -2056,7 +2056,7 @@ The Cassandra context provides List, Set, and Map encoding:
 
 ```scala
 
-case class Book(id: Int, notes: Set[String], pages: List[Int], history: Map[Int, Boolean])
+final case class Book(id: Int, notes: Set[String], pages: List[Int], history: Map[Int, Boolean])
 
 ctx.run(query[Book])
 // SELECT id, notes, pages, history FROM Book
@@ -2067,7 +2067,7 @@ ctx.run(query[Book])
 The cassandra context provides encoding of UDT (user-defined types).
 ```scala
 
-case class Name(firstName: String, lastName: String) extends Udt
+final case class Name(firstName: String, lastName: String) extends Udt
 ```
 
 To encode the UDT and bind it into the query (insert/update queries), the context needs to retrieve UDT metadata from

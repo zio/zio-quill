@@ -41,7 +41,7 @@ class ArrayAsyncEncodingSpec extends ArrayEncodingBaseSpec with ZioSpec {
     val actual2 = runSyncUnsafe(context.run(q.filter(_.texts == lift(List("test2")))))
     baseEntityDeepCheck(actual1.head, e)
     actual1 mustEqual List(e)
-    actual2 mustEqual List()
+    actual2 mustEqual List.empty
   }
 
   // Need to have an actual value in the table in order for the decoder to go off. Previously,

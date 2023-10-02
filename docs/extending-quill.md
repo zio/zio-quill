@@ -10,7 +10,7 @@ Infix is a very flexible mechanism to use non-supported features without having 
 For instance, quill doesn't support the `FOR UPDATE` SQL feature. It can still be used through infix and implicit classes:
 
 ```scala
-implicit class ForUpdate[T](q: Query[T]) {
+implicit final class ForUpdate[T](private val q: Query[T]) extends AnyVal {
   def forUpdate = quote(sql"$q FOR UPDATE".as[Query[T]])
 }
 
@@ -30,8 +30,8 @@ of the infix are a pure function.
 be careful with the use of `infix` in queries that have multiple `map`+`filter` clauses.
 
 ```scala
-case class Data(id: Int)
-case class DataAndRandom(id: Int, value: Int)
+final case class Data(id: Int)
+final case class DataAndRandom(id: Int, value: Int)
 
 // This should be alright:
 val q = quote {
@@ -88,8 +88,8 @@ Typically this requires a `CASE WHERE ... END`.
 
 Take the following example:
 ```scala
-case class Node(name: String, isUp: Boolean, uptime:Long)
-case class Status(name: String, allowed: Boolean)
+final case class Node(name: String, isUp: Boolean, uptime:Long)
+final case class Status(name: String, allowed: Boolean)
 val allowedStatus:Boolean = getState
 
 quote {
@@ -104,7 +104,7 @@ run(q)
 However, in certain cases, infix clauses that express conditionals should actually represent
 boolean expressions for example:
 ```scala
-case class Node(name: String, isUp: Boolean)
+final case class Node(name: String, isUp: Boolean)
 val maxUptime:Boolean = getState
 
 quote {
@@ -141,7 +141,7 @@ You can use implicit extensions in quill in several ways.
 
 ##### Standard quoted extension:
 ```scala
-implicit class Ext(q: Query[Person]) {
+implicit final class Ext(private val q: Query[Person]) extends AnyVal {
   def olderThan(age: Int) = quote {
     query[Person].filter(p => p.age > lift(age))
   }
@@ -152,7 +152,7 @@ run(query[Person].olderThan(44))
 
 ##### Higher-order quoted extension:
 ```scala
-implicit class Ext(q: Query[Person]) {
+implicit final class Ext(private val q: Query[Person]) extends AnyVal {
   def olderThan = quote {
     (age: Int) =>
       query[Person].filter(p => p.age > lift(age))
@@ -170,7 +170,7 @@ The advantage of this approach is that you can choose to either lift or use a co
 
 Just as `Query` can be extended, scalar values can be similarly extended.
 ```scala
-implicit class Ext(i: Int) {
+implicit final class Ext(private val i: Int) extends AnyVal {
   def between = quote {
     (a: Int, b:Int) =>
       i > a && i < b
@@ -183,7 +183,7 @@ run(query[Person].filter(p => p.age.between(33, 44)))
 ##### Extensions in ProtoQuill/Scala3:
 In ProtoQuill, the implicit class pattern for extensions is not supported. Please switch to using Scala 3 extension methods combined with inline definitions to achieve the same functionality.
 
-```scala
+```scala 3
 extension (q: Query[Person]) {
   inline def olderThan(inline age: Int) = quote {
     query[Person].filter(p => p.age > lift(age))
@@ -230,7 +230,7 @@ ctx.run(q)
 
 The easiest way to use comparison operators with dates is to import them from the `extras` module.
 ```scala
-case class Person(name: String, bornOn: java.util.Date)
+final case class Person(name: String, bornOn: java.util.Date)
 
 val ctx = new SqlMirrorContext(PostgresDialect, Literal)
 import ctx._
@@ -246,7 +246,7 @@ You can also define an implicit-class that converts your Date/Numeric type to a 
 which will also give it `>`, `<` etc... comparison operators.
 
 ```scala
-implicit class LocalDateTimeOps(val value: MyCustomNumber) extends Ordered[MyCustomNumber] {
+implicit final class LocalDateTimeOps(val value: MyCustomNumber) extends Ordered[MyCustomNumber] {
   def compare(that: MyCustomNumber): Int = value.compareTo(that)
 }
 ```
@@ -264,7 +264,7 @@ Finally, can implement comparison operators (or any other kinds of operators) by
 implicit conversion and using infix.
 
 ```scala
-implicit class DateQuotes(left: MyCustomDate) {
+implicit final class DateQuotes(private val left: MyCustomDate) extends AnyVal {
   def >(right: MyCustomDate) = quote(sql"$left > $right".as[Boolean])
   def <(right: MyCustomDate) = quote(sql"$left < $right".as[Boolean])
 }
@@ -273,7 +273,7 @@ implicit class DateQuotes(left: MyCustomDate) {
 ### batch with infix
 
 ```scala
-implicit class OnDuplicateKeyIgnore[T](q: Insert[T]) {
+implicit final class OnDuplicateKeyIgnore[T](private val q: Insert[T]) extends AnyVal {
   def ignoreDuplicate = quote(sql"$q ON DUPLICATE KEY UPDATE id=id".as[Insert[T]])
 }
 
@@ -342,8 +342,8 @@ trait UUIDEncodingExample {
 Quill automatically encodes `AnyVal`s (value classes):
 
 ```scala
-case class UserId(value: Int) extends AnyVal
-case class User(id: UserId, name: String)
+final case class UserId(value: Int) extends AnyVal
+final case class User(id: UserId, name: String)
 
 val q = quote {
   for {
