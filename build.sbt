@@ -554,13 +554,13 @@ lazy val `quill-orientdb` =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "5.0.1" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "8.1.0"      % Test,
-    "com.h2database"          % "h2"                      % "2.2.224"    % Test,
-    "org.postgresql"          % "postgresql"              % "42.6.0"     % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"   % Test,
-    "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.2.2.jre11" % Test,
-    "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"   % Test,
-    "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"    % Test
+    "com.mysql"               % "mysql-connector-j"       % "8.1.0"       % Test,
+    "com.h2database"          % "h2"                      % "2.2.224"     % Test,
+    "org.postgresql"          % "postgresql"              % "42.6.0"      % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"    % Test,
+    "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
+    "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
+    "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
   )
 )
 
