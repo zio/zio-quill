@@ -2,7 +2,7 @@ package io.getquill.codegen.util
 import scala.util.{Failure, Try}
 
 object TryOps {
-  implicit class TryThrowExt[T](t: Try[T]) {
+  implicit final class TryThrowExt[T](private val t: Try[T]) extends AnyVal {
     def orThrow: T =
       t match {
         case scala.util.Success(v) => v

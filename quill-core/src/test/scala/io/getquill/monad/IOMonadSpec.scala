@@ -171,7 +171,7 @@ trait IOMonadSpec extends Spec {
       "empty" in {
         val ios = List.empty[IO[Int, Effect]]
         val io  = IO.traverse(ios)(IO.successful)
-        eval(io) mustEqual List()
+        eval(io) mustEqual List.empty
       }
       "success" in {
         val ints = List(1, 2)

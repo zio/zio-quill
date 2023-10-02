@@ -78,15 +78,16 @@ object ZioJdbc {
       }
   }
 
-  implicit class QuillZioDataSourceExt[T](qzio: ZIO[DataSource, Throwable, T]) {
+  implicit final class QuillZioDataSourceExt[T](private val qzio: ZIO[DataSource, Throwable, T]) extends AnyVal {
     def implicitDS(implicit implicitEnv: Implicit[DataSource]): ZIO[Any, SQLException, T] =
       (for {
         q <- qzio.provideEnvironment(ZEnvironment(implicitEnv.env))
       } yield q).refineToOrDie[SQLException]
   }
 
-  implicit class QuillZioSomeDataSourceExt[T, R](qzio: ZIO[DataSource with R, Throwable, T])(implicit tag: Tag[R]) {
-    def implicitSomeDS(implicit implicitEnv: Implicit[DataSource]): ZIO[R, SQLException, T] =
+  implicit final class QuillZioSomeDataSourceExt[T, R](private val qzio: ZIO[DataSource with R, Throwable, T])
+      extends AnyVal {
+    def implicitSomeDS(implicit tag: Tag[R], implicitEnv: Implicit[DataSource]): ZIO[R, SQLException, T] =
       (for {
         r <- ZIO.environment[R]
         q <- qzio
@@ -95,7 +96,7 @@ object ZioJdbc {
       } yield q).refineToOrDie[SQLException]
   }
 
-  implicit class QuillZioExtPlain[T](qzio: ZIO[Connection, Throwable, T]) {
+  implicit final class QuillZioExtPlain[T](private val qzio: ZIO[Connection, Throwable, T]) extends AnyVal {
 
     def onDataSource: ZIO[DataSource, SQLException, T] =
       (for {
@@ -110,7 +111,7 @@ object ZioJdbc {
       } yield q).refineToOrDie[SQLException]
   }
 
-  implicit class QuillZioExt[T, R](qzio: ZIO[Connection with R, Throwable, T])(implicit tag: Tag[R]) {
+  implicit final class QuillZioExt[T, R](private val qzio: ZIO[Connection with R, Throwable, T]) extends AnyVal {
 
     /**
      * Change `Connection` of a QIO to `DataSource with Closeable` by providing
@@ -123,7 +124,7 @@ object ZioJdbc {
      *   run(query[Person]).onDataSource.provide(Has(ds))
      * }}}
      */
-    def onSomeDataSource: ZIO[DataSource with R, SQLException, T] =
+    def onSomeDataSource(implicit tag: Tag[R]): ZIO[DataSource with R, SQLException, T] =
       (for {
         r <- ZIO.environment[R]
         q <- qzio

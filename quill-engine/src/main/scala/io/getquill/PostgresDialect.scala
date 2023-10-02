@@ -178,7 +178,7 @@ trait PostgresDialect
           //   Originally was `WHERE ps.id = STag(uid:3)`
           //   (replacedWhere: `WHERE ps.id = p.id1`, additionalColumns: [id] /*and any other column names of STags in WHERE*/, additionalLifts: [STag(uid:3)])
           val (Update(Filter(table: Entity, tableAlias, replacedWhere), assignments), valuesColumns, valuesLifts) =
-            ReplaceLiftings.of(clause)(batchAlias, List())
+            ReplaceLiftings.of(clause)(batchAlias, List.empty)
           if (valuesLifts.nonEmpty) {
             // The SET columns/values i.e. ([name, id], [STag(uid:1), STag(uid:2)]
             val columnsAndValues = columnsAndValuesTogether(assignments)
@@ -197,7 +197,7 @@ trait PostgresDialect
 
         case (clause @ Update(_: Entity, _), IdiomContext.QueryType.Batch(batchAlias)) =>
           val (Update(table: Entity, assignments), valuesColumns, valuesLifts) =
-            ReplaceLiftings.of(clause)(batchAlias, List())
+            ReplaceLiftings.of(clause)(batchAlias, List.empty)
 
           // Choose table alias based on how assignments clauses were realized. Batch-Alias should mean the same thing as when NormalizeFilteredActionAliases was run in Idiom should the
           // value should be the same thing as the clauses that were realiased.
