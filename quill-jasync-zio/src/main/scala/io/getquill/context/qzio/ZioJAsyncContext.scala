@@ -24,7 +24,7 @@ abstract class ZioJAsyncContext[D <: SqlIdiom, +N <: NamingStrategy, C <: Concre
     with Encoders
     with ZIOMonad {
 
-  protected val dateTimeZone = ZoneId.systemDefault()
+  protected val dateTimeZone: ZoneId = ZoneId.systemDefault()
 
   private val logger = ContextLogger(classOf[ZioJAsyncContext[_, _, _]])
 
