@@ -16,10 +16,10 @@ object ProbeStatement {
 
   private val cache = new Cache[Types#Type, Context[Idiom, NamingStrategy]]
 
-  def apply(statement: String, c: MacroContext) = {
+  def apply(statement: String, c: MacroContext): Unit = {
     import c.universe.{Try => _, _}
 
-    def resolveContext(tpe: Type) =
+    def resolveContext(tpe: Type): Option[Context[Idiom, NamingStrategy]] =
       tpe match {
         case tpe if tpe <:< c.weakTypeOf[QueryProbing] =>
           LoadObject[Context[Idiom, NamingStrategy]](c)(tpe) match {
