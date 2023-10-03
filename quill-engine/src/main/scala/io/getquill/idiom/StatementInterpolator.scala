@@ -24,7 +24,7 @@ object StatementInterpolator {
     )(pf: PartialFunction[T, Token]): Tokenizer[T] =
       new Tokenizer[T] {
         private lazy val stable: Tokenizer[T] = fallback(this)
-        override def token(v: T): Token  = pf.applyOrElse(v, stable.token)
+        override def token(v: T): Token       = pf.applyOrElse(v, stable.token)
       }
   }
 

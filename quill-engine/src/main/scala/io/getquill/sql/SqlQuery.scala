@@ -515,7 +515,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
       case (Ident(_, _: Quat.Product), ord) =>
         new ExpandSelection(from).ofSubselect(List(SelectValue(ast))).map(_.ast).flatMap(orderByCriteria(_, ord, from))
       case (a, o: PropertyOrdering) => List(OrderByCriteria(a, o))
-      case _                    => fail(s"Invalid order by criteria $ast")
+      case _                        => fail(s"Invalid order by criteria $ast")
     }
 
   private def collectAliases(contexts: List[FromContext]): List[String] =
