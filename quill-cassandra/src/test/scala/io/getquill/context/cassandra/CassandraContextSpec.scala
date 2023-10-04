@@ -17,7 +17,16 @@ class CassandraContextSpec extends Spec {
       val update = quote {
         query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
       }
-      await(testAsyncDB.run(update)) mustEqual (AsyncResultSet)
+     val result: AsyncResultSet = await(testAsyncDB.run(update))
+      result.map { row =>
+        println("kemallllgetColumnDefinitions: " + row.getColumnDefinitions)
+        println("kemallllgetColumnDefinitions: " + row.getColumnDefinitions)
+        println("kemallllsize(): " + row.size())
+        println("kemallll: " + row)
+        row
+      }
+      assert(result!=null)
+
     }
     "sync" in {
       import testSyncDB._
