@@ -3,7 +3,7 @@ package io.getquill.context.jdbc
 import java.sql.Types
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, OffsetTime, ZoneOffset, ZonedDateTime}
 import java.{time, util}
-import java.util.{Calendar, TimeZone}
+import java.util.TimeZone
 import scala.math.BigDecimal.javaBigDecimal2bigDecimal
 
 trait Decoders {
@@ -55,7 +55,7 @@ trait Decoders {
   implicit val doubleDecoder: Decoder[Double]         = decoder(_.getDouble)
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder(_.getBytes)
   implicit val dateDecoder: Decoder[util.Date] =
-    decoder((index, row, session) => new util.Date(row.getTimestamp(index, Calendar.getInstance(dateTimeZone)).getTime))
+    decoder((index, row, session) => new util.Date(row.getTimestamp(index, calendar).getTime))
 }
 
 trait BasicTimeDecoders { self: Decoders =>
