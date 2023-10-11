@@ -30,7 +30,7 @@ trait JdbcContextTypes[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   val dateTimeZone = TimeZone.getDefault
 
-  val calendar: Calendar = Calendar.getInstance(dateTimeZone)
+  final lazy val calendar: Calendar = Calendar.getInstance(dateTimeZone)
 
   /**
    * Parses instances of java.sql.Types to string form so it can be used in
