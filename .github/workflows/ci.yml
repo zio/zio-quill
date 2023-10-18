@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         scala: [2.12.x, 2.13.x, 3.3.x]
-        module: [base, db, async, codegen, bigdata]
+        module: [base, db, codegen, bigdata]
         include:
           - scala: 2.12.x
             scala_short: 212
@@ -42,8 +42,6 @@ jobs:
           # For now, only do the `base` build for Scala 3
           - scala: 3.3.x
             module: db
-          - scala: 3.3.x
-            module: async
           - scala: 3.3.x
             module: codegen
           - scala: 3.3.x
