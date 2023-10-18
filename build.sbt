@@ -206,7 +206,7 @@ lazy val `quill-engine` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                  % "config"        % "1.4.2",
+        "com.typesafe"                  % "config"        % "1.4.3",
         "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.4.0",
@@ -222,7 +222,7 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                % "config"        % "1.4.2",
+        "com.typesafe"                % "config"        % "1.4.3",
         "dev.zio"                    %% "zio-logging"   % "2.1.14",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
