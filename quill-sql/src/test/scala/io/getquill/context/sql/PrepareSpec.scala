@@ -53,7 +53,7 @@ class PrepareSpec extends Spec {
         } yield (a, b, c.map(c => c.i))
       }
       testContext.run(q).string mustEqual
-        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i RIGHT JOIN TestEntity c ON c.i = a.i"
+        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.i AS _3 FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i RIGHT JOIN TestEntity c ON c.i = a.i"
     }
   }
 }
