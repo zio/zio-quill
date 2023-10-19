@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.mysql
 
-import io.getquill.context.sql.QueryResultTypeSpec
+import io.getquill.context.sql.base.QueryResultTypeSpec
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters._
 
@@ -16,8 +16,8 @@ class QueryResultTypeJdbcSpec extends QueryResultTypeSpec {
   override def beforeAll = {
     context.run(deleteAll)
     val ids = context.run(liftQuery(productEntries).foreach(p => productInsert(p)))
-    val inserted = (ids zip productEntries).map {
-      case (id, prod) => prod.copy(id = id)
+    val inserted = (ids zip productEntries).map { case (id, prod) =>
+      prod.copy(id = id)
     }
     insertedProducts.addAll(inserted.asJava)
     ()

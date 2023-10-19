@@ -1,41 +1,48 @@
 package io.getquill.quotation
 
+import io.getquill.Quoted
 import scala.reflect.macros.whitebox.Context
 import io.getquill.ast._
-import io.getquill.dsl.CoreDsl
 import io.getquill.quat.Quat
 
 trait Liftables extends QuatLiftable {
   val mctx: Context
-  import mctx.universe.{ Ident => _, Constant => _, Function => _, If => _, Block => _, _ }
+  import mctx.universe.{Ident => _, Constant => _, Function => _, If => _, Block => _, _}
 
   private val pack = q"io.getquill.ast"
 
+  implicit val stringOptionLiftable: Liftable[Option[String]] = Liftable[Option[String]] {
+    case None        => q"scala.None"
+    case Some(value) => q"scala.Some[String]($value)"
+  }
+
   implicit val astLiftable: Liftable[Ast] = Liftable[Ast] {
-    case ast: Query => queryLiftable(ast)
-    case ast: Action => actionLiftable(ast)
-    case ast: Value => valueLiftable(ast)
-    case ast: Ident => identLiftable(ast)
-    case ast: ExternalIdent => externalIdentLiftable(ast)
-    case ast: Ordering => orderingLiftable(ast)
-    case ast: Lift => liftLiftable(ast)
-    case ast: Assignment => assignmentLiftable(ast)
-    case ast: OptionOperation => optionOperationLiftable(ast)
-    case ast: IterableOperation => traversableOperationLiftable(ast)
-    case ast: Property => propertyLiftable(ast)
-    case Val(name, body) => q"$pack.Val($name, $body)"
-    case Block(statements) => q"$pack.Block($statements)"
-    case Function(a, b) => q"$pack.Function($a, $b)"
-    case FunctionApply(a, b) => q"$pack.FunctionApply($a, $b)"
-    case BinaryOperation(a, b, c) => q"$pack.BinaryOperation($a, $b, $c)"
-    case UnaryOperation(a, b) => q"$pack.UnaryOperation($a, $b)"
-    case Infix(a, b, pure, quat) => q"$pack.Infix($a, $b, $pure, $quat)"
-    case If(a, b, c) => q"$pack.If($a, $b, $c)"
-    case Dynamic(tree: Tree, _) if (tree.tpe <:< mctx.weakTypeOf[CoreDsl#Quoted[Any]]) => q"$tree.ast"
-    case Dynamic(tree: Tree, quat) => q"$pack.Constant($tree, $quat)"
-    case QuotedReference(tree: Tree, ast) => q"$ast"
-    case OnConflict.Excluded(a) => q"$pack.OnConflict.Excluded($a)"
-    case OnConflict.Existing(a) => q"$pack.OnConflict.Existing($a)"
+    case ast: Query                                                            => queryLiftable(ast)
+    case ast: Action                                                           => actionLiftable(ast)
+    case ast: Value                                                            => valueLiftable(ast)
+    case ast: Ident                                                            => identLiftable(ast)
+    case ast: ExternalIdent                                                    => externalIdentLiftable(ast)
+    case ast: Ordering                                                         => orderingLiftable(ast)
+    case ast: Lift                                                             => liftLiftable(ast)
+    case ast: Tag                                                              => tagLiftable(ast)
+    case ast: Assignment                                                       => assignmentLiftable(ast)
+    case ast: AssignmentDual                                                   => assignmentDualLiftable(ast)
+    case ast: OptionOperation                                                  => optionOperationLiftable(ast)
+    case ast: IterableOperation                                                => traversableOperationLiftable(ast)
+    case ast: Property                                                         => propertyLiftable(ast)
+    case Val(name, body)                                                       => q"$pack.Val($name, $body)"
+    case Block(statements)                                                     => q"$pack.Block($statements)"
+    case Function(a, b)                                                        => q"$pack.Function($a, $b)"
+    case FunctionApply(a, b)                                                   => q"$pack.FunctionApply($a, $b)"
+    case BinaryOperation(a, b, c)                                              => q"$pack.BinaryOperation($a, $b, $c)"
+    case UnaryOperation(a, b)                                                  => q"$pack.UnaryOperation($a, $b)"
+    case Infix(a, b, pure, transparent, quat)                                  => q"$pack.Infix($a, $b, $pure, $transparent, $quat)"
+    case If(a, b, c)                                                           => q"$pack.If($a, $b, $c)"
+    case Dynamic(tree: Tree, _) if (tree.tpe <:< mctx.weakTypeOf[Quoted[Any]]) => q"$tree.ast"
+    case Dynamic(tree: Tree, quat)                                             => q"$pack.Constant($tree, $quat)"
+    case QuotedReference(tree: Tree, ast)                                      => q"$ast"
+    case OnConflict.Excluded(a)                                                => q"$pack.OnConflict.Excluded($a)"
+    case OnConflict.Existing(a)                                                => q"$pack.OnConflict.Existing($a)"
   }
 
   implicit val optionOperationLiftable: Liftable[OptionOperation] = Liftable[OptionOperation] {
@@ -45,6 +52,7 @@ trait Liftables extends QuatLiftable {
     case OptionTableForall(a, b, c)  => q"$pack.OptionTableForall($a,$b,$c)"
     case OptionFlatten(a)            => q"$pack.OptionFlatten($a)"
     case OptionGetOrElse(a, b)       => q"$pack.OptionGetOrElse($a,$b)"
+    case OptionOrElse(a, b)          => q"$pack.OptionOrElse($a,$b)"
     case OptionFlatMap(a, b, c)      => q"$pack.OptionFlatMap($a,$b,$c)"
     case OptionMap(a, b, c)          => q"$pack.OptionMap($a,$b,$c)"
     case OptionForall(a, b, c)       => q"$pack.OptionForall($a,$b,$c)"
@@ -58,6 +66,7 @@ trait Liftables extends QuatLiftable {
     case OptionOrNull(a)             => q"$pack.OptionOrNull($a)"
     case OptionGetOrNull(a)          => q"$pack.OptionGetOrNull($a)"
     case OptionNone(quat)            => q"$pack.OptionNone($quat)"
+    case FilterIfDefined(a, b, c)    => q"$pack.FilterIfDefined($a,$b,$c)"
   }
 
   implicit val traversableOperationLiftable: Liftable[IterableOperation] = Liftable[IterableOperation] {
@@ -67,8 +76,8 @@ trait Liftables extends QuatLiftable {
   }
 
   implicit val binaryOperatorLiftable: Liftable[BinaryOperator] = Liftable[BinaryOperator] {
-    case EqualityOperator.`==`       => q"$pack.EqualityOperator.`==`"
-    case EqualityOperator.`!=`       => q"$pack.EqualityOperator.`!=`"
+    case EqualityOperator.`_==`      => q"$pack.EqualityOperator.`_==`"
+    case EqualityOperator.`_!=`      => q"$pack.EqualityOperator.`_!=`"
     case BooleanOperator.`&&`        => q"$pack.BooleanOperator.`&&`"
     case BooleanOperator.`||`        => q"$pack.BooleanOperator.`||`"
     case StringOperator.`+`          => q"$pack.StringOperator.`+`"
@@ -123,6 +132,7 @@ trait Liftables extends QuatLiftable {
     case ConcatMap(a, b, c)                         => q"$pack.ConcatMap($a, $b, $c)"
     case SortBy(a, b, c, d)                         => q"$pack.SortBy($a, $b, $c, $d)"
     case GroupBy(a, b, c)                           => q"$pack.GroupBy($a, $b, $c)"
+    case GroupByMap(a, b, c, d, e)                  => q"$pack.GroupByMap($a, $b, $c, $d, $e)"
     case Aggregation(a, b)                          => q"$pack.Aggregation($a, $b)"
     case Take(a, b)                                 => q"$pack.Take($a, $b)"
     case Drop(a, b)                                 => q"$pack.Drop($a, $b)"
@@ -131,15 +141,17 @@ trait Liftables extends QuatLiftable {
     case Join(a, b, c, d, e, f)                     => q"$pack.Join($a, $b, $c, $d, $e, $f)"
     case FlatJoin(a, b, c, d)                       => q"$pack.FlatJoin($a, $b, $c, $d)"
     case Distinct(a)                                => q"$pack.Distinct($a)"
+    case DistinctOn(a, b, c)                        => q"$pack.DistinctOn($a, $b, $c)"
     case Nested(a)                                  => q"$pack.Nested($a)"
   }
 
-  implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] {
-    case PropertyAlias(a, b) => q"$pack.PropertyAlias($a, $b)"
+  implicit val propertyAliasLiftable: Liftable[PropertyAlias] = Liftable[PropertyAlias] { case PropertyAlias(a, b) =>
+    q"$pack.PropertyAlias($a, $b)"
   }
 
   implicit val propertyLiftable: Liftable[Property] = Liftable[Property] {
-    case Property.Opinionated(a, b, renameable, visibility) => q"$pack.Property.Opinionated($a, $b, $renameable, $visibility)"
+    case Property.Opinionated(a, b, renameable, visibility) =>
+      q"$pack.Property.Opinionated($a, $b, $renameable, $visibility)"
   }
 
   implicit val orderingLiftable: Liftable[Ordering] = Liftable[Ordering] {
@@ -179,32 +191,40 @@ trait Liftables extends QuatLiftable {
     case OnConflict.Update(a) => q"$pack.OnConflict.Update.apply($a)"
   }
 
-  implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] {
-    case Assignment(a, b, c) => q"$pack.Assignment($a, $b, $c)"
+  implicit val assignmentLiftable: Liftable[Assignment] = Liftable[Assignment] { case Assignment(a, b, c) =>
+    q"$pack.Assignment($a, $b, $c)"
+  }
+
+  implicit val assignmentDualLiftable: Liftable[AssignmentDual] = Liftable[AssignmentDual] {
+    case AssignmentDual(a1, a2, b, c) => q"$pack.AssignmentDual($a1, $a2, $b, $c)"
   }
 
   implicit val valueLiftable: Liftable[Value] = Liftable[Value] {
     case NullValue         => q"$pack.NullValue"
     case Constant(a, quat) => q"$pack.Constant(${Literal(mctx.universe.Constant(a))}, $quat)"
     case Tuple(a)          => q"$pack.Tuple($a)"
-    case CaseClass(a)      => q"$pack.CaseClass($a)"
+    case CaseClass(n, a)   => q"$pack.CaseClass($n, $a)"
   }
 
-  implicit val identLiftable: Liftable[Ident] = Liftable[Ident] {
-    case Ident(a, quat) => q"$pack.Ident($a, $quat)"
+  implicit val identLiftable: Liftable[Ident] = Liftable[Ident] { case Ident(a, quat) =>
+    q"$pack.Ident($a, $quat)"
   }
-  implicit val externalIdentLiftable: Liftable[ExternalIdent] = Liftable[ExternalIdent] {
-    case ExternalIdent(a, quat) => q"$pack.ExternalIdent($a, $quat)"
+  implicit val externalIdentLiftable: Liftable[ExternalIdent] = Liftable[ExternalIdent] { case ExternalIdent(a, quat) =>
+    q"$pack.ExternalIdent($a, $quat)"
   }
 
   implicit val liftLiftable: Liftable[Lift] = Liftable[Lift] {
-    case ScalarValueLift(a, b: Tree, c: Tree, quat: Quat) => q"$pack.ScalarValueLift($a, $b, $c, $quat)"
-    case CaseClassValueLift(a, b: Tree, quat: Quat)       => q"$pack.CaseClassValueLift($a, $b, $quat)"
-    case ScalarQueryLift(a, b: Tree, c: Tree, quat: Quat) => q"$pack.ScalarQueryLift($a, $b, $c, $quat)"
-    case CaseClassQueryLift(a, b: Tree, quat: Quat)       => q"$pack.CaseClassQueryLift($a, $b, $quat)"
+    case ScalarValueLift(a, a1, b: Tree, c: Tree, quat: Quat) => q"$pack.ScalarValueLift($a, $a1, $b, $c, $quat)"
+    case CaseClassValueLift(a, a1, b: Tree, quat: Quat)       => q"$pack.CaseClassValueLift($a, $a1, $b, $quat)"
+    case ScalarQueryLift(a, b: Tree, c: Tree, quat: Quat)     => q"$pack.ScalarQueryLift($a, $b, $c, $quat)"
+    case CaseClassQueryLift(a, b: Tree, quat: Quat)           => q"$pack.CaseClassQueryLift($a, $b, $quat)"
   }
   implicit val tagLiftable: Liftable[Tag] = Liftable[Tag] {
-    case ScalarTag(uid)    => q"$pack.ScalarTag($uid)"
-    case QuotationTag(uid) => q"$pack.QuotationTag($uid)"
+    case ScalarTag(uid, originalName) => q"$pack.ScalarTag($uid, $originalName)"
+    case QuotationTag(uid)            => q"$pack.QuotationTag($uid)"
+  }
+  implicit val sourceLiftable: Liftable[External.Source] = Liftable[External.Source] {
+    case External.Source.Parser                 => q"$pack.External.Source.Parser"
+    case External.Source.UnparsedProperty(prop) => q"$pack.External.Source.UnparsedProperty($prop)"
   }
 }

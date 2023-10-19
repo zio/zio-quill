@@ -1,11 +1,12 @@
 package io.getquill.mock
 
+import io.getquill.base.Spec
 import java.io.Closeable
 import java.sql._
 
-import io.getquill.context.monix.MonixJdbcContext.Runner
+import io.getquill.context.monix.MonixJdbcContext.EffectWrapper
 import javax.sql.DataSource
-import io.getquill.{ Literal, PostgresMonixJdbcContext, Spec }
+import io.getquill.{Literal, PostgresMonixJdbcContext}
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.mockito.scalatest.AsyncMockitoSugar
@@ -15,16 +16,16 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 class MockTests extends Spec with AsyncMockitoSugar {
-  import scala.reflect.runtime.{ universe => ru }
+  import scala.reflect.runtime.{universe => ru}
   implicit val scheduler = Scheduler.io()
 
   object MockResultSet {
     def apply[T: ClassTag: ru.TypeTag](data: Seq[T]) = {
-      val rs = mock[ResultSet]
+      val rs       = mock[ResultSet]
       var rowIndex = -1
 
-      def introspection = new Introspection(data(rowIndex))
-      def getIndex(i: Int): Any = introspection.getIndex(i)
+      def introspection                = new Introspection(data(rowIndex))
+      def getIndex(i: Int): Any        = introspection.getIndex(i)
       def getColumn(name: String): Any = introspection.getField(name)
 
       when(rs.next()) thenAnswer {
@@ -52,22 +53,22 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed after usage" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, Runner.using(scheduler))
+    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     val results =
       stream(query[Person])
-        .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+        .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
         .map(_.reverse)
         .runSyncUnsafe()
 
@@ -90,19 +91,19 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed when ending conn.setAutoCommit returns error but is caught" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
 
     when(ds.getConnection) thenReturn conn
     when(conn.getAutoCommit) thenThrow (new SQLException(msg))
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, Runner.using(scheduler))
+    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
     val results =
       stream(query[Person])
-        .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+        .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
         .map(_.reverse)
         .materialize
         .runSyncUnsafe()
@@ -121,10 +122,10 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed after usage and conn.setAutoCommit afterward fails" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
@@ -132,15 +133,15 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.getAutoCommit) thenReturn true
     when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
 
-    val ctx = new PostgresMonixJdbcContext(Literal, ds, Runner.using(scheduler))
+    val ctx = new PostgresMonixJdbcContext(Literal, ds, EffectWrapper.using(scheduler))
     import ctx._
 
-    // In this case, instead of catching the error inside the observable, let it propogate to the top
+    // In this case, instead of catching the error inside the observable, let it propagate to the top
     // and make sure that the connection is closed anyhow
     val results =
       Try {
         stream(query[Person])
-          .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+          .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
           .map(_.reverse)
           .runSyncUnsafe()
       }
@@ -166,10 +167,10 @@ class MockTests extends Spec with AsyncMockitoSugar {
   "stream is correctly closed after usage and conn.setAutoCommit after results fails - with custom wrapClose" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
 
-    val ds = mock[MyDataSource]
+    val ds   = mock[MyDataSource]
     val conn = mock[Connection]
     val stmt = mock[PreparedStatement]
-    val rs = MockResultSet(people)
+    val rs   = MockResultSet(people)
 
     when(ds.getConnection) thenReturn conn
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
@@ -177,7 +178,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
     when(conn.getAutoCommit) thenReturn true
     when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
 
-    val runner = new Runner {
+    val runner = new EffectWrapper {
       override def schedule[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def boundary[T](t: Task[T]): Task[T] = t.executeOn(scheduler, true)
       override def wrapClose(t: => Unit): Task[Unit] =
@@ -189,7 +190,7 @@ class MockTests extends Spec with AsyncMockitoSugar {
 
     val results =
       stream(query[Person])
-        .foldLeftL(Seq[Person]())({ case (l, p) => p +: l })
+        .foldLeftL(Seq[Person]()) { case (l, p) => p +: l }
         .map(_.reverse)
         .runSyncUnsafe()
 

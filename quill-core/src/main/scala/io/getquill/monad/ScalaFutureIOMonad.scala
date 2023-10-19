@@ -1,15 +1,15 @@
 package io.getquill.monad
 
 import io.getquill.context.Context
+
 import language.experimental.macros
 import language.higherKinds
 import scala.collection.compat._
 import scala.util.Failure
 import scala.util.Success
-
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import io.getquill.{ Query, Action, BatchAction, ActionReturning }
+import io.getquill.{Action, ActionReturning, BatchAction, Query, Quoted}
 
 trait ScalaFutureIOMonad extends IOMonad {
   this: Context[_, _] =>
@@ -29,8 +29,7 @@ trait ScalaFutureIOMonad extends IOMonad {
     quoted: Quoted[BatchAction[ActionReturning[_, T]]]
   ): IO[RunBatchActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIOEC
 
-  case class Run[T, E <: Effect](f: (ExecutionContext) => Result[T])
-    extends IO[T, E]
+  case class Run[T, E <: Effect](f: (ExecutionContext) => Result[T]) extends IO[T, E]
 
   def flatten[Y, M[X] <: IterableOnce[X]](
     seq: Sequence[Y, M, Effect]
@@ -46,8 +45,7 @@ trait ScalaFutureIOMonad extends IOMonad {
       .map(_.result())
   }
 
-  def performIO[T](io: IO[T, _], transactional: Boolean = false)(
-    implicit
+  def performIO[T](io: IO[T, _], transactional: Boolean = false)(implicit
     ec: ExecutionContext
   ): Result[T] =
     io match {

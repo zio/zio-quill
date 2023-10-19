@@ -1,10 +1,10 @@
 package io.getquill.context.sql.norm
 
-import io.getquill.ReturnAction.{ ReturnColumns, ReturnRecord }
+import io.getquill.ReturnAction.{ReturnColumns, ReturnRecord}
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContextUpper
 import io.getquill.context.sql.testContextUpper._
-import io.getquill.{ MirrorSqlDialectWithReturnClause, Spec }
-import io.getquill.Query
+import io.getquill.{EntityQuery, MirrorSqlDialectWithReturnClause, Query, Quoted}
 
 class RenamePropertiesOverrideSpec extends Spec {
 
@@ -30,7 +30,7 @@ class RenamePropertiesOverrideSpec extends Spec {
         tup.map(t => (t._1, t._2))
       }
       testContextUpper.run(q).string mustEqual
-        "SELECT t.field_s, t._2 FROM test_tuple t"
+        "SELECT t.field_s AS _1, t._2 FROM test_tuple t"
     }
     "mapped to caseclass and filtered" in {
       case class StringInt(strProp: String, intProp: Int)
@@ -38,7 +38,7 @@ class RenamePropertiesOverrideSpec extends Spec {
         tup.map(t => new StringInt(t._1, t._2)).filter(_.strProp == "foo")
       }
       testContextUpper.run(q).string mustEqual
-        "SELECT t.field_s, t._2 FROM test_tuple t WHERE t.field_s = 'foo'"
+        "SELECT t.field_s AS strProp, t._2 AS intProp FROM test_tuple t WHERE t.field_s = 'foo'"
     }
   }
 
@@ -46,7 +46,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     "action" - {
       "insert" in {
         val q = quote {
-          e.insert(lift(TestEntity("a", 1, 1L, None, true)))
+          e.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContextUpper.run(q).string mustEqual
           "INSERT INTO test_entity (field_s,field_i,L,O,B) VALUES (?, ?, ?, ?, ?)"
@@ -60,17 +60,17 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
       "update" in {
         val q = quote {
-          e.filter(_.i == 999).update(lift(TestEntity("a", 1, 1L, None, true)))
+          e.filter(t => t.i == 999).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         testContextUpper.run(q).string mustEqual
-          "UPDATE test_entity SET field_s = ?, field_i = ?, L = ?, O = ?, B = ? WHERE field_i = 999"
+          "UPDATE test_entity AS t SET field_s = ?, field_i = ?, L = ?, O = ?, B = ? WHERE t.field_i = 999"
       }
       "delete" in {
         val q = quote {
-          e.filter(_.i == 999).delete
+          e.filter(t => t.i == 999).delete
         }
         testContextUpper.run(q).string mustEqual
-          "DELETE FROM test_entity WHERE field_i = 999"
+          "DELETE FROM test_entity AS t WHERE t.field_i = 999"
       }
       "returning" - {
         "returning - alias" in testContextUpper.withDialect(MirrorSqlDialectWithReturnClause) { ctx =>
@@ -79,14 +79,14 @@ class RenamePropertiesOverrideSpec extends Spec {
             querySchema[TestEntity]("test_entity", _.s -> "field_s", _.i -> "field_i")
           }
           val q = quote {
-            e1.insert(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
+            e1.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returning(_.i)
           }
           val mirror = ctx.run(q)
           mirror.returningBehavior mustEqual ReturnRecord
         }
         "returning generated - alias" in {
           val q = quote {
-            e.insert(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
+            e.insertValue(lift(TestEntity("s", 1, 1L, None, true))).returningGenerated(_.i)
           }
           val mirror = testContextUpper.run(q)
           mirror.returningBehavior mustEqual ReturnColumns(List("field_i"))
@@ -99,7 +99,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.flatMap(t => qr2.filter(u => u.s == t.s))
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT u.S, u.I, u.L, u.O FROM test_entity t, TESTENTITY2 u WHERE u.S = t.field_s"
+          "SELECT u.S AS s, u.I AS i, u.L AS l, u.O AS o FROM test_entity t, TESTENTITY2 u WHERE u.S = t.field_s"
       }
       "transitive" in {
         val q = quote {
@@ -118,7 +118,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           }
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_s, a.field_i, a.L, a.O, a.B, b.S, b.I, b.L, b.O FROM test_entity a, TESTENTITY2 b WHERE a.field_s = b.S"
+          "SELECT a.field_s, a.field_i, a.L AS l, a.O AS o, a.B AS b, b.S AS s, b.I AS i, b.L AS l, b.O AS o FROM test_entity a, TESTENTITY2 b WHERE a.field_s = b.S"
       }
     }
     "concatMap" in {
@@ -134,7 +134,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.map(t => (t.i, t.l))
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_i, t.L FROM test_entity t"
+          "SELECT t.field_i AS _1, t.L AS _2 FROM test_entity t"
       }
       "body with caseclass" in {
         case class IntLongCase(im: Int, lm: Long)
@@ -142,7 +142,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.map(t => new IntLongCase(t.i, t.l))
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_i, t.L FROM test_entity t"
+          "SELECT t.field_i AS im, t.L AS lm FROM test_entity t"
       }
       "body with caseclass companion constructed" in {
         case class IntLongCase(im: Int, lm: Long)
@@ -150,21 +150,21 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.map(t => IntLongCase(t.i, t.l))
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_i, t.L FROM test_entity t"
+          "SELECT t.field_i AS im, t.L AS lm FROM test_entity t"
       }
       "body with caseclass companion in class scope" in {
         val q = quote {
           e.map(t => IntLongCaseClassScope(t.i, t.l))
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_i, t.L FROM test_entity t"
+          "SELECT t.field_i AS im, t.L AS lm FROM test_entity t"
       }
       "transitive" in {
         val q = quote {
           e.map(t => t).filter(t => t.i == 1)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_s, t.field_i, t.L, t.O, t.B FROM test_entity t WHERE t.field_i = 1"
+          "SELECT t.field_s, t.field_i, t.L AS l, t.O AS o, t.B AS b FROM test_entity t WHERE t.field_i = 1"
       }
     }
     "filter" - {
@@ -173,7 +173,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.filter(t => t.i == 1)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_s, t.field_i, t.L, t.O, t.B FROM test_entity t WHERE t.field_i = 1"
+          "SELECT t.field_s, t.field_i, t.L AS l, t.O AS o, t.B AS b FROM test_entity t WHERE t.field_i = 1"
       }
       "transitive" in {
         val q = quote {
@@ -189,7 +189,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.sortBy(t => t.i)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT t.field_s, t.field_i, t.L, t.O, t.B FROM test_entity t ORDER BY t.field_i ASC NULLS FIRST"
+          "SELECT t.field_s, t.field_i, t.L AS l, t.O AS o, t.B AS b FROM test_entity t ORDER BY t.field_i ASC NULLS FIRST"
       }
       "transitive" in {
         val q = quote {
@@ -205,7 +205,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.take(1)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.L, x.O, x.B FROM test_entity x LIMIT 1"
+          "SELECT x.field_s, x.field_i, x.L AS l, x.O AS o, x.B AS b FROM test_entity x LIMIT 1"
       }
       "transitive" in {
         val q = quote {
@@ -221,7 +221,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           e.drop(1)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.L, x.O, x.B FROM test_entity x OFFSET 1"
+          "SELECT x.field_s, x.field_i, x.L AS l, x.O AS o, x.B AS b FROM test_entity x OFFSET 1"
       }
       "transitive" in {
         val q = quote {
@@ -232,12 +232,12 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
     }
     "distinct" - {
-      "body" in { //hello
+      "body" in {
         val q = quote {
           e.distinct
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT x.field_s, x.field_i, x.l, x.o, x.b FROM (SELECT DISTINCT x.field_s, x.field_i, x.L AS l, x.O AS o, x.B AS b FROM test_entity x) AS x"
+          "SELECT DISTINCT x.field_s, x.field_i, x.L AS l, x.O AS o, x.B AS b FROM test_entity x"
       }
       "transitive" in {
         val q = quote {
@@ -249,12 +249,12 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
 
     "join" - {
-      "both sidess" in {
+      "both sides" in {
         val q = quote {
           e.leftJoin(e).on((a, b) => a.s == b.s).map(t => (t._1.s, t._2.map(_.s)))
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_s, b.field_s FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
+          "SELECT a.field_s AS _1, b.field_s AS _2 FROM test_entity a LEFT JOIN test_entity b ON a.field_s = b.field_s"
       }
       "inner" in {
         val q = quote {
@@ -285,7 +285,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           } yield (x.s, x.i)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT b.field_s, b.field_i FROM TESTENTITY2 a INNER JOIN test_entity b ON a.S = b.field_s"
+          "SELECT b.field_s AS _1, b.field_i AS _2 FROM TESTENTITY2 a INNER JOIN test_entity b ON a.S = b.field_s"
       }
       "flat left" in {
         val q = quote {
@@ -295,7 +295,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           } yield x.map(x => x.i -> x.s)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT b.field_i, b.field_s FROM TESTENTITY2 a LEFT JOIN test_entity b ON a.S = b.field_s"
+          "SELECT b.field_i AS _1, b.field_s AS _2 FROM TESTENTITY2 a LEFT JOIN test_entity b ON a.S = b.field_s"
       }
       "flat right" in {
         val q = quote {
@@ -305,36 +305,36 @@ class RenamePropertiesOverrideSpec extends Spec {
           } yield x.map(x => x.i -> x.s)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT b.field_i, b.field_s FROM TESTENTITY2 a RIGHT JOIN test_entity b ON a.S = b.field_s"
+          "SELECT b.field_i AS _1, b.field_s AS _2 FROM TESTENTITY2 a RIGHT JOIN test_entity b ON a.S = b.field_s"
       }
     }
 
     "aggregation" - {
       "groupBy" in {
         val q = quote {
-          e.groupBy(a => a.s).map {
-            case (s, eq) => s -> eq.map(_.i).sum
+          e.groupBy(a => a.s).map { case (s, eq) =>
+            s -> eq.map(_.i).sum
           }
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_s, SUM(a.field_i) FROM test_entity a GROUP BY a.field_s"
+          "SELECT a.field_s AS _1, SUM(a.field_i) AS _2 FROM test_entity a GROUP BY a.field_s"
       }
     }
 
     "operation" - {
       "unary" in {
-        val q = quote {
+        val q: Quoted[EntityQuery[Index]] = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty).map(_.i)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0)"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.L AS l, b.O AS o, b.B AS b FROM test_entity b WHERE b.field_i > 0)"
       }
       "binary" in {
         val q = quote {
           e.filter(a => e.filter(b => b.i > 0).isEmpty && a.s == "test").map(_.i)
         }
         testContextUpper.run(q).string mustEqual
-          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.* FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
+          "SELECT a.field_i FROM test_entity a WHERE NOT EXISTS (SELECT b.field_s, b.field_i, b.L AS l, b.O AS o, b.B AS b FROM test_entity b WHERE b.field_i > 0) AND a.field_s = 'test'"
       }
       "query body" in {
         val q = quote {
@@ -346,16 +346,16 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
   }
 
-  "respects the schema definition for embeddeds" - {
+  "respects the schema definition for embedded" - {
     "query" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         testContextUpper.run(query[A]).string mustEqual
-          "SELECT x.C FROM A x"
+          "SELECT x.C AS c FROM A x"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC")
@@ -364,15 +364,15 @@ class RenamePropertiesOverrideSpec extends Spec {
           "SELECT x.bC FROM A x"
       }
     }
-    "query for Option embeddeds" - {
+    "query for Option embedded" - {
       "without schema" in {
-        case class B(c1: Int, c2: Int) extends Embedded
+        case class B(c1: Int, c2: Int)
         case class A(b: Option[B])
         testContextUpper.run(query[A]).string mustEqual
-          "SELECT x.C1, x.C2 FROM A x"
+          "SELECT x.C1 AS c1, x.C2 AS c2 FROM A x"
       }
       "with schema" in {
-        case class B(c1: Int, c2: Int) extends Embedded
+        case class B(c1: Int, c2: Int)
         case class A(b: Option[B])
         val q = quote {
           querySchema[A]("A", _.b.map(_.c1) -> "bC1", _.b.map(_.c2) -> "bC2")
@@ -383,7 +383,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "update" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           query[A].update(_.b.c -> 1)
@@ -392,7 +392,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "UPDATE A SET C = 1"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").update(_.b.c -> 1)
@@ -403,7 +403,7 @@ class RenamePropertiesOverrideSpec extends Spec {
     }
     "insert" - {
       "without schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           query[A].insert(_.b.c -> 1)
@@ -412,7 +412,7 @@ class RenamePropertiesOverrideSpec extends Spec {
           "INSERT INTO A (C) VALUES (1)"
       }
       "with schema" in {
-        case class B(c: Int) extends Embedded
+        case class B(c: Int)
         case class A(b: B)
         val q = quote {
           querySchema[A]("A", _.b.c -> "bC").insert(_.b.c -> 1)
@@ -422,24 +422,24 @@ class RenamePropertiesOverrideSpec extends Spec {
       }
     }
 
-    "infix" - {
-      case class B(b: Int) extends Embedded
+    "sql" - {
+      case class B(b: Int)
       case class A(u: Long, v: Int, w: B)
       "does not break schema" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
+          sql"${querySchema[A]("C", _.v -> "m", _.w.b -> "n")} LIMIT 10".as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual
-          "SELECT x.U, x.m, x.n FROM C x LIMIT 10"
+          "SELECT x.U AS u, x.m, x.n FROM C x LIMIT 10"
       }
       "with filter" in {
         val q = quote {
-          infix"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
+          sql"${querySchema[A]("C", _.v -> "m", _.w.b -> "n").filter(x => x.v == 1)} LIMIT 10".as[Query[A]]
         }
 
         testContextUpper.run(q).string mustEqual
-          "SELECT x.U, x.m, x.n FROM C x WHERE x.m = 1 LIMIT 10"
+          "SELECT x.U AS u, x.m, x.n FROM C x WHERE x.m = 1 LIMIT 10"
       }
     }
   }

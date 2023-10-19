@@ -1,6 +1,6 @@
 package io.getquill.dsl
 
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import io.getquill.Embedded
 import io.getquill.util.OptionalTypecheck
 import io.getquill.util.MacroContextExt._
@@ -43,24 +43,23 @@ trait ValueComputation {
           Nested(term, tpe, params, optional = false)
       }
 
-    def apply(tpe: Type, term: Option[TermName], nested: Boolean): Value = {
+    def apply(tpe: Type, term: Option[TermName], nested: Boolean): Value =
       OptionalTypecheck(c)(q"implicitly[${c.prefix}.${TypeName(encoding)}[$tpe]]") match {
         case Some(encoding) =>
           Scalar(term, tpe, encoding, optional = is[Option[Any]](tpe))
         case None =>
-
           def value(tpe: Type) =
             tpe match {
-              case tpe if !is[Embedded](tpe) && nested =>
+              case tpe if is[Product](tpe) =>
+                nest(tpe, term)
+
+              case _ =>
                 c.fail(
                   s"""Can't find implicit `$encoding[$tpe]`. Please, do one of the following things:
                      |1. ensure that implicit `$encoding[$tpe]` is provided and there are no other conflicting implicits;
                      |2. make `$tpe` `Embedded` case class or `AnyVal`.
                    """.stripMargin
                 )
-
-              case tpe =>
-                nest(tpe, term)
             }
 
           if (isNone(tpe)) {
@@ -71,19 +70,17 @@ trait ValueComputation {
             value(tpe)
           }
       }
-    }
 
     def filterExcludes(value: Value) = {
       val paths =
-        exclude.map {
-          case f: Function =>
-            def path(tree: Tree): List[TermName] =
-              tree match {
-                case q"$a.$b"                => path(a) :+ b
-                case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
-                case _                       => Nil
-              }
-            path(f.body)
+        exclude.map { case f: Function =>
+          def path(tree: Tree): List[TermName] =
+            tree match {
+              case q"$a.$b"                => path(a) :+ b
+              case q"$a.map[$t]($b => $c)" => path(a) ++ path(c)
+              case _                       => Nil
+            }
+          path(f.body)
         }
 
       def filter(value: Value, path: List[TermName] = Nil): Option[Value] =

@@ -1,6 +1,6 @@
 package io.getquill.context.sql
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 import io.getquill.context.sql.testContext._
 
 class PrepareSpec extends Spec {
@@ -25,7 +25,7 @@ class PrepareSpec extends Spec {
       val q = quote {
         for {
           (a, b) <- qr1 join qr2 on ((a, b) => a.i == b.i)
-          c <- qr1 join (c => c.i == a.i)
+          c      <- qr1 join (c => c.i == a.i)
         } yield (a, b, c)
       }
       testContext.run(q).string mustEqual
@@ -36,9 +36,9 @@ class PrepareSpec extends Spec {
       val q = quote {
         for {
           (a, b) <- qr1 join qr2 on ((a, b) => a.i == b.i)
-          c <- qr1 join (c => c.i == a.i)
-          d <- qr2 join (d => d.i == b.i)
-          e <- qr3 join (e => e.i == c.i)
+          c      <- qr1 join (c => c.i == a.i)
+          d      <- qr2 join (d => d.i == b.i)
+          e      <- qr3 join (e => e.i == c.i)
         } yield (a, b, c, d, e)
       }
       testContext.run(q).string mustEqual
@@ -49,11 +49,11 @@ class PrepareSpec extends Spec {
       val q = quote {
         for {
           (a, b) <- qr1 join qr2 on ((a, b) => a.i == a.i)
-          c <- qr1 rightJoin (c => c.i == a.i)
+          c      <- qr1 rightJoin (c => c.i == a.i)
         } yield (a, b, c.map(c => c.i))
       }
       testContext.run(q).string mustEqual
-        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.i FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = a.i RIGHT JOIN TestEntity c ON c.i = a.i"
+        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.i AS _3 FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = a.i RIGHT JOIN TestEntity c ON c.i = a.i"
     }
   }
 }
