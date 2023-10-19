@@ -9,8 +9,10 @@ on:
     types: [ published ] # Triggers the CI when a new Github Release is published
 
 env:
-  JAVA_OPTS: -Xms6G -Xmx6G -XX:+UseG1GC
-  JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC # See https://stackoverflow.com/a/73708006
+  # See:
+  #  - https://stackoverflow.com/a/73708006
+  #  - https://stackoverflow.com/questions/73465937/apache-spark-3-3-0-breaks-on-java-17-with-cannot-access-class-sun-nio-ch-direct
+  JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC --add-exports java.base/sun.nio.ch=ALL-UNNAMED
 
 jobs:
   build:
@@ -25,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         scala: [2.12.x, 2.13.x, 3.3.x]
-        module: [base, db, async, codegen, bigdata]
+        module: [base, db, codegen, bigdata]
         include:
           - scala: 2.12.x
             scala_short: 212
@@ -40,8 +42,6 @@ jobs:
           # For now, only do the `base` build for Scala 3
           - scala: 3.3.x
             module: db
-          - scala: 3.3.x
-            module: async
           - scala: 3.3.x
             module: codegen
           - scala: 3.3.x
@@ -68,7 +68,7 @@ jobs:
       uses: actions/setup-java@v3.12.0
       with:
         distribution: temurin
-        java-version: '8'
+        java-version: '17'
         check-latest: true
 
     - name: Build modules
@@ -91,7 +91,7 @@ jobs:
         uses: actions/setup-java@v3.12.0
         with:
           distribution: temurin
-          java-version: '8'
+          java-version: '17'
           check-latest: true
       - run: |
           sbt ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release

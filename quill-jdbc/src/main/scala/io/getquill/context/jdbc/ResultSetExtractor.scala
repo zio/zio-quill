@@ -9,7 +9,7 @@ object ResultSetExtractor {
     conn: Connection,
     extractor: (ResultSet, Connection) => T
   ): List[T] =
-    extractResult(rs, conn, extractor, List())
+    extractResult(rs, conn, extractor, List.empty)
 
   @tailrec
   private[getquill] final def extractResult[T](

@@ -41,7 +41,7 @@ trait TranspileConfigSummoning {
           foundMemberNames.contains(simpleName)
         }
       case None =>
-        List()
+        List.empty
     }
   }
 
@@ -60,7 +60,7 @@ trait TranspileConfigSummoning {
           foundMemberNames.contains(simpleName)
         }
       case None =>
-        List()
+        List.empty
     }
   }
 

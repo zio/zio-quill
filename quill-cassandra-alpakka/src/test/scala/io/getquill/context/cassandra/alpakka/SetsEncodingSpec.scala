@@ -2,6 +2,7 @@ package io.getquill.context.cassandra.alpakka
 
 import io.getquill.context.cassandra.CollectionsSpec
 
+import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 
@@ -33,7 +34,7 @@ class SetsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
     Set(1f, 3f),
     Set(5d),
     Set(LocalDate.now()),
-    Set(Instant.now()),
+    Set(Instant.now().truncatedTo(ChronoUnit.MILLIS)), // See https://stackoverflow.com/a/74781779/2431728
     Set(UUID.randomUUID())
   )
   val q = quote(query[SetsEntity])

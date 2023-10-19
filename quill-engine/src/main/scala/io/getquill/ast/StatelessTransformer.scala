@@ -2,7 +2,7 @@ package io.getquill.ast
 
 trait StatelessTransformer {
 
-  def applyIdent(id: Ident) = id
+  def applyIdent(id: Ident): Ident = id
 
   def apply(e: Ast): Ast =
     e match {

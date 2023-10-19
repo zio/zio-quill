@@ -14,10 +14,10 @@ class StereotypePackager[Emitter, TableMeta, ColumnMeta] {
   ) = {
     import io.getquill.codegen.util.MapExtensions._
     import packagingStrategy._
-    implicit class OptionSeqExtentions[T](optionalSeq: Option[Seq[T]]) {
-      def toSeq = optionalSeq match {
+    implicit final class OptionSeqExtentions[T](optionalSeq: Option[Seq[T]]) {
+      def toSeq: Seq[T] = optionalSeq match {
         case Some(seq) => seq
-        case None      => Seq[T]()
+        case None      => Seq.empty[T]
       }
     }
 
@@ -40,7 +40,7 @@ class StereotypePackager[Emitter, TableMeta, ColumnMeta] {
           )
         }
 
-    mergedDefinitions.toSeq.flatMap(s => s)
+    mergedDefinitions.toSeq.flatten
   }
 
   protected def makeCodegenForNamespace[H >: Emitter](
@@ -56,7 +56,7 @@ class StereotypePackager[Emitter, TableMeta, ColumnMeta] {
       case DoNotGroup => {
         (caseClassTables ++ querySchemaTables)
           .groupBy(tc => tc)
-          .map(_._1)
+          .keys
           .map(tc => generatorMaker(EmitterSettings(Seq(tc), Seq(tc), wrapping)))
           .toSeq
       }

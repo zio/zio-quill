@@ -1,7 +1,8 @@
 package io.getquill.context.cassandra
 
+import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate}
-import java.util.{Date, UUID}
+import java.util.UUID
 
 class MapsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB
@@ -17,11 +18,13 @@ class MapsEncodingSpec extends CollectionsSpec {
   )
   val e = MapsEntity(
     1,
-    Map("1"               -> BigDecimal(1)),
-    Map(1                 -> 1d, 2 -> 2d, 3 -> 3d),
-    Map(1L                -> 3f),
-    Map(true              -> LocalDate.now()),
-    Map(UUID.randomUUID() -> Instant.now())
+    Map("1"  -> BigDecimal(1)),
+    Map(1    -> 1d, 2 -> 2d, 3 -> 3d),
+    Map(1L   -> 3f),
+    Map(true -> LocalDate.now()),
+    Map(
+      UUID.randomUUID() -> Instant.now().truncatedTo(ChronoUnit.MILLIS)
+    ) // See https://stackoverflow.com/a/74781779/2431728
   )
   val q = quote(query[MapsEntity])
 

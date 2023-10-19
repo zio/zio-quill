@@ -10,7 +10,7 @@ import io.getquill.util.TraceConfig
 
 class SqlQuerySpec extends Spec {
 
-  implicit val naming = new Literal {}
+  implicit val naming: Literal = new Literal {}
 
   val SqlQuery = new SqlQueryApply(TraceConfig.Empty)
 
