@@ -188,6 +188,7 @@ lazy val `quill-util` =
         else Seq.empty
       }
     )
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-engine` =
@@ -204,6 +205,7 @@ lazy val `quill-engine` =
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-core` =
@@ -212,7 +214,6 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.1.14",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -220,6 +221,7 @@ lazy val `quill-core` =
       Test / fork := true
     )
     .dependsOn(`quill-engine` % "compile->compile")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-sql` =
@@ -229,12 +231,14 @@ lazy val `quill-sql` =
       `quill-engine` % "compile->compile",
       `quill-core`   % "compile->compile;test->test"
     )
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))
     .settings(commonSettings: _*)
     .dependsOn(`quill-core` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
 
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
@@ -248,6 +252,7 @@ lazy val `quill-codegen-jdbc` =
     )
     .dependsOn(`quill-codegen` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile")
+    .dependsOn(`quill-test-kit` % Test)
 
 lazy val `quill-codegen-tests` =
   (project in file("quill-codegen-tests"))
@@ -282,6 +287,7 @@ lazy val `quill-codegen-tests` =
       }.tag(CodegenTag)
     )
     .dependsOn(`quill-codegen-jdbc` % "compile->test")
+    .dependsOn(`quill-test-kit` % Test)
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false") match {
@@ -298,6 +304,7 @@ lazy val `quill-jdbc` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
@@ -312,6 +319,7 @@ lazy val `quill-doobie` =
       )
     )
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-monix` =
@@ -325,6 +333,7 @@ lazy val `quill-monix` =
       )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-monix` =
@@ -350,6 +359,7 @@ lazy val `quill-jdbc-monix` =
     .dependsOn(`quill-monix` % "compile->compile;test->test")
     .dependsOn(`quill-sql` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-zio` =
@@ -363,6 +373,7 @@ lazy val `quill-zio` =
       )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-zio` =
@@ -397,6 +408,7 @@ lazy val `quill-jdbc-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .dependsOn(`quill-sql` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-spark` =
@@ -408,6 +420,7 @@ lazy val `quill-spark` =
       excludeDependencies ++= Seq("ch.qos.logback" % "logback-classic")
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra` =
@@ -424,6 +437,7 @@ lazy val `quill-cassandra` =
       )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-monix` =
@@ -434,6 +448,7 @@ lazy val `quill-cassandra-monix` =
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-monix` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-zio` =
@@ -448,6 +463,7 @@ lazy val `quill-cassandra-zio` =
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
     .dependsOn(`quill-zio` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-alpakka` =
@@ -461,6 +477,7 @@ lazy val `quill-cassandra-alpakka` =
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-orientdb` =
@@ -473,7 +490,13 @@ lazy val `quill-orientdb` =
       )
     )
     .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-test-kit` % Test)
     .enablePlugins(MimaPlugin)
+
+lazy val `quill-test-kit` =
+  (project in file("quill-test-kit"))
+    .settings(commonSettings: _*)
+    .settings(noPublishSettings: _*)
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
@@ -665,3 +688,10 @@ lazy val docs = project
          |
          |You can notify all current maintainers using the handle `@getquill/maintainers`.""".stripMargin
   )
+
+lazy val noPublishSettings = Seq(
+  publish := {},
+  publishLocal := {},
+  publishM2 := {},
+  publishArtifact := false,
+)

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configuration doc: https://logback.qos.ch/manual/layouts.html -->
+<configuration>
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+    <shutdownHook class="ch.qos.logback.core.hook.DefaultShutdownHook"/>
+
+    <appender name="ASYNC_STDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref>
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            </appender>
+        </appender-ref>
+    </appender>
+
+    <root level="WARN">
+        <appender-ref ref="ASYNC_STDOUT"/>
+    </root>
+</configuration>
