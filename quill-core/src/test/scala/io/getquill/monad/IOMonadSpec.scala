@@ -2,13 +2,12 @@ package io.getquill.monad
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import io.getquill.Spec
-
 import scala.util.Success
 import scala.util.Try
 import scala.util.Failure
 import io.getquill.monad.Effect.Write
 import io.getquill.TestEntities
+import io.getquill.base.Spec
 import io.getquill.context.Context
 
 trait IOMonadSpec extends Spec {
@@ -24,12 +23,12 @@ trait IOMonadSpec extends Spec {
 
     "fromTry" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.fromTry(t)
         Try(eval(io)) mustEqual t
       }
       "failure" in {
-        val t = Failure(new Exception)
+        val t  = Failure(new Exception)
         val io = IO.fromTry(t)
         Try(eval(io)) mustEqual t
       }
@@ -96,34 +95,34 @@ trait IOMonadSpec extends Spec {
       "success" in {
         val ios = List(IO(1), IO(2))
         val io =
-          IO.foldLeft(ios)(0) {
-            case (a, b) => a + b
+          IO.foldLeft(ios)(0) { case (a, b) =>
+            a + b
           }
         eval(io) mustEqual 3
       }
       "empty" in {
         val io =
-          IO.foldLeft(List.empty[IO[Int, Effect]])(0) {
-            case (a, b) => a + b
+          IO.foldLeft(List.empty[IO[Int, Effect]])(0) { case (a, b) =>
+            a + b
           }
         eval(io) mustEqual 0
       }
       "failure" - {
         "ios" in {
-          val ex = new Exception
+          val ex  = new Exception
           val ios = List(IO(1), IO.failed[Int](ex))
           val io =
-            IO.foldLeft(ios)(0) {
-              case (a, b) => a + b
+            IO.foldLeft(ios)(0) { case (a, b) =>
+              a + b
             }
           Try(eval(io)) mustEqual Failure(ex)
         }
         "op" in {
-          val ex = new Exception
+          val ex  = new Exception
           val ios = List(IO(1), IO(2))
           val io =
-            IO.foldLeft(ios)(0) {
-              case (a, b) => throw ex
+            IO.foldLeft(ios)(0) { case (a, b) =>
+              throw ex
             }
           Try(eval(io)) mustEqual Failure(ex)
         }
@@ -134,34 +133,34 @@ trait IOMonadSpec extends Spec {
       "success" in {
         val ios = List(IO(1), IO(2))
         val io =
-          IO.reduceLeft(ios) {
-            case (a, b) => a + b
+          IO.reduceLeft(ios) { case (a, b) =>
+            a + b
           }
         eval(io) mustEqual 3
       }
       "empty" in {
         val io =
-          IO.reduceLeft(List.empty[IO[Int, Effect]]) {
-            case (a, b) => a + b
+          IO.reduceLeft(List.empty[IO[Int, Effect]]) { case (a, b) =>
+            a + b
           }
         intercept[UnsupportedOperationException](eval(io))
       }
       "failure" - {
         "ios" in {
-          val ex = new Exception
+          val ex  = new Exception
           val ios = List(IO(1), IO.failed[Int](ex))
           val io =
-            IO.reduceLeft(ios) {
-              case (a, b) => a + b
+            IO.reduceLeft(ios) { case (a, b) =>
+              a + b
             }
           Try(eval(io)) mustEqual Failure(ex)
         }
         "op" in {
-          val ex = new Exception
+          val ex  = new Exception
           val ios = List(IO(1), IO(2))
           val io =
-            IO.reduceLeft(ios) {
-              case (a, b) => throw ex
+            IO.reduceLeft(ios) { case (a, b) =>
+              throw ex
             }
           Try(eval(io)) mustEqual Failure(ex)
         }
@@ -171,18 +170,18 @@ trait IOMonadSpec extends Spec {
     "traverse" - {
       "empty" in {
         val ios = List.empty[IO[Int, Effect]]
-        val io = IO.traverse(ios)(IO.successful)
-        eval(io) mustEqual List()
+        val io  = IO.traverse(ios)(IO.successful)
+        eval(io) mustEqual List.empty
       }
       "success" in {
         val ints = List(1, 2)
-        val io = IO.traverse(ints)(IO.successful)
+        val io   = IO.traverse(ints)(IO.successful)
         eval(io) mustEqual ints
       }
       "failure" in {
-        val ex = new Exception
+        val ex   = new Exception
         val ints = List(1, 2)
-        val io = IO.traverse(ints)(_ => throw ex)
+        val io   = IO.traverse(ints)(_ => throw ex)
         Try(eval(io)) mustEqual Failure(ex)
       }
     }
@@ -193,24 +192,24 @@ trait IOMonadSpec extends Spec {
     "transformWith" - {
       "base io" - {
         "success" in {
-          val t = Success(1)
+          val t  = Success(1)
           val io = IO.fromTry(t).transformWith(IO.fromTry)
           Try(eval(io)) mustEqual t
         }
         "failure" in {
-          val t = Failure[Int](new Exception)
+          val t  = Failure[Int](new Exception)
           val io = IO.fromTry(t).transformWith(IO.fromTry)
           Try(eval(io)) mustEqual t
         }
       }
       "transformed io" - {
         "success" in {
-          val t = Success(1)
+          val t  = Success(1)
           val io = IO.successful(()).transformWith(_ => IO.fromTry(t))
           Try(eval(io)) mustEqual t
         }
         "failure" in {
-          val t = Failure[Int](new Exception)
+          val t  = Failure[Int](new Exception)
           val io = IO.successful(()).transformWith(_ => IO.fromTry(t))
           Try(eval(io)) mustEqual t
         }
@@ -231,24 +230,24 @@ trait IOMonadSpec extends Spec {
     "transform" - {
       "base io" - {
         "success" in {
-          val t = Success(1)
+          val t  = Success(1)
           val io = IO.fromTry(t).transform(identity)
           Try(eval(io)) mustEqual t
         }
         "failure" in {
-          val t = Failure[Int](new Exception)
+          val t  = Failure[Int](new Exception)
           val io = IO.fromTry(t).transform(identity)
           Try(eval(io)) mustEqual t
         }
       }
       "transformed try" - {
         "success" in {
-          val t = Success(1)
+          val t  = Success(1)
           val io = IO.successful(()).transform(_ => t)
           Try(eval(io)) mustEqual t
         }
         "failure" in {
-          val t = Failure[Int](new Exception)
+          val t  = Failure[Int](new Exception)
           val io = IO.successful(()).transform(_ => t)
           Try(eval(io)) mustEqual t
         }
@@ -268,12 +267,12 @@ trait IOMonadSpec extends Spec {
 
     "lowerFromTry" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.successful(t).lowerFromTry
         Try(eval(io)) mustEqual t
       }
       "failure" in {
-        val t = Failure(new Exception)
+        val t  = Failure(new Exception)
         val io = IO.successful(t).lowerFromTry
         Try(eval(io)) mustEqual t
       }
@@ -281,12 +280,12 @@ trait IOMonadSpec extends Spec {
 
     "liftToTry" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.fromTry(t).liftToTry
         eval(io) mustEqual t
       }
       "failure" in {
-        val t = Failure(new Exception)
+        val t  = Failure(new Exception)
         val io = IO.fromTry(t).liftToTry
         eval(io) mustEqual t
       }
@@ -294,13 +293,13 @@ trait IOMonadSpec extends Spec {
 
     "failed" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.fromTry(t).failed
         intercept[NoSuchElementException](eval(io))
       }
       "failure" in {
         val ex = new Exception
-        val t = Failure(ex)
+        val t  = Failure(ex)
         val io = IO.fromTry(t).failed
         eval(io) mustEqual ex
       }
@@ -308,12 +307,12 @@ trait IOMonadSpec extends Spec {
 
     "map" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.fromTry(t).map(_ + 1)
         eval(io) mustEqual 2
       }
       "failure" in {
-        val t = Failure[Int](new Exception)
+        val t  = Failure[Int](new Exception)
         val io = IO.fromTry(t).map(_ + 1)
         Try(eval(io)) mustEqual t
       }
@@ -321,12 +320,12 @@ trait IOMonadSpec extends Spec {
 
     "flatMap" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.fromTry(t).flatMap(i => IO(i + 1))
         eval(io) mustEqual 2
       }
       "failure" in {
-        val t = Failure[Int](new Exception)
+        val t  = Failure[Int](new Exception)
         val io = IO.fromTry(t).flatMap(i => IO(i + 1))
         Try(eval(io)) mustEqual t
       }
@@ -367,12 +366,12 @@ trait IOMonadSpec extends Spec {
 
     "recover" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.fromTry(t).recover { case _ => 2 }
         eval(io) mustEqual 1
       }
       "failure" in {
-        val t = Failure[Int](new Exception)
+        val t  = Failure[Int](new Exception)
         val io = IO.fromTry(t).recover { case _ => 2 }
         eval(io) mustEqual 2
       }
@@ -380,25 +379,26 @@ trait IOMonadSpec extends Spec {
 
     "recoverWith" - {
       "success" in {
-        val t = Success(1)
+        val t  = Success(1)
         val io = IO.fromTry(t).recoverWith { case _ => IO(2) }
         eval(io) mustEqual 1
       }
       "failure" in {
-        val t = Failure[Int](new Exception)
+        val t  = Failure[Int](new Exception)
         val io = IO.fromTry(t).recoverWith { case _ => IO(2) }
         eval(io) mustEqual 2
       }
       "flatMap and recoverWith" in {
         val evalCount = new AtomicInteger(0)
-        val e = new Exception("failure")
-        val io = IO.unit.map(_ => {
-          resultValue[Int](evalCount.incrementAndGet())
-        }).flatMap { _ =>
-          IO.failed(e)
-        }.recoverWith {
-          case _: VirtualMachineError => IO.successful(-1) // won't match the error
-        }
+        val e         = new Exception("failure")
+        val io = IO.unit
+          .map(_ => resultValue[Int](evalCount.incrementAndGet()))
+          .flatMap { _ =>
+            IO.failed(e)
+          }
+          .recoverWith { case _: VirtualMachineError =>
+            IO.successful(-1) // won't match the error
+          }
         Try(eval(io)) mustEqual Failure(e)
         evalCount.get() mustEqual 1
       }

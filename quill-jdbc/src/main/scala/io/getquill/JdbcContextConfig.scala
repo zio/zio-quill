@@ -3,6 +3,7 @@ package io.getquill
 import com.typesafe.config.Config
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+
 import java.util.Properties
 import scala.util.control.NonFatal
 
@@ -21,6 +22,6 @@ case class JdbcContextConfig(config: Config) {
       new HikariDataSource(new HikariConfig(configProperties))
     catch {
       case NonFatal(ex) =>
-        throw new IllegalStateException(s"Failed to load data source for config: '$config'", ex)
+        throw new IllegalStateException("Failed to load data source", ex)
     }
 }

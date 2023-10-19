@@ -1,8 +1,10 @@
 package io.getquill.monad
 
+import io.getquill.MirrorContexts
+
 class SyncIOMonadSpec extends IOMonadSpec {
 
-  override val ctx = io.getquill.testContext
+  override val ctx = MirrorContexts.testContext
   import ctx._
 
   override def eval[T](io: IO[T, _]) =
@@ -23,18 +25,18 @@ class SyncIOMonadSpec extends IOMonadSpec {
       eval(ctx.runIO(q)).string mustEqual ctx.run(q).string
     }
     "RunActionReturningResult" in {
-      val t = TestEntity("1", 2, 3L, Some(4))
-      val q = quote(qr1.insert(lift(t)).returning(_.i))
+      val t = TestEntity("1", 2, 3L, Some(4), true)
+      val q = quote(qr1.insertValue(lift(t)).returning(_.i))
       eval(ctx.runIO(q)).string mustEqual ctx.run(q).string
     }
     "RunBatchActionResult" in {
-      val l = List(TestEntity("1", 2, 3L, Some(4)))
-      val q = quote(liftQuery(l).foreach(t => qr1.insert(t)))
+      val l = List(TestEntity("1", 2, 3L, Some(4), true))
+      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t)))
       eval(ctx.runIO(q)).groups mustEqual ctx.run(q).groups
     }
     "RunBatchActionReturningResult" in {
-      val l = List(TestEntity("1", 2, 3L, Some(4)))
-      val q = quote(liftQuery(l).foreach(t => qr1.insert(t).returning(_.i)))
+      val l = List(TestEntity("1", 2, 3L, Some(4), true))
+      val q = quote(liftQuery(l).foreach(t => qr1.insertValue(t).returning(_.i)))
       eval(ctx.runIO(q)).groups mustEqual ctx.run(q).groups
     }
   }

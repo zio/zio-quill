@@ -2,13 +2,29 @@ package io.getquill.context.mirror
 
 import scala.reflect.ClassTag
 
-import io.getquill.util.Messages.fail
-
-case class Row(data: Any*) {
-  def add(value: Any) = Row((data :+ value): _*)
-  def apply[T](index: Int)(implicit t: ClassTag[T]) =
-    data(index) match {
-      case v: T  => v
-      case other => fail(s"Invalid column type. Expected '${t.runtimeClass}', but got '$other'")
+/**
+ * Defines a artificial 'Row' used for the mirror context. Mostly used for
+ * testing. (Note that this must not be in quill-engine or it will conflict with
+ * the io.getquill.context.mirror.Row class in ProtoQuill.)
+ */
+case class Row private (data: List[Any]) {
+  // Nulls need a special placeholder so they can be checked via `nullAt`.
+  def add(value: Any): Row =
+    value match {
+      case null => new Row((data :+ null))
+      case _    => new Row((data :+ value))
     }
+
+  def nullAt(index: Int): Boolean = data.apply(index) == null
+  def apply[T](index: Int)(implicit t: ClassTag[T]): T =
+    data(index) match {
+      case v: T => v
+      case other =>
+        throw new IllegalStateException(s"Invalid column type. Expected '${t.runtimeClass}', but got '$other'")
+    }
+}
+
+object Row {
+  def apply(data: Any*): Row =
+    data.foldLeft(new Row(List.empty))((r, value) => r.add(value))
 }

@@ -14,7 +14,7 @@ class ArrayMirrorEncodingSpec extends ArrayEncodingBaseSpec {
   val q = quote(query[ArraysTestEntity])
 
   "Support all sql base types and `Seq` implementers" in {
-    val insertStr = ctx.run(q.insert(lift(e))).string
+    val insertStr = ctx.run(q.insertValue(lift(e))).string
     val selectStr = ctx.run(q).string
 
     insertStr mustEqual "INSERT INTO ArraysTestEntity (texts,decimals,bools,bytes,shorts,ints,longs,floats," +
@@ -27,7 +27,7 @@ class ArrayMirrorEncodingSpec extends ArrayEncodingBaseSpec {
   "Support Seq encoding basing on MappedEncoding" in {
     val wrapQ = quote(querySchema[WrapEntity]("ArraysTestEntity"))
 
-    val insertStr = ctx.run(wrapQ.insert(lift(wrapE))).string
+    val insertStr = ctx.run(wrapQ.insertValue(lift(wrapE))).string
     val selectStr = ctx.run(wrapQ).string
     insertStr mustEqual "INSERT INTO ArraysTestEntity (texts) VALUES (?)"
     selectStr mustEqual "SELECT x.texts FROM ArraysTestEntity x"

@@ -2,13 +2,13 @@ package io.getquill.context
 
 import scala.concurrent.duration.DurationInt
 import scala.reflect.api.Types
-import scala.reflect.macros.whitebox.{ Context => MacroContext }
+import scala.reflect.macros.whitebox.{Context => MacroContext}
 import scala.util.Failure
 import scala.util.Success
 
 import io.getquill._
 import io.getquill.util.Cache
-import io.getquill.util.Messages.RichContext
+import io.getquill.util.MacroContextExt._
 import io.getquill.util.LoadObject
 import io.getquill.idiom.Idiom
 
@@ -16,10 +16,10 @@ object ProbeStatement {
 
   private val cache = new Cache[Types#Type, Context[Idiom, NamingStrategy]]
 
-  def apply(statement: String, c: MacroContext) = {
-    import c.universe.{ Try => _, _ }
+  def apply(statement: String, c: MacroContext): Unit = {
+    import c.universe.{Try => _, _}
 
-    def resolveContext(tpe: Type) =
+    def resolveContext(tpe: Type): Option[Context[Idiom, NamingStrategy]] =
       tpe match {
         case tpe if tpe <:< c.weakTypeOf[QueryProbing] =>
           LoadObject[Context[Idiom, NamingStrategy]](c)(tpe) match {
@@ -29,7 +29,7 @@ object ProbeStatement {
               c.error(
                 s"Can't load the context of type '$tpe' for a compile-time query probing. " +
                   s"Make sure that context creation happens in a separate compilation unit. " +
-                  s"For more information please refer to the documentation http://getquill.io/#quotation-query-probing. " +
+                  s"For more information please refer to the documentation https://getquill.io/#quotation-query-probing. " +
                   s"Reason: '$ex'"
               )
               None

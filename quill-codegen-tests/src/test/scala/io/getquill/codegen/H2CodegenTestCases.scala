@@ -3,7 +3,7 @@ package io.getquill.codegen
 import io.getquill.codegen.integration.CodegenTestCases._
 import io.getquill.codegen.util.ConfigPrefix.TestH2DB
 import io.getquill.codegen.util._
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class H2CodegenTestCases extends CodegenSpec {
   import io.getquill.codegen.generated.h2._

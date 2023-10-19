@@ -1,7 +1,7 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
-import org.scalatest.Matchers._
+import io.getquill.base.Spec
+import org.scalatest.matchers.should.Matchers._
 
 class QuestionMarkSpec extends Spec {
   val context = io.getquill.context.sql.testContext
@@ -26,13 +26,14 @@ class QuestionMarkSpec extends Spec {
     testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))
   }
 
-  "simple variable usage must work in the middle of a stirng" in {
-    val newContact = Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
+  "simple variable usage must work in the middle of a string" in {
+    val newContact      = Contact("Moe", "Rabbenu", 123, 2, "Something ? Something ? Else")
     val extraPeopleList = peopleList :+ newContact
 
     val q = quote {
       for {
-        p <- liftQuery(extraPeopleList.toDS()) if p.extraInfo == "Something ? Something ? Else" && p.firstName == lift("Moe")
+        p <- liftQuery(extraPeopleList.toDS())
+        if p.extraInfo == "Something ? Something ? Else" && p.firstName == lift("Moe")
       } yield p
     }
     testContext.run(q).collect() should contain theSameElementsAs Seq(newContact)
@@ -50,7 +51,7 @@ class QuestionMarkSpec extends Spec {
   "infix usage must work" in {
     val q = quote {
       for {
-        p <- liftQuery(peopleList.toDS()) if p.extraInfo == infix"'?'".as[String] && p.firstName == lift("Alex")
+        p <- liftQuery(peopleList.toDS()) if p.extraInfo == sql"'?'".as[String] && p.firstName == lift("Alex")
       } yield p
     }
     testContext.run(q).collect() should contain theSameElementsAs Seq(peopleList(0))

@@ -1,6 +1,7 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
+import io.getquill.Query
+import io.getquill.base.Spec
 
 class PeopleOrientDBSpec extends Spec {
 
@@ -17,7 +18,7 @@ class PeopleOrientDBSpec extends Spec {
       Person(5, "Dre", 60)
     )
     ctx.run(query[Person].delete)
-    ctx.run(liftQuery(entries).foreach(e => query[Person].insert(e)))
+    ctx.run(liftQuery(entries).foreach(e => query[Person].insertValue(e)))
     ()
   }
 
@@ -25,8 +26,8 @@ class PeopleOrientDBSpec extends Spec {
     "empty" in {
       val ctx = orientdb.testSyncDB
       import ctx._
-      val q = quote {
-        (ids: Query[Int]) => query[Person].filter(p => ids.contains(p.id))
+      val q = quote { (ids: Query[Int]) =>
+        query[Person].filter(p => ids.contains(p.id))
       }
       ctx.run(q(liftQuery(Set.empty[Int]))) mustEqual List.empty[Person]
     }

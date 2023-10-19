@@ -1,6 +1,7 @@
 package io.getquill.dsl
 
 import scala.language.experimental.macros
+import io.getquill.{EntityQuery, Insert, Query, Quoted, Update}
 
 trait MetaDslLowPriorityImplicits {
   this: MetaDsl =>
@@ -17,7 +18,8 @@ trait MetaDsl extends MetaDslLowPriorityImplicits {
   type Embedded = io.getquill.Embedded
 
   def schemaMeta[T](entity: String, columns: (T => (Any, String))*): SchemaMeta[T] = macro MetaDslMacro.schemaMeta[T]
-  def queryMeta[T, R](expand: Quoted[Query[T] => Query[R]])(extract: R => T): QueryMeta[T] = macro MetaDslMacro.queryMeta[T, R]
+  def queryMeta[T, R](expand: Quoted[Query[T] => Query[R]])(extract: R => T): QueryMeta[T] =
+    macro MetaDslMacro.queryMeta[T, R]
   def updateMeta[T](exclude: (T => Any)*): UpdateMeta[T] = macro MetaDslMacro.updateMeta[T]
   def insertMeta[T](exclude: (T => Any)*): InsertMeta[T] = macro MetaDslMacro.insertMeta[T]
 
@@ -27,7 +29,7 @@ trait MetaDsl extends MetaDslLowPriorityImplicits {
 
   trait QueryMeta[T] {
     def expand: Quoted[Query[T] => Query[_]]
-    def extract: ResultRow => T
+    def extract: (ResultRow, Session) => T
   }
 
   trait UpdateMeta[T] {

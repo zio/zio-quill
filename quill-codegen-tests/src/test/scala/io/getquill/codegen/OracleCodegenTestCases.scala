@@ -2,9 +2,9 @@ package io.getquill.codegen
 
 import io.getquill.codegen.integration.CodegenTestCases._
 import io.getquill.codegen.util.ConfigPrefix.TestOracleDB
-import io.getquill.codegen.util.{ WithOracleContextStandalone => WithContext, _ }
+import io.getquill.codegen.util.{WithOracleContextStandalone => WithContext, _}
 import WithContext._
-import org.scalatest.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 class OracleCodegenTestCases extends CodegenSpec {
   import io.getquill.codegen.generated.oracle._

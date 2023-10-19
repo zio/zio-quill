@@ -1,7 +1,7 @@
 package io.getquill.context.spark.norm
 
-import io.getquill.Spec
-import io.getquill.context.spark.{ sqlContext, testContext }
+import io.getquill.base.Spec
+import io.getquill.context.spark.{sqlContext, testContext}
 
 case class Test(i: Int, j: Int, s: String)
 case class TestHolder(ta: Test, tb: Test)
@@ -21,7 +21,7 @@ class ExpandEntityIdsSpec extends Spec {
   import testContext._
   import sqlContext.implicits._
 
-  val ent = Test(1, 2, "3")
+  val ent      = Test(1, 2, "3")
   val entities = Seq(ent)
 
   val qr1 = liftQuery(entities.toDS)
@@ -32,13 +32,19 @@ class ExpandEntityIdsSpec extends Spec {
   val s0 = liftQuery(Seq(Tuple1(1), Tuple1(2)).toDS)
   val s1 = liftQuery(Seq(SingleElement(1), SingleElement(2)).toDS)
   val s2 = liftQuery(Seq(SingleElementSingleHolder(SingleElement(1)), SingleElementSingleHolder(SingleElement(2))).toDS)
-  val s3 = liftQuery(Seq(SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(1)), SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(2))).toDS)
+  val s3 = liftQuery(
+    Seq(
+      SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(1)),
+      SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(2))
+    ).toDS
+  )
 
   "decomposition" - {
     "tuple decomposition" in {
-      val j1 = testContext.run {
+      val q1 = quote {
         qr1.join(qr2).on(_.i == _.i)
       }
+      val j1 = testContext.run(q1)
 
       val q = quote {
         for {
@@ -56,7 +62,7 @@ class ExpandEntityIdsSpec extends Spec {
       val q = quote {
         for {
           (ja, jb) <- liftQuery(j1)
-          c <- qr3 if (jb.i == c.i)
+          c        <- qr3 if (jb.i == c.i)
         } yield (ja, jb, c)
       }
       testContext.run(q).collect.toList mustEqual List((Test(1, 2, "3"), Test(1, 2, "3"), Test(1, 2, "3")))
@@ -70,7 +76,7 @@ class ExpandEntityIdsSpec extends Spec {
       val q = quote {
         for {
           (ja, jb) <- liftQuery(j1)
-          c <- qr3.join(_.i == jb.i)
+          c        <- qr3.join(_.i == jb.i)
         } yield (ja, jb, c)
       }
       testContext.run(q).collect.toList mustEqual List((Test(1, 2, "3"), Test(1, 2, "3"), Test(1, 2, "3")))
@@ -82,7 +88,7 @@ class ExpandEntityIdsSpec extends Spec {
     "single tuple" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s0 if sm._1 == a.i
         } yield (a, sm)
       }
@@ -92,7 +98,7 @@ class ExpandEntityIdsSpec extends Spec {
     "single tuple yield" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s0 if sm._1 == a.i
         } yield (sm)
       }
@@ -102,7 +108,7 @@ class ExpandEntityIdsSpec extends Spec {
     "single element in nested in tuple" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s1 if sm.i == a.i
         } yield (a, sm)
       }
@@ -112,7 +118,7 @@ class ExpandEntityIdsSpec extends Spec {
     "two-level single element, nested in tuple" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s2 if sm.sma.i == a.i
         } yield (a, sm)
       }
@@ -122,7 +128,7 @@ class ExpandEntityIdsSpec extends Spec {
     "single element, nested in case class ad-hoc case class out" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s1 if sm.i == a.i
         } yield SingleElementMultiHolder(a, sm)
       }
@@ -132,27 +138,31 @@ class ExpandEntityIdsSpec extends Spec {
     "single element, nested in case class ad-hoc case class out further surrounded by tuple" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s1 if sm.i == a.i
         } yield (sm, SingleElementMultiHolder(a, sm))
       }
-      testContext.run(q).collect.toList mustEqual List((SingleElement(1), SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(1))))
+      testContext.run(q).collect.toList mustEqual List(
+        (SingleElement(1), SingleElementMultiHolder(Test(1, 2, "3"), SingleElement(1)))
+      )
     }
 
     "single element, nested in case class with case class out further surrounded by tuple" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s2 if sm.sma.i == a.i
         } yield (sm.sma, (a, sm))
       }
-      testContext.run(q).collect.toList mustEqual List((SingleElement(1), (Test(1, 2, "3"), SingleElementSingleHolder(SingleElement(1)))))
+      testContext.run(q).collect.toList mustEqual List(
+        (SingleElement(1), (Test(1, 2, "3"), SingleElementSingleHolder(SingleElement(1))))
+      )
     }
 
     "single element, nested in two-element case class with case class out further surrounded by tuple" in {
       val q = quote {
         for {
-          a <- qr1
+          a  <- qr1
           sm <- s3 if sm.sm.i == a.i
         } yield sm
       }
@@ -224,7 +234,7 @@ class ExpandEntityIdsSpec extends Spec {
           b <- qr2 if (a.i + 1) == b.j
         } yield TestHolder(a, b)
       }
-      testContext.run(q.dynamic).collect.toList mustEqual entities.map(e => TestHolder(e, e))
+      testContext.run(q).collect.toList mustEqual entities.map(e => TestHolder(e, e))
     }
     "regular entities and entities inside ad-hoc case classes" in {
       val q = quote {
@@ -244,7 +254,9 @@ class ExpandEntityIdsSpec extends Spec {
           d <- qr4 if (c.i + 1) == d.j
         } yield TestHolderHolder(TestHolder(a, b), TestHolder(a, b))
       }
-      testContext.run(q).collect.toList mustEqual entities.map(e => TestHolderHolder(TestHolder(e, e), TestHolder(e, e)))
+      testContext.run(q).collect.toList mustEqual entities.map(e =>
+        TestHolderHolder(TestHolder(e, e), TestHolder(e, e))
+      )
     }
     "entities inside ad-hoc case classes multiple levels different levels" in {
       val q = quote {
@@ -266,7 +278,9 @@ class ExpandEntityIdsSpec extends Spec {
           d <- qr4 if (c.i + 1) == d.j
         } yield (TestHolderHolder(TestHolder(a, b), TestHolder(a, b)), TestHolder(a, b))
       }
-      testContext.run(q).collect.toList mustEqual entities.map(e => (TestHolderHolder(TestHolder(e, e), TestHolder(e, e)), TestHolder(e, e)))
+      testContext.run(q).collect.toList mustEqual entities.map(e =>
+        (TestHolderHolder(TestHolder(e, e), TestHolder(e, e)), TestHolder(e, e))
+      )
     }
     "entities inside tuples - with distinct" in {
       val q = quote {
@@ -335,7 +349,9 @@ class ExpandEntityIdsSpec extends Spec {
           d <- qr4 if (c.i + 1) == d.j
         } yield ParentNestedTupleHolderTest(NestedTupleHolderTest((a.i, b), c.s), c.s)
       }
-      testContext.run(q).collect.toList mustEqual entities.map(e => ParentNestedTupleHolderTest(NestedTupleHolderTest((e.i, e), e.s), e.s))
+      testContext.run(q).collect.toList mustEqual entities.map(e =>
+        ParentNestedTupleHolderTest(NestedTupleHolderTest((e.i, e), e.s), e.s)
+      )
     }
     "test nested tuple holder inside parent inside super tuple" in {
       val q = quote {
@@ -346,7 +362,9 @@ class ExpandEntityIdsSpec extends Spec {
           d <- qr4 if (c.i + 1) == d.j
         } yield SuperParentNestedTupleHolderTest((NestedTupleHolderTest((a.i, b), c.s), c), c.s)
       }
-      testContext.run(q).collect.toList mustEqual entities.map(e => SuperParentNestedTupleHolderTest((NestedTupleHolderTest((e.i, e), e.s), e), e.s))
+      testContext.run(q).collect.toList mustEqual entities.map(e =>
+        SuperParentNestedTupleHolderTest((NestedTupleHolderTest((e.i, e), e.s), e), e.s)
+      )
     }
 
     // TODO Ad-Hoc case class union inside for comprehension

@@ -1,6 +1,6 @@
 package io.getquill.context.jdbc.postgres
 
-import io.getquill.context.sql.OnConflictSpec
+import io.getquill.context.sql.base.OnConflictSpec
 
 class OnConflictJdbcSpec extends OnConflictSpec {
   val ctx = testContext
@@ -43,9 +43,7 @@ class OnConflictJdbcSpec extends OnConflictSpec {
         _.i2 -> "i",
         _.l2 -> "l",
         _.o2 -> "o"
-      ).insert(lift(e)).onConflictUpdate(_.i2)(
-          (t, _) => t.l2 -> (t.l2 + 1)
-        )
+      ).insertValue(lift(e)).onConflictUpdate(_.i2)((t, _) => t.l2 -> (t.l2 + 1))
     }
 
     val e1Rename = TestEntityRename("r1", 4, 0, None)

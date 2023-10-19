@@ -4,8 +4,10 @@ import scala.language.higherKinds
 import scala.collection.compat._
 import language.experimental.macros
 import io.getquill.context.Context
+
 import scala.annotation.tailrec
 import scala.util.Try
+import io.getquill.{Action, ActionReturning, BatchAction, Query, Quoted}
 
 trait SyncIOMonad extends IOMonad {
   this: Context[_, _] =>
@@ -15,9 +17,11 @@ trait SyncIOMonad extends IOMonad {
   def runIO[T](quoted: Quoted[T]): IO[RunQuerySingleResult[T], Effect.Read] = macro IOMonadMacro.runIO
   def runIO[T](quoted: Quoted[Query[T]]): IO[RunQueryResult[T], Effect.Read] = macro IOMonadMacro.runIO
   def runIO(quoted: Quoted[Action[_]]): IO[RunActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[ActionReturning[_, T]]): IO[RunActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
+  def runIO[T](quoted: Quoted[ActionReturning[_, T]]): IO[RunActionReturningResult[T], Effect.Write] =
+    macro IOMonadMacro.runIO
   def runIO(quoted: Quoted[BatchAction[Action[_]]]): IO[RunBatchActionResult, Effect.Write] = macro IOMonadMacro.runIO
-  def runIO[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): IO[RunBatchActionReturningResult[T], Effect.Write] = macro IOMonadMacro.runIO
+  def runIO[T](quoted: Quoted[BatchAction[ActionReturning[_, T]]]): IO[RunBatchActionReturningResult[T], Effect.Write] =
+    macro IOMonadMacro.runIO
 
   case class Run[T, E <: Effect](f: () => Result[T]) extends IO[T, E]
 
@@ -26,10 +30,11 @@ trait SyncIOMonad extends IOMonad {
     @tailrec def loop[U](io: IO[U, _]): Result[U] = {
 
       def flatten[Y, M[X] <: IterableOnce[X]](seq: Sequence[Y, M, Effect]) =
-        seq.in.iterator.foldLeft(IO.successful(seq.cbfResultToValue.newBuilder)) {
-          (builder, item) =>
+        seq.in.iterator
+          .foldLeft(IO.successful(seq.cbfResultToValue.newBuilder)) { (builder, item) =>
             builder.flatMap(b => item.map(b += _))
-        }.map(_.result())
+          }
+          .map(_.result())
 
       io match {
         case FromTry(v)           => v.get

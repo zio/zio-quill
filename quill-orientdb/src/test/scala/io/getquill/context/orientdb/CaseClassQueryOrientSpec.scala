@@ -1,6 +1,6 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
+import io.getquill.base.Spec
 
 class CaseClassQueryOrientSpec extends Spec {
 
@@ -11,7 +11,7 @@ class CaseClassQueryOrientSpec extends Spec {
   case class Address(id: Int, street: String, zip: Int, otherExtraInfo: String)
 
   val peopleInsert =
-    quote((p: Contact) => query[Contact].insert(p))
+    quote((p: Contact) => query[Contact].insertValue(p))
 
   val peopleEntries = List(
     Contact(1, "Alex", "Jones", 60, 2, "foo"),
@@ -20,7 +20,7 @@ class CaseClassQueryOrientSpec extends Spec {
   )
 
   val addressInsert =
-    quote((c: Address) => query[Address].insert(c))
+    quote((c: Address) => query[Address].insertValue(c))
 
   val addressEntries = List(
     Address(1, "123 Fake Street", 11234, "something"),
@@ -48,7 +48,7 @@ class CaseClassQueryOrientSpec extends Spec {
     query[Contact].filter(p => p.id == filtrationObject.idFilter)
   }
 
-  val `Ex 3 Inline Record Usage exepected result` = List(
+  val `Ex 3 Inline Record Usage expected result` = List(
     new Contact(1, "Alex", "Jones", 60, 2, "foo")
   )
 
@@ -60,10 +60,14 @@ class CaseClassQueryOrientSpec extends Spec {
   }
 
   "Example 1 - Single Case Class Mapping" in {
-    testSyncDB.run(`Ex 1 CaseClass Record Output`) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
+    testSyncDB.run(
+      `Ex 1 CaseClass Record Output`
+    ) must contain theSameElementsAs `Ex 1 CaseClass Record Output expected result`
   }
 
   "Example 2 - Inline Record as Filter" in {
-    testSyncDB.run(`Ex 3 Inline Record Usage`) must contain theSameElementsAs `Ex 3 Inline Record Usage exepected result`
+    testSyncDB.run(
+      `Ex 3 Inline Record Usage`
+    ) must contain theSameElementsAs `Ex 3 Inline Record Usage expected result`
   }
 }

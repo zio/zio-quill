@@ -1,8 +1,8 @@
 package io.getquill.ast
 
-import io.getquill.Spec
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Visible
+import io.getquill.base.Spec
 
 class StatelessTransformerSpec extends Spec {
 
@@ -14,7 +14,7 @@ class StatelessTransformerSpec extends Spec {
   "transforms asts" - {
     "query" - {
       "entity" in {
-        val ast: Ast = Entity("a", Nil)
+        val ast: Ast = Entity("a", Nil, QEP)
         Subject()(ast) mustEqual ast
       }
       "filter" in {
@@ -109,7 +109,7 @@ class StatelessTransformerSpec extends Spec {
 
     "value" - {
       "constant" in {
-        val ast: Ast = Constant("a")
+        val ast: Ast = Constant.auto("a")
         Subject()(ast) mustEqual ast
       }
       "null" in {
@@ -122,9 +122,9 @@ class StatelessTransformerSpec extends Spec {
           Tuple(List(Ident("a'"), Ident("b'"), Ident("c'")))
       }
       "caseclass" in {
-        val ast: Ast = CaseClass(List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
+        val ast: Ast = CaseClass("CC", List(("foo", Ident("a")), ("bar", Ident("b")), ("baz", Ident("c"))))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(ast) mustEqual
-          CaseClass(List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
+          CaseClass("CC", List(("foo", Ident("a'")), ("bar", Ident("b'")), ("baz", Ident("c'"))))
       }
     }
 
@@ -137,12 +137,22 @@ class StatelessTransformerSpec extends Spec {
     "action" - {
       "update" in {
         val ast: Ast = Update(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'"),
+          Ident("d") -> Ident("d'")
+        )(ast) mustEqual
           Update(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
       }
       "insert" in {
         val ast: Ast = Insert(Ident("a"), List(Assignment(Ident("b"), Ident("c"), Ident("d"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"), Ident("d") -> Ident("d'"))(ast) mustEqual
+        Subject(
+          Ident("a") -> Ident("a'"),
+          Ident("b") -> Ident("b'"),
+          Ident("c") -> Ident("c'"),
+          Ident("d") -> Ident("d'")
+        )(ast) mustEqual
           Insert(Ident("a'"), List(Assignment(Ident("b"), Ident("c'"), Ident("d'"))))
       }
       "delete" in {
@@ -168,7 +178,8 @@ class StatelessTransformerSpec extends Spec {
           OnConflict.Properties(List(Property(Ident("a'"), "b")))
       }
       "properties - fixed" in {
-        val target: OnConflict.Target = OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed, Visible)))
+        val target: OnConflict.Target =
+          OnConflict.Properties(List(Property.Opinionated(Ident("a"), "b", Fixed, Visible)))
         Subject(Ident("a") -> Ident("a'"))(target) mustEqual
           OnConflict.Properties(List(Property.Opinionated(Ident("a'"), "b", Fixed, Visible)))
       }
@@ -180,9 +191,15 @@ class StatelessTransformerSpec extends Spec {
         Subject()(action) mustEqual action
       }
       "update" in {
-        val action: OnConflict.Action = OnConflict.Update(List(Assignment(Ident("a"), Ident("b"), Ident("c"))))
-        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"), Ident("c") -> Ident("c'"))(action) mustEqual
-          OnConflict.Update(List(Assignment(Ident("a"), Ident("b'"), Ident("c'"))))
+        val action: OnConflict.Action =
+          OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))))
+        Subject(
+          Ident("a1") -> Ident("a1'"),
+          Ident("a2") -> Ident("a2'"),
+          Ident("b")  -> Ident("b'"),
+          Ident("c")  -> Ident("c'")
+        )(action) mustEqual
+          OnConflict.Update(List(AssignmentDual(Ident("a1"), Ident("a2"), Ident("b'"), Ident("c'"))))
       }
     }
 
@@ -220,16 +237,16 @@ class StatelessTransformerSpec extends Spec {
         Property.Opinionated(Ident("a'"), "b", Fixed, Visible)
     }
 
-    "infix" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false)
+    "sql" in {
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), false, false, QV)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-        Infix(List("test"), List(Ident("a'"), Ident("b'")), false)
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), false, false, QV)
     }
 
     "infix - pure" in {
-      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), true)
+      val ast: Ast = Infix(List("test"), List(Ident("a"), Ident("b")), true, false, QV)
       Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
-        Infix(List("test"), List(Ident("a'"), Ident("b'")), true)
+        Infix(List("test"), List(Ident("a'"), Ident("b'")), true, false, QV)
     }
 
     "option operation" - {
@@ -259,13 +276,18 @@ class StatelessTransformerSpec extends Spec {
           OptionGetOrNull(Ident("a'"))
       }
       "None" in {
-        val ast: Ast = OptionNone
+        val ast: Ast = OptionNone(QV)
         Subject()(ast) mustEqual ast
       }
       "getOrElse" in {
         val ast: Ast = OptionGetOrElse(Ident("a"), Ident("b"))
         Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
           OptionGetOrElse(Ident("a'"), Ident("b'"))
+      }
+      "orElse" in {
+        val ast: Ast = OptionOrElse(Ident("a"), Ident("b"))
+        Subject(Ident("a") -> Ident("a'"), Ident("b") -> Ident("b'"))(ast) mustEqual
+          OptionOrElse(Ident("a'"), Ident("b'"))
       }
       "flatMap - Unchecked" in {
         val ast: Ast = OptionTableFlatMap(Ident("a"), Ident("b"), Ident("c"))
@@ -359,21 +381,27 @@ class StatelessTransformerSpec extends Spec {
     }
 
     "block" in {
-      val ast: Ast = Block(List(
-        Val(Ident("a"), Entity("a", Nil)),
-        Val(Ident("b"), Entity("b", Nil))
-      ))
-      Subject(Entity("a", Nil) -> Entity("b", Nil), Entity("b", Nil) -> Entity("c", Nil))(ast) mustEqual
-        Block(List(
-          Val(Ident("a"), Entity("b", Nil)),
-          Val(Ident("b"), Entity("c", Nil))
-        ))
+      val ast: Ast = Block(
+        List(
+          Val(Ident("a"), Entity("a", Nil, QEP)),
+          Val(Ident("b"), Entity("b", Nil, QEP))
+        )
+      )
+      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP), Entity("b", Nil, QEP) -> Entity("c", Nil, QEP))(
+        ast
+      ) mustEqual
+        Block(
+          List(
+            Val(Ident("a"), Entity("b", Nil, QEP)),
+            Val(Ident("b"), Entity("c", Nil, QEP))
+          )
+        )
     }
 
     "val" in {
-      val ast: Ast = Val(Ident("a"), Entity("a", Nil))
-      Subject(Entity("a", Nil) -> Entity("b", Nil))(ast) mustEqual
-        Val(Ident("a"), Entity("b", Nil))
+      val ast: Ast = Val(Ident("a"), Entity("a", Nil, QEP))
+      Subject(Entity("a", Nil, QEP) -> Entity("b", Nil, QEP))(ast) mustEqual
+        Val(Ident("a"), Entity("b", Nil, QEP))
     }
   }
 }

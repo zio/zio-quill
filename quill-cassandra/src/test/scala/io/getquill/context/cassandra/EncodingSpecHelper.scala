@@ -1,9 +1,9 @@
 package io.getquill.context.cassandra
 
-import java.util.{ Date, UUID }
+import io.getquill.base.Spec
+import java.util.{Date, UUID}
 
-import com.datastax.driver.core.LocalDate
-import io.getquill.Spec
+import java.time.{Instant, LocalDate}
 
 abstract class EncodingSpecHelper extends Spec {
   protected def verify(result: List[EncodingTestEntity]): Unit =
@@ -42,29 +42,29 @@ abstract class EncodingSpecHelper extends Spec {
   }
 
   case class EncodingTestEntity(
-    id:  Int,
-    v1:  String,
-    v2:  BigDecimal,
-    v3:  Boolean,
-    v4:  Int,
-    v5:  Long,
-    v6:  Float,
-    v7:  Double,
-    v8:  Array[Byte],
-    v9:  LocalDate,
+    id: Int,
+    v1: String,
+    v2: BigDecimal,
+    v3: Boolean,
+    v4: Int,
+    v5: Long,
+    v6: Float,
+    v7: Double,
+    v8: Array[Byte],
+    v9: LocalDate,
     v10: UUID,
-    v11: Date,
+    v11: Instant,
     v12: Byte,
     v13: Short,
-    o1:  Option[String],
-    o2:  Option[BigDecimal],
-    o3:  Option[Boolean],
-    o4:  Option[Int],
-    o5:  Option[Long],
-    o6:  Option[Float],
-    o7:  Option[Double],
-    o8:  Option[Array[Byte]],
-    o9:  Option[Date],
+    o1: Option[String],
+    o2: Option[BigDecimal],
+    o3: Option[Boolean],
+    o4: Option[Int],
+    o5: Option[Long],
+    o6: Option[Float],
+    o7: Option[Double],
+    o8: Option[Array[Byte]],
+    o9: Option[Instant],
     o10: Option[LocalDate]
   )
 
@@ -82,9 +82,9 @@ abstract class EncodingSpecHelper extends Spec {
         v6 = 34.4f,
         v7 = 42d,
         v8 = Array(1.toByte, 2.toByte),
-        v9 = LocalDate.fromYearMonthDay(2014, 11, 11),
+        v9 = LocalDate.of(2014, 11, 11),
         v10 = fixUUID,
-        v11 = new Date(31202000),
+        v11 = Instant.ofEpochSecond(31202000),
         v12 = (Byte.MaxValue - 10).toByte,
         v13 = (Short.MaxValue - 10).toShort,
         o1 = Some("s"),
@@ -95,8 +95,8 @@ abstract class EncodingSpecHelper extends Spec {
         o6 = Some(34.4f),
         o7 = Some(42d),
         o8 = Some(Array(1.toByte, 2.toByte)),
-        o9 = Some(new Date(31200000)),
-        o10 = Some(LocalDate.fromYearMonthDay(2014, 11, 11))
+        o9 = Some(Instant.ofEpochSecond(31200000)),
+        o10 = Some(LocalDate.of(2014, 11, 11))
       ),
       EncodingTestEntity(
         id = 2,
@@ -105,12 +105,12 @@ abstract class EncodingSpecHelper extends Spec {
         v3 = false,
         v4 = 0,
         v5 = 0L,
-        v6 = 0F,
-        v7 = 0D,
+        v6 = 0f,
+        v7 = 0d,
         v8 = Array(),
-        v9 = LocalDate.fromMillisSinceEpoch(0),
+        v9 = LocalDate.ofEpochDay(0),
         v10 = fixUUID,
-        v11 = new Date(0),
+        v11 = Instant.ofEpochSecond(0),
         v12 = 0,
         v13 = 0,
         o1 = None,
