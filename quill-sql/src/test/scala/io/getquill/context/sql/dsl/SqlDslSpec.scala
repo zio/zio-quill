@@ -26,7 +26,7 @@ class SqlDslSpec extends Spec {
 
   "forUpdate" in {
     val q: Quoted[Query[TestEntity]] = quote {
-      query[TestEntity].filter(t => t.s == "a").forUpdate
+      query[TestEntity].filter(t => t.s == "a").forUpdate()
     }
     testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s = 'a' FOR UPDATE"
   }
@@ -34,7 +34,7 @@ class SqlDslSpec extends Spec {
   "forUpdate naming schema" in {
 
     val q: Quoted[Query[TestEntity]] = quote {
-      query[TestEntity].filter(t => t.s == "a").forUpdate
+      query[TestEntity].filter(t => t.s == "a").forUpdate()
     }
     testContext.run(q).string mustEqual "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.s = 'a' FOR UPDATE"
   }

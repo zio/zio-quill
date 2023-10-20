@@ -103,7 +103,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       path.foldLeft(tuple) { case (t, i) =>
         Property(t, s"_${i + 1}")
       }
-    def reductions(ast: Ast, path: List[Int] = List()): List[(Ident, Ast)] =
+    def reductions(ast: Ast, path: List[Int] = List.empty): List[(Ident, Ast)] =
       ast match {
         case ident: Ident => List(ident -> property(path))
         case Tuple(elems) =>
@@ -200,9 +200,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       Entity("unused", Nil, quat)
 
     case q"$pack.querySchema[$t](${name: String}, ..$properties)" =>
-      val ttpe     = q"$t".tpe
-      val inferred = inferQuat(q"$t".tpe)
-      val quat     = inferQuat(q"$t".tpe).probit
+      val quat = inferQuat(q"$t".tpe).probit
       c.warn(VerifyNoBranches.in(quat))
       Entity.Opinionated(name, properties.map(propertyAliasParser(_)), quat, Fixed)
 
@@ -962,7 +960,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     }
   }
 
-  implicit class InsertReturnCapabilityExtension(capability: ReturningCapability) {
+  implicit final class InsertReturnCapabilityExtension(capability: ReturningCapability) {
     def verifyAst(returnBody: Ast) = capability match {
       case OutputClauseSupported =>
         returnBody match {
@@ -1231,7 +1229,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         case false => maybeQuoted
         case true  => q"unquote($maybeQuoted)"
       }
-    val t = TypeName(c.freshName("T"))
+
     try
       c.typecheck(unquoted(tree), c.TYPEmode)
     catch {

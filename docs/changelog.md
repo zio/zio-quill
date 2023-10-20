@@ -3,11 +3,8 @@ id: changelog
 title: "Quill Changelog"
 ---
 
-# 4.7.0
-
-- [Update Scala 2.12 && Drop `quill-finagle-mysql` and `quill-finagle-postgres` modules](https://github.com/zio/zio-quill/pull/2756)
-- [Update Scala3 version to `3.3.0`](https://github.com/zio/zio-quill/pull/2759)
-- [Drop `ndbc` support](https://github.com/zio/zio-quill/pull/2760)
+Starting from the versions superior v4.6.1, the release notes and changelog will be provided in the GitHub Releases of the project.
+See https://github.com/zio/zio-quill/releases
 
 # 4.6.1
 

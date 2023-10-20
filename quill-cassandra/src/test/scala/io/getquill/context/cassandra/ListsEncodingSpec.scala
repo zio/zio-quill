@@ -1,7 +1,7 @@
 package io.getquill.context.cassandra
 
-import java.util.{Date, UUID}
 import java.time.{Instant, LocalDate}
+import java.util.UUID
 
 class ListsEncodingSpec extends CollectionsSpec {
   val ctx = testSyncDB
@@ -34,7 +34,9 @@ class ListsEncodingSpec extends CollectionsSpec {
     List(1f, 3f),
     List(5d),
     List(LocalDate.now()),
-    List(Instant.now()),
+    List(
+      Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS)
+    ), // See https://stackoverflow.com/a/74781779/2431728
     List(UUID.randomUUID())
   )
 

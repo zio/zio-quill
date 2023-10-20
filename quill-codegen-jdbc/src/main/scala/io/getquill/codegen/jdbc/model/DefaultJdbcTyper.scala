@@ -1,10 +1,8 @@
 package io.getquill.codegen.jdbc.model
 
-import java.sql.Types._
-
 import io.getquill.codegen.model._
-import io.getquill.util.ContextLogger
 
+import java.sql.Types._
 import scala.reflect.{ClassTag, classTag}
 
 class DefaultJdbcTyper(
@@ -12,7 +10,6 @@ class DefaultJdbcTyper(
   numericPreference: NumericPreference
 ) extends (JdbcTypeInfo => Option[ClassTag[_]]) {
 
-  private val logger                  = ContextLogger(classOf[DefaultJdbcTyper])
   private[getquill] val MaxIntDigits  = 9
   private[getquill] val MaxLongDigits = 18
 

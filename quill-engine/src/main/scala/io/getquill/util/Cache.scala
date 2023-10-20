@@ -1,19 +1,19 @@
 package io.getquill.util
 
 import java.io.Closeable
-import java.lang.System.{currentTimeMillis => now}
-
+import scala.collection.mutable
 import scala.concurrent.duration.Duration
 
-class Cache[K, V <: Closeable] {
+final class Cache[K, V <: Closeable] {
 
   private case class Entry(value: Option[V], expiration: Long)
 
-  private var cache = Map[K, Entry]()
+  private val cache = mutable.Map.empty[K, Entry]
 
   def getOrElseUpdate(key: K, value: => Option[V], ttl: Duration): Option[V] =
     synchronized {
-      evict()
+      val now = System.currentTimeMillis
+      evict(now)
       val expiration = now + ttl.toMillis
       cache.get(key) match {
         case Some(entry) =>
@@ -26,10 +26,10 @@ class Cache[K, V <: Closeable] {
       }
     }
 
-  private def evict() =
+  private def evict(now: Long): Unit =
     for ((key, Entry(value, expiration)) <- cache)
       if (now > expiration) {
-        value.map(_.close)
+        value.foreach(_.close)
         cache -= key
       }
 }

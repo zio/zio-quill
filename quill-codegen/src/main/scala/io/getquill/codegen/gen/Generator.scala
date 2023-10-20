@@ -101,8 +101,6 @@ trait Generator {
           }
 
         val fileWithExtension = fileName.resolveSibling(fileName.getFileName.toString + ".scala")
-        val loc               = Paths.get(location)
-
         (gen, Paths.get(location, fileWithExtension.toString))
       }
 

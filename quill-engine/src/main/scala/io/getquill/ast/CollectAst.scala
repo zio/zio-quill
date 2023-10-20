@@ -10,7 +10,7 @@ import scala.reflect.ClassTag
  */
 class CollectAst[T](p: PartialFunction[Ast, T], val state: Queue[T]) extends StatefulTransformer[Queue[T]] {
 
-  override def apply(a: Ast) =
+  override def apply(a: Ast): (Ast, StatefulTransformer[Queue[T]]) =
     a match {
       case d if (p.isDefinedAt(d)) => (d, new CollectAst(p, state :+ p(d)))
       case other                   => super.apply(other)
@@ -19,12 +19,12 @@ class CollectAst[T](p: PartialFunction[Ast, T], val state: Queue[T]) extends Sta
 
 object CollectAst {
 
-  def byType[T: ClassTag](a: Ast) =
+  def byType[T: ClassTag](a: Ast): Queue[T] =
     apply[T](a) { case t: T =>
       t
     }
 
-  def apply[T](a: Ast)(p: PartialFunction[Ast, T]) =
+  def apply[T](a: Ast)(p: PartialFunction[Ast, T]): Queue[T] =
     (new CollectAst(p, Queue[T]()).apply(a)) match {
       case (_, transformer) =>
         transformer.state

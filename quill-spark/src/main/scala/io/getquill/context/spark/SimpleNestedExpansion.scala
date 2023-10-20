@@ -7,7 +7,7 @@ import io.getquill.sql.norm.{QueryLevel, StatelessQueryTransformer}
 
 object TopLevelExpansion {
 
-  implicit class AliasOp(alias: Option[String]) {
+  implicit final class AliasOp(private val alias: Option[String]) extends AnyVal {
     def concatWith(str: String): Option[String] =
       alias.orElse(Some("")).map(v => s"${v}${str}")
   }
