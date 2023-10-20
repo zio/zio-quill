@@ -1,5 +1,6 @@
 package io.getquill.mock
 
+import io.getquill.util.PrintMac
 import io.getquill.{Literal, PostgresZioJdbcContext}
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.freespec.AnyFreeSpec
@@ -178,6 +179,8 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._
 
+    PrintMac(stream(query[Person]))
+
     // In this case, instead of catching the error inside the observable, let it propagate to the top
     // and make sure that the connection is closed anyhow
     val resultMsg = Unsafe.unsafe { implicit u =>
@@ -189,7 +192,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
       }.getOrThrow()
     }
 
-    // resultMsg mustBe "toto"
+    resultMsg mustBe "toto"
     resultMsg.contains("fiber") mustBe true
     resultMsg.contains(errorMsg) mustBe true
 
