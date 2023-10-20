@@ -1,4 +1,4 @@
-FROM hseeberger/scala-sbt:8u312_1.5.5_2.13.6
+FROM sbtscala/scala-sbt:eclipse-temurin-focal-17.0.8.1_1_1.9.6_3.3.1
 MAINTAINER mdedetrich@gmail.com
 
 RUN apt-get update

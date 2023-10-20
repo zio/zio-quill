@@ -12,7 +12,7 @@ class OrientDBContextSpec extends Spec {
       val select = quote {
         query[TestEntity].filter(_.id == lift(1))
       }
-      ctx.run(select) mustEqual List()
+      ctx.run(select) mustEqual List.empty
     }
   }
 

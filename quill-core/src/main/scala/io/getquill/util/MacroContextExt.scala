@@ -11,7 +11,7 @@ object MacroContextExt {
 
   private[getquill] val queryLogger: QueryLogger = new QueryLogger(Messages.quillLogFile)
 
-  implicit class RichContext(c: MacroContext) {
+  implicit final class RichContext(private val c: MacroContext) extends AnyVal {
 
     def error(msg: String): Unit =
       c.error(c.enclosingPosition, if (errorPrefix) s"[quill] $msg" else msg)

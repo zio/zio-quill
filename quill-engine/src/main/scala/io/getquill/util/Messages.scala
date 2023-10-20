@@ -49,6 +49,10 @@ object Messages {
     "quill.query.cacheDynamic",
     variable("quill.query.cacheDynamic", "query_query_cacheDynamic", "true").toBoolean
   )
+  def cacheDynamicMaxSize = cache(
+    "quill.query.cacheDynamicMaxSize",
+    variable("quill.query.cacheDynamicMaxSize", "query_query_cacheDynamicMaxSize", "1024").toLong
+  )
   def querySubexpand =
     cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
   def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
@@ -79,7 +83,7 @@ object Messages {
     case object Full  extends QuatTrace { val value = "full"  }
     case object All   extends QuatTrace { val value = "all"   }
     case object None  extends QuatTrace { val value = "none"  }
-    val values = List(Short, Full, All, None)
+    val values: List[QuatTrace] = List(Short, Full, All, None)
     def apply(str: String): QuatTrace =
       values
         .find(_.value == str)
@@ -105,7 +109,7 @@ object Messages {
     )
   }
 
-  def tracesEnabled(tt: TraceType) =
+  def tracesEnabled(tt: TraceType): Boolean =
     (traceEnabled && traces.contains(tt)) || tt == TraceType.Warning
 
   def enableTrace(
@@ -210,13 +214,13 @@ object Messages {
   ) =
     new AstPrinter(traceOpinions, traceAstSimple, traceQuats)
 
-  def fail(msg: String) =
+  def fail(msg: String): Nothing =
     throw new IllegalStateException(msg)
 
-  def title[T](label: String, traceType: TraceType = TraceType.Standard) =
+  def title[T](label: String, traceType: TraceType = TraceType.Standard): T => T =
     trace[T](("=".repeat(10)) + s" $label " + ("=".repeat(10)), 0, traceType)
 
-  def trace[T](label: String, numIndent: Int = 0, traceType: TraceType = TraceType.Standard) =
+  def trace[T](label: String, numIndent: Int = 0, traceType: TraceType = TraceType.Standard): T => T =
     (v: T) => {
       val indent = (0 to numIndent).map(_ => "").mkString("  ")
       if (tracesEnabled(traceType))
@@ -226,7 +230,7 @@ object Messages {
       v
     }
 
-  implicit class StringExt(str: String) {
-    def repeat(n: Int) = (0 until n).map(_ => str).mkString
+  implicit final class StringExt(private val str: String) extends AnyVal {
+    def repeat(n: Int): String = (0 until n).map(_ => str).mkString
   }
 }

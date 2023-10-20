@@ -41,7 +41,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
   val interp = new Interpolator(TraceType.RepropagateQuats, traceConfig, 1)
   import interp._
 
-  implicit class QuatExt(q: Quat) {
+  implicit final class QuatExt(q: Quat) {
     def retypeFrom(other: Quat): Quat =
       (q, other) match {
         case (Quat.BooleanValue, Quat.BooleanExpression) => Quat.BooleanValue
@@ -54,7 +54,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
         case (_, other)                                  => other
       }
   }
-  implicit class ProductQuatExt(q: Quat.Product) {
+  implicit final class ProductQuatExt(q: Quat.Product) {
     import io.getquill.quat.LinkedHashMapOps._
 
     def retypeProduct(other: Quat.Product): Quat.Product = {
@@ -76,12 +76,12 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
     }
   }
 
-  implicit class IdentExt(id: Ident) {
-    def retypeQuatFrom(from: Quat) =
+  implicit final class IdentExt(id: Ident) {
+    def retypeQuatFrom(from: Quat): Ident =
       id.copy(quat = id.quat.retypeFrom(from))
   }
 
-  def applyBody(a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => Query) = {
+  def applyBody(a: Ast, b: Ident, c: Ast)(f: (Ast, Ident, Ast) => Query): Query = {
     val ar = apply(a)
     val br = b.retypeQuatFrom(ar.quat)
     val cr = BetaReduction(c, RWR, b -> br)
@@ -136,7 +136,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
         super.apply(other)
     }
 
-  def reassign(assignments: List[Assignment], quat: Quat) =
+  def reassign(assignments: List[Assignment], quat: Quat): List[Assignment] =
     assignments.map {
       case Assignment(alias, property, value) =>
         val aliasR    = alias.retypeQuatFrom(quat)

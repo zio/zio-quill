@@ -76,7 +76,7 @@ class DynamicQuerySpec extends Spec {
 
     "simple dynamic query succeeds" in {
       val s = dynamicQuerySchema[Person2]("Person2")
-      s.ast mustEqual Entity("Person2", List(), Quat.LeafProduct("firstName", "lastName"))
+      s.ast mustEqual Entity("Person2", List.empty, Quat.LeafProduct("firstName", "lastName"))
     }
 
     "dynamicQuery" in {

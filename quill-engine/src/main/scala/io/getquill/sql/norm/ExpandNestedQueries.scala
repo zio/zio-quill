@@ -19,7 +19,7 @@ class ExpandSelection(from: List[FromContext]) {
   private[norm] def apply(values: List[SelectValue], level: QueryLevel): List[SelectValue] =
     values.flatMap(apply(_, level))
 
-  implicit class AliasOp(alias: Option[String]) {
+  implicit final class AliasOp(alias: Option[String]) {
     def concatWith(str: String): Option[String] =
       alias.orElse(Some("")).map(v => s"${v}${str}")
   }

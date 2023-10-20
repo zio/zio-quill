@@ -48,12 +48,12 @@ class PrepareSpec extends Spec {
     "with outer join" in {
       val q = quote {
         for {
-          (a, b) <- qr1 join qr2 on ((a, b) => a.i == a.i)
+          (a, b) <- qr1 join qr2 on ((a, b) => a.i == b.i)
           c      <- qr1 rightJoin (c => c.i == a.i)
         } yield (a, b, c.map(c => c.i))
       }
       testContext.run(q).string mustEqual
-        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.i AS _3 FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = a.i RIGHT JOIN TestEntity c ON c.i = a.i"
+        "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o, c.i AS _3 FROM TestEntity a INNER JOIN TestEntity2 b ON a.i = b.i RIGHT JOIN TestEntity c ON c.i = a.i"
     }
   }
 }

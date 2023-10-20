@@ -6,7 +6,7 @@ import io.getquill.base.Spec
 import io.getquill.context.sql.util.StringOps._
 
 class GroupBySpec extends Spec {
-  implicit val naming = new Literal {}
+  implicit val naming: Literal = new Literal {}
 
   import io.getquill.norm.{DisablePhase, OptionalPhase}
   import io.getquill.norm.ConfigList._

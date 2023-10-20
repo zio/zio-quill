@@ -12,6 +12,7 @@ const sidebars = {
         "contexts",
         "code-generation",
         "logging",
+        "compiler-performance",
         "additional-resources",
         "quill-vs-cassandra",
         "quill-vs-slick",

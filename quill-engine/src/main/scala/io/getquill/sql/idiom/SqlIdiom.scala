@@ -172,7 +172,7 @@ trait SqlIdiom extends Idiom {
             val (l, e) = flatten(b)
             ((cond, a) +: l, e)
           case other =>
-            (List(), other)
+            (List.empty, other)
         }
 
       val (l, e) = flatten(ast)
@@ -196,13 +196,13 @@ trait SqlIdiom extends Idiom {
 
     import q._
 
-    def selectTokenizer =
+    def selectTokenizer: Token =
       select match {
         case Nil => stmt"*"
         case _   => select.token
       }
 
-    def distinctTokenizer = (
+    def distinctTokenizer: Statement = (
       distinct match {
         case DistinctKind.Distinct          => stmt"DISTINCT "
         case DistinctKind.DistinctOn(props) => stmt"DISTINCT ON (${props.token}) "
@@ -212,7 +212,7 @@ trait SqlIdiom extends Idiom {
 
     def withDistinct = stmt"$distinctTokenizer${selectTokenizer}"
 
-    def withFrom =
+    def withFrom: Statement =
       from match {
         case Nil => withDistinct
         case head :: tail =>
@@ -226,27 +226,27 @@ trait SqlIdiom extends Idiom {
           stmt"$withDistinct FROM $t"
       }
 
-    def withWhere =
+    def withWhere: Statement =
       where match {
         case None        => withFrom
         case Some(where) => stmt"$withFrom WHERE ${where.token}"
       }
 
-    def withGroupBy =
+    def withGroupBy: Statement =
       groupBy match {
         case None          => withWhere
         case Some(groupBy) => stmt"$withWhere GROUP BY ${tokenizeGroupBy(groupBy)}"
       }
 
-    def withOrderBy =
+    def withOrderBy: Statement =
       orderBy match {
         case Nil     => withGroupBy
         case orderBy => stmt"$withGroupBy ${tokenOrderBy(orderBy)}"
       }
 
-    def withLimitOffset = limitOffsetToken(withOrderBy).token((limit, offset))
+    def withLimitOffset: Token = limitOffsetToken(withOrderBy).token((limit, offset))
 
-    def apply = stmt"SELECT $withLimitOffset"
+    def apply: Statement = stmt"SELECT $withLimitOffset"
   }
 
   implicit def sqlQueryTokenizer(implicit

@@ -8,7 +8,7 @@ sidebar_label: "Getting Started"
 
 Quill has integrations with many libraries. If you are using a regular RDBMS e.g. PostgreSQL
 and want to use Quill to query it with an asynchronous, non-blocking, reactive application, the easiest way to get
-started is by using an awesome library called ZIO.
+started is by using ZIO.
 
 A simple ZIO + Quill application looks like this:
 ```scala
@@ -57,6 +57,4 @@ Choose the quill module that works for you!
 * If you are starting from scratch with a regular RDBMS try using the `quill-jdbc-zio` module as shown above.
 * If you are developing a legacy Java project and don't want/need reactive, use `quill-jdbc`.
 * If you are developing a project with Cats and/or Monix, try `quill-jdbc-monix`.
-* If you like to "live dangerously" and want to try a socket-level async library, try `quill-jasync-postgres`
-  or `quill-jasync-mysql`.
 * If you are using Cassandra, Spark, or OrientDB, try the corresponding modules for each of them.
