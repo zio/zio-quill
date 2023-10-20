@@ -8,7 +8,7 @@ import io.getquill.context.jdbc._
 import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.LoadConfig
-import zio.{Scope, Tag, ZIO, ZLayer}
+import zio.{Tag, ZIO, ZLayer}
 
 import java.io.Closeable
 import java.sql.{Connection, SQLException}
@@ -98,8 +98,8 @@ object Quill {
   }
 
   object Connection {
-    val acquireScoped: ZLayer[DataSource with Scope, SQLException, Connection] =
-      ZLayer.fromZIO {
+    val acquireScoped: ZLayer[DataSource, SQLException, Connection] =
+      ZLayer.scoped {
         for {
           ds <- ZIO.service[DataSource]
           c <- ZIO.blocking {

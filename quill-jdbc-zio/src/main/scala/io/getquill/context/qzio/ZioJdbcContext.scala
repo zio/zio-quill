@@ -236,12 +236,8 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   private def onConnection[T](qlio: ZIO[Connection, SQLException, T]): ZIO[DataSource, SQLException, T] =
     currentConnection.get.flatMap {
-      case Some(connection) =>
-        blocking(qlio.provideEnvironment(ZEnvironment(connection)))
-      case None =>
-        ZIO.scoped[DataSource] {
-          blocking(qlio.provideLayer(Quill.Connection.acquireScoped))
-        }
+      case Some(connection) => blocking(qlio.provideEnvironment(ZEnvironment(connection)))
+      case None             => blocking(qlio.provideLayer(Quill.Connection.acquireScoped))
     }
 
   private def onConnectionStream[T](
