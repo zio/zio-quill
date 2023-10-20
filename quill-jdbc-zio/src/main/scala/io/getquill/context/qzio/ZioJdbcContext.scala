@@ -283,7 +283,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       }
 
     ZStream.blocking {
-      working
+      notWorking
       // qstream.provideLayer(Quill.Connection.acquireScoped)
       // ZStream.unwrap {
       //  for {

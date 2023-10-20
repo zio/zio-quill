@@ -4,6 +4,7 @@ import io.getquill.{Literal, PostgresZioJdbcContext}
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers._
+import zio.stream.ZSink
 import zio.{Unsafe, ZEnvironment}
 
 import java.io.Closeable
@@ -182,8 +183,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     val resultMsg = Unsafe.unsafe { implicit u =>
       zio.Runtime.default.unsafe.run {
         stream(query[Person])
-          .runFold(Seq[Person]()) { case (l, p) => p +: l }
-          .map(_.reverse)
+          .run(ZSink.collectAll)
           .provideEnvironment(ZEnvironment(ds))
           .foldCause(cause => cause.prettyPrint, success => s"Query SUCCEEDED with $success. This should not happen!")
       }.getOrThrow()
