@@ -187,24 +187,23 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
 
     val managedEnv: ZIO[Scope with Connection, Throwable, (Connection, ResultSet)] =
       for {
-        connection         <- scopedBestEffort(ZIO.service[Connection])
+        connection         <- ZIO.service[Connection]
         previousAutoCommit <- ZIO.attempt(connection.getAutoCommit)
         _ <- ZIO.acquireRelease(ZIO.attempt(connection.setAutoCommit(false))) { _ =>
-               ZIO.debug("setAutoCommit(false) of connection") *>
-                 ZIO
-                   .attempt(connection.setAutoCommit(previousAutoCommit))
-                   .tapError { e =>
+               ZIO
+                 .attempt(connection.setAutoCommit(previousAutoCommit))
+                 .tapError { e =>
+                   ZIO
+                     .attempt(
+                       logger.underlying
+                         .error(s"setAutoCommit(previousAutoCommit) of connection failed", e)
+                     )
+                     .ignore *>
                      ZIO
-                       .attempt(
-                         logger.underlying
-                           .error(s"setAutoCommit(previousAutoCommit) of connection failed", e)
-                       )
-                       .ignore *>
-                       ZIO
-                         .attempt(connection.close())
-                         .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of connection failed", e)).ignore)
-                   }
-                   .orDie
+                       .attempt(connection.close())
+                       .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of connection failed", e)).ignore)
+                 }
+                 .orDie
              }
         ps <- scopedBestEffort(ZIO.attempt(prepareStatement(connection)))
         rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
