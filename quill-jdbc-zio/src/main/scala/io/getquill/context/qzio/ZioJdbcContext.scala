@@ -8,7 +8,7 @@ import io.getquill.jdbczio.Quill
 import io.getquill.{NamingStrategy, ReturnAction}
 import zio.Exit.{Failure, Success}
 import zio.ZIO.blocking
-import zio.stream.ZStream
+import zio.stream.{ZSink, ZStream}
 import zio.{Cause, FiberRef, Runtime, Scope, Unsafe, ZEnvironment, ZIO}
 
 import java.sql.{Array => _, _}
@@ -248,8 +248,8 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   private def onConnectionStream[T](
     qstream: ZStream[Connection, SQLException, T]
-  ): ZStream[DataSource, SQLException, T] =
-    ZStream.blocking {
+  ): ZStream[DataSource, SQLException, T] = {
+    val working: ZStream[DataSource, SQLException, T] =
       ZStream.unwrapScoped {
         for {
           ds <- ZIO.service[DataSource]
@@ -260,9 +260,30 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
                      .scopedBestEffort(ZIO.attempt(ds.getConnection), "acquireScoped")
                      .refineToOrDie[SQLException]
                }
-          _ <- ZIO.addFinalizer(ZIO.debug("acquireScoped - Finalizer"))
+          _ <- ZIO.addFinalizer(ZIO.debug("onConnectionStream - middle"))
+          r <- qstream.run(ZSink.collectAll).provideEnvironment(ZEnvironment(c))
+          _ <- ZIO.debug(s"Fetched $r")
+          _ <- ZIO.addFinalizer(ZIO.debug("onConnectionStream - Before"))
+        } yield ZStream.fromChunk(r)
+      }
+
+    val notWorking: ZStream[DataSource, SQLException, T] =
+      ZStream.unwrapScoped {
+        for {
+          ds <- ZIO.service[DataSource]
+          _  <- ZIO.addFinalizer(ZIO.debug("onConnectionStream - After"))
+          c <- ZIO.blocking {
+                 ZIO.debug("acquireScoped - Before") *>
+                   ZioJdbc
+                     .scopedBestEffort(ZIO.attempt(ds.getConnection), "acquireScoped")
+                     .refineToOrDie[SQLException]
+               }
+          _ <- ZIO.addFinalizer(ZIO.debug("onConnectionStream - Before"))
         } yield qstream.provideEnvironment(ZEnvironment(c))
       }
+
+    ZStream.blocking {
+      working
       // qstream.provideLayer(Quill.Connection.acquireScoped)
       // ZStream.unwrap {
       //  for {
@@ -273,4 +294,5 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       //  }
       // }
     }
+  }
 }
