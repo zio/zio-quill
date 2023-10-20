@@ -123,7 +123,7 @@ object ZioJdbc {
      *   run(query[Person]).onDataSource.provide(Has(ds))
      * }}}
      */
-    def onSomeDataSource(implicit tag: Tag[R]): ZIO[DataSource with R, SQLException, T] =
+    def onSomeDataSource: ZIO[DataSource with R, SQLException, T] =
       qzio
         .provideSomeLayer[DataSource with R](Quill.Connection.acquireScoped)
         .refineToOrDie[SQLException]
