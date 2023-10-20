@@ -416,11 +416,8 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.17.0",
-        (CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
-          case _             => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
-        })
+        "com.datastax.oss"        % "java-driver-core"   % "4.17.0",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
       )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
@@ -457,7 +454,7 @@ lazy val `quill-cassandra-pekko` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.0",
-        "org.apache.pekko" %% "pekko-testkit" % "1.0.1" % Test
+        "org.apache.pekko" %% "pekko-testkit"              % "1.0.1" % Test
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
