@@ -251,13 +251,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
         maybeConnection <- currentConnection.get
       } yield maybeConnection match {
         case Some(connection) => qstream.provideEnvironment(ZEnvironment(connection))
-        case None =>
-          (
-            for {
-              env <- ZStream.scoped(Quill.Connection.acquire.build)
-              r   <- qstream.provideEnvironment(env)
-            } yield r
-          ).refineToOrDie[SQLException]
+        case None             => qstream.provideLayer(Quill.Connection.acquire).refineToOrDie[SQLException]
       }
     }
 }
