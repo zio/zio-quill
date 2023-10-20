@@ -221,14 +221,15 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
         }
       }
 
-    ZStream
-      .unwrapScoped[Connection] {
-        for {
-          _          <- streamBlocker
-          (conn, rs) <- managedEnv
-        } yield outStream(conn, rs)
-      }
-      .refineToOrDie[SQLException]
+    ZStream.blocking {
+      ZStream
+        .unwrapScoped[Connection] {
+          for {
+            (conn, rs) <- managedEnv
+          } yield outStream(conn, rs)
+        }
+        .refineToOrDie[SQLException]
+    }
   }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): QCIO[Seq[String]] =
