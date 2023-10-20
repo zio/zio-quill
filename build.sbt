@@ -56,7 +56,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-cassandra`,
   `quill-cassandra-monix`,
   `quill-cassandra-zio`,
-  `quill-cassandra-alpakka`,
+  `quill-cassandra-pekko`,
   `quill-orientdb`,
   `quill-spark`
 )
@@ -450,14 +450,14 @@ lazy val `quill-cassandra-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-cassandra-alpakka` =
-  (project in file("quill-cassandra-alpakka"))
+lazy val `quill-cassandra-pekko` =
+  (project in file("quill-cassandra-pekko"))
     .settings(commonSettings: _*)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "6.0.1",
-        "com.typesafe.akka"  %% "akka-testkit"                  % "2.8.1" % Test
+        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.0",
+        "org.apache.pekko" %% "pekko-testkit" % "1.0.1" % Test
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")

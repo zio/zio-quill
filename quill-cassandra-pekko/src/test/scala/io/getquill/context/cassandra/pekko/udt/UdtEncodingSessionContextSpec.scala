@@ -1,10 +1,10 @@
-package io.getquill.context.cassandra.alpakka.udt
+package io.getquill.context.cassandra.pekko.udt
 
-import io.getquill.context.cassandra.alpakka.CassandraAlpakkaSpec
+import io.getquill.context.cassandra.pekko.CassandraPekkoSpec
 import io.getquill.context.cassandra.udt.UdtSpec
 import io.getquill.Udt
 
-class UdtEncodingSessionContextSpec extends UdtSpec with CassandraAlpakkaSpec {
+class UdtEncodingSessionContextSpec extends UdtSpec with CassandraPekkoSpec {
 
   val ctx1 = testDB
 

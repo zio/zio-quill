@@ -1,11 +1,11 @@
-package io.getquill.context.cassandra.alpakka
+package io.getquill.context.cassandra.pekko
 
-import akka.Done
+import org.apache.pekko.Done
 import io.getquill.context.ExecutionInfo
 
 import scala.util.Try
 
-class CassandraContextSpec extends CassandraAlpakkaSpec {
+class CassandraContextSpec extends CassandraPekkoSpec {
   import testDB._
   "run non-batched action" in {
     case class TestEntity(id: Int, s: String, i: Int, l: Long, o: Int)
