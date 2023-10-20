@@ -213,6 +213,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
       ZStream
         .unwrapScoped[Connection] {
           for {
+            _          <- ZIO.addFinalizer(ZIO.debug("streamQuery - After"))
             (conn, rs) <- managedEnv
           } yield outStream(conn, rs)
         }

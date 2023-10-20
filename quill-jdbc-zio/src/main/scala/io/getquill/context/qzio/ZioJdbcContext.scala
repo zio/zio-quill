@@ -246,7 +246,20 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     qstream: ZStream[Connection, SQLException, T]
   ): ZStream[DataSource, SQLException, T] =
     ZStream.blocking {
-      qstream.provideLayer(Quill.Connection.acquireScoped)
+      ZStream.unwrapScoped {
+        for {
+          ds <- ZIO.service[DataSource]
+          _  <- ZIO.addFinalizer(ZIO.debug("onConnectionStream - After"))
+          c <- ZIO.blocking {
+                 ZIO.debug("acquireScoped - Before") *>
+                   ZioJdbc
+                     .scopedBestEffort(ZIO.attempt(ds.getConnection), "acquireScoped")
+                     .refineToOrDie[SQLException]
+               }
+          _ <- ZIO.addFinalizer(ZIO.debug("acquireScoped - Finalizer"))
+        } yield qstream.provideEnvironment(ZEnvironment(c))
+      }
+      // qstream.provideLayer(Quill.Connection.acquireScoped)
       // ZStream.unwrap {
       //  for {
       //    maybeConnection <- currentConnection.get
