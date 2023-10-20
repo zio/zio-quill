@@ -7,7 +7,7 @@ import io.getquill.jdbczio.Quill
 import io.getquill.util.{ContextLogger, LoadConfig}
 import izumi.reflect.Tag
 import zio.stream.ZStream
-import zio.{Scope, URIO, ZEnvironment, ZIO, ZLayer}
+import zio.{Scope, ZEnvironment, ZIO, ZLayer}
 
 import java.io.Closeable
 import java.sql.{Connection, SQLException}
@@ -146,17 +146,6 @@ object ZioJdbc {
         .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of resource failed", e)).ignore)
         .ignore
     )
-
-  /**
-   * Run the rest of the scoped code on the blocking pool and shift back to the
-   * previous pool once executed
-   */
-  private[getquill] val streamBlocker: URIO[Scope, Unit] =
-    for {
-      executor         <- ZIO.executor
-      blockingExecutor <- ZIO.blockingExecutor
-      _                <- ZIO.acquireRelease(ZIO.shift(blockingExecutor))(_ => ZIO.shift(executor))
-    } yield ()
 
   private[getquill] val logger = ContextLogger(ZioJdbc.getClass)
 }
