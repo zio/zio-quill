@@ -189,6 +189,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
       }.getOrThrow()
     }
 
+    // resultMsg mustBe "toto"
     resultMsg.contains("fiber") mustBe true
     resultMsg.contains(errorMsg) mustBe true
 

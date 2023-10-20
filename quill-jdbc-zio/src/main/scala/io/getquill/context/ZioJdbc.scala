@@ -139,12 +139,16 @@ object ZioJdbc {
    * failing to release a stale connection) which will eventually cause other
    * operations (i.e. future reads/writes) to fail that have not occurred yet.
    */
-  private[getquill] def scopedBestEffort[R, E, A <: AutoCloseable](effect: ZIO[R, E, A]): ZIO[R with Scope, E, A] =
-    ZIO.acquireRelease(effect)(resource =>
-      ZIO
-        .attemptBlocking(resource.close())
-        .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of resource failed", e)).ignore)
-        .ignore
+  private[getquill] def scopedBestEffort[R, E, A <: AutoCloseable](
+    effect: ZIO[R, E, A],
+    tag: String = ""
+  ): ZIO[R with Scope, E, A] =
+    ZIO.acquireRelease(ZIO.debug(s"scopedBestEffort - acquire - $tag") *> effect)(resource =>
+      ZIO.debug(s"scopedBestEffort - release - $tag") *>
+        ZIO
+          .attemptBlocking(resource.close())
+          .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of resource failed", e)).ignore)
+          .ignore
     )
 
   private[getquill] val logger = ContextLogger(ZioJdbc.getClass)

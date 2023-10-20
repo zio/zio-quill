@@ -189,24 +189,13 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
       for {
         connection         <- ZIO.service[Connection]
         previousAutoCommit <- ZIO.attempt(connection.getAutoCommit)
+        _                  <- ZIO.addFinalizer(ZIO.debug("managedEnv - release - After"))
         _ <- ZIO.acquireRelease(ZIO.attempt(connection.setAutoCommit(false))) { _ =>
-               ZIO
-                 .attempt(connection.setAutoCommit(previousAutoCommit))
-                 .tapError { e =>
-                   ZIO
-                     .attempt(
-                       logger.underlying
-                         .error(s"setAutoCommit(previousAutoCommit) of connection failed", e)
-                     )
-                     .ignore *>
-                     ZIO
-                       .attempt(connection.close())
-                       .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of connection failed", e)).ignore)
-                 }
-                 .orDie
+               ZIO.debug("managedEnv - release - Before") *>
+                 ZIO.attempt(connection.setAutoCommit(previousAutoCommit)).orDie
              }
-        ps <- scopedBestEffort(ZIO.attempt(prepareStatement(connection)))
-        rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
+        ps <- scopedBestEffort(ZIO.attempt(prepareStatement(connection)), "statement")
+        rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()), "ruleset")
       } yield (connection, rs)
 
     def outStream(conn: Connection, rs: ResultSet): ZStream[Connection, Throwable, T] =

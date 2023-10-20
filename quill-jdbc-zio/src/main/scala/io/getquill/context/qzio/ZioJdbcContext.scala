@@ -246,19 +246,14 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     qstream: ZStream[Connection, SQLException, T]
   ): ZStream[DataSource, SQLException, T] =
     ZStream.blocking {
-      ZStream.unwrapScoped[DataSource] {
-        for {
-          maybeConnection <- currentConnection.get
-          stream <- maybeConnection match {
-                      case Some(connection) => ZIO.succeed(qstream.provideEnvironment(ZEnvironment(connection)))
-                      case None =>
-                        (
-                          for {
-                            connection <- Quill.Connection.acquireScoped.build
-                          } yield qstream.provideSomeEnvironment[DataSource](_.union(connection))
-                        ).refineToOrDie[SQLException]
-                    }
-        } yield stream
-      }
+      qstream.provideLayer(Quill.Connection.acquireScoped)
+      // ZStream.unwrap {
+      //  for {
+      //    maybeConnection <- currentConnection.get
+      //  } yield maybeConnection match {
+      //    case Some(connection) => qstream.provideEnvironment(ZEnvironment(connection))
+      //    case None             => qstream.provideLayer(Quill.Connection.acquireScoped)
+      //  }
+      // }
     }
 }

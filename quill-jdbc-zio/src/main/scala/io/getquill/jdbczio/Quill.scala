@@ -103,10 +103,12 @@ object Quill {
         for {
           ds <- ZIO.service[DataSource]
           c <- ZIO.blocking {
-                 ZioJdbc
-                   .scopedBestEffort(ZIO.attempt(ds.getConnection))
-                   .refineToOrDie[SQLException]
+                 ZIO.debug("acquireScoped - Before") *>
+                   ZioJdbc
+                     .scopedBestEffort(ZIO.attempt(ds.getConnection), "acquireScoped")
+                     .refineToOrDie[SQLException]
                }
+          _ <- ZIO.addFinalizer(ZIO.debug("acquireScoped - Finalizer"))
         } yield c
       }
   }
