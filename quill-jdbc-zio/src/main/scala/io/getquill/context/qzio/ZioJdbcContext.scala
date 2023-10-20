@@ -127,7 +127,11 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
   )(info: ExecutionInfo, dc: Runner): QStream[T] =
-    onConnectionStream(connDelegate.streamQuery[T](fetchSize, sql, prepare, extractor)(info, dc))
+    ZStream.unwrapScoped[DataSource] {
+      ZIO.addFinalizer(ZIO.debug("high-level streamQuery - After")) *>
+        ZIO.succeed(onConnectionStream(connDelegate.streamQuery[T](fetchSize, sql, prepare, extractor)(info, dc))) <*
+        ZIO.addFinalizer(ZIO.debug("high-level streamQuery - Before"))
+    }
 
   def executeActionReturning[O](
     sql: String,
