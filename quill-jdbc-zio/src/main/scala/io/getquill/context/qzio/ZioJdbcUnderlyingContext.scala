@@ -187,32 +187,28 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
 
     val managedEnv: ZIO[Scope with Connection, Throwable, (Connection, ResultSet)] =
       for {
-        conn <- scopedBestEffort {
-                  for {
-                    conn               <- ZIO.service[Connection]
-                    previousAutoCommit <- ZIO.attempt(conn.getAutoCommit)
-                    _ <- ZIO.acquireRelease(ZIO.attempt(conn.setAutoCommit(false))) { _ =>
-                           ZIO
-                             .attempt(conn.setAutoCommit(previousAutoCommit))
-                             .tapError { e =>
-                               ZIO
-                                 .attempt(
-                                   logger.underlying.error(s"setAutoCommit(previousAutoCommit) of connection failed", e)
-                                 )
-                                 .ignore *>
-                                 ZIO
-                                   .attempt(conn.close())
-                                   .tapError(e =>
-                                     ZIO.attempt(logger.underlying.error(s"close() of connection failed", e)).ignore
-                                   )
-                             }
-                             .orDie
-                         }
-                  } yield conn
-                }
-        ps <- scopedBestEffort(ZIO.attempt(prepareStatement(conn)))
+        connection         <- scopedBestEffort(ZIO.service[Connection])
+        previousAutoCommit <- ZIO.attempt(connection.getAutoCommit)
+        _ <- ZIO.acquireRelease(ZIO.attempt(connection.setAutoCommit(false))) { _ =>
+               ZIO.debug("setAutoCommit(false) of connection") *>
+                 ZIO
+                   .attempt(connection.setAutoCommit(previousAutoCommit))
+                   .tapError { e =>
+                     ZIO
+                       .attempt(
+                         logger.underlying
+                           .error(s"setAutoCommit(previousAutoCommit) of connection failed", e)
+                       )
+                       .ignore *>
+                       ZIO
+                         .attempt(connection.close())
+                         .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of connection failed", e)).ignore)
+                   }
+                   .orDie
+             }
+        ps <- scopedBestEffort(ZIO.attempt(prepareStatement(connection)))
         rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
-      } yield (conn, rs)
+      } yield (connection, rs)
 
     def outStream(conn: Connection, rs: ResultSet): ZStream[Connection, Throwable, T] =
       ZStream.suspend {
