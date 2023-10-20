@@ -418,7 +418,7 @@ lazy val `quill-cassandra` =
       libraryDependencies ++= Seq(
         "com.datastax.oss" % "java-driver-core" % "4.17.0",
         (CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
+          case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
           case _             => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
         })
       )
