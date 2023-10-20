@@ -19,13 +19,11 @@ object Quill {
       ZLayer.fromFunction((session: CassandraZioSession) => new Cassandra[N](naming, session))
   }
 
-  case class Cassandra[+N <: NamingStrategy](val naming: N, session: CassandraZioSession)
+  class Cassandra[+N <: NamingStrategy](val naming: N, session: CassandraZioSession)
       extends CassandraRowContext[N]
       with ZioContext[CqlIdiom, N]
       with Context[CqlIdiom, N]
       with Probing {
-
-    private val logger = ContextLogger(classOf[Quill.Cassandra[_]])
 
     override type Error       = Throwable
     override type Environment = Any

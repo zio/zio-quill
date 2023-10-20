@@ -4,6 +4,8 @@ import java.time._
 import io.getquill.context.sql.EncodingSpec
 import io.getquill.Query
 
+import java.time.temporal.ChronoUnit
+
 class JdbcEncodingSpec extends EncodingSpec {
 
   val context = testContext
@@ -33,7 +35,7 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "LocalDateTime" in {
     case class EncodingTestEntity(v11: Option[LocalDateTime])
-    val now = LocalDateTime.now()
+    val now = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS) // See https://stackoverflow.com/a/74781779/2431728
     val e1  = EncodingTestEntity(Some(now))
     val e2  = EncodingTestEntity(None)
     val res: (List[EncodingTestEntity], List[EncodingTestEntity]) = performIO {

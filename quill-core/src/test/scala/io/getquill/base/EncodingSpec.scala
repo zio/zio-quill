@@ -3,6 +3,7 @@ package io.getquill.base
 import io.getquill.context.Context
 
 import java.util.Date
+import scala.annotation.nowarn
 
 trait EncodingSpec extends Spec {
 
@@ -167,6 +168,7 @@ trait EncodingSpec extends Spec {
       )
     )
 
+  @nowarn("msg=match may not be exhaustive")
   def verify(result: List[EncodingTestEntity]) =
     result match {
       case List(e1, e2) =>

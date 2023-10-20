@@ -1,10 +1,8 @@
 package io.getquill.context
 
+import io.getquill.{IdiomContext, NamingStrategy}
 import io.getquill.ast._
-import io.getquill.NamingStrategy
 import io.getquill.idiom._
-import io.getquill.IdiomContext
-import io.getquill.quat.Quat
 
 object CanDoBatchedInsert {
   def apply(ast: Ast, idiom: Idiom, statement: Token, isReturning: Boolean, idiomContext: IdiomContext): Boolean = {
@@ -17,8 +15,8 @@ object CanDoBatchedInsert {
     else {
       val validations =
         for {
-          _ <- validateConcatenatedIterationPossible(statement).right
-          _ <- validateIdiomSupportsConcatenatedIteration(idiom, isReturning).right
+          _ <- validateConcatenatedIterationPossible(statement)
+          _ <- validateIdiomSupportsConcatenatedIteration(idiom, isReturning)
         } yield ()
 
       validations match {

@@ -1,7 +1,7 @@
 package io.getquill.codegen.util
 
 object StringSeqUtil {
-  implicit class StringSeqExt(seq: Seq[String]) {
-    def pruneEmpty = seq.filterNot(_.trim == "")
+  implicit final class StringSeqExt(private val seq: Seq[String]) extends AnyVal {
+    def pruneEmpty: Seq[String] = seq.filterNot(_.trim == "")
   }
 }

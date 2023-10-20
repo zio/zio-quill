@@ -10,19 +10,19 @@ import scala.reflect.{ClassTag, classTag}
 
 trait PostgresJsonExtensions { this: Encoders with Decoders =>
 
-  implicit def jsonEntityEncoder[T](implicit jsonEncoder: JsonEncoder[T]): Encoder[JsonValue[T]] =
+  implicit final def jsonEntityEncoder[T](implicit jsonEncoder: JsonEncoder[T]): Encoder[JsonValue[T]] =
     entityEncoder[T, JsonValue[T]](_.value)("json", jsonEncoder)
-  implicit def jsonEntityDecoder[T: ClassTag](implicit jsonDecoder: JsonDecoder[T]): Decoder[JsonValue[T]] =
+  implicit final def jsonEntityDecoder[T: ClassTag](implicit jsonDecoder: JsonDecoder[T]): Decoder[JsonValue[T]] =
     entityDecoder[T, JsonValue[T]](JsonValue(_))("json", jsonDecoder)
-  implicit def jsonbEntityEncoder[T](implicit jsonEncoder: JsonEncoder[T]): Encoder[JsonbValue[T]] =
+  implicit final def jsonbEntityEncoder[T](implicit jsonEncoder: JsonEncoder[T]): Encoder[JsonbValue[T]] =
     entityEncoder[T, JsonbValue[T]](_.value)("jsonb", jsonEncoder)
-  implicit def jsonbEntityDecoder[T: ClassTag](implicit jsonDecoder: JsonDecoder[T]): Decoder[JsonbValue[T]] =
+  implicit final def jsonbEntityDecoder[T: ClassTag](implicit jsonDecoder: JsonDecoder[T]): Decoder[JsonbValue[T]] =
     entityDecoder[T, JsonbValue[T]](JsonbValue(_))("jsonb", jsonDecoder)
 
-  implicit def jsonAstEncoder: Encoder[JsonValue[Json]]   = astEncoder(_.value.toString(), "json")
-  implicit def jsonAstDecoder: Decoder[JsonValue[Json]]   = astDecoder(JsonValue(_))
-  implicit def jsonbAstEncoder: Encoder[JsonbValue[Json]] = astEncoder(_.value.toString(), "jsonb")
-  implicit def jsonbAstDecoder: Decoder[JsonbValue[Json]] = astDecoder(JsonbValue(_))
+  implicit final val jsonAstEncoder: Encoder[JsonValue[Json]]   = astEncoder(_.value.toString(), "json")
+  implicit final val jsonAstDecoder: Decoder[JsonValue[Json]]   = astDecoder(JsonValue(_))
+  implicit final val jsonbAstEncoder: Encoder[JsonbValue[Json]] = astEncoder(_.value.toString(), "jsonb")
+  implicit final val jsonbAstDecoder: Decoder[JsonbValue[Json]] = astDecoder(JsonbValue(_))
 
   def astEncoder[Wrapper](valueToString: Wrapper => String, jsonType: String): Encoder[Wrapper] =
     encoder(

@@ -1,35 +1,33 @@
 package io.getquill.codegen.jdbc.gen
 
-import java.sql.{Connection, ResultSet}
-
 import io.getquill.codegen.jdbc.DatabaseTypes.{DatabaseType, Oracle}
 import io.getquill.codegen.jdbc.model.JdbcTypes.{JdbcConnectionMaker, JdbcSchemaReader}
 import io.getquill.codegen.model.{JdbcColumnMeta, JdbcTableMeta, RawSchema}
 import io.getquill.codegen.util.StringUtil._
 import io.getquill.util.Using
-import scala.util.{Success, Failure}
 
+import java.sql.{Connection, ResultSet}
 import scala.annotation.tailrec
-import scala.collection.immutable.List
+import scala.util.{Failure, Success}
 
 class DefaultJdbcSchemaReader(
   databaseType: DatabaseType
 ) extends JdbcSchemaReader {
 
   @tailrec
-  private def resultSetExtractor[T](rs: ResultSet, extractor: (ResultSet) => T, acc: List[T] = List()): List[T] =
+  private def resultSetExtractor[T](rs: ResultSet, extractor: (ResultSet) => T, acc: List[T] = List.empty): List[T] =
     if (!rs.next())
       acc.reverse
     else
       resultSetExtractor(rs, extractor, extractor(rs) :: acc)
 
-  private[getquill] def schemaPattern(schema: String) =
+  private[getquill] def schemaPattern(schema: String): String =
     databaseType match {
       case Oracle => schema // Oracle meta fetch takes minutes to hours if schema is not specified
       case _      => null
     }
 
-  def jdbcEntityFilter(ts: JdbcTableMeta) =
+  def jdbcEntityFilter(ts: JdbcTableMeta): Boolean =
     ts.tableType.existsInSetNocase("table", "view", "user table", "user view", "base table")
 
   private[getquill] def extractTables(connectionMaker: () => Connection): List[JdbcTableMeta] = {
@@ -52,7 +50,7 @@ class DefaultJdbcSchemaReader(
         case Failure(e)     => throw e
       }
 
-    unfilteredJdbcEntities.filter(jdbcEntityFilter(_))
+    unfilteredJdbcEntities.filter(jdbcEntityFilter)
   }
 
   private[getquill] def extractColumns(connectionMaker: () => Connection): List[JdbcColumnMeta] = {

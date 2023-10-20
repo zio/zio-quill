@@ -17,7 +17,8 @@ class Issue1067 extends AnyFreeSpec with Matchers {
     "org.postgresql.Driver",
     s"jdbc:postgresql://${System.getenv("POSTGRES_HOST")}:${System.getenv("POSTGRES_PORT")}/doobie_test",
     "postgres",
-    System.getenv("POSTGRES_PASSWORD")
+    System.getenv("POSTGRES_PASSWORD"),
+    None
   )
 
   val dc = new DoobieContext.Postgres(Literal)

@@ -5,7 +5,7 @@ import io.getquill.base.Spec
 
 class OrderBySpec extends Spec {
 
-  implicit val naming = new Literal {}
+  implicit val naming: Literal = new Literal {}
 
   case class Country(id: Int, name: String)
   case class City(name: String, countryId: Int)
