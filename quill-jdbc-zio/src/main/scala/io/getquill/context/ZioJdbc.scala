@@ -99,16 +99,19 @@ object ZioJdbc {
   implicit final class QuillZioExtPlain[T](private val qzio: ZIO[Connection, Throwable, T]) extends AnyVal {
 
     def onDataSource: ZIO[DataSource, SQLException, T] =
-      (for {
-        q <- qzio.provideSomeLayer(Quill.Connection.acquire)
-      } yield q).refineToOrDie[SQLException]
+      ZIO.scoped[DataSource] {
+        qzio
+          .provideSomeLayer(Quill.Connection.acquireScoped)
+          .refineToOrDie[SQLException]
+      }
 
     def implicitDS(implicit implicitEnv: Implicit[DataSource]): ZIO[Any, SQLException, T] =
-      (for {
-        q <- qzio
-               .provideSomeLayer(Quill.Connection.acquire)
-               .provideEnvironment(ZEnvironment(implicitEnv.env))
-      } yield q).refineToOrDie[SQLException]
+      ZIO.scoped[Any] {
+        qzio
+          .provideSomeLayer(Quill.Connection.acquireScoped)
+          .provideSomeEnvironment[Scope](_.union(ZEnvironment(implicitEnv.env)))
+          .refineToOrDie[SQLException]
+      }
   }
 
   implicit final class QuillZioExt[T, R](private val qzio: ZIO[Connection with R, Throwable, T]) extends AnyVal {
@@ -125,12 +128,11 @@ object ZioJdbc {
      * }}}
      */
     def onSomeDataSource(implicit tag: Tag[R]): ZIO[DataSource with R, SQLException, T] =
-      (for {
-        r <- ZIO.environment[R]
-        q <- qzio
-               .provideSomeLayer[Connection](ZLayer.succeedEnvironment(r))
-               .provideSomeLayer(Quill.Connection.acquire)
-      } yield q).refineToOrDie[SQLException]
+      ZIO.scoped[DataSource with R] {
+        qzio
+          .provideSomeLayer[DataSource with R with Scope](Quill.Connection.acquireScoped)
+          .refineToOrDie[SQLException]
+      }
   }
 
   /**

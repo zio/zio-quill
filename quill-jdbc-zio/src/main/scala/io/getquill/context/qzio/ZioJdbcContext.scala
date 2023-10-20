@@ -239,7 +239,9 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       case Some(connection) =>
         blocking(qlio.provideEnvironment(ZEnvironment(connection)))
       case None =>
-        blocking(qlio.provideLayer(Quill.Connection.acquire))
+        ZIO.scoped[DataSource] {
+          blocking(qlio.provideLayer(Quill.Connection.acquireScoped))
+        }
     }
 
   private def onConnectionStream[T](
@@ -249,9 +251,15 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       for {
         _               <- streamBlocker
         maybeConnection <- currentConnection.get
-      } yield maybeConnection match {
-        case Some(connection) => qstream.provideEnvironment(ZEnvironment(connection))
-        case None             => qstream.provideLayer(Quill.Connection.acquire).refineToOrDie[SQLException]
-      }
+        stream <- maybeConnection match {
+                    case Some(connection) => ZIO.succeed(qstream.provideEnvironment(ZEnvironment(connection)))
+                    case None =>
+                      (
+                        for {
+                          connection <- Quill.Connection.acquireScoped.build
+                        } yield qstream.provideSomeEnvironment[DataSource](_.union(connection))
+                      ).refineToOrDie[SQLException]
+                  }
+      } yield stream
     }
 }
