@@ -98,7 +98,7 @@ object Quill {
   }
 
   object Connection {
-    val acquire: ZLayer[DataSource, SQLException, Connection] =
+    val acquireScoped: ZLayer[DataSource, SQLException, Connection] =
       ZLayer.scoped {
         for {
           ds <- ZIO.service[DataSource]
