@@ -50,22 +50,28 @@ object ReifyStatement {
     apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
   }
 
-  private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token) =
+  private val `, ` : StringToken = StringToken(", ")
+  private val `)` : StringToken  = StringToken(")")
+
+  private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token): Statement =
     Statement {
-      statement.tokens.foldLeft(List.empty[Token]) {
-        case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
-          lift.value.asInstanceOf[Iterable[Any]].toList match {
-            case Nil => tokens :+ emptySetContainsToken(a)
-            case values =>
-              val liftings = values.map(v =>
-                ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
+      statement.tokens
+        .foldLeft(List.empty[Token]) {
+          case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
+            val iterable = lift.value.asInstanceOf[Iterable[Any]]
+            if (iterable.isEmpty) tokens :+ emptySetContainsToken(a)
+            else {
+              val liftings = iterable.map(v =>
+                ScalarLiftToken(
+                  ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat)
+                )
               )
-              val separators = List.fill(liftings.size - 1)(StringToken(", "))
-              (tokens :+ stmt"$a $op (") ++ Interleave(liftings, separators) :+ StringToken(")")
-          }
-        case (tokens, token) =>
-          tokens :+ token
-      }
+              val separators = List.fill(liftings.size - 1)(`, `)
+              (tokens :+ stmt"$a $op (") ++ Interleave(liftings.toList, separators) :+ `)`
+            }
+          case (tokens, token) =>
+            tokens :+ token
+        }
     }
 }
 
@@ -80,10 +86,9 @@ object ReifyStatementWithInjectables {
     injectables: List[(String, T => ScalarLift)]
   ): (String, List[External]) = {
     val expanded =
-      forProbing match {
-        case true  => statement
-        case false => expandLiftings(statement, emptySetContainsToken, subBatch, injectables.toMap)
-      }
+      if (forProbing) statement
+      else expandLiftings(statement, emptySetContainsToken, subBatch, injectables.toMap)
+
     val (query, externals) = token2string(expanded, liftingPlaceholder)
     (query, externals)
   }
