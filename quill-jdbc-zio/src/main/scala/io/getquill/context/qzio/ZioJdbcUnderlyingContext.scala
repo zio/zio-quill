@@ -4,13 +4,12 @@ import io.getquill.context.ZioJdbc._
 import io.getquill.context.jdbc.JdbcContextVerbExecute
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.{ContextVerbStream, ExecutionInfo}
-import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.util.ContextLogger
 import io.getquill.{NamingStrategy, ReturnAction}
 import zio.Exit.{Failure, Success}
 import zio.ZIO.blocking
 import zio.stream.ZStream
-import zio.{Cause, StackTrace, ZIO}
+import zio.{Cause, Scope, StackTrace, ZIO}
 
 import java.sql.{Array => _, _}
 import javax.sql.DataSource
@@ -118,19 +117,6 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
              .refineToOrDie[E]
     } yield r
 
-  private[getquill] def streamWithoutAutoCommit[A](
-    f: ZStream[Connection, Throwable, A]
-  ): ZStream[Connection, Throwable, A] =
-    for {
-      conn          <- ZStream.service[Connection]
-      autoCommitPrev = conn.getAutoCommit
-      r <- ZStream
-             .acquireReleaseWith(ZIO.attempt(conn.setAutoCommit(false))) { _ =>
-               ZIO.succeed(conn.setAutoCommit(autoCommitPrev))
-             }
-             .flatMap(_ => f)
-    } yield r
-
   def transaction[R <: Connection, A](f: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =
     ZIO
       .environment[R]
@@ -168,13 +154,17 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
             c.close()
           }
         }
-      case None => Try[Unit](())
+      case None => scala.util.Success[Unit](())
     }
 
   /**
    * Override to enable specific vendor options needed for streaming
    */
-  protected def prepareStatementForStreaming(sql: String, conn: Connection, fetchSize: Option[Int]) = {
+  protected def prepareStatementForStreaming(
+    sql: String,
+    conn: Connection,
+    fetchSize: Option[Int]
+  ): PreparedStatement = {
     val stmt = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
     fetchSize.foreach { size =>
       stmt.setFetchSize(size)
@@ -188,37 +178,61 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
     prepare: Prepare = identityPrepare,
     extractor: Extractor[T] = identityExtractor
   )(info: ExecutionInfo, dc: Runner): QCStream[T] = {
-    def prepareStatement(conn: Connection) = {
+    def prepareStatement(conn: Connection): PrepareRow = {
       val stmt         = prepareStatementForStreaming(sql, conn, fetchSize)
       val (params, ps) = prepare(stmt, conn)
       logger.logQuery(sql, params)
       ps
     }
 
-    val managedEnv: ZStream[Connection, Throwable, (Connection, PrepareRow, ResultSet)] =
-      ZStream.scoped {
-        for {
-          conn <- ZIO.service[Connection]
-          ps   <- scopedBestEffort(ZIO.attempt(prepareStatement(conn)))
-          rs   <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
-        } yield (conn, ps, rs)
-      }
+    val managedEnv: ZIO[Scope with Connection, Throwable, (Connection, ResultSet)] =
+      for {
+        conn <- scopedBestEffort {
+                  for {
+                    conn               <- ZIO.service[Connection]
+                    previousAutoCommit <- ZIO.attempt(conn.getAutoCommit)
+                    _ <- ZIO.acquireRelease(ZIO.attempt(conn.setAutoCommit(false))) { _ =>
+                           ZIO
+                             .attempt(conn.setAutoCommit(previousAutoCommit))
+                             .tapError { e =>
+                               ZIO
+                                 .attempt(
+                                   logger.underlying.error(s"setAutoCommit(previousAutoCommit) of connection failed", e)
+                                 )
+                                 .ignore *>
+                                 ZIO
+                                   .attempt(conn.close())
+                                   .tapError(e =>
+                                     ZIO.attempt(logger.underlying.error(s"close() of connection failed", e)).ignore
+                                   )
+                             }
+                             .orDie
+                         }
+                  } yield conn
+                }
+        ps <- scopedBestEffort(ZIO.attempt(prepareStatement(conn)))
+        rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
+      } yield (conn, rs)
 
-    val outStream: ZStream[Connection, Throwable, T] =
-      managedEnv.flatMap { case (conn, ps, rs) =>
+    def outStream(conn: Connection, rs: ResultSet): ZStream[Connection, Throwable, T] =
+      ZStream.suspend {
         val iter = new ResultSetIterator(rs, conn, extractor)
         fetchSize match {
           // TODO Assuming chunk size is fetch size. Not sure if this is optimal.
           //      Maybe introduce some switches to control this?
-          case Some(size) =>
-            ZStream.fromIterator(iter, size)
-          case None =>
-            ZStream.fromIterator(new ResultSetIterator(rs, conn, extractor))
+          case Some(size) => ZStream.fromIterator(iter, size)
+          case None       => ZStream.fromIterator(iter)
         }
       }
 
-    // Run the chunked fetch on the blocking pool
-    streamBlocker *> streamWithoutAutoCommit(outStream).refineToOrDie[SQLException]
+    ZStream
+      .unwrapScoped[Connection] {
+        for {
+          _          <- streamBlocker
+          (conn, rs) <- managedEnv
+        } yield outStream(conn, rs)
+      }
+      .refineToOrDie[SQLException]
   }
 
   override private[getquill] def prepareParams(statement: String, prepare: Prepare): QCIO[Seq[String]] =
