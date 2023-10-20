@@ -43,7 +43,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
 
   trait MyDataSource extends DataSource with Closeable
 
-  val msg = "Database blew up for some reason"
+  val errorMsg = "Database blew up for some reason"
 
   "stream is correctly closed after usage" in {
     val people = List(Person("Joe", 11), Person("Jack", 22))
@@ -132,7 +132,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     val stmt = mock[PreparedStatement]
 
     when(ds.getConnection) thenReturn conn
-    when(conn.getAutoCommit) thenThrow (new SQLException(msg))
+    when(conn.getAutoCommit) thenThrow (new SQLException(errorMsg))
 
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._
@@ -149,7 +149,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
       }
 
     resultMsg.contains("fiber") mustBe true
-    resultMsg.contains(msg) mustBe true
+    resultMsg.contains(errorMsg) mustBe true
 
     // In test suite verifications come after
     val order = inOrder(conn)
@@ -170,7 +170,9 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    // The second call to `setAutoCommit` will fail. This second call is the one that sets backs the initial values
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((_: Boolean) => ()) andThenThrow (new SQLException(errorMsg))
+    when(conn.close()) thenAnswer (())
 
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._
@@ -188,7 +190,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     }
 
     resultMsg.contains("fiber") mustBe true
-    resultMsg.contains(msg) mustBe true
+    resultMsg.contains(errorMsg) mustBe true
 
     // In test suite verifications come after
     val order = inOrder(Seq[AnyRef](conn, stmt, rs): _*)
@@ -202,7 +204,7 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     // closing autocommit bracket
     order.verify(conn).setAutoCommit(true)
     // connection close bracket
-    order.verify(conn).close()
+    order.verify(conn, times(1)).close()
     order.verifyNoMoreInteractions()
   }
 }

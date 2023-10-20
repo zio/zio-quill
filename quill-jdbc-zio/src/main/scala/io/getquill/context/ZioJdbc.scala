@@ -2,12 +2,12 @@ package io.getquill.context
 
 import com.typesafe.config.Config
 import io.getquill.JdbcContextConfig
-import io.getquill.util.{ContextLogger, LoadConfig}
-import io.getquill.jdbczio.Quill
-import zio.{Scope, ZEnvironment, ZIO, ZLayer}
-import zio.stream.ZStream
 import io.getquill.context.qzio.ImplicitSyntax.Implicit
+import io.getquill.jdbczio.Quill
+import io.getquill.util.{ContextLogger, LoadConfig}
 import izumi.reflect.Tag
+import zio.stream.ZStream
+import zio.{Scope, URIO, ZEnvironment, ZIO, ZLayer}
 
 import java.io.Closeable
 import java.sql.{Connection, SQLException}
@@ -100,13 +100,13 @@ object ZioJdbc {
 
     def onDataSource: ZIO[DataSource, SQLException, T] =
       (for {
-        q <- qzio.provideSomeLayer(Quill.Connection.acquireScoped)
+        q <- qzio.provideSomeLayer(Quill.Connection.acquire)
       } yield q).refineToOrDie[SQLException]
 
     def implicitDS(implicit implicitEnv: Implicit[DataSource]): ZIO[Any, SQLException, T] =
       (for {
         q <- qzio
-               .provideSomeLayer(Quill.Connection.acquireScoped)
+               .provideSomeLayer(Quill.Connection.acquire)
                .provideEnvironment(ZEnvironment(implicitEnv.env))
       } yield q).refineToOrDie[SQLException]
   }
@@ -129,7 +129,7 @@ object ZioJdbc {
         r <- ZIO.environment[R]
         q <- qzio
                .provideSomeLayer[Connection](ZLayer.succeedEnvironment(r))
-               .provideSomeLayer(Quill.Connection.acquireScoped)
+               .provideSomeLayer(Quill.Connection.acquire)
       } yield q).refineToOrDie[SQLException]
   }
 
@@ -151,14 +151,16 @@ object ZioJdbc {
         .ignore
     )
 
-  private[getquill] val streamBlocker: ZStream[Any, Nothing, Any] =
-    ZStream.scoped {
-      for {
-        executor         <- ZIO.executor
-        blockingExecutor <- ZIO.blockingExecutor
-        _                <- ZIO.acquireRelease(ZIO.shift(blockingExecutor))(_ => ZIO.shift(executor))
-      } yield ()
-    }
+  /**
+   * Run the rest of the scoped code on the blocking pool and shift back to the
+   * previous pool once executed
+   */
+  private[getquill] val streamBlocker: URIO[Scope, Unit] =
+    for {
+      executor         <- ZIO.executor
+      blockingExecutor <- ZIO.blockingExecutor
+      _                <- ZIO.acquireRelease(ZIO.shift(blockingExecutor))(_ => ZIO.shift(executor))
+    } yield ()
 
   private[getquill] val logger = ContextLogger(ZioJdbc.getClass)
 }
