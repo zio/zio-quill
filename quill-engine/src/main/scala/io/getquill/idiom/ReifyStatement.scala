@@ -1,10 +1,11 @@
 package io.getquill.idiom
 
 import io.getquill.ast._
-import io.getquill.util.Interleave
 import io.getquill.idiom.StatementInterpolator._
+import io.getquill.util.Interleave
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 object ReifyStatement {
 
@@ -15,10 +16,9 @@ object ReifyStatement {
     forProbing: Boolean
   ): (String, List[External]) = {
     val expanded =
-      forProbing match {
-        case true  => statement
-        case false => expandLiftings(statement, emptySetContainsToken)
-      }
+      if (forProbing) statement
+      else expandLiftings(statement, emptySetContainsToken)
+
     token2string(expanded, liftingPlaceholder)
   }
 
@@ -26,27 +26,28 @@ object ReifyStatement {
     @tailrec
     def apply(
       workList: List[Token],
-      sqlResult: Seq[String],
-      liftingResult: Seq[External],
+      sqlResult: ListBuffer[String],
+      liftingResult: ListBuffer[External],
       liftingSize: Int
-    ): (String, List[External]) = workList match {
-      case Nil => sqlResult.reverse.mkString("") -> liftingResult.reverse.toList
-      case head :: tail =>
-        head match {
-          case StringToken(s2)            => apply(tail, s2 +: sqlResult, liftingResult, liftingSize)
-          case SetContainsToken(a, op, b) => apply(stmt"$a $op ($b)" +: tail, sqlResult, liftingResult, liftingSize)
-          case ScalarLiftToken(lift) =>
-            apply(tail, liftingPlaceholder(liftingSize) +: sqlResult, lift +: liftingResult, liftingSize + 1)
-          case ScalarTagToken(tag) =>
-            apply(tail, liftingPlaceholder(liftingSize) +: sqlResult, tag +: liftingResult, liftingSize + 1)
-          case Statement(tokens)       => apply(tokens.foldRight(tail)(_ +: _), sqlResult, liftingResult, liftingSize)
-          case ValuesClauseToken(stmt) => apply(stmt +: tail, sqlResult, liftingResult, liftingSize)
-          case _: QuotationTagToken =>
-            throw new UnsupportedOperationException("Quotation Tags must be resolved before a reification.")
-        }
-    }
+    ): (String, List[External]) =
+      workList match {
+        case Nil => sqlResult.mkString("") -> liftingResult.toList
+        case head :: tail =>
+          head match {
+            case StringToken(s2)            => apply(tail, sqlResult += s2, liftingResult, liftingSize)
+            case SetContainsToken(a, op, b) => apply(stmt"$a $op ($b)" +: tail, sqlResult, liftingResult, liftingSize)
+            case ScalarLiftToken(lift) =>
+              apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += lift, liftingSize + 1)
+            case ScalarTagToken(tag) =>
+              apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += tag, liftingSize + 1)
+            case Statement(tokens)       => apply(tokens.foldRight(tail)(_ +: _), sqlResult, liftingResult, liftingSize)
+            case ValuesClauseToken(stmt) => apply(stmt +: tail, sqlResult, liftingResult, liftingSize)
+            case _: QuotationTagToken =>
+              throw new UnsupportedOperationException("Quotation Tags must be resolved before a reification.")
+          }
+      }
 
-    apply(List(token), Seq(), Seq(), 0)
+    apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
   }
 
   private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token) =
