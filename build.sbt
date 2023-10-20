@@ -1,6 +1,6 @@
+import java.io.{File => JFile}
 import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 
-import java.io.File as JFile
 import scala.collection.immutable.ListSet
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
