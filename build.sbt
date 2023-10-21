@@ -30,6 +30,7 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-engine`,
   `quill-core`,
   `quill-sql`,
+  `quill-sql-test`,
   `quill-monix`,
   `quill-zio`,
   `quill-util`
@@ -233,7 +234,17 @@ lazy val `quill-sql` =
     .settings(commonSettings: _*)
     .dependsOn(
       `quill-engine` % "compile->compile",
-      `quill-core`   % "compile->compile;test->test"
+      `quill-core`   % "compile->compile"
+    )
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-sql-test` =
+  project
+    .settings(commonSettings: _*)
+    .settings(noPublishSettings: _*)
+    .dependsOn(
+      `quill-sql`,
+      `quill-core`   % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -303,7 +314,8 @@ lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile")
+    .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-test-h2` =
@@ -311,7 +323,8 @@ lazy val `quill-jdbc-test-h2` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-test-mysql` =
@@ -319,7 +332,8 @@ lazy val `quill-jdbc-test-mysql` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-test-oracle` =
@@ -327,7 +341,8 @@ lazy val `quill-jdbc-test-oracle` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-test-postgres` =
@@ -335,7 +350,8 @@ lazy val `quill-jdbc-test-postgres` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-test-sqlite` =
@@ -343,7 +359,8 @@ lazy val `quill-jdbc-test-sqlite` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-jdbc-test-sqlserver` =
@@ -351,7 +368,8 @@ lazy val `quill-jdbc-test-sqlserver` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
 ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
@@ -402,7 +420,7 @@ lazy val `quill-jdbc-monix` =
       }
     )
     .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
@@ -449,7 +467,7 @@ lazy val `quill-jdbc-zio` =
       }
     )
     .dependsOn(`quill-zio` % "compile->compile;test->test")
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(`quill-sql` % "compile->compile")
     .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
@@ -461,7 +479,11 @@ lazy val `quill-spark` =
       libraryDependencies ++= Seq("org.apache.spark" %% "spark-sql" % "3.4.0"),
       excludeDependencies ++= Seq("ch.qos.logback" % "logback-classic")
     )
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(
+      `quill-sql` % "compile->compile",
+      `quill-sql-test` % "test->test",
+      `quill-core` % "test->test",
+    )
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra` =
@@ -526,7 +548,10 @@ lazy val `quill-orientdb` =
         "com.orientechnologies" % "orientdb-graphdb" % "3.2.23"
       )
     )
-    .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .dependsOn(
+      `quill-sql` % "compile->compile",
+      `quill-core` % "test->test"
+    )
     .enablePlugins(MimaPlugin)
 
 lazy val jdbcTestingLibraries = Seq(
