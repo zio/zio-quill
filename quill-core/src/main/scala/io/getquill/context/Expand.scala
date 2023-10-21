@@ -99,9 +99,9 @@ object CanDoBatchedInsert {
   }
 }
 
-case class Expand[C <: Context[_, _]](
-  val context: C,
-  val ast: Ast,
+final case class Expand[C <: Context[_, _]](
+  context: C,
+  ast: Ast,
   statement: Statement,
   idiom: Idiom,
   naming: NamingStrategy,
@@ -131,9 +131,9 @@ case class Expand[C <: Context[_, _]](
     }
 }
 
-case class ExpandWithInjectables[T, C <: Context[_, _]](
-  val context: C,
-  val ast: Ast,
+final case class ExpandWithInjectables[T, C <: Context[_, _]](
+  context: C,
+  ast: Ast,
   statement: Statement,
   idiom: Idiom,
   naming: NamingStrategy,
