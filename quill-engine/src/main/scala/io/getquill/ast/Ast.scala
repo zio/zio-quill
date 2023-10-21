@@ -484,7 +484,7 @@ object Property {
 
   // Properties that are 'Hidden' are used for embedded objects whose path should not be expressed
   // during SQL Tokenization.
-  def apply(ast: Ast, name: String)               = new Property(ast, name)(Renameable.neutral, Visibility.Visible)
+  def apply(ast: Ast, name: String): Property     = new Property(ast, name)(Renameable.neutral, Visibility.Visible)
   def unapply(p: Property): Option[(Ast, String)] = Some((p.ast, p.name))
 
   object Opinionated {
