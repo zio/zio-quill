@@ -11,8 +11,8 @@ object Interleave {
   @tailrec
   private[this] def interleave[T](l1: List[T], l2: List[T], acc: ListBuffer[T]): List[T] =
     (l1, l2) match {
-      case (Nil, l2)            => acc.toList ++ l2
-      case (l1, Nil)            => acc.toList ++ l1
+      case (Nil, l2)            => (acc ++ l2).toList
+      case (l1, Nil)            => (acc ++ l1).toList
       case (h1 :: t1, h2 :: t2) => interleave(t1, t2, { acc += h1; acc += h2 })
     }
 }
