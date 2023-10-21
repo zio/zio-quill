@@ -5,7 +5,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.util.Interleave
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.ArrayBuffer
 
 object ReifyStatement {
 
@@ -26,8 +26,8 @@ object ReifyStatement {
     @tailrec
     def apply(
       workList: List[Token],
-      sqlResult: ListBuffer[String],
-      liftingResult: ListBuffer[External],
+      sqlResult: ArrayBuffer[String],
+      liftingResult: ArrayBuffer[External],
       liftingSize: Int
     ): (String, List[External]) =
       workList match {
@@ -47,27 +47,22 @@ object ReifyStatement {
           }
       }
 
-    apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
+    apply(List(token), ArrayBuffer.empty, ArrayBuffer.empty, 0)
   }
-
-  private val `, ` : StringToken = StringToken(", ")
-  private val `)` : StringToken  = StringToken(")")
 
   private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token): Statement =
     Statement {
       statement.tokens
         .foldLeft(List.empty[Token]) {
           case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
-            val iterable = lift.value.asInstanceOf[Iterable[Any]]
-            if (iterable.isEmpty) tokens :+ emptySetContainsToken(a)
-            else {
-              val liftings = iterable.map(v =>
-                ScalarLiftToken(
-                  ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat)
+            lift.value.asInstanceOf[Iterable[Any]].toList match {
+              case Nil => tokens :+ emptySetContainsToken(a)
+              case values =>
+                val liftings = values.map(v =>
+                  ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
                 )
-              )
-              val separators = List.fill(liftings.size - 1)(`, `)
-              (tokens :+ stmt"$a $op (") ++ Interleave(liftings.toList, separators) :+ `)`
+                val separators = List.fill(liftings.size - 1)(StringToken(", "))
+                (tokens :+ stmt"$a $op (") ++ Interleave(liftings, separators) :+ StringToken(")")
             }
           case (tokens, token) =>
             tokens :+ token
@@ -76,6 +71,7 @@ object ReifyStatement {
 }
 
 object ReifyStatementWithInjectables {
+  import Tokens._
 
   def apply[T](
     liftingPlaceholder: Int => String,
@@ -97,8 +93,8 @@ object ReifyStatementWithInjectables {
     @tailrec
     def apply(
       workList: List[Token],
-      sqlResult: ListBuffer[String],
-      liftingResult: ListBuffer[External],
+      sqlResult: ArrayBuffer[String],
+      liftingResult: ArrayBuffer[External],
       liftingSize: Int
     ): (String, List[External]) = workList match {
       case Nil => sqlResult.mkString("") -> liftingResult.toList
@@ -117,7 +113,7 @@ object ReifyStatementWithInjectables {
         }
     }
 
-    apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
+    apply(List(token), ArrayBuffer.empty, ArrayBuffer.empty, 0)
   }
 
   private def expandLiftings[T](
@@ -176,8 +172,8 @@ object ReifyStatementWithInjectables {
           }
         case (tokens, valuesClause: ValuesClauseToken) =>
           val pluggedClauses = subBatch.map(value => plugScalarTags(valuesClause, value))
-          val separators     = List.fill(pluggedClauses.size - 1)(StringToken(", "))
-          (tokens ++ Interleave(pluggedClauses.toList, separators))
+          val separators     = List.fill(pluggedClauses.size - 1)(`, `)
+          tokens ++ Interleave(pluggedClauses, separators)
         case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
           lift.value.asInstanceOf[Iterable[Any]].toList match {
             case Nil => tokens :+ emptySetContainsToken(a)
@@ -185,12 +181,17 @@ object ReifyStatementWithInjectables {
               val liftings = values.map(v =>
                 ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
               )
-              val separators = List.fill(liftings.size - 1)(StringToken(", "))
-              (tokens :+ stmt"$a $op (") ++ Interleave(liftings, separators) :+ StringToken(")")
+              val separators = List.fill(liftings.size - 1)(`, `)
+              (tokens :+ stmt"$a $op (") ++ Interleave(liftings, separators) :+ `)`
           }
         case (tokens, token) =>
           tokens :+ token
       }
     }
   }
+}
+
+private[idiom] object Tokens {
+  val `, ` : StringToken = StringToken(", ")
+  val `)` : StringToken  = StringToken(")")
 }
