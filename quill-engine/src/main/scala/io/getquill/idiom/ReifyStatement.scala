@@ -50,22 +50,28 @@ object ReifyStatement {
     apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
   }
 
-  private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token) =
+  private val `, ` : StringToken = StringToken(", ")
+  private val `)` : StringToken  = StringToken(")")
+
+  private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token): Statement =
     Statement {
-      statement.tokens.foldLeft(List.empty[Token]) {
-        case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
-          lift.value.asInstanceOf[Iterable[Any]].toList match {
-            case Nil => tokens :+ emptySetContainsToken(a)
-            case values =>
-              val liftings = values.map(v =>
-                ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
+      statement.tokens
+        .foldLeft(List.empty[Token]) {
+          case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
+            val iterable = lift.value.asInstanceOf[Iterable[Any]]
+            if (iterable.isEmpty) tokens :+ emptySetContainsToken(a)
+            else {
+              val liftings = iterable.map(v =>
+                ScalarLiftToken(
+                  ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat)
+                )
               )
-              val separators = List.fill(liftings.size - 1)(StringToken(", "))
-              (tokens :+ stmt"$a $op (") ++ Interleave(liftings, separators) :+ StringToken(")")
-          }
-        case (tokens, token) =>
-          tokens :+ token
-      }
+              val separators = List.fill(liftings.size - 1)(`, `)
+              (tokens :+ stmt"$a $op (") ++ Interleave(liftings.toList, separators) :+ `)`
+            }
+          case (tokens, token) =>
+            tokens :+ token
+        }
     }
 }
 
@@ -80,10 +86,9 @@ object ReifyStatementWithInjectables {
     injectables: List[(String, T => ScalarLift)]
   ): (String, List[External]) = {
     val expanded =
-      forProbing match {
-        case true  => statement
-        case false => expandLiftings(statement, emptySetContainsToken, subBatch, injectables.toMap)
-      }
+      if (forProbing) statement
+      else expandLiftings(statement, emptySetContainsToken, subBatch, injectables.toMap)
+
     val (query, externals) = token2string(expanded, liftingPlaceholder)
     (query, externals)
   }
@@ -92,19 +97,19 @@ object ReifyStatementWithInjectables {
     @tailrec
     def apply(
       workList: List[Token],
-      sqlResult: Seq[String],
-      liftingResult: Seq[External],
+      sqlResult: ListBuffer[String],
+      liftingResult: ListBuffer[External],
       liftingSize: Int
     ): (String, List[External]) = workList match {
-      case Nil => sqlResult.reverse.mkString("") -> liftingResult.reverse.toList
+      case Nil => sqlResult.mkString("") -> liftingResult.toList
       case head :: tail =>
         head match {
-          case StringToken(s2)            => apply(tail, s2 +: sqlResult, liftingResult, liftingSize)
+          case StringToken(s2)            => apply(tail, sqlResult += s2, liftingResult, liftingSize)
           case SetContainsToken(a, op, b) => apply(stmt"$a $op ($b)" +: tail, sqlResult, liftingResult, liftingSize)
           case ScalarLiftToken(lift) =>
-            apply(tail, liftingPlaceholder(liftingSize) +: sqlResult, lift +: liftingResult, liftingSize + 1)
+            apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += lift, liftingSize + 1)
           case ScalarTagToken(tag) =>
-            apply(tail, liftingPlaceholder(liftingSize) +: sqlResult, tag +: liftingResult, liftingSize + 1)
+            apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += tag, liftingSize + 1)
           case Statement(tokens)       => apply(tokens.foldRight(tail)(_ +: _), sqlResult, liftingResult, liftingSize)
           case ValuesClauseToken(stmt) => apply(stmt +: tail, sqlResult, liftingResult, liftingSize)
           case _: QuotationTagToken =>
@@ -112,7 +117,7 @@ object ReifyStatementWithInjectables {
         }
     }
 
-    apply(List(token), Seq(), Seq(), 0)
+    apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
   }
 
   private def expandLiftings[T](
@@ -120,9 +125,9 @@ object ReifyStatementWithInjectables {
     emptySetContainsToken: Token => Token,
     subBatch: List[T],
     injectables: collection.Map[String, T => ScalarLift]
-  ) = {
+  ): Statement = {
 
-    def resolveInjectableValue(v: ScalarTagToken, value: T) = {
+    def resolveInjectableValue(v: ScalarTagToken, value: T): ScalarLiftToken = {
       val injectable =
         // Look up the right uuid:String to get the right <some-field> for ((p:Person) => ScalarLift(p.<some-field>))
         injectables.get(v.tag.uid) match {
