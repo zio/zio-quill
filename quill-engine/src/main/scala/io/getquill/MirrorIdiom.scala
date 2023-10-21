@@ -4,12 +4,11 @@ import io.getquill.ast.Renameable.{ByStrategy, Fixed}
 import io.getquill.ast.Visibility.Hidden
 import io.getquill.ast.{Action => AstAction, Query => AstQuery, _}
 import io.getquill.context.{CanReturnClause, ExecutionType}
-import io.getquill.idiom.{Idiom, SetContainsToken, Statement}
 import io.getquill.idiom.StatementInterpolator._
+import io.getquill.idiom.{Idiom, SetContainsToken, Statement, Token}
 import io.getquill.norm.{Normalize, NormalizeCaching}
 import io.getquill.quat.Quat
 import io.getquill.util.Interleave
-import io.getquill.IdiomContext
 
 object MirrorIdiom extends MirrorIdiom
 class MirrorIdiom  extends MirrorIdiomBase with CanReturnClause
@@ -282,7 +281,7 @@ trait MirrorIdiomBase extends Idiom {
     )
 
     implicit val conflictTargetTokenizer: Tokenizer[OnConflict.Target] = Tokenizer[OnConflict.Target] {
-      case OnConflict.NoTarget          => stmt""
+      case OnConflict.NoTarget          => emptyStatement
       case OnConflict.Properties(props) => stmt"(${targetProps(props).token})"
     }
 
@@ -320,7 +319,7 @@ trait MirrorIdiomBase extends Idiom {
       def tokenParam(ast: Ast) =
         ast match {
           case ast: Ident => stmt"$$${ast.token}"
-          case other      => stmt"$${${ast.token}}"
+          case _          => stmt"$${${ast.token}}"
         }
 
       val pt   = parts.map(_.token)
@@ -329,7 +328,7 @@ trait MirrorIdiomBase extends Idiom {
       stmt"""sql"${body.token}""""
   }
 
-  private def scopedTokenizer(ast: Ast)(implicit externalTokenizer: Tokenizer[External]) =
+  private def scopedTokenizer(ast: Ast)(implicit externalTokenizer: Tokenizer[External]): Token =
     ast match {
       case _: Function        => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"
