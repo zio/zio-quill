@@ -847,9 +847,8 @@ object ScalarValueLift {
   private final case class Id(name: String, source: External.Source, value: Any, encoder: Any)
   def apply(name: String, source: External.Source, value: Any, encoder: Any, quat: => Quat): ScalarValueLift =
     new ScalarValueLift(name, source, value, encoder)(quat)
-  def unapply(svl: ScalarValueLift): Option[(String, External.Source, Any, Any, Quat)] = Some(
-    (svl.name, svl.source, svl.value, svl.encoder, svl.quat)
-  )
+  def unapply(svl: ScalarValueLift): Option[(String, External.Source, Any, Any, Quat)] =
+    Some((svl.name, svl.source, svl.value, svl.encoder, svl.quat))
 }
 
 final class ScalarQueryLift(val name: String, val value: Any, val encoder: Any)(theQuat: => Quat) extends ScalarLift {
