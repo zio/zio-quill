@@ -323,7 +323,7 @@ lazy val `quill-jdbc-test-h2` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
@@ -332,7 +332,7 @@ lazy val `quill-jdbc-test-mysql` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
@@ -341,7 +341,7 @@ lazy val `quill-jdbc-test-oracle` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
@@ -350,7 +350,7 @@ lazy val `quill-jdbc-test-postgres` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
@@ -359,7 +359,7 @@ lazy val `quill-jdbc-test-sqlite` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
@@ -368,7 +368,7 @@ lazy val `quill-jdbc-test-sqlserver` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
-    .dependsOn(`quill-jdbc`)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .dependsOn(`quill-sql-test` % "test->test")
     .enablePlugins(MimaPlugin)
 
