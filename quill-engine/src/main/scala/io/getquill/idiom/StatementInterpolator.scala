@@ -9,6 +9,7 @@ import scala.collection.mutable.ListBuffer
 
 //noinspection ConvertExpressionToSAM
 object StatementInterpolator {
+  val emptyStatement: Statement = stmt""
 
   trait Tokenizer[T] {
     def token(v: T): Token
@@ -181,4 +182,5 @@ object StatementInterpolator {
       Statement(tokens)
     }
   }
+
 }
