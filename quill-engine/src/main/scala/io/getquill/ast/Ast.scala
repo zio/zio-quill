@@ -906,9 +906,8 @@ object CaseClassValueLift {
   private final case class Id(name: String, simpleName: String, value: Any)
   def apply(name: String, simpleName: String, value: Any, quat: => Quat): CaseClassValueLift =
     new CaseClassValueLift(name, simpleName, value)(quat)
-  def unapply(l: CaseClassValueLift): Option[(String, String, Any, Quat)] = Some(
-    (l.name, l.simpleName, l.value, l.quat)
-  )
+  def unapply(l: CaseClassValueLift): Option[(String, String, Any, Quat)] =
+    Some((l.name, l.simpleName, l.value, l.quat))
 }
 
 final class CaseClassQueryLift(val name: String, val value: Any)(theQuat: => Quat) extends CaseClassLift {
