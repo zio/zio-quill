@@ -150,21 +150,21 @@ trait MirrorIdiomBase extends Idiom {
         stmt"${a.token}.nested"
     }
 
-  private final val `Org.asc`: Statement            = stmt"Ord.asc"
-  private final val `Org.desc`: Statement           = stmt"Ord.desc"
-  private final val `Org.ascNullsFirst`: Statement  = stmt"Ord.ascNullsFirst"
-  private final val `Org.descNullsFirst`: Statement = stmt"Ord.descNullsFirst"
-  private final val `Org.ascNullsLast`: Statement   = stmt"Ord.ascNullsLast"
-  private final val `Org.descNullsLast`: Statement  = stmt"Ord.descNullsLast"
+  private final val `Ord.asc`: Statement            = stmt"Ord.asc"
+  private final val `Ord.desc`: Statement           = stmt"Ord.desc"
+  private final val `Ord.ascNullsFirst`: Statement  = stmt"Ord.ascNullsFirst"
+  private final val `Ord.descNullsFirst`: Statement = stmt"Ord.descNullsFirst"
+  private final val `Ord.ascNullsLast`: Statement   = stmt"Ord.ascNullsLast"
+  private final val `Ord.descNullsLast`: Statement  = stmt"Ord.descNullsLast"
 
   implicit final val orderingTokenizer: Tokenizer[Ordering] = Tokenizer[Ordering] {
     case TupleOrdering(elems) => stmt"Ord(${elems.token})"
-    case Asc                  => `Org.asc`
-    case Desc                 => `Org.desc`
-    case AscNullsFirst        => `Org.ascNullsFirst`
-    case DescNullsFirst       => `Org.descNullsFirst`
-    case AscNullsLast         => `Org.ascNullsLast`
-    case DescNullsLast        => `Org.descNullsLast`
+    case Asc                  => `Ord.asc`
+    case Desc                 => `Ord.desc`
+    case AscNullsFirst        => `Ord.ascNullsFirst`
+    case DescNullsFirst       => `Ord.descNullsFirst`
+    case AscNullsLast         => `Ord.ascNullsLast`
+    case DescNullsLast        => `Ord.descNullsLast`
   }
 
   private final val None: Statement = stmt"None"
