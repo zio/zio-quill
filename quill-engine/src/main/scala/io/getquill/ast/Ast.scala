@@ -23,10 +23,10 @@ sealed trait Ast {
     }.sum
 
   override final lazy val toString: String = {
+    import io.getquill.MirrorIdiom._
     import io.getquill.idiom.StatementInterpolator._
-    implicit def externalTokenizer: Tokenizer[External] =
-      Tokenizer[External](_ => stmt"?")
-    implicit val namingStrategy: NamingStrategy = io.getquill.Literal
+    implicit def externalTokenizer: Tokenizer[External] = Tokenizer[External](_ => stmt"?")
+    implicit val namingStrategy: NamingStrategy         = io.getquill.Literal
     this.token.toString
   }
 }
