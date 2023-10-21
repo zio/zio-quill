@@ -135,18 +135,20 @@ object StatementInterpolator {
           tokens.foldLeft((new ListBuffer[Token], new ListBuffer[String])) {
             case ((builder, acc), stringToken: StringToken) =>
               val str = stringToken.string
-              if (str.nonEmpty)
+              if (str.nonEmpty) {
                 acc += stringToken.string
+              }
               (builder, acc)
             case ((builder, prev), b) if prev.isEmpty =>
               (builder += b.token, prev)
             case ((builder, prev), b) /* if prev.nonEmpty */ =>
-              builder += StringToken(prev.result().mkString)
+              builder += StringToken(prev.mkString)
               builder += b.token
               (builder, new ListBuffer[String])
           }
-        if (leftTokens.nonEmpty)
-          resultBuilder += StringToken(leftTokens.result().mkString)
+        if (leftTokens.nonEmpty) {
+          resultBuilder += StringToken(leftTokens.mkString)
+        }
         resultBuilder.result()
       }
 
