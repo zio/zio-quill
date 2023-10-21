@@ -5,7 +5,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.util.Interleave
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 
 object ReifyStatement {
 
@@ -26,8 +26,8 @@ object ReifyStatement {
     @tailrec
     def apply(
       workList: List[Token],
-      sqlResult: ArrayBuffer[String],
-      liftingResult: ArrayBuffer[External],
+      sqlResult: ListBuffer[String],
+      liftingResult: ListBuffer[External],
       liftingSize: Int
     ): (String, List[External]) =
       workList match {
@@ -47,7 +47,7 @@ object ReifyStatement {
           }
       }
 
-    apply(List(token), ArrayBuffer.empty, ArrayBuffer.empty, 0)
+    apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
   }
 
   private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token): Statement =
@@ -93,8 +93,8 @@ object ReifyStatementWithInjectables {
     @tailrec
     def apply(
       workList: List[Token],
-      sqlResult: ArrayBuffer[String],
-      liftingResult: ArrayBuffer[External],
+      sqlResult: ListBuffer[String],
+      liftingResult: ListBuffer[External],
       liftingSize: Int
     ): (String, List[External]) = workList match {
       case Nil => sqlResult.mkString("") -> liftingResult.toList
@@ -113,7 +113,7 @@ object ReifyStatementWithInjectables {
         }
     }
 
-    apply(List(token), ArrayBuffer.empty, ArrayBuffer.empty, 0)
+    apply(List(token), ListBuffer.empty, ListBuffer.empty, 0)
   }
 
   private def expandLiftings[T](
