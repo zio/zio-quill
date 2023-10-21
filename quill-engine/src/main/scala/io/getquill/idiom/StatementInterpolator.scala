@@ -4,6 +4,7 @@ import io.getquill.ast._
 import io.getquill.util.Interleave
 import io.getquill.util.Messages._
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 //noinspection ConvertExpressionToSAM
@@ -117,11 +118,17 @@ object StatementInterpolator {
 
     private def flatten(tokens: List[Token]): List[Token] = {
 
-      def unnestStatements(tokens: List[Token]): List[Token] =
-        tokens.flatMap {
-          case Statement(innerTokens) => unnestStatements(innerTokens)
-          case token                  => token :: Nil
-        }
+      def unnestStatements(tokens: List[Token]): List[Token] = {
+        @tailrec
+        def loop(acc: ListBuffer[Token], rest: List[Token]): List[Token] =
+          rest match {
+            case Nil                            => acc.result()
+            case Statement(innerTokens) :: tail => loop(acc, innerTokens ++ tail)
+            case head :: tail                   => loop(acc += head, tail)
+          }
+
+        loop(ListBuffer.empty, tokens)
+      }
 
       def mergeStringTokens(tokens: List[Token]): List[Token] = {
         val (resultBuilder, leftTokens) =
