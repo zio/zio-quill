@@ -309,9 +309,8 @@ object Infix {
   def apply(parts: List[String], params: List[Ast], pure: Boolean, transparent: Boolean, quat: => Quat) =
     new Infix(parts, params, pure, transparent)(quat)
 
-  def unapply(i: Infix): Option[(List[String], List[Ast], Boolean, Boolean, Quat)] = Some(
-    (i.parts, i.params, i.pure, i.transparent, i.quat)
-  )
+  def unapply(i: Infix): Option[(List[String], List[Ast], Boolean, Boolean, Quat)] =
+    Some((i.parts, i.params, i.pure, i.transparent, i.quat))
 }
 
 final case class Function(params: List[Ident], body: Ast) extends Ast {
