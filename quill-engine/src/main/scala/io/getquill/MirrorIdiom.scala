@@ -21,7 +21,7 @@ trait MirrorIdiomBase extends Idiom {
 
   def distinguishHidden: Boolean = false
 
-  override def prepareForProbing(string: String) = string
+  override def prepareForProbing(string: String): String = string
 
   override def liftingPlaceholder(index: Int): String = "?"
 
@@ -144,15 +144,24 @@ trait MirrorIdiomBase extends Idiom {
         stmt"${a.token}.nested"
     }
 
+  private val `Org.asc`: Statement            = stmt"Ord.asc"
+  private val `Org.desc`: Statement           = stmt"Ord.desc"
+  private val `Org.ascNullsFirst`: Statement  = stmt"Ord.ascNullsFirst"
+  private val `Org.descNullsFirst`: Statement = stmt"Ord.descNullsFirst"
+  private val `Org.ascNullsLast`: Statement   = stmt"Ord.ascNullsLast"
+  private val `Org.descNullsLast`: Statement  = stmt"Ord.descNullsLast"
+
   implicit val orderingTokenizer: Tokenizer[Ordering] = Tokenizer[Ordering] {
     case TupleOrdering(elems) => stmt"Ord(${elems.token})"
-    case Asc                  => stmt"Ord.asc"
-    case Desc                 => stmt"Ord.desc"
-    case AscNullsFirst        => stmt"Ord.ascNullsFirst"
-    case DescNullsFirst       => stmt"Ord.descNullsFirst"
-    case AscNullsLast         => stmt"Ord.ascNullsLast"
-    case DescNullsLast        => stmt"Ord.descNullsLast"
+    case Asc                  => `Org.asc`
+    case Desc                 => `Org.desc`
+    case AscNullsFirst        => `Org.ascNullsFirst`
+    case DescNullsFirst       => `Org.descNullsFirst`
+    case AscNullsLast         => `Org.ascNullsLast`
+    case DescNullsLast        => `Org.descNullsLast`
   }
+
+  private val None: Statement = stmt"None"
 
   implicit def optionOperationTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[OptionOperation] =
     Tokenizer[OptionOperation] {
@@ -175,7 +184,7 @@ trait MirrorIdiomBase extends Idiom {
       case OptionApply(ast)                     => stmt"Option(${ast.token})"
       case OptionOrNull(ast)                    => stmt"${ast.token}.orNull"
       case OptionGetOrNull(ast)                 => stmt"${ast.token}.getOrNull"
-      case OptionNone(_)                        => stmt"None"
+      case OptionNone(_)                        => None
       case FilterIfDefined(ast, alias, body)    => stmt"${ast.token}.filterIfDefined((${alias.token}) => ${body.token})"
     }
 
@@ -187,11 +196,16 @@ trait MirrorIdiomBase extends Idiom {
     case ListContains(ast, body) => stmt"${ast.token}.contains(${body.token})"
   }
 
+  private val join: Statement      = stmt"join"
+  private val leftJoin: Statement  = stmt"leftJoin"
+  private val rightJoin: Statement = stmt"rightJoin"
+  private val fullJoin: Statement  = stmt"fullJoin"
+
   implicit val joinTypeTokenizer: Tokenizer[JoinType] = Tokenizer[JoinType] {
-    case InnerJoin => stmt"join"
-    case LeftJoin  => stmt"leftJoin"
-    case RightJoin => stmt"rightJoin"
-    case FullJoin  => stmt"fullJoin"
+    case InnerJoin => join
+    case LeftJoin  => leftJoin
+    case RightJoin => rightJoin
+    case FullJoin  => fullJoin
   }
 
   implicit def functionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[Function] =
@@ -208,19 +222,22 @@ trait MirrorIdiomBase extends Idiom {
       case FunctionApply(function, values)                    => stmt"${scopedTokenizer(function)}.apply(${values.token})"
     }
 
-  implicit def operatorTokenizer[T <: Operator]: Tokenizer[T] = Tokenizer[T] {
-    case EqualityOperator.`_!=` => stmt"!="
-    case EqualityOperator.`_==` => stmt"=="
+  private val `!=` : Statement = stmt"!="
+  private val `==` : Statement = stmt"=="
+  private val _operatorTokenizer: Tokenizer[Any] = Tokenizer[Any] {
+    case EqualityOperator.`_!=` => `!=`
+    case EqualityOperator.`_==` => `==`
     case o                      => stmt"${o.toString.token}"
   }
+  implicit def operatorTokenizer[T <: Operator]: Tokenizer[T] = _operatorTokenizer.asInstanceOf[Tokenizer[T]]
 
-  def tokenizeName(name: String, renameable: Renameable) =
+  def tokenizeName(name: String, renameable: Renameable): String =
     renameable match {
       case ByStrategy => name
-      case Fixed      => s"`${name}`"
+      case Fixed      => s"`$name`"
     }
 
-  def bracketIfHidden(name: String, visibility: Visibility) =
+  def bracketIfHidden(name: String, visibility: Visibility): String =
     (distinguishHidden, visibility) match {
       case (true, Hidden) => s"[$name]"
       case _              => name
@@ -244,11 +261,11 @@ trait MirrorIdiomBase extends Idiom {
       stmt"${name.token}(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
 
-  implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] { case Ident.Opinionated(name, quat, visibility) =>
+  implicit val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] { case Ident.Opinionated(name, _, visibility) =>
     stmt"${bracketIfHidden(name, visibility).token}"
   }
 
-  implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] { case e =>
+  implicit val typeTokenizer: Tokenizer[ExternalIdent] = Tokenizer[ExternalIdent] { e =>
     stmt"${e.name.token}"
   }
 
@@ -274,7 +291,7 @@ trait MirrorIdiomBase extends Idiom {
 
   implicit def conflictTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[OnConflict] = {
 
-    def targetProps(l: List[Property]) = l.map(p =>
+    def targetProps(l: List[Property]): List[Ast] = l.map(p =>
       Transform(p) { case Ident(_, quat) =>
         Ident("_", quat)
       }
@@ -332,6 +349,6 @@ trait MirrorIdiomBase extends Idiom {
     ast match {
       case _: Function        => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"
-      case other              => ast.token
+      case _                  => ast.token
     }
 }
