@@ -106,7 +106,8 @@ object StatementInterpolator {
   implicit final class TokenList[T](private val list: List[T]) extends AnyVal {
     def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]): Statement = {
       val l1 = list.map(_.token)
-      val l2 = List.fill(l1.size - 1)(StringToken(sep))
+      val sepStatement = StringToken(sep)
+      val l2 = List.fill(l1.size - 1)(sepStatement)
       Statement(Interleave(l1, l2))
     }
   }
