@@ -87,7 +87,7 @@ final class Entity(val name: String, val properties: List[PropertyAlias])(theQua
   override lazy val quat: Quat.Product = theQuat
   override def bestQuat: Quat          = quat
 
-  private def id: Entity.Id = Entity.Id(name, properties)
+  private val id: Entity.Id = Entity.Id(name, properties)
 
   def copy(
     name: String = this.name,
@@ -278,7 +278,7 @@ final class Infix(val parts: List[String], val params: List[Ast], val pure: Bool
 ) extends Ast {
   override lazy val quat: Quat = theQuat
   override def bestQuat: Quat  = quat
-  private def id               = Infix.Id(parts, params, pure, transparent)
+  private val id               = Infix.Id(parts, params, pure, transparent)
 
   def asTransparent = new Infix(this.parts, this.params, this.pure, true)(quat)
 
@@ -371,10 +371,9 @@ object Ident {
 // Like identity but is but defined in a clause external to the query. Currently this is used
 // for 'returning' clauses to define properties being returned.
 final class ExternalIdent private (val name: String)(theQuat: => Quat)(val renameable: Renameable) extends Ast {
-  private lazy val computedQuat: Quat = theQuat
-  override def quat: Quat             = computedQuat
-  override def bestQuat: Quat         = quat
-  private def id                      = ExternalIdent.Id(name)
+  override lazy val quat: Quat = theQuat
+  override def bestQuat: Quat  = quat
+  private val id               = ExternalIdent.Id(name)
 
   override def equals(that: Any): Boolean =
     that match {
@@ -459,7 +458,7 @@ final class Property(val ast: Ast, val name: String)(val renameable: Renameable,
   override lazy val bestQuat: Quat  = ast.quat.lookup(name, failNonExist = false)
   lazy val prevName: Option[String] = ast.quat.beforeRenamed(name)
 
-  private def id = Property.Id(ast, name)
+  private val id = Property.Id(ast, name)
 
   def copy(ast: Ast = this.ast, name: String = this.name): Property =
     Property.Opinionated(ast, name, this.renameable, this.visibility)
@@ -553,9 +552,8 @@ final case class FilterIfDefined(ast: Ast, alias: Ident, body: Ast) extends Opti
 }
 case object OptionNoneId
 final class OptionNone(theQuat: => Quat) extends OptionOperation with Terminal {
-  private lazy val computedQuat = theQuat
-  override def quat: Quat       = computedQuat
-  override def bestQuat: Quat   = quat
+  override lazy val quat: Quat = theQuat
+  override def bestQuat: Quat  = quat
 
   override def withQuat(quat: => Quat): OptionNone = this.copy(quat = quat)
   override def equals(obj: Any): Boolean =
@@ -639,9 +637,8 @@ final case class FunctionApply(function: Ast, values: List[Ast]) extends Operati
 sealed trait Value extends Ast
 
 final class Constant(val v: Any)(theQuat: => Quat) extends Value {
-  private lazy val computedQuat = theQuat
-  override def quat: Quat       = computedQuat
-  override def bestQuat: Quat   = quat
+  override lazy val quat: Quat = theQuat
+  override def bestQuat: Quat  = quat
 
   private val id               = Constant.Id(v)
   override def hashCode(): Int = id.hashCode()
@@ -667,18 +664,14 @@ object Constant {
 case object NullValue extends Value { override def quat: Quat = Quat.Null; override def bestQuat: Quat = quat }
 
 final case class Tuple(values: List[Ast]) extends Value {
-  private lazy val computedQuat     = Quat.Tuple(values.map(_.quat))
-  override def quat: Quat           = computedQuat
-  private lazy val bestComputedQuat = Quat.Tuple(values.map(_.bestQuat))
-  override def bestQuat: Quat       = bestComputedQuat
+  override lazy val quat: Quat     = Quat.Tuple(values.map(_.quat))
+  override lazy val bestQuat: Quat = Quat.Tuple(values.map(_.bestQuat))
 }
 
 final case class CaseClass(name: String, values: List[(String, Ast)]) extends Value {
-  private lazy val computedQuat     = Quat.Product(name, values.map { case (k, v) => (k, v.quat) })
-  override def quat: Quat           = computedQuat
-  private lazy val bestComputedQuat = Quat.Product(name, values.map { case (k, v) => (k, v.bestQuat) })
-  override def bestQuat: Quat       = bestComputedQuat
-  private val id                    = CaseClass.Id(values)
+  override lazy val quat: Quat     = Quat.Product(name, values.map { case (k, v) => (k, v.quat) })
+  override lazy val bestQuat: Quat = Quat.Product(name, values.map { case (k, v) => (k, v.bestQuat) })
+  private val id                   = CaseClass.Id(values)
 
   // Even thought name is not an "opinion" it still does not make sense to use it to compare CaseClass Asts
   override def hashCode(): Int = id.hashCode()
@@ -705,10 +698,8 @@ object CaseClass {
 //************************************************************
 
 final case class Block(statements: List[Ast]) extends Ast {
-  private lazy val computedQuat     = statements.last.quat
-  override def quat: Quat           = computedQuat
-  private lazy val bestComputedQuat = statements.last.bestQuat
-  override def bestQuat: Quat       = bestComputedQuat
+  override lazy val quat: Quat     = statements.last.quat
+  override lazy val bestQuat: Quat = statements.last.bestQuat
 } // Note. Assuming Block is not Empty
 
 final case class Val(name: Ident, body: Ast) extends Ast {
@@ -786,9 +777,8 @@ object OnConflict {
 
 /** For Dynamic Infix Splices */
 final class Dynamic(val tree: Any)(theQuat: => Quat) extends Ast {
-  private lazy val computedQuat = theQuat
-  override def quat: Quat       = computedQuat
-  override def bestQuat: Quat   = quat
+  override lazy val quat: Quat = theQuat
+  override def bestQuat: Quat  = quat
 }
 
 object Dynamic {
