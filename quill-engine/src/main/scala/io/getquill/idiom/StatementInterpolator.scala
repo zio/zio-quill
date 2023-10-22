@@ -9,7 +9,9 @@ import scala.collection.mutable.ListBuffer
 
 //noinspection ConvertExpressionToSAM
 object StatementInterpolator {
-  val emptyStatement: Statement = stmt""
+  private[getquill] val emptyStatement: Statement               = stmt""
+  private[getquill] val externalStatement: Statement            = stmt"?"
+  private[getquill] val _externalTokenizer: Tokenizer[External] = Tokenizer[External](_ => externalStatement)
 
   trait Tokenizer[T] {
     def token(v: T): Token
@@ -104,8 +106,9 @@ object StatementInterpolator {
 
   implicit final class TokenList[T](private val list: List[T]) extends AnyVal {
     def mkStmt(sep: String = ", ")(implicit tokenize: Tokenizer[T]): Statement = {
-      val l1 = list.map(_.token)
-      val l2 = List.fill(l1.size - 1)(StringToken(sep))
+      val l1           = list.map(_.token)
+      val sepStatement = StringToken(sep)
+      val l2           = List.fill(l1.size - 1)(sepStatement)
       Statement(Interleave(l1, l2))
     }
   }
