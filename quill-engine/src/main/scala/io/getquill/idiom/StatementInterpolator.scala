@@ -4,6 +4,7 @@ import io.getquill.ast._
 import io.getquill.util.Interleave
 import io.getquill.util.Messages._
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 //noinspection ConvertExpressionToSAM
@@ -118,29 +119,37 @@ object StatementInterpolator {
 
     private def flatten(tokens: List[Token]): List[Token] = {
 
-      def unnestStatements(tokens: List[Token]): List[Token] =
-        tokens.flatMap {
-          case Statement(innerTokens) => unnestStatements(innerTokens)
-          case token                  => token :: Nil
-        }
+      def unnestStatements(tokens: List[Token]): List[Token] = {
+        @tailrec
+        def loop(acc: ListBuffer[Token], rest: List[Token]): List[Token] =
+          rest match {
+            case Nil                            => acc.result()
+            case Statement(innerTokens) :: tail => loop(acc, innerTokens ++ tail)
+            case head :: tail                   => loop(acc += head, tail)
+          }
+
+        loop(ListBuffer.empty, tokens)
+      }
 
       def mergeStringTokens(tokens: List[Token]): List[Token] = {
         val (resultBuilder, leftTokens) =
           tokens.foldLeft((new ListBuffer[Token], new ListBuffer[String])) {
             case ((builder, acc), stringToken: StringToken) =>
               val str = stringToken.string
-              if (str.nonEmpty)
+              if (str.nonEmpty) {
                 acc += stringToken.string
+              }
               (builder, acc)
             case ((builder, prev), b) if prev.isEmpty =>
               (builder += b.token, prev)
             case ((builder, prev), b) /* if prev.nonEmpty */ =>
-              builder += StringToken(prev.result().mkString)
+              builder += StringToken(prev.mkString)
               builder += b.token
               (builder, new ListBuffer[String])
           }
-        if (leftTokens.nonEmpty)
-          resultBuilder += StringToken(leftTokens.result().mkString)
+        if (leftTokens.nonEmpty) {
+          resultBuilder += StringToken(leftTokens.mkString)
+        }
         resultBuilder.result()
       }
 
