@@ -191,8 +191,8 @@ case object AscNullsLast      extends PropertyOrdering
 case object DescNullsLast     extends PropertyOrdering
 
 final case class GroupBy(query: Ast, alias: Ident, body: Ast) extends Query {
-  override def quat: Quat     = Quat.Tuple(body.quat, query.quat)
-  override def bestQuat: Quat = Quat.Tuple(body.bestQuat, query.bestQuat)
+  override lazy val quat: Quat     = Quat.Tuple(body.quat, query.quat)
+  override lazy val bestQuat: Quat = Quat.Tuple(body.bestQuat, query.bestQuat)
 }
 
 final case class GroupByMap(query: Ast, byAlias: Ident, byBody: Ast, mapAlias: Ident, mapBody: Ast) extends Query {
@@ -201,7 +201,7 @@ final case class GroupByMap(query: Ast, byAlias: Ident, byBody: Ast, mapAlias: I
 }
 
 final case class Aggregation(operator: AggregationOperator, ast: Ast) extends Query {
-  override def quat: Quat =
+  override lazy val quat: Quat =
     operator match {
       case AggregationOperator.`min`  => ast.quat
       case AggregationOperator.`max`  => ast.quat
@@ -209,7 +209,7 @@ final case class Aggregation(operator: AggregationOperator, ast: Ast) extends Qu
       case AggregationOperator.`sum`  => Quat.Value
       case AggregationOperator.`size` => Quat.Value
     }
-  override def bestQuat: Quat =
+  override lazy val bestQuat: Quat =
     operator match {
       case AggregationOperator.`min`  => ast.bestQuat
       case AggregationOperator.`max`  => ast.bestQuat
@@ -247,8 +247,8 @@ final case class Join(
   aliasB: Ident,
   on: Ast
 ) extends Query {
-  override def quat: Quat     = Quat.Tuple(a.quat, b.quat)
-  override def bestQuat: Quat = Quat.Tuple(a.bestQuat, b.bestQuat)
+  override lazy val quat: Quat     = Quat.Tuple(a.quat, b.quat)
+  override lazy val bestQuat: Quat = Quat.Tuple(a.bestQuat, b.bestQuat)
 }
 
 final case class FlatJoin(typ: JoinType, a: Ast, aliasA: Ident, on: Ast) extends Query {
