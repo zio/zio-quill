@@ -41,6 +41,12 @@ lazy val docsModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc`,
+  `quill-jdbc-test-h2`,
+  `quill-jdbc-test-mysql`,
+  `quill-jdbc-test-oracle`,
+  `quill-jdbc-test-postgres`,
+  `quill-jdbc-test-sqlite`,
+  `quill-jdbc-test-sqlserver`,
   `quill-doobie`,
   `quill-jdbc-monix`,
   `quill-jdbc-zio`
@@ -298,6 +304,54 @@ lazy val `quill-jdbc` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .dependsOn(`quill-sql` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jdbc-test-h2` =
+  (project in file("quill-jdbc-test-h2"))
+    .settings(commonSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(noPublishSettings: _*)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jdbc-test-mysql` =
+  (project in file("quill-jdbc-test-mysql"))
+    .settings(commonSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(noPublishSettings: _*)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jdbc-test-oracle` =
+  (project in file("quill-jdbc-test-oracle"))
+    .settings(commonSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(noPublishSettings: _*)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jdbc-test-postgres` =
+  (project in file("quill-jdbc-test-postgres"))
+    .settings(commonSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(noPublishSettings: _*)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jdbc-test-sqlite` =
+  (project in file("quill-jdbc-test-sqlite"))
+    .settings(commonSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(noPublishSettings: _*)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
+    .enablePlugins(MimaPlugin)
+
+lazy val `quill-jdbc-test-sqlserver` =
+  (project in file("quill-jdbc-test-sqlserver"))
+    .settings(commonSettings: _*)
+    .settings(jdbcTestingSettings: _*)
+    .settings(noPublishSettings: _*)
+    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
@@ -613,6 +667,13 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
 
 lazy val commonNoLogSettings = basicSettings
 lazy val commonSettings      = basicSettings ++ loggingSettings
+
+lazy val noPublishSettings = Seq(
+  publish         := {},
+  publishLocal    := {},
+  publishM2       := {},
+  publishArtifact := false
+)
 
 lazy val docs = project
   .in(file("zio-quill-docs"))
