@@ -48,7 +48,7 @@ trait MySQLDialect
         stmt"IGNORE INTO ${renameable.fixedOr(name.token)(strategy.table(name).token)}"
       }
 
-    def tokenizer(implicit astTokenizer: Tokenizer[Ast]) =
+    def tokenizer(implicit astTokenizer: Tokenizer[Ast]): Tokenizer[OnConflict] =
       Tokenizer[OnConflict] {
         case OnConflict(i, NoTarget, Update(a)) =>
           stmt"${i.token} ON DUPLICATE KEY UPDATE ${a.token}"
