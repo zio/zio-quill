@@ -8,6 +8,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 object ReifyStatement {
+  import Tokens._
 
   def apply(
     liftingPlaceholder: Int => String,
@@ -53,20 +54,21 @@ object ReifyStatement {
   private def expandLiftings(statement: Statement, emptySetContainsToken: Token => Token): Statement =
     Statement {
       statement.tokens
-        .foldLeft(List.empty[Token]) {
+        .foldLeft(ListBuffer.empty[Token]) {
           case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
             lift.value.asInstanceOf[Iterable[Any]].toList match {
-              case Nil => tokens :+ emptySetContainsToken(a)
+              case Nil => tokens += emptySetContainsToken(a)
               case values =>
                 val liftings = values.map(v =>
                   ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
                 )
-                val separators = List.fill(liftings.size - 1)(StringToken(", "))
-                (tokens :+ stmt"$a $op (") ++ Interleave(liftings, separators) :+ StringToken(")")
+                val separators = List.fill(liftings.size - 1)(`, `)
+                tokens ++= (stmt"$a $op (" +: Interleave(liftings, separators) :+ `)`)
             }
           case (tokens, token) =>
-            tokens :+ token
+            tokens += token
         }
+        .result()
     }
 }
 
@@ -159,34 +161,36 @@ object ReifyStatementWithInjectables {
       }
 
     Statement {
-      statement.tokens.foldLeft(List.empty[Token]) {
-        // If we are not doing batch lifting, that means there should only be ONE entity in the list
-        case (tokens, tag: ScalarTagToken) =>
-          if (subBatch.length != 1)
-            throw new IllegalArgumentException(
-              s"Expecting a batch of exactly one value for a non-VALUES-clause lift (e.g. for a context that does not support VALUES clauses) but found: ${subBatch}"
-            )
-          else {
-            val resolvedLift = resolveInjectableValue(tag, subBatch.head)
-            tokens :+ resolvedLift
-          }
-        case (tokens, valuesClause: ValuesClauseToken) =>
-          val pluggedClauses = subBatch.map(value => plugScalarTags(valuesClause, value))
-          val separators     = List.fill(pluggedClauses.size - 1)(`, `)
-          tokens ++ Interleave(pluggedClauses, separators)
-        case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
-          lift.value.asInstanceOf[Iterable[Any]].toList match {
-            case Nil => tokens :+ emptySetContainsToken(a)
-            case values =>
-              val liftings = values.map(v =>
-                ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
+      statement.tokens
+        .foldLeft(List.newBuilder[Token]) {
+          // If we are not doing batch lifting, that means there should only be ONE entity in the list
+          case (tokens, tag: ScalarTagToken) =>
+            if (subBatch.length != 1)
+              throw new IllegalArgumentException(
+                s"Expecting a batch of exactly one value for a non-VALUES-clause lift (e.g. for a context that does not support VALUES clauses) but found: ${subBatch}"
               )
-              val separators = List.fill(liftings.size - 1)(`, `)
-              (tokens :+ stmt"$a $op (") ++ Interleave(liftings, separators) :+ `)`
-          }
-        case (tokens, token) =>
-          tokens :+ token
-      }
+            else {
+              val resolvedLift = resolveInjectableValue(tag, subBatch.head)
+              tokens += resolvedLift
+            }
+          case (tokens, valuesClause: ValuesClauseToken) =>
+            val pluggedClauses = subBatch.map(value => plugScalarTags(valuesClause, value))
+            val separators     = List.fill(pluggedClauses.size - 1)(`, `)
+            tokens ++= Interleave(pluggedClauses, separators)
+          case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
+            lift.value.asInstanceOf[Iterable[Any]].toList match {
+              case Nil => tokens += emptySetContainsToken(a)
+              case values =>
+                val liftings = values.map(v =>
+                  ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
+                )
+                val separators = List.fill(liftings.size - 1)(`, `)
+                tokens ++= (stmt"$a $op (" +: Interleave(liftings, separators) :+ `)`)
+            }
+          case (tokens, token) =>
+            tokens += token
+        }
+        .result()
     }
   }
 }
