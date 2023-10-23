@@ -25,7 +25,7 @@ object CollectAst {
     }
 
   def apply[T](a: Ast)(p: PartialFunction[Ast, T]): Queue[T] =
-    (new CollectAst(p, Queue[T]()).apply(a)) match {
+    new CollectAst(p, Queue.empty[T]).apply(a) match {
       case (_, transformer) =>
         transformer.state
     }

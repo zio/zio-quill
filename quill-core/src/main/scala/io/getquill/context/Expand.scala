@@ -1,17 +1,18 @@
 package io.getquill.context
 
-import io.getquill.{IdiomContext, NamingStrategy}
 import io.getquill.ast._
 import io.getquill.idiom._
+import io.getquill.{IdiomContext, NamingStrategy}
 
 object CanDoBatchedInsert {
+  private val right: Right[String, Unit] = Right(())
+
   def apply(ast: Ast, idiom: Idiom, statement: Token, isReturning: Boolean, idiomContext: IdiomContext): Boolean = {
     // find any actions that could have a VALUES clause. Right now just ast.Insert,
     // in the future might be Update and Delete
     val actions = CollectAst.byType[Action](ast)
     // only one action allowed per-query in general
-    if (actions.length != 1)
-      false
+    if (actions.length != 1) false
     else {
       val validations =
         for {
@@ -20,29 +21,24 @@ object CanDoBatchedInsert {
         } yield ()
 
       validations match {
-        case Right(_)  => true
-        case Left(msg) => false
+        case Right(_) => true
+        case Left(_)  => false
       }
     }
   }
 
   private def validateIdiomSupportsConcatenatedIteration(idiom: Idiom, doingReturning: Boolean): Either[String, Unit] =
-    doingReturning match {
-      case false =>
-        validateIdiomSupportsConcatenatedIterationNormal(idiom)
-      case true =>
-        validateIdiomSupportsConcatenatedIterationReturning(idiom)
-    }
+    if (doingReturning) validateIdiomSupportsConcatenatedIterationReturning(idiom)
+    else validateIdiomSupportsConcatenatedIterationNormal(idiom)
 
   private def validateIdiomSupportsConcatenatedIterationNormal(idiom: Idiom): Either[String, Unit] = {
     val hasCapability =
-      if (idiom.isInstanceOf[IdiomInsertValueCapability])
-        idiom.asInstanceOf[IdiomInsertValueCapability].idiomInsertValuesCapability == InsertValueMulti
-      else
-        false
+      idiom match {
+        case capability: IdiomInsertValueCapability => capability.idiomInsertValuesCapability == InsertValueMulti
+        case _                                      => false
+      }
 
-    if (hasCapability)
-      Right(())
+    if (hasCapability) right
     else
       Left(
         s"""|The dialect ${idiom.getClass.getName} does not support inserting multiple rows-per-batch (e.g. it cannot support multiple VALUES clauses).
@@ -54,15 +50,13 @@ object CanDoBatchedInsert {
 
   private def validateIdiomSupportsConcatenatedIterationReturning(idiom: Idiom): Either[String, Unit] = {
     val hasCapability =
-      if (idiom.isInstanceOf[IdiomInsertReturningValueCapability])
-        idiom
-          .asInstanceOf[IdiomInsertReturningValueCapability]
-          .idiomInsertReturningValuesCapability == InsertReturningValueMulti
-      else
-        false
+      idiom match {
+        case capability: IdiomInsertReturningValueCapability =>
+          capability.idiomInsertReturningValuesCapability == InsertReturningValueMulti
+        case _ => false
+      }
 
-    if (hasCapability)
-      Right(())
+    if (hasCapability) right
     else
       Left(
         s"""|The dialect ${idiom.getClass.getName} does not support inserting multiple rows-per-batch (e.g. it cannot support multiple VALUES clauses)
@@ -82,13 +76,12 @@ object CanDoBatchedInsert {
         case _: ScalarTagToken              => false
         case _: QuotationTagToken           => false
         case _: ScalarLiftToken             => false
-        case Statement(tokens: List[Token]) => tokens.exists(valueClauseExistsIn(_) == true)
+        case Statement(tokens: List[Token]) => tokens.exists(valueClauseExistsIn)
         case SetContainsToken(a: Token, op: Token, b: Token) =>
           valueClauseExistsIn(a) || valueClauseExistsIn(op) || valueClauseExistsIn(b)
       }
 
-    if (valueClauseExistsIn(realQuery))
-      Right(())
+    if (valueClauseExistsIn(realQuery)) right
     else
       Left(
         s"""|Cannot insert multiple rows per-batch-query since the query has no VALUES clause.
@@ -99,9 +92,9 @@ object CanDoBatchedInsert {
   }
 }
 
-case class Expand[C <: Context[_, _]](
-  val context: C,
-  val ast: Ast,
+final case class Expand[C <: Context[_, _]](
+  context: C,
+  ast: Ast,
   statement: Statement,
   idiom: Idiom,
   naming: NamingStrategy,
@@ -131,9 +124,9 @@ case class Expand[C <: Context[_, _]](
     }
 }
 
-case class ExpandWithInjectables[T, C <: Context[_, _]](
-  val context: C,
-  val ast: Ast,
+final case class ExpandWithInjectables[T, C <: Context[_, _]](
+  context: C,
+  ast: Ast,
   statement: Statement,
   idiom: Idiom,
   naming: NamingStrategy,

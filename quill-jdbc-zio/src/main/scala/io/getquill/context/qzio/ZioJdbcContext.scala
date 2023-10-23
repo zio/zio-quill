@@ -200,7 +200,8 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
         case Some(_) => op
         case None =>
           val connection: ZIO[DataSource with Scope, SQLException, Unit] = {
-            @inline def attemptSQL[T](code: => T): ZIO[Any, SQLException, T] = ZIO.attempt(code).refineToOrDie[SQLException]
+            @inline def attemptSQL[T](code: => T): ZIO[Any, SQLException, T] =
+              ZIO.attempt(code).refineToOrDie[SQLException]
 
             for {
               ds         <- ZIO.service[DataSource]
@@ -210,7 +211,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
               // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
               // to whatever the previous value was.
               _ <- ZIO.acquireRelease(attemptSQL(connection.setAutoCommit(false))) { _ =>
-                    attemptSQL(connection.setAutoCommit(prevAutoCommit)).orDie
+                     attemptSQL(connection.setAutoCommit(prevAutoCommit)).orDie
                    }
               _ <- ZIO.acquireRelease(currentConnection.set(Some(connection))) { _ =>
                      // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggressive.
