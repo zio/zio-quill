@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 export SQLITE_SCRIPT=quill-jdbc/src/test/resources/sql/sqlite-schema.sql
-export MYSQL_SCRIPT=quill-sql/src/test/sql/mysql-schema.sql
-export POSTGRES_SCRIPT=quill-sql/src/test/sql/postgres-schema.sql
-export POSTGRES_DOOBIE_SCRIPT=quill-sql/src/test/sql/postgres-doobie-schema.sql
-export SQL_SERVER_SCRIPT=quill-sql/src/test/sql/sqlserver-schema.sql
-export ORACLE_SCRIPT=quill-sql/src/test/sql/oracle-schema.sql
+export MYSQL_SCRIPT=quill-sql-test/src/test/sql/mysql-schema.sql
+export POSTGRES_SCRIPT=quill-sql-test/src/test/sql/postgres-schema.sql
+export POSTGRES_DOOBIE_SCRIPT=quill-sql-test/src/test/sql/postgres-doobie-schema.sql
+export SQL_SERVER_SCRIPT=quill-sql-test/src/test/sql/sqlserver-schema.sql
+export ORACLE_SCRIPT=quill-sql-test/src/test/sql/oracle-schema.sql
 export CASSANDRA_SCRIPT=quill-cassandra/src/test/cql/cassandra-schema.cql
 
 

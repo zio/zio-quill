@@ -15,6 +15,28 @@ env:
   JDK_JAVA_OPTIONS: -Xms6G -Xmx6G -XX:+UseG1GC --add-exports java.base/sun.nio.ch=ALL-UNNAMED
 
 jobs:
+  scalafmt:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.0.0
+      - name: Cache sbt
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.sbt
+          key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v3.12.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          check-latest: true
+      - name: Check scalafmt
+        run: sbt 'scalafmtCheckAll' # https://scalameta.org/scalafmt/docs/installation.html#task-keys
+
   build:
     runs-on: ubuntu-latest
 
@@ -64,7 +86,7 @@ jobs:
           ~/.sbt
         key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
-    - name: Setup Java and Scala
+    - name: Setup Java
       uses: actions/setup-java@v3.12.0
       with:
         distribution: temurin
@@ -87,7 +109,7 @@ jobs:
       CI_SNAPSHOT_RELEASE: publish # By default, sbt-ci-release uses the `+publish` which is publishing for all the Scala versions configured, which is not what we want
     steps:
       - uses: actions/checkout@v4.0.0
-      - name: Setup Java and Scala
+      - name: Setup Java
         uses: actions/setup-java@v3.12.0
         with:
           distribution: temurin
