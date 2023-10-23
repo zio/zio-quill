@@ -135,14 +135,15 @@ sealed trait Quat {
       // NOTE This is a linear lookup. To improve efficiency store a map going back from rename to the initial property,
       // if we did that however, we would need to make sure to warn a user of two things are renamed to the same property however,
       // that kind of warning should probably exist already
-      renames.find(_._2 == fieldName).headOption.map(_._2)
+      renames.find(_._2 == fieldName).map(_._2)
     case (other, fieldName) =>
       QuatException(s"The post-rename field '${fieldName}' does not exist in an SQL-level type ${other}")
   }
 
   def lookup(path: String, failNonExist: Boolean): Quat = (this, path) match {
     case (cc @ Quat.Product(fields), fieldName) =>
-      fields.get(fieldName).getOrElse {
+      fields.getOrElse(
+        fieldName,
         if (failNonExist)
           throw new IllegalArgumentException(s"The field '${fieldName}' does not exist in an SQL-level type ${cc}")
         else {
@@ -152,7 +153,7 @@ sealed trait Quat {
           )
           Quat.Unknown
         }
-      }
+      )
     case (Quat.Generic, fieldName) =>
       io.getquill.util.Messages.trace(
         s"The field '${fieldName}' was looked up from a Generic Quat. Assuming it will also be Quat.Generic",
@@ -179,7 +180,7 @@ sealed trait Quat {
 
 object Quat {
   object Is {
-    def unapply(ast: Ast) = Some(ast.quat)
+    def unapply(ast: Ast): Option[Quat] = Some(ast.quat)
   }
 
   object IsAbstract {
@@ -287,7 +288,7 @@ object Quat {
     override def withRenames(renames: mutable.LinkedHashMap[String, String]): Quat.Product =
       Product.WithRenames(name, tpe, fields, renames)
 
-    def withType(tpe: Quat.Product.Type) =
+    def withType(tpe: Quat.Product.Type): Product =
       this.copy(tpe = tpe)
 
     override def withRenames(renames: List[(String, String)]): Quat.Product =
@@ -314,8 +315,8 @@ object Quat {
       Product.WithRenames(name, tpe, newFields, renames)
     }
   }
-  def LeafProduct(name: String, list: String*) = Quat.Product(name, list.map(e => (e, Quat.Value)))
-  def LeafTuple(numElems: Int)                 = Quat.Tuple((1 to numElems).map(_ => Quat.Value))
+  def LeafProduct(name: String, list: String*): Product = Quat.Product(name, list.map(e => (e, Quat.Value)))
+  def LeafTuple(numElems: Int): Product                 = Quat.Tuple((1 to numElems).map(_ => Quat.Value))
 
   object Product {
     case class Id(fields: mutable.LinkedHashMap[String, Quat])
