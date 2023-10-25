@@ -18,8 +18,8 @@ class CassandraContextSpec extends Spec {
       val update: Quoted[Update[TestEntity]] = quote {
         query[TestEntity].filter(_.id == lift(1)).update(_.i -> lift(1))
       }
-     val result: AsyncResultSet = await(testAsyncDB.run(update))
-      assert(result!=null)
+      val result: AsyncResultSet = await(testAsyncDB.run(update))
+      assert(result != null)
 
     }
     "sync" in {
