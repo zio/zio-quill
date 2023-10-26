@@ -167,7 +167,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.7.14")
+        ("org.scalameta" %% "scalafmt-core" % "3.7.15")
           .excludeAll(
             ({
               if (isScala3)
