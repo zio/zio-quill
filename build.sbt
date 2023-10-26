@@ -244,8 +244,8 @@ lazy val `quill-sql-test` =
     .settings(noPublishSettings: _*)
     .dependsOn(
       `quill-sql`,
-      `quill-core` % "test->test",
-      `quill-test-kit` % "test->test",
+      `quill-core`     % "test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -316,9 +316,9 @@ lazy val `quill-jdbc` =
     .settings(commonSettings: _*)
     .settings(jdbcTestingSettings: _*)
     .dependsOn(
-      `quill-sql` % "compile->compile",
-      `quill-core` % "test->test",
-      `quill-test-kit` % "test->test",
+      `quill-sql`      % "compile->compile",
+      `quill-core`     % "test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -328,8 +328,8 @@ lazy val `quill-jdbc-test-h2` =
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
     .dependsOn(
-      `quill-jdbc` % "compile->compile;test->test",
-      `quill-test-kit` % "test->test",
+      `quill-jdbc`     % "compile->compile;test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -339,8 +339,8 @@ lazy val `quill-jdbc-test-mysql` =
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
     .dependsOn(
-      `quill-jdbc` % "compile->compile;test->test",
-      `quill-test-kit` % "test->test",
+      `quill-jdbc`     % "compile->compile;test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -350,8 +350,8 @@ lazy val `quill-jdbc-test-oracle` =
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
     .dependsOn(
-      `quill-jdbc` % "compile->compile;test->test",
-      `quill-test-kit` % "test->test",
+      `quill-jdbc`     % "compile->compile;test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -361,8 +361,8 @@ lazy val `quill-jdbc-test-postgres` =
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
     .dependsOn(
-      `quill-jdbc` % "compile->compile;test->test",
-      `quill-test-kit` % "test->test",
+      `quill-jdbc`     % "compile->compile;test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -372,8 +372,8 @@ lazy val `quill-jdbc-test-sqlite` =
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
     .dependsOn(
-      `quill-jdbc` % "compile->compile;test->test",
-      `quill-test-kit` % "test->test",
+      `quill-jdbc`     % "compile->compile;test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -383,8 +383,8 @@ lazy val `quill-jdbc-test-sqlserver` =
     .settings(jdbcTestingSettings: _*)
     .settings(noPublishSettings: _*)
     .dependsOn(
-      `quill-jdbc` % "compile->compile;test->test",
-      `quill-test-kit` % "test->test",
+      `quill-jdbc`     % "compile->compile;test->test",
+      `quill-test-kit` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -400,8 +400,8 @@ lazy val `quill-doobie` =
       )
     )
     .dependsOn(
-      `quill-jdbc` % "compile->compile",
-      `quill-sql-test` % "test->test",
+      `quill-jdbc`     % "compile->compile",
+      `quill-sql-test` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
@@ -579,14 +579,14 @@ lazy val `quill-test-kit` =
     .settings(noPublishSettings: _*)
     .dependsOn(
       `quill-sql`,
-      `quill-core` % "test->test",
+      `quill-core` % "test->test"
     )
     .enablePlugins(MimaPlugin)
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "5.0.1" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "8.1.0"       % Test,
+    "com.mysql"               % "mysql-connector-j"       % "8.2.0"       % Test,
     "com.h2database"          % "h2"                      % "2.2.224"     % Test,
     "org.postgresql"          % "postgresql"              % "42.6.0"      % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"    % Test,
