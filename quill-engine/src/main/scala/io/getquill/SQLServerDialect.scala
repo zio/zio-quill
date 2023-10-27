@@ -25,13 +25,15 @@ trait SQLServerDialect
 
   override def useActionTableAliasAs: ActionTableAliasBehavior = ActionTableAliasBehavior.Hide
 
-  override def querifyAst(ast: Ast, idiomContext: TraceConfig) = AddDropToNestedOrderBy(
+  override def querifyAst(ast: Ast, idiomContext: TraceConfig): SqlQuery = AddDropToNestedOrderBy(
     new SqlQueryApply(idiomContext)(ast)
   )
 
-  override def emptySetContainsToken(field: Token) = StringToken("1 <> 1")
+  private val _emptySetContainsToken: StringToken = StringToken("1 <> 1")
 
-  override def prepareForProbing(string: String) = string
+  override def emptySetContainsToken(field: Token): Token = _emptySetContainsToken
+
+  override def prepareForProbing(string: String): String = string
 
   // SQL-Server can potentially disable ANSI-null via `SET ANSI_NULLS OFF`. Force more strict checking here
   // for the sake of consistency with the other contexts.
@@ -39,7 +41,7 @@ trait SQLServerDialect
 
   override protected def limitOffsetToken(
     query: Statement
-  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
+  )(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[(Option[Ast], Option[Ast])] =
     Tokenizer[(Option[Ast], Option[Ast])] {
       case (Some(limit), None)         => stmt"TOP (${limit.token}) $query"
       case (Some(limit), Some(offset)) => stmt"$query OFFSET ${offset.token} ROWS FETCH FIRST ${limit.token} ROWS ONLY"

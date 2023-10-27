@@ -177,13 +177,6 @@ function db_build() {
     ./build/aware_run.sh "sbt -Dmodules=db $SBT_ARGS test"
 }
 
-function async_build() {
-    echo "build.sh =:> Async Build Specified"
-    wait_for_mysql_postgres
-    echo "build.sh =:> Starting Async Build Primary"
-    sbt -Dmodules=async $SBT_ARGS test
-}
-
 function codegen_build() {
     echo "build.sh =:> Codegen Build Specified"
     wait_for_databases
@@ -236,9 +229,6 @@ elif [[ $modules == "js" ]]; then
 elif [[ $modules == "finagle" ]]; then
     echo "build.sh =:> Build Script: Doing Finagle Database Build"
     finagle_build
-elif [[ $modules == "async" ]]; then
-    echo "build.sh =:> Build Script: Doing Async Database Build"
-    async_build
 elif [[ $modules == "codegen" ]]; then
     echo "build.sh =:> Build Script: Doing Code Generator Build"
     codegen_build

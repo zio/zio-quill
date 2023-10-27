@@ -102,7 +102,7 @@ trait OrientDBIdiom extends Idiom {
     }
 
   implicit def ifTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[If] =
-    Tokenizer[If] { case ast: If =>
+    Tokenizer[If] { ast: If =>
       def flatten(ast: Ast): (List[(Ast, Ast)], Ast) =
         ast match {
           case If(cond, a, b) =>
@@ -121,7 +121,7 @@ trait OrientDBIdiom extends Idiom {
     }
 
   implicit def queryTokenizer(implicit strategy: NamingStrategy, idiomContext: IdiomContext): Tokenizer[Query] =
-    Tokenizer[Query] { case q =>
+    Tokenizer[Query] { q =>
       new SqlQueryApply(idiomContext.traceConfig)(q).token
     }
 
@@ -375,7 +375,7 @@ trait OrientDBIdiom extends Idiom {
       renameable.fixedOr(name.token)(strategy.table(name).token)
   }
 
-  protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]) =
+  protected def scopedTokenizer[A <: Ast](ast: A)(implicit token: Tokenizer[A]): Token =
     ast match {
       case _: Query           => stmt"(${ast.token})"
       case _: BinaryOperation => stmt"(${ast.token})"

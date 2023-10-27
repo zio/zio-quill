@@ -1,20 +1,19 @@
 package io.getquill.context.qzio
 
 import io.getquill.context.ZioJdbc._
+import io.getquill.context._
 import io.getquill.context.jdbc.JdbcContextTypes
 import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.context._
 import io.getquill.jdbczio.Quill
 import io.getquill.{NamingStrategy, ReturnAction}
 import zio.Exit.{Failure, Success}
+import zio.ZIO.blocking
 import zio.stream.ZStream
-import zio.{FiberRef, Runtime, Scope, Unsafe, ZEnvironment, ZIO}
+import zio.{Cause, FiberRef, Runtime, Scope, Unsafe, ZEnvironment, ZIO}
 
 import java.sql.{Array => _, _}
 import javax.sql.DataSource
 import scala.util.Try
-import zio.ZIO.attemptBlocking
-import zio.ZIO.blocking
 
 /**
  * Quill context that executes JDBC queries inside of ZIO. Unlike most other
@@ -83,7 +82,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   lazy val underlying: ZioJdbcUnderlyingContext[Dialect, Naming] = connDelegate
   private[getquill] val connDelegate: ZioJdbcUnderlyingContext[Dialect, Naming]
 
-  override def close() = ()
+  override def close(): Unit = ()
 
   override def probe(sql: String): Try[_] = connDelegate.probe(sql)
 
@@ -193,37 +192,47 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
    * set-prev-autocommit(connection), release-conn </pre>
    */
   def transaction[R <: DataSource, A](op: ZIO[R, Throwable, A]): ZIO[R, Throwable, A] =
-    blocking(currentConnection.get.flatMap {
-      // We can just return the op in the case that there is already a connection set on the fiber ref
-      // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
-      // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
-      case Some(connection) => op
-      case None =>
-        val connection: ZIO[DataSource with Scope, Throwable, Unit] = for {
-          env        <- ZIO.service[DataSource]
-          connection <- scopedBestEffort(attemptBlocking(env.getConnection))
-          // Get the current value of auto-commit
-          prevAutoCommit <- attemptBlocking(connection.getAutoCommit)
-          // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
-          // to whatever the previous value was.
-          _ <- ZIO.acquireRelease(attemptBlocking(connection.setAutoCommit(false))) { _ =>
-                 attemptBlocking(connection.setAutoCommit(prevAutoCommit)).orDie
-               }
-          _ <- ZIO.acquireRelease(currentConnection.set(Some(connection))) { _ =>
-                 // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggressive.
-                 // If the connection pool e.g. Hikari resets this property for a recycled connection anyway doing it here
-                 // might not be necessary
-                 currentConnection.set(None)
-               }
-          // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
-          _ <- ZIO.addFinalizerExit {
-                 case Success(_)     => blocking(ZIO.succeed(connection.commit()))
-                 case Failure(cause) => blocking(ZIO.succeed(connection.rollback()))
-               }
-        } yield ()
+    blocking {
+      currentConnection.get.flatMap {
+        // We can just return the op in the case that there is already a connection set on the fiber ref
+        // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
+        // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
+        case Some(_) => op
+        case None =>
+          val connection: ZIO[DataSource with Scope, SQLException, Unit] = {
+            @inline def attemptSQL[T](code: => T): ZIO[Any, SQLException, T] =
+              ZIO.attempt(code).refineToOrDie[SQLException]
 
-        ZIO.scoped[R](connection *> op)
-    })
+            for {
+              ds         <- ZIO.service[DataSource]
+              connection <- scopedBestEffort(attemptSQL(ds.getConnection))
+              // Get the current value of auto-commit
+              prevAutoCommit <- attemptSQL(connection.getAutoCommit)
+              // Disable auto-commit since we need to be able to roll back. Once everything is done, set it
+              // to whatever the previous value was.
+              _ <- ZIO.acquireRelease(attemptSQL(connection.setAutoCommit(false))) { _ =>
+                     attemptSQL(connection.setAutoCommit(prevAutoCommit)).orDie
+                   }
+              _ <- ZIO.acquireRelease(currentConnection.set(Some(connection))) { _ =>
+                     // Note. We are failing the fiber if auto-commit reset fails. For some circumstances this may be too aggressive.
+                     // If the connection pool e.g. Hikari resets this property for a recycled connection anyway doing it here
+                     // might not be necessary
+                     currentConnection.set(None)
+                   }
+              // Once the `use` of this outer-ZManaged is done, rollback the connection if needed
+              _ <- ZIO.addFinalizerExit {
+                     case Success(_) =>
+                       ZIO.succeed(connection.commit())
+                     case Failure(cause) =>
+                       ZIO.logErrorCause("Transaction execution failed - rollback", Cause.fail(cause)) *>
+                         ZIO.succeed(connection.rollback())
+                   }
+            } yield ()
+          }
+
+          ZIO.scoped[R](connection *> op)
+      }
+    }
 
   private def onConnection[T](qlio: ZIO[Connection, SQLException, T]): ZIO[DataSource, SQLException, T] =
     currentConnection.get.flatMap {
