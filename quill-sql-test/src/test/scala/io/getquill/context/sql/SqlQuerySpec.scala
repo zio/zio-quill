@@ -8,7 +8,7 @@ import io.getquill.base.Spec
 import io.getquill.context.sql.util.StringOps._
 import io.getquill.util.TraceConfig
 
-class SqlQuerySpec extends Spec {
+class SqlQuerySpec extends Spec { //
 
   implicit val naming: Literal = new Literal {}
 
@@ -613,7 +613,7 @@ class SqlQuerySpec extends Spec {
 
       // If you look inside BetaReduction, you will see that tuple values that are the same are collapsed via 'distinct'.
       // In this case, use different values that do not allow this to happen
-      "with map query inside join with non-distinct tuple" in {
+      "with map query inside join with non-distinct tuple" in { //
         val q = quote {
           qr1
             .join(
@@ -622,9 +622,11 @@ class SqlQuerySpec extends Spec {
                 .distinct
             )
             .on((a, b) => a.i == b._1)
-        }
+        }.dynamic //
+        println(testContext.run(q))
         testContext.run(q).string mustEqual
           "SELECT a.s, a.i, a.l, a.o, a.b, q21._1, q21._2 FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i AS _1, q2.l AS _2 FROM TestEntity2 q2) AS q21 ON a.i = q21._1"
+        // SELECT a.s, a.i, a.l, a.o, a.b, q2._1, q2._2 FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i AS _1, q2.l AS _2 FROM TestEntity2 q2) AS q21 ON a.i = q21._1
       }
 
       "with map query inside join with non-distinct tuple with operation" in {

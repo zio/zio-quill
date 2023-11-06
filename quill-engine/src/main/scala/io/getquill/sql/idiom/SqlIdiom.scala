@@ -15,13 +15,21 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
-import io.getquill.norm.{ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken}
+import io.getquill.norm.{
+  ConcatBehavior,
+  EqualityBehavior,
+  ExpandReturning,
+  NormalizeCaching,
+  ProductAggregationToken,
+  SheathLeafClauses
+}
 import io.getquill.quat.Quat
 import io.getquill.sql.norm.{
   HideTopLevelFilterAlias,
   NormalizeFilteredActionAliases,
   RemoveExtraAlias,
-  RemoveUnusedSelects
+  RemoveUnusedSelects,
+  SheathIdentContexts
 }
 import io.getquill.util.{Interleave, Interpolator, Messages, TraceConfig}
 import io.getquill.util.Messages.{TraceType, fail, trace}
@@ -89,7 +97,9 @@ trait SqlIdiom extends Idiom {
           VerifySqlQuery(sql).map(fail)
           val expanded = ExpandNestedQueries(sql, topLevelQuat)
           trace"Expanded SQL: ${expanded}".andLog()
-          val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
+          val sheathed = SheathIdentContexts(expanded, topLevelQuat)
+          trace"Sheathed-Clause SQL: ${sheathed}".andLog()
+          val refined = if (Messages.pruneColumns) RemoveUnusedSelects(sheathed) else expanded
           trace"Filtered SQL (only used selects): ${refined}".andLog()
           val cleaned = if (!Messages.alwaysAlias) RemoveExtraAlias(naming)(refined, topLevelQuat) else refined
           trace"Cleaned SQL: ${cleaned}".andLog()

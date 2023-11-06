@@ -5,7 +5,7 @@ import io.getquill.norm.{DisablePhase, OptionalPhase}
 import io.getquill.{Literal, MirrorSqlDialect, SqlMirrorContext, TestEntities}
 import io.getquill.norm.ConfigList._
 
-class AggregationSpec extends Spec {
+class AggregationSpec extends Spec { //
   case class Person(id: Int, name: String, age: Int)
   case class PersonOpt(name: Option[String], age: Int)
 
