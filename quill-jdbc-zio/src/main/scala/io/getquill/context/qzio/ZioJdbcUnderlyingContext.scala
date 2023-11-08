@@ -190,20 +190,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
         connection         <- ZIO.service[Connection]
         previousAutoCommit <- ZIO.attempt(connection.getAutoCommit)
         _ <- ZIO.acquireRelease(ZIO.attempt(connection.setAutoCommit(false))) { _ =>
-               ZIO
-                 .attempt(connection.setAutoCommit(previousAutoCommit))
-                 .tapError { e =>
-                   ZIO
-                     .attempt(
-                       logger.underlying
-                         .error(s"setAutoCommit(previousAutoCommit) of connection failed", e)
-                     )
-                     .ignore *>
-                     ZIO
-                       .attempt(connection.close())
-                       .tapError(e => ZIO.attempt(logger.underlying.error(s"close() of connection failed", e)).ignore)
-                 }
-                 .orDie
+               ZIO.succeed(connection.setAutoCommit(previousAutoCommit))
              }
         ps <- scopedBestEffort(ZIO.attempt(prepareStatement(connection)))
         rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
