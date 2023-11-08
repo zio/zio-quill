@@ -1,11 +1,11 @@
-package io.getquill.context.cassandra.alpakka
+package io.getquill.context.cassandra.pekko
 
 import io.getquill.context.cassandra.CollectionsSpec
 
 import java.time.{Instant, LocalDate}
 import java.util.UUID
 
-class ListsEncodingSpec extends CollectionsSpec with CassandraAlpakkaSpec {
+class ListsEncodingSpec extends CollectionsSpec with CassandraPekkoSpec {
   val ctx = testDB
   import ctx._
 

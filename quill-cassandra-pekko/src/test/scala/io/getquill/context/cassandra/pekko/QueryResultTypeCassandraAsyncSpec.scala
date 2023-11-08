@@ -1,9 +1,9 @@
-package io.getquill.context.cassandra.alpakka
+package io.getquill.context.cassandra.pekko
 
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.stream.scaladsl.Sink
 import io.getquill.context.cassandra.QueryResultTypeCassandraSpec
 
-class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec with CassandraAlpakkaSpec {
+class QueryResultTypeCassandraAsyncSpec extends QueryResultTypeCassandraSpec with CassandraPekkoSpec {
 
   val context = testDB
   import context._
