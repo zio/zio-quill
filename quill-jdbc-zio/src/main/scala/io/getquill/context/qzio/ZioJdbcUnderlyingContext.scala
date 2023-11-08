@@ -185,7 +185,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
       ps
     }
 
-    val managedEnv: ZIO[Scope with Connection, Throwable, (Connection, ResultSet)] =
+    val executeQuery: ZIO[Scope with Connection, Throwable, (Connection, ResultSet)] =
       for {
         connection         <- ZIO.service[Connection]
         previousAutoCommit <- ZIO.attempt(connection.getAutoCommit)
@@ -196,23 +196,19 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
         rs <- scopedBestEffort(ZIO.attempt(ps.executeQuery()))
       } yield (connection, rs)
 
-    def outStream(conn: Connection, rs: ResultSet): ZStream[Connection, Throwable, T] =
-      ZStream.suspend {
-        val iter = new ResultSetIterator(rs, conn, extractor)
-        fetchSize match {
-          // TODO Assuming chunk size is fetch size. Not sure if this is optimal.
-          //      Maybe introduce some switches to control this?
-          case Some(size) => ZStream.fromIterator(iter, size)
-          case None       => ZStream.fromIterator(iter)
-        }
-      }
-
     ZStream.blocking {
       ZStream
         .unwrapScoped[Connection] {
           for {
-            (conn, rs) <- managedEnv
-          } yield outStream(conn, rs)
+            (conn, rs) <- executeQuery
+            iter        = new ResultSetIterator(rs, conn, extractor)
+            outStream = fetchSize match {
+                          // TODO Assuming chunk size is fetch size. Not sure if this is optimal.
+                          //      Maybe introduce some switches to control this?
+                          case Some(size) => ZStream.fromIterator(iter, size)
+                          case None       => ZStream.fromIterator(iter)
+                        }
+          } yield outStream
         }
         .refineToOrDie[SQLException]
     }
