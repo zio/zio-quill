@@ -146,6 +146,7 @@ trait CqlIdiom extends Idiom {
     case Tuple(values)          => stmt"${values.token}"
     case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
     case NullValue              => fail("Cql doesn't support null values.")
+    case i: InternalValue       => fail(s"Interal value '${i.name}' found. Cannot have internal-property in tokenizer.")
   }
 
   implicit def infixTokenizer(implicit

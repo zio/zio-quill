@@ -121,9 +121,10 @@ trait StatelessTransformer {
 
   def apply(e: Value): Value =
     e match {
-      case e: Constant   => e
-      case NullValue     => NullValue
-      case Tuple(values) => Tuple(values.map(apply))
+      case i: InternalValue => i
+      case e: Constant      => e
+      case NullValue        => NullValue
+      case Tuple(values)    => Tuple(values.map(apply))
       case CaseClass(n, tuples) => {
         val (keys, values) = tuples.unzip
         CaseClass(n, keys.zip(values.map(apply)))

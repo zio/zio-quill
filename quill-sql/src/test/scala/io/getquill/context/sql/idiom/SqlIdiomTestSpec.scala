@@ -35,11 +35,20 @@ object SqlIdiomTestSpec {
     // println(ctx.run(q).string)
     // "SELECT i._1, x1.s, x1.i, x1.l, x1.o FROM (SELECT DISTINCT i.i AS _1 FROM TestEntity i) AS i, TestEntity2 x1 WHERE x1.i = i._1"
 
+//    val q = quote {
+//      qr1.map(x => x.i).nested
+//    }.dynamic
+//
+//    println(run(q).string) //
+
     val q = quote {
-      qr1.map(x => x.i).nested
+      for {
+        (a, b) <- qr1 join qr2 on ((a, b) => a.i == b.i)
+        c      <- qr1 rightJoin (c => c.i == a.i)
+      } yield (a, b, c.map(c => c.i))
     }.dynamic
 
-    println(run(q).string) //
+    println(run(q).string)
   }
 
 }

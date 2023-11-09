@@ -274,8 +274,9 @@ trait StatefulTransformerWithStack[T] {
 
   def apply(e: Value)(implicit parent: History): (Value, StatefulTransformerWithStack[T]) =
     e match {
-      case e: Constant => (e, this)
-      case NullValue   => (e, this)
+      case i: InternalValue => (i, this)
+      case e: Constant      => (e, this)
+      case NullValue        => (e, this)
       case Tuple(a) =>
         val (at, att) = apply(a)(s => (u => s.apply(u)(History(e))))
         (Tuple(at), att)

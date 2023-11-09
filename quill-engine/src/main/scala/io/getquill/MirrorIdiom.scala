@@ -260,11 +260,12 @@ trait MirrorIdiomBase extends Idiom {
     }
 
   implicit final val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: String, _) => stmt""""${v.token}""""
-    case Constant((), _)        => stmt"{}"
-    case Constant(v, _)         => stmt"${v.toString.token}"
-    case NullValue              => stmt"null"
-    case Tuple(values)          => stmt"(${values.token})"
+    case Constant(v: String, _)   => stmt""""${v.token}""""
+    case Constant((), _)          => stmt"{}"
+    case Constant(v, _)           => stmt"${v.toString.token}"
+    case NullValue                => stmt"null"
+    case InternalValue(str, quat) => stmt"<INTERNAL-VALUE:${str.token}>"
+    case Tuple(values)            => stmt"(${values.token})"
     case CaseClass(name, values) =>
       stmt"${name.token}(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }

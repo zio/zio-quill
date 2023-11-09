@@ -1,24 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast.{
-  Aggregation,
-  Ast,
-  CaseClass,
-  ConcatMap,
-  Distinct,
-  Filter,
-  FlatMap,
-  GroupBy,
-  GroupByMap,
-  Ident,
-  Join,
-  Map,
-  Property,
-  Query,
-  StatefulTransformerWithStack,
-  Union,
-  UnionAll
-}
+import io.getquill.ast.{Aggregation, Ast, CaseClass, ConcatMap, Distinct, Filter, FlatMap, GroupBy, GroupByMap, Ident, Join, Map, Property, Query, StatefulTransformerWithStack, Union, UnionAll}
 import io.getquill.ast.Ast.LeafQuat
 import io.getquill.ast.StatefulTransformerWithStack.History
 import io.getquill.util.{Interpolator, TraceConfig}

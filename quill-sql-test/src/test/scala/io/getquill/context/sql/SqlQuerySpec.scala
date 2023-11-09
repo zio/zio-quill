@@ -623,7 +623,7 @@ class SqlQuerySpec extends Spec { //
             )
             .on((a, b) => a.i == b._1)
         }.dynamic //
-        println(testContext.run(q))
+        println(testContext.run(q).string)
         testContext.run(q).string mustEqual
           "SELECT a.s, a.i, a.l, a.o, a.b, q21._1, q21._2 FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i AS _1, q2.l AS _2 FROM TestEntity2 q2) AS q21 ON a.i = q21._1"
         // SELECT a.s, a.i, a.l, a.o, a.b, q2._1, q2._2 FROM TestEntity a INNER JOIN (SELECT DISTINCT q2.i AS _1, q2.l AS _2 FROM TestEntity2 q2) AS q21 ON a.i = q21._1

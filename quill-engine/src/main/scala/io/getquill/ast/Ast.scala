@@ -635,6 +635,26 @@ final case class FunctionApply(function: Ast, values: List[Ast]) extends Operati
 
 sealed trait Value extends Ast
 
+final class InternalValue(val name: String)(theQuat: => Quat) extends Value {
+  override lazy val quat: Quat = theQuat
+  override def bestQuat: Quat  = quat
+
+  private val id               = InternalValue.Id(name)
+  override def hashCode(): Int = id.hashCode()
+  override def equals(obj: Any): Boolean =
+    obj match {
+      case e: InternalValue => e.id == this.id
+      case _                => false
+    }
+}
+
+object InternalValue {
+  private final case class Id(name: String)
+
+  def apply(name: String, quat: => Quat): InternalValue             = new InternalValue(name)(quat)
+  def unapply(internalValue: InternalValue): Option[(String, Quat)] = Some((internalValue.name, internalValue.quat))
+}
+
 final class Constant(val v: Any)(theQuat: => Quat) extends Value {
   override lazy val quat: Quat = theQuat
   override def bestQuat: Quat  = quat

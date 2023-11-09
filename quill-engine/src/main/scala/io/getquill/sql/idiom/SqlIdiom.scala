@@ -15,22 +15,9 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.idiom._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
-import io.getquill.norm.{
-  ConcatBehavior,
-  EqualityBehavior,
-  ExpandReturning,
-  NormalizeCaching,
-  ProductAggregationToken,
-  SheathLeafClauses
-}
+import io.getquill.norm.{ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken, SheathLeafClauses}
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.{
-  HideTopLevelFilterAlias,
-  NormalizeFilteredActionAliases,
-  RemoveExtraAlias,
-  RemoveUnusedSelects,
-  SheathIdentContexts
-}
+import io.getquill.sql.norm.{HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects, SheathIdentContexts}
 import io.getquill.util.{Interleave, Interpolator, Messages, TraceConfig}
 import io.getquill.util.Messages.{TraceType, fail, trace}
 
@@ -571,6 +558,7 @@ trait SqlIdiom extends Idiom {
       case NullValue              => stmt"null"
       case Tuple(values)          => stmt"${values.token}"
       case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
+      case i: InternalValue       => fail(s"Interal value '${i.name}' found. Cannot have internal-property in tokenizer.")
     }
 
   implicit def infixTokenizer(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy): Tokenizer[Infix] =

@@ -258,8 +258,9 @@ trait StatefulTransformer[T] {
 
   def apply(e: Value): (Value, StatefulTransformer[T]) =
     e match {
-      case e: Constant => (e, this)
-      case NullValue   => (e, this)
+      case i: InternalValue => (i, this)
+      case e: Constant      => (e, this)
+      case NullValue        => (e, this)
       case Tuple(a) =>
         val (at, att) = apply(a)(_.apply)
         (Tuple(at), att)

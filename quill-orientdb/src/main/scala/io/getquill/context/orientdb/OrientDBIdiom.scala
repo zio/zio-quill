@@ -301,6 +301,7 @@ trait OrientDBIdiom extends Idiom {
       case NullValue              => stmt"null"
       case Tuple(values)          => stmt"${values.token}"
       case CaseClass(_, values)   => stmt"${values.map(_._2).token}"
+      case i: InternalValue       => fail(s"Interal value '${i.name}' found. Cannot have internal-property in tokenizer.")
     }
 
   implicit def infixTokenizer(implicit
