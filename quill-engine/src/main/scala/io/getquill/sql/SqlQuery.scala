@@ -228,10 +228,11 @@ class SqlQueryApply(traceConfig: TraceConfig) {
                 }
               val collectedAliases = aliases(ctx).map { case (a, quat) => Ident(a, quat) }
               val select           = Tuple(collectedAliases)
-              FlattenSqlQuery(
+              val o = FlattenSqlQuery(
                 from = ctx :: Nil,
                 select = List(SelectValue(select, None))
               )(q.quat)
+              o
             }
           case q @ (_: Filter | _: Entity) =>
             trace"base| Flattening Filter/Entity $q" andReturn { flatten(sources, q, alias, nestNextMap) }
@@ -349,6 +350,17 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           val agg = b.select.collect { case s @ SelectValue(_: Aggregation, _, _) =>
             s
           }
+          // if it's not distinct and there's no aggregation and there's no applicative join
+          // the we can flatten out the inner context. Note that inner applicative-joins are complicated
+          // because they could have wonky inner alises declared so we need to be aggresive about
+          // nesting them.
+//          if (q.isInstanceOf[Join])
+//            trace"Flattening| Map(Ident) [Join]" andReturn
+//              FlattenSqlQuery(
+//                from = QueryContext(apply(q), q.asInstanceOf[Join].) :: Nil,
+//                select = selectValues(p)
+//              )(quat)
+//          else
           if (!b.distinct.isDistinct && agg.isEmpty)
             trace"Flattening| Map(Ident) [Simple]" andReturn
               b.copy(select = selectValues(p))(quat)

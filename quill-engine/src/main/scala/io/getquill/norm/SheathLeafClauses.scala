@@ -306,6 +306,11 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
       // Unfortunately however due to the ExpandJoin phase being non-well typed this would cause various kinds of queries to fail. Some
       // examples are in SqlQuerySpec. If ExpandJoin can be rewritten to be well-typed this approach can be re-examined.
       case Join(t, a, b, iA, iB, on) =>
+        if (LeafQuat.unapply(iA).isDefined) {
+          val (a1, sa) = apply(a)
+          val iA1      = Ident(iA.name, a1.quat)
+        }
+
         val (a1, sa)   = apply(a)
         val (b1, sb)   = apply(b)
         val (iA1, iB1) = (Ident(iA.name, a1.quat), Ident(iB.name, b1.quat))
@@ -317,12 +322,13 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
           (Join(t, a1m, b1m, iA, iB, on), SheathLeafClauses(None, traceConfig))
         }
 
-      case Filter(ent, e, LeafQuat(body)) =>
+      // For filter clauses the body is always a quat:V so we check the ident to see if it's something that needs to be sheathed
+      case Filter(ent, LeafQuat(e: Ident), body) =>
         val (ent1, s) = apply(ent)
         val e1        = Ident(e.name, ent1.quat)
-        // For filter clauses we want to go from: Filter(M(ent,e,e.v),e == 123) to Filter(M(ent,e,CC(v->e.v)),e,e.v == 123)
+        // For filter clauses we want to go from: Filter(M(ent,e,e.v),x == 123) to Filter(M(ent,e,CC(v->e.v)),x,x.v == 123)
         // the body should not be re-sheathed since a body of CC(v->e.v == 123) would make no sense since
-        // that's not even a boolean. Instead we just need to do e.v == 123.
+        // that's not even a boolean. Instead we just need to do x.v == 123.
         val bodyC = elaborateSheath(body)(s.state, e, e1)
         trace"Sheath Filter(qry) with $stateInfo in $qq becomes" andReturn {
           (Filter(ent1, e1, bodyC), s)

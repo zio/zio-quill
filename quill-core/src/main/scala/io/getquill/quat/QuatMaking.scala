@@ -252,10 +252,22 @@ trait QuatMakingBase extends MacroUtilUniverse {
         }
     }
 
+    def isPrimitive(tpe: Type): Boolean =
+      tpe <:< typeOf[String] ||
+        tpe <:< typeOf[Int] ||
+        tpe <:< typeOf[Short] ||
+        tpe <:< typeOf[Long] ||
+        tpe <:< typeOf[Boolean] ||
+        tpe <:< typeOf[Byte] ||
+        tpe <:< typeOf[Float] ||
+        tpe <:< typeOf[Double]
+
     object DefiniteValue {
       def unapply(tpe: Type): Option[Type] =
         // UDTs (currently only used by cassandra) are created as tables even though there is an encoder for them.
-        if (tpe <:< typeOf[Udt])
+        if (isPrimitive(tpe))
+          Some(tpe)
+        else if (tpe <:< typeOf[Udt])
           None
         else if (isType[AnyVal](tpe))
           Some(tpe)
@@ -358,7 +370,6 @@ trait QuatMakingBase extends MacroUtilUniverse {
 
         // Otherwise it's a terminal value
         case _ =>
-          println(Messages.qprint(s"Could not infer SQL-type of ${tpe}, assuming it is a Unknown Quat."))
           Messages.trace(s"Could not infer SQL-type of ${tpe}, assuming it is a Unknown Quat.")
           Quat.Unknown
       }

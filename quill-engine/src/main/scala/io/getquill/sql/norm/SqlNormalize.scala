@@ -55,16 +55,15 @@ class SqlNormalize(
       .andThen(demarcate("RenameProperties"))
       .andThen(ExpandDistinctPhase.apply _)
       .andThen(demarcate("ExpandDistinct"))
-      .andThen(NormalizePhase.apply _)
-      .andThen(demarcate("Normalize")) // Needed only because ExpandDistinct introduces an alias.
-      .andThen(NormalizePhase.apply _)
+      .andThen(demarcate("Normalize"))
+      .andThen(NormalizePhase.apply _) // Needed only because ExpandDistinct introduces an alias.
       .andThen(demarcate("Normalize"))
       .andThen(ExpandJoinPhase.apply _)
       .andThen(demarcate("ExpandJoin"))
       .andThen(ExpandMappedInfix.apply _)
       .andThen(demarcate("ExpandMappedInfix"))
-      .andThen(SheathLeafClausesPhase.apply _)
-      .andThen(demarcate("SheathLeaves"))
+//      .andThen(SheathLeafClausesPhase.apply _)
+//      .andThen(demarcate("SheathLeaves"))
       .andThen { ast =>
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.
