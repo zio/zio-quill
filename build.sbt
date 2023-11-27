@@ -63,7 +63,7 @@ lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-cassandra`,
   `quill-cassandra-monix`,
   `quill-cassandra-zio`,
-  `quill-cassandra-alpakka`,
+  `quill-cassandra-pekko`,
   `quill-orientdb`,
   `quill-spark`
 )
@@ -167,7 +167,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.7.15")
+        ("org.scalameta" %% "scalafmt-core" % "3.7.17")
           .excludeAll(
             ({
               if (isScala3)
@@ -219,7 +219,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.1.15",
+        "dev.zio"                    %% "zio-logging"   % "2.1.16",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -463,7 +463,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.6.0" % "provided",
+        "org.postgresql" % "postgresql" % "42.7.0" % "provided",
         "dev.zio"       %% "zio-json"   % "0.6.2"
       ),
       Test / testGrouping := {
@@ -511,11 +511,8 @@ lazy val `quill-cassandra` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.datastax.oss" % "java-driver-core" % "4.17.0",
-        (CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, 12)) => "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.1"
-          case _             => "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
-        })
+        "com.datastax.oss"        % "java-driver-core"   % "4.17.0",
+        "org.scala-lang.modules" %% "scala-java8-compat" % "1.0.2"
       )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
@@ -545,14 +542,14 @@ lazy val `quill-cassandra-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-cassandra-alpakka` =
-  (project in file("quill-cassandra-alpakka"))
+lazy val `quill-cassandra-pekko` =
+  (project in file("quill-cassandra-pekko"))
     .settings(commonSettings: _*)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "6.0.1",
-        "com.typesafe.akka"  %% "akka-testkit"                  % "2.8.1" % Test
+        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.1",
+        "org.apache.pekko" %% "pekko-testkit"              % "1.0.1" % Test
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -588,7 +585,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              % "HikariCP"                % "5.1.0" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "8.2.0"       % Test,
     "com.h2database"          % "h2"                      % "2.2.224"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.6.0"      % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.0"      % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,

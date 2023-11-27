@@ -1,9 +1,9 @@
-package io.getquill.context.cassandra.alpakka
+package io.getquill.context.cassandra.pekko
 
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.stream.scaladsl.Sink
 import io.getquill._
 
-class PeopleCassandraSpec extends CassandraAlpakkaSpec {
+class PeopleCassandraSpec extends CassandraPekkoSpec {
 
   import testDB._
 
