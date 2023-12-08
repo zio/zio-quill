@@ -47,7 +47,7 @@ class SqlQuerySpec extends Spec {
             .filter(_._2.forall(_ == 1))
         }
         testContext.run(q).string mustEqual
-          "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+          "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i = 1 OR b.i IS NULL"
       }
       "null-checked" in {
         val q = quote {
