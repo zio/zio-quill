@@ -58,7 +58,7 @@ class SqlQuerySpec extends Spec {
             .filter(_._2.forall(v => if (v == "value") true else false))
         }
         testContext.run(q).string mustEqual
-          "SELECT a.i AS _1, b.s AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.s IS NULL OR b.s IS NOT NULL AND CASE WHEN b.s = 'value' THEN true ELSE false END"
+          "SELECT a.i AS _1, b.s AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE CASE WHEN b.s = 'value' THEN true ELSE false END AND b.s IS NOT NULL OR b.s IS NULL"
       }
     }
 

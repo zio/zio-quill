@@ -3,10 +3,7 @@ package io.getquill.context.cassandra.pekko
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.connectors.cassandra.CassandraSessionSettings
-import org.apache.pekko.stream.connectors.cassandra.scaladsl.{
-  CassandraSessionRegistry,
-  CassandraSession => CassandraPekkoSession
-}
+import org.apache.pekko.stream.connectors.cassandra.scaladsl.{CassandraSessionRegistry, CassandraSession => CassandraPekkoSession}
 import org.apache.pekko.testkit.TestKit
 import io.getquill.base.Spec
 import io.getquill.context.cassandra.CassandraTestEntities
