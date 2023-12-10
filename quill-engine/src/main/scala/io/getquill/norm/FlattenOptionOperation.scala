@@ -34,11 +34,11 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
       validateBody(body),
       () => {
         val reduction = BetaReduction(body, alias -> ast)
-        apply((IsNullCheck(ast) +||+ (IsNotNullCheck(ast) +&&+ reduction)): Ast)
+        apply(((reduction +&&+ IsNotNullCheck(ast)) +||+ IsNullCheck(ast)): Ast)
       },
       () => {
         val reduced = BetaReduction(body, alias -> ast)
-        apply((IsNullCheck(ast) +||+ reduced): Ast)
+        apply((reduced +||+ IsNullCheck(ast)): Ast)
       }
     )
 
@@ -81,7 +81,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
 
       case OptionGetOrElse(HasBooleanQuat(OptionMap(ast, alias, body)), HasBooleanQuat(alternative)) =>
         val expr        = BetaReduction(body, alias -> ast)
-        val output: Ast = (IsNotNullCheck(ast) +&&+ expr) +||+ (IsNullCheck(ast) +&&+ alternative)
+        val output: Ast = (expr +&&+ IsNotNullCheck(ast)) +||+ (alternative +&&+ IsNullCheck(ast))
         apply(output)
 
       case OptionGetOrElse(ast, body) =>
@@ -96,6 +96,14 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
       case OptionMap(ast, alias, body) =>
         uncheckedReduction(ast, alias, body, containsNonFallthroughElement)
 
+      // a.orElse(b).forAll(alias => body) becomes:
+      //    body(->a) || a==null && body(->b) || a==null && b==null
+      //
+      // Note that since all of the clauses are boolean this a.orElse(...) can be replaced
+      // by a||(b && a==null). If the clause was actually returning value (e.g. if(a) foo else bar)
+      // then these kinds of reductions would not be possible.
+      // Leaving the ||a==null clause without reversing for now despite the fact that ==null
+      // clauses shuold generally be the 2nd in the order because of the <> issue.
       case OptionForall(OptionOrElse(a, b), alias, body) =>
         val reducedA = BetaReduction(body, alias -> a)
         val reducedB = BetaReduction(body, alias -> b)
@@ -117,7 +125,7 @@ class FlattenOptionOperation(concatBehavior: ConcatBehavior, traceConfig: TraceC
           containsNonFallthroughElement(body),
           () => {
             val reduction = BetaReduction(body, alias -> ast)
-            apply(IsNotNullCheck(ast) +&&+ reduction: Ast)
+            apply(reduction +&&+ IsNotNullCheck(ast): Ast)
           },
           () => apply(BetaReduction(body, alias -> ast))
         )

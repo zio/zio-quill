@@ -1,19 +1,6 @@
 package io.getquill.norm.capture
 
-import io.getquill.ast.{
-  Entity,
-  Filter,
-  FlatJoin,
-  FlatMap,
-  GroupBy,
-  Ident,
-  Join,
-  Map,
-  Query,
-  SortBy,
-  StatefulTransformer,
-  _
-}
+import io.getquill.ast.{Entity, Filter, FlatJoin, FlatMap, GroupBy, Ident, Join, Map, Query, SortBy, StatefulTransformer, _}
 import io.getquill.ast.Implicits._
 import io.getquill.norm.{BetaReduction, Normalize}
 import io.getquill.util.{Interpolator, TraceConfig}
