@@ -82,8 +82,8 @@ trait OracleDialect
   override protected def tokenizeColumnAlias(strategy: NamingStrategy, column: String): String =
     tokenizeEscapeUnderscores(strategy, column, None)
 
-  override protected def tokenizeTableAlias(strategy: NamingStrategy, column: String): String =
-    tokenizeEscapeUnderscores(strategy, column, None)
+  override protected def tokenizeTableAlias(strategy: NamingStrategy, tableName: Ident): String =
+    tokenizeEscapeUnderscores(strategy, tableName.name, None)
 
   private def tokenizeEscapeUnderscores(
     strategy: NamingStrategy,

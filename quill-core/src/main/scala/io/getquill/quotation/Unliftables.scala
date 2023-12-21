@@ -155,6 +155,11 @@ trait Unliftables extends QuatUnliftable {
     case q"$pack.Visibility.Hidden"  => Visibility.Hidden
   }
 
+  implicit val positionUnliftable: Unliftable[Pos] = Unliftable[Pos] {
+    case q"$pack.Pos.Real.apply(${file: String}, ${row: Int}, ${column: Int}, ${point: Int}, ${width: Int})" => Pos.Real(file, row, column, point, width)
+    case q"$pack.Pos.Synthetic"                                                                              => Pos.Synthetic
+  }
+
   implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {
     case q"$pack.Property.apply(${a: Ast}, ${b: String})" => Property(a, b)
     case q"$pack.Property.Opinionated.apply(${a: Ast}, ${b: String}, ${renameable: Renameable}, ${visibility: Visibility})" =>
@@ -209,7 +214,8 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val identUnliftable: Unliftable[Ident] = Unliftable[Ident] {
-    case q"$pack.Ident.apply(${a: String}, ${quat: Quat})" => Ident(a, quat)
+    case q"$pack.Ident.Opinionated.apply(${a: String}, ${quat: Quat}, ${vis: Visibility}, ${pos: Pos})" =>
+      Ident.Opinionated(a, quat, vis, pos)
   }
   implicit val externalIdentUnliftable: Unliftable[ExternalIdent] = Unliftable[ExternalIdent] {
     case q"$pack.ExternalIdent.apply(${a: String}, ${quat: Quat})" => ExternalIdent(a, quat)

@@ -132,7 +132,7 @@ object Messages {
     //       implicit val t = new EnableTrace {  override type Trace = TraceType.Normalizations :: HNil }
     //       Otherwise it would have to be override type Trace = TraceType.Normalizations.type
 
-    // Specifically for situations where what needs to be printed is a type of warning to the user as opposed to an expansion
+    // Specifically for situations where what needs to be printed is a type of warning to the user as opposOed to an expansion
     // This kind of trace is always on by default and does not need to be enabled by the user.
     sealed trait Warning                extends TraceType { val value = "warning"     }
     sealed trait SqlNormalizations      extends TraceType { val value = "sql"         }
