@@ -156,8 +156,8 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val positionUnliftable: Unliftable[Pos] = Unliftable[Pos] {
-    case q"$pack.Pos.Real.apply(${file: String}, ${row: Int}, ${column: Int}, ${point: Int})" => Pos.Real(file, row, column, point)
-    case q"$pack.Pos.Synthetic"                                                               => Pos.Synthetic
+    case q"$pack.Pos.Real.apply(${file: String}, ${row: Int}, ${column: Int}, ${point: Int}, ${width: Int})" => Pos.Real(file, row, column, point, width)
+    case q"$pack.Pos.Synthetic"                                                                              => Pos.Synthetic
   }
 
   implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {

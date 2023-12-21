@@ -50,7 +50,7 @@ object VerifySqlQuery {
 
     verifyFlatJoins(query)
 
-    val aliases = query.from.flatMap(this.aliases) :+ Ident.trival("*") :+ Ident.trival("?")
+    val aliases = query.from.flatMap(this.aliases) :+ Ident.trivial("*") :+ Ident.trivial("?")
 
     def verifyAst(ast: Ast) = {
       val freeVariables =

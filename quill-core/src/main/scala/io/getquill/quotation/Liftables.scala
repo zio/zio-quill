@@ -125,8 +125,8 @@ trait Liftables extends QuatLiftable {
   }
 
   implicit val positionLiftable: Liftable[Pos] = Liftable[Pos] {
-    case Pos.Real(a, b, c, d) => q"$pack.Pos.Real($a, $b, $c, $d)"
-    case Pos.Synthetic        => q"$pack.Pos.Synthetic"
+    case Pos.Real(a, b, c, d, e) => q"$pack.Pos.Real($a, $b, $c, $d, $e)"
+    case Pos.Synthetic           => q"$pack.Pos.Synthetic"
   }
 
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {

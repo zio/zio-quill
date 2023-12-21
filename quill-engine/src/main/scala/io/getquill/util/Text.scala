@@ -91,7 +91,7 @@ ${freeVariablesExplanation(freeVar.name)}
 private def freeVariablesMulti(freeVarsUnordered: Seq[Ident]) = {
   val knowPosVars =
     freeVarsUnordered.sortByVariant {
-      case value @ Ident.WithPos(_, Pos.Real(file, line, col, _)) => (file, line, col)
+      case value @ Ident.WithPos(_, Pos.Real(file, line, col, _, _)) => (file, line, col)
     }
   val unknownPosVars =
     freeVarsUnordered.sortByVariant {

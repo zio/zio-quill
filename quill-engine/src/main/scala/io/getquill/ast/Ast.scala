@@ -362,7 +362,7 @@ object Ident {
   // Represents an identifier used for temporary purposes (e.g. comparison to symbols) and or for various
   // operational reasons. For example VerifySqlQuery needs Ident.trivial("*") to check if there are any
   // star-operators that have been created within the query.
-  def trival(name: String) = Ident(name, Quat.Unknown)
+  def trivial(name: String) = Ident(name, Quat.Unknown)
 
   object WithPos {
     def unapply(id: Ident): Option[(String, Pos)] = Some((id.name, id.pos))
@@ -435,7 +435,7 @@ object Pos extends OpinionValues[Pos] {
   // so for the sake of scala macros, only `point` is needed. The files `line` and `column` are used if when we build
   // up error messages with variable positions and do not have the compiler to help us (e.g. if there are multiple
   // places with error locations (e.g. multiple free variables have been found or the error is being thrown at runtime).
-  case class Real(fileName: String, line: Int, column: Int, point: Int) extends Pos {
+  case class Real(fileName: String, line: Int, column: Int, point: Int, width: Int = 0) extends Pos {
     override def print: String = s"${fileName}:${line}:${column}"
   }
   case object Synthetic extends Pos {
