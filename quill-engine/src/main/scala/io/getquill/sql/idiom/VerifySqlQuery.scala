@@ -36,7 +36,7 @@ object VerifySqlQuery {
 
   private def verifyFlatJoins(q: FlattenSqlQuery) = {
 
-    def loop(l: List[FromContext], available: Set[String]): Set[String] =
+    def loop(l: List[FromContext], available: Set[Ident]): Set[Ident] =
       l.foldLeft(available) {
         case (av, TableContext(_, alias)) => Set(alias)
         case (av, InfixContext(_, alias)) => Set(alias)
@@ -45,7 +45,7 @@ object VerifySqlQuery {
           av ++ loop(a :: Nil, av) ++ loop(b :: Nil, av)
         case (av, FlatJoinContext(_, a, on)) =>
           val nav     = av ++ loop(a :: Nil, av)
-          val free    = FreeVariables(on).map(_.name)
+          val free    = FreeVariables(on)
           val invalid = free -- nav
           require(
             invalid.isEmpty,
@@ -61,7 +61,7 @@ object VerifySqlQuery {
 
     verifyFlatJoins(query)
 
-    val aliases = query.from.flatMap(this.aliases).map(IdentName(_)) :+ IdentName("*") :+ IdentName("?")
+    val aliases = query.from.flatMap(this.aliases).map(IdentName(_)(Pos.Synthetic)) :+ IdentName("*")(Pos.Synthetic) :+ IdentName("?")(Pos.Synthetic)
 
     def verifyAst(ast: Ast) = {
       val freeVariables =

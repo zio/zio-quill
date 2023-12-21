@@ -277,7 +277,7 @@ trait SqlIdiom extends Idiom {
   protected def tokenizeFixedColumn(strategy: NamingStrategy, column: String): String =
     column
 
-  protected def tokenizeTableAlias(strategy: NamingStrategy, table: String): String =
+  protected def tokenizeTableAlias(strategy: NamingStrategy, table: Ident): String =
     table
 
   protected def tokenizeIdentName(strategy: NamingStrategy, name: String): String =
@@ -498,7 +498,7 @@ trait SqlIdiom extends Idiom {
             stmt"${actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(emptyStatement)}${TokenizeProperty(name, prefix, strategy, renameable)}"
 
           // In the rare case that the Ident is invisible, do not show it. See the Ident documentation for more info.
-          case (Ident.Opinionated(_, _, Hidden), prefix) =>
+          case (Ident.Opinionated(_, _, Hidden, _), prefix) =>
             stmt"${TokenizeProperty(name, prefix, strategy, renameable)}"
 
           // The normal case where `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)`

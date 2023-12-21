@@ -1,0 +1,78 @@
+package io.getquill.util
+
+import io.getquill.ast.{IdentName, Pos}
+
+// Intentionally put all comments in 1st line. Want this to be a place
+// where example code can be put
+// format: off
+
+object Text {
+
+implicit class StringExt(str: String) {
+  def trimLeft = str.dropWhile(_.isWhitespace)
+}
+
+implicit class SeqExt[T](seq: Seq[T]) {
+  def sortByVariant[R](pf: PartialFunction[T, R])(implicit ord: Ordering[R]) = {
+    seq.filter(v => pf.isDefinedAt(v)).sortBy(v => pf(v))
+  }
+}
+
+def FreeVariablesExitError(freeVars: Seq[IdentName], showPos: Boolean = true): String =
+  if (freeVars.size == 1)
+    freeVariablesSingle(freeVars.head, showPos)
+  else
+    freeVariablesMulti(freeVars)
+
+
+// Most of the time there are free varaibles it's just one so make a specific message optimizing for that
+// if we're in a compile-time flow we don't need to show the position because it will be conveyed directly to the compiler.
+private def freeVariablesSingle(freeVar: IdentName, showPos: Boolean) =
+s"""
+Found the following variable: ${freeVar} that originates outside of a `quote {...}` or `run {...}` block.
+${if (showPos) s"Here: ${freeVar.pos.print}\n" else ""}
+${freeVariablesExplanation(freeVar.name)}
+""".trimLeft
+
+private def freeVariablesMulti(freeVarsUnordered: Seq[IdentName]) = {
+val knowPosVars =
+  freeVarsUnordered.sortByVariant {
+    case value @ IdentName.WithPos(_, Pos.Real(file, line, col, _)) => (file, line, col)
+  }
+val unknownPosVars =
+  freeVarsUnordered.sortByVariant {
+    case IdentName.WithPos(name, Pos.Synthetic) => name
+  }
+val allVars = knowPosVars ++ unknownPosVars
+val free = allVars.map(_.name)
+val firstVar = free.headOption.getOrElse("x")
+
+val locations =
+  if (knowPosVars.nonEmpty) {
+    knowPosVars.map(v => s"  ${v.name} - ${v.pos.print}").mkString("\n") + "\n"
+  } else
+  ""
+
+s"""
+Found the following variables: ${free} that seem to originate outside of a `quote {...}` or `run {...}` block.
+${locations}
+${freeVariablesExplanation(firstVar)}
+""".trimLeft
+
+
+}
+
+private def freeVariablesExplanation(varExample: String) =
+s"""
+Quotes and run blocks cannot use values outside their scope directly (with the exception of inline expressions in Scala 3).
+In order to use runtime values in a quotation, you need to lift them, so instead
+of this `$varExample` do this: `lift($varExample)`.
+Here is a more complete example:
+Instead of this: `def byName(n: String) = quote(query[Person].filter(_.name == n))`
+        Do this: `def byName(n: String) = quote(query[Person].filter(_.name == lift(n)))`
+}
+""".trimLeft
+
+
+}
+// format: on

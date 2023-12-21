@@ -1,11 +1,16 @@
 package io.getquill.ast
 
 // Represents an Ident without a Quat
-case class IdentName(name: String)
+case class IdentName(name: String)(val pos: io.getquill.ast.Pos)
+object IdentName {
+  object WithPos {
+    def unapply(id: IdentName): Option[(String, Pos)] = Some((id.name, id.pos))
+  }
+}
 
 object Implicits {
   implicit final class IdentOps(private val id: Ident) extends AnyVal {
-    def idName: IdentName = IdentName(id.name)
+    def idName: IdentName = IdentName(id.name)(id.pos)
   }
 
   implicit final class AstOpsExt(private val body: Ast) extends AnyVal {
