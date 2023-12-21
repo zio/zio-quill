@@ -61,7 +61,7 @@ object VerifySqlQuery {
 
     verifyFlatJoins(query)
 
-    val aliases = query.from.flatMap(this.aliases).map(IdentName(_)(Pos.Synthetic)) :+ IdentName("*")(Pos.Synthetic) :+ IdentName("?")(Pos.Synthetic)
+    val aliases = query.from.flatMap(this.aliases) :+ Ident.trival("*") :+ Ident.trival("?")
 
     def verifyAst(ast: Ast) = {
       val freeVariables =
@@ -111,7 +111,7 @@ object VerifySqlQuery {
     }
   }
 
-  private def aliases(s: FromContext): List[String] =
+  private def aliases(s: FromContext): List[Ident] =
     s match {
       case s: TableContext    => List(s.alias)
       case s: QueryContext    => List(s.alias)

@@ -98,8 +98,8 @@ object RemoveUnusedSelects {
       case _: TableContext | _: InfixContext => (s, new mutable.LinkedHashSet[Property]())
     }
 
-  private def references(alias: String, asts: List[Ast]) =
-    LinkedHashSet.empty ++ (References(State(Ident(alias, Quat.Value), Nil))(asts)(_.apply)._2.state.references)
+  private def references(alias: Ident, asts: List[Ast]) =
+    LinkedHashSet.empty ++ (References(State(alias, Nil))(asts)(_.apply)._2.state.references)
 }
 
 case class State(ident: Ident, references: List[Property])

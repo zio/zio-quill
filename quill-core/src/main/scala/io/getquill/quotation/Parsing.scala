@@ -27,7 +27,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
   // Variables that need to be sanitized out in various places due to internal conflicts with the way
   // macros hard handled in MetaDsl
-  private[getquill] val dangerousVariables: Set[IdentName] = Set(IdentName("v")(Pos.Synthetic))
+  private[getquill] val dangerousVariables: Set[Ident] = Set(Ident.trival("v"))
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 

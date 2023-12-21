@@ -278,7 +278,7 @@ trait SqlIdiom extends Idiom {
     column
 
   protected def tokenizeTableAlias(strategy: NamingStrategy, table: Ident): String =
-    table
+    table.name
 
   protected def tokenizeIdentName(strategy: NamingStrategy, name: String): String =
     name

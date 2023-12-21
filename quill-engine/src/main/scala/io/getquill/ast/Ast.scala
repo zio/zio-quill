@@ -359,6 +359,15 @@ object Ident {
   def apply(name: String, quat: => Quat = Quat.Value) = new Ident(name)(quat)(Visibility.Visible, Pos.Synthetic)
   def unapply(p: Ident): Option[(String, Quat)]       = Some((p.name, p.quat))
 
+  // Represents an identifier used for temporary purposes (e.g. comparison to symbols) and or for various
+  // operational reasons. For example VerifySqlQuery needs Ident.trivial("*") to check if there are any
+  // star-operators that have been created within the query.
+  def trival(name: String) = Ident(name, Quat.Unknown)
+
+  object WithPos {
+    def unapply(id: Ident): Option[(String, Pos)] = Some((id.name, id.pos))
+  }
+
   object Opinionated {
     def apply(name: String, quatNew: => Quat, visibilityNew: Visibility, posNew: Pos) =
       new Ident(name)(quatNew)(visibilityNew, posNew)

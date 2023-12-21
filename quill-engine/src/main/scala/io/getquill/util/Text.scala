@@ -1,6 +1,6 @@
 package io.getquill.util
 
-import io.getquill.ast.{IdentName, Pos}
+import io.getquill.ast.{Ident, Pos}
 
 // Intentionally put all comments in 1st line. Want this to be a place
 // where example code can be put
@@ -18,7 +18,7 @@ implicit class SeqExt[T](seq: Seq[T]) {
   }
 }
 
-def FreeVariablesExitError(freeVars: Seq[IdentName], showPos: Boolean = true): String =
+def FreeVariablesExitError(freeVars: Seq[Ident], showPos: Boolean = true): String =
   if (freeVars.size == 1)
     freeVariablesSingle(freeVars.head, showPos)
   else
@@ -27,21 +27,21 @@ def FreeVariablesExitError(freeVars: Seq[IdentName], showPos: Boolean = true): S
 
 // Most of the time there are free varaibles it's just one so make a specific message optimizing for that
 // if we're in a compile-time flow we don't need to show the position because it will be conveyed directly to the compiler.
-private def freeVariablesSingle(freeVar: IdentName, showPos: Boolean) =
+private def freeVariablesSingle(freeVar: Ident, showPos: Boolean) =
 s"""
 Found the following variable: ${freeVar} that originates outside of a `quote {...}` or `run {...}` block.
 ${if (showPos) s"Here: ${freeVar.pos.print}\n" else ""}
 ${freeVariablesExplanation(freeVar.name)}
 """.trimLeft
 
-private def freeVariablesMulti(freeVarsUnordered: Seq[IdentName]) = {
+private def freeVariablesMulti(freeVarsUnordered: Seq[Ident]) = {
 val knowPosVars =
   freeVarsUnordered.sortByVariant {
-    case value @ IdentName.WithPos(_, Pos.Real(file, line, col, _)) => (file, line, col)
+    case value @ Ident.WithPos(_, Pos.Real(file, line, col, _)) => (file, line, col)
   }
 val unknownPosVars =
   freeVarsUnordered.sortByVariant {
-    case IdentName.WithPos(name, Pos.Synthetic) => name
+    case Ident.WithPos(name, Pos.Synthetic) => name
   }
 val allVars = knowPosVars ++ unknownPosVars
 val free = allVars.map(_.name)
