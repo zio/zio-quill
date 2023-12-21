@@ -4,22 +4,11 @@ import io.getquill.ast._
 import io.getquill.context.sql._
 import io.getquill.quotation.FreeVariables
 import io.getquill.quat.Quat
+import io.getquill.util.Text
 
 case class Error(free: List[Ident], ast: Ast)
 case class InvalidSqlQuery(errors: List[Error]) {
-  override def toString = {
-    val allVars  = errors.flatMap(_.free).distinct
-    val firstVar = errors.headOption.flatMap(_.free.headOption).getOrElse("someVar")
-    s"""
-       |When synthesizing Joins, Quill found some variables that could not be traced back to their
-       |origin: ${allVars.map(_.name)}. Typically this happens when there are some flatMapped
-       |clauses that are missing data once they are flattened.
-       |Sometimes this is the result of a internal error in Quill. If that is the case, please
-       |reach out on our discord channel https://discord.gg/2ccFBr4 and/or file an issue
-       |on https://github.com/zio/zio-quill.
-       |""".stripMargin +
-      errors.map(error => s"Faulty expression: '${error.ast}'. Free variables: '${error.free}'.").mkString(",\n")
-  }
+  override def toString = Text.JoinSynthesisError(errors)
 }
 
 object VerifySqlQuery {
