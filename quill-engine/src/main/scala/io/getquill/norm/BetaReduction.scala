@@ -96,14 +96,14 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
             .apply(body)
         apply(BetaReduction(map ++ newParams.zip(values).toMap, typeBehavior, emptyBehavior).apply(bodyr))
 
-//      case Function(params, body) =>
-//        val newParams = params.map { p =>
-//          map.get(p) match {
-//            case Some(i: Ident) => i
-//            case _              => p
-//          }
-//        }
-//        Function(newParams, BetaReduction(map ++ params.zip(newParams), typeBehavior, emptyBehavior)(body))
+      case Function(params, body) =>
+        val newParams = params.map { p =>
+          map.get(p) match {
+            case Some(i: Ident) => i
+            case _              => p
+          }
+        }
+        Function(newParams, BetaReduction(map ++ params.zip(newParams), typeBehavior, emptyBehavior)(body))
 
       case Block(statements) =>
         apply {
