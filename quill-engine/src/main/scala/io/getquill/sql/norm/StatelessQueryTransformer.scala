@@ -1,17 +1,6 @@
 package io.getquill.sql.norm
 
-import io.getquill.context.sql.{
-  FlatJoinContext,
-  FlattenSqlQuery,
-  FromContext,
-  InfixContext,
-  JoinContext,
-  QueryContext,
-  SetOperationSqlQuery,
-  SqlQuery,
-  TableContext,
-  UnaryOperationSqlQuery
-}
+import io.getquill.context.sql.{FlatJoinContext, FlattenSqlQuery, FromContext, InfixContext, JoinContext, QueryContext, SetOperationSqlQuery, SqlQuery, TableContext, UnaryOperationSqlQuery}
 import io.getquill.quat.Quat
 
 sealed trait QueryLevel {

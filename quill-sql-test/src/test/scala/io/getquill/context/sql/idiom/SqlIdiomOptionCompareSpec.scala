@@ -107,35 +107,35 @@ class SqlIdiomOptionCompareSpec extends Spec {
         qr1.filter(t => t.o.exists(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE CASE WHEN t.o <> 1 THEN false ELSE true END AND t.o IS NOT NULL"
     }
     "forall" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o = 1 OR t.o IS NULL)"
     }
     "forall with null-check" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (CASE WHEN t.o <> 1 THEN false ELSE true END AND t.o IS NOT NULL OR t.o IS NULL)"
     }
     "filterIfDefined" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.filterIfDefined(op => op == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o = 1 OR t.o IS NULL)"
     }
     "filterIfDefined with null-check" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.filterIfDefined(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (CASE WHEN t.o <> 1 THEN false ELSE true END AND t.o IS NOT NULL OR t.o IS NULL)"
     }
     "embedded" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
@@ -184,7 +184,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
+          "SELECT t.optionalValue FROM TestEntity t WHERE CASE WHEN t.optionalValue = 1 THEN true ELSE false END AND t.optionalValue IS NOT NULL"
       }
       "forall" in {
         val q = quote {
@@ -192,7 +192,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue = 1"
+          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1 OR t.optionalValue IS NULL"
       }
       "forall with null-check" in {
         val q = quote {
@@ -202,7 +202,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
+          "SELECT t.optionalValue FROM TestEntity t WHERE CASE WHEN t.optionalValue = 1 THEN true ELSE false END AND t.optionalValue IS NOT NULL OR t.optionalValue IS NULL"
       }
       "filterIfDefined" in {
         val q = quote {
@@ -210,7 +210,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue = 1"
+          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1 OR t.optionalValue IS NULL"
       }
       "filterIfDefined with null-check" in {
         val q = quote {
@@ -220,7 +220,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
+          "SELECT t.optionalValue FROM TestEntity t WHERE CASE WHEN t.optionalValue = 1 THEN true ELSE false END AND t.optionalValue IS NOT NULL OR t.optionalValue IS NULL"
       }
     }
   }
@@ -323,35 +323,35 @@ class SqlIdiomOptionCompareSpec extends Spec {
         qr1.filter(t => t.o.exists(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE CASE WHEN t.o <> 1 THEN false ELSE true END AND t.o IS NOT NULL"
     }
     "forall" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => op == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o = 1 OR t.o IS NULL)"
     }
     "forall with null-check" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.forall(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (CASE WHEN t.o <> 1 THEN false ELSE true END AND t.o IS NOT NULL OR t.o IS NULL)"
     }
     "filterIfDefined" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.filterIfDefined(op => op == 1))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o = 1)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o = 1 OR t.o IS NULL)"
     }
     "filterIfDefined with null-check" in {
       val q = quote {
         qr1.filter(t => t.i != 1 && t.o.filterIfDefined(op => if (op != 1) false else true))
       }
       testContext.run(q).string mustEqual
-        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (t.o IS NULL OR t.o IS NOT NULL AND CASE WHEN t.o <> 1 THEN false ELSE true END)"
+        "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE t.i <> 1 AND (CASE WHEN t.o <> 1 THEN false ELSE true END AND t.o IS NOT NULL OR t.o IS NULL)"
     }
     "embedded" - {
       case class TestEntity(optionalEmbedded: Option[EmbeddedEntity])
@@ -400,7 +400,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
+          "SELECT t.optionalValue FROM TestEntity t WHERE CASE WHEN t.optionalValue = 1 THEN true ELSE false END AND t.optionalValue IS NOT NULL"
       }
       "forall" in {
         val q = quote {
@@ -408,7 +408,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue = 1"
+          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1 OR t.optionalValue IS NULL"
       }
       "forall with null-check" in {
         val q = quote {
@@ -418,7 +418,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
+          "SELECT t.optionalValue FROM TestEntity t WHERE CASE WHEN t.optionalValue = 1 THEN true ELSE false END AND t.optionalValue IS NOT NULL OR t.optionalValue IS NULL"
       }
       "filterIfDefined" in {
         val q = quote {
@@ -426,7 +426,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue = 1"
+          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue = 1 OR t.optionalValue IS NULL"
       }
       "filterIfDefined with null-check" in {
         val q = quote {
@@ -436,7 +436,7 @@ class SqlIdiomOptionCompareSpec extends Spec {
         }
 
         testContext.run(q).string mustEqual
-          "SELECT t.optionalValue FROM TestEntity t WHERE t.optionalValue IS NULL OR t.optionalValue IS NOT NULL AND CASE WHEN t.optionalValue = 1 THEN true ELSE false END"
+          "SELECT t.optionalValue FROM TestEntity t WHERE CASE WHEN t.optionalValue = 1 THEN true ELSE false END AND t.optionalValue IS NOT NULL OR t.optionalValue IS NULL"
       }
     }
   }
