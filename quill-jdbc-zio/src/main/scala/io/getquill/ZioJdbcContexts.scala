@@ -1,15 +1,7 @@
 package io.getquill
 
 import com.typesafe.config.Config
-import io.getquill.context.jdbc.{
-  H2JdbcTypes,
-  MysqlJdbcTypes,
-  OracleJdbcTypes,
-  PostgresJdbcTypes,
-  SqlServerExecuteOverride,
-  SqlServerJdbcTypes,
-  SqliteJdbcTypes
-}
+import io.getquill.context.jdbc.{H2JdbcTypes, MysqlJdbcTypes, OracleJdbcTypes, PostgresJdbcTypes, SqlServerExecuteOverride, SqlServerJdbcTypes, SqliteJdbcTypes}
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.context.qzio.{ZioJdbcContext, ZioJdbcUnderlyingContext}

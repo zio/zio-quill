@@ -12,7 +12,7 @@ class OptionSqlSpec extends Spec {
       testContext.run {
         query[Someone].filter(s => s.name.forall(n => n == "Joe"))
       }.string mustEqual
-        "SELECT s.name FROM Someone s WHERE s.name IS NULL OR s.name = 'Joe'"
+        "SELECT s.name FROM Someone s WHERE s.name = 'Joe' OR s.name IS NULL"
     }
     "exists" in {
       testContext.run {
@@ -71,11 +71,11 @@ class OptionSqlSpec extends Spec {
         "normally" in {
           val q = quote(query[Node].map(s => s.isUp.map(n => n == true).getOrElse(false)))
           testContext.run(q).string mustEqual
-            "SELECT s.isUp IS NOT NULL AND s.isUp = true OR s.isUp IS NULL AND false FROM Node s"
+            "SELECT s.isUp = true AND s.isUp IS NOT NULL OR false AND s.isUp IS NULL FROM Node s"
         }
         "map to self" in {
           testContext.run(query[Node].map(s => s.isUp.map(n => n).getOrElse(false))).string mustEqual
-            "SELECT s.isUp IS NOT NULL AND s.isUp OR s.isUp IS NULL AND false FROM Node s"
+            "SELECT s.isUp AND s.isUp IS NOT NULL OR false AND s.isUp IS NULL FROM Node s"
         }
         "simple" in {
           testContext.run(query[Node].map(s => s.isUp.getOrElse(false))).string mustEqual
@@ -85,11 +85,11 @@ class OptionSqlSpec extends Spec {
       "in filter clause" - {
         "normally" in {
           testContext.run(query[Node].filter(s => s.isUp.map(n => n == true).getOrElse(false))).string mustEqual
-            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND s.isUp = true OR s.isUp IS NULL AND false"
+            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp = true AND s.isUp IS NOT NULL OR false AND s.isUp IS NULL"
         }
         "map to self" in {
           testContext.run(query[Node].filter(s => s.isUp.map(n => n).getOrElse(false))).string mustEqual
-            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND s.isUp OR s.isUp IS NULL AND false"
+            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp AND s.isUp IS NOT NULL OR false AND s.isUp IS NULL"
         }
         "simple" in {
           testContext.run(query[Node].filter(s => s.isUp.getOrElse(false))).string mustEqual
@@ -102,12 +102,12 @@ class OptionSqlSpec extends Spec {
         "normally" in {
           testContext.run {
             query[Node].map(s => s.isUp.map(n => n == true).getOrElse(lift(false)))
-          }.string mustEqual // hello
-            "SELECT s.isUp IS NOT NULL AND s.isUp = true OR s.isUp IS NULL AND ? FROM Node s"
+          }.string mustEqual
+            "SELECT s.isUp = true AND s.isUp IS NOT NULL OR ? AND s.isUp IS NULL FROM Node s"
         }
         "map to self" in {
           testContext.run(query[Node].map(s => s.isUp.map(n => n).getOrElse(lift(false)))).string mustEqual
-            "SELECT s.isUp IS NOT NULL AND s.isUp OR s.isUp IS NULL AND ? FROM Node s"
+            "SELECT s.isUp AND s.isUp IS NOT NULL OR ? AND s.isUp IS NULL FROM Node s"
         }
         "simple" in {
           testContext.run(query[Node].map(s => s.isUp.getOrElse(lift(false)))).string mustEqual
@@ -118,12 +118,12 @@ class OptionSqlSpec extends Spec {
         "normally" in {
           testContext.run {
             query[Node].filter(s => s.isUp.map(n => n == true).getOrElse(lift(false)))
-          }.string mustEqual // hello
-            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND s.isUp = true OR s.isUp IS NULL AND ?"
+          }.string mustEqual
+            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp = true AND s.isUp IS NOT NULL OR ? AND s.isUp IS NULL"
         }
         "map to self" in {
           testContext.run(query[Node].filter(s => s.isUp.map(n => n).getOrElse(lift(false)))).string mustEqual
-            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND s.isUp OR s.isUp IS NULL AND ?"
+            "SELECT s.name, s.isUp FROM Node s WHERE s.isUp AND s.isUp IS NOT NULL OR ? AND s.isUp IS NULL"
         }
         "simple" in {
           testContext.run(query[Node].filter(s => s.isUp.getOrElse(lift(false)))).string mustEqual
@@ -143,13 +143,13 @@ class OptionSqlSpec extends Spec {
             testContext.run {
               query[Node].map(s => s.isUp.map(n => n == true).getOrElse(false))
             }.string mustEqual
-              "SELECT CASE WHEN s.isUp IS NOT NULL AND s.isUp = 1 OR s.isUp IS NULL AND 1 = 0 THEN 1 ELSE 0 END FROM Node s"
+              "SELECT CASE WHEN s.isUp = 1 AND s.isUp IS NOT NULL OR 1 = 0 AND s.isUp IS NULL THEN 1 ELSE 0 END FROM Node s"
           }
           "map to self" in {
             testContext.run {
               query[Node].map(s => s.isUp.map(n => n).getOrElse(false))
             }.string mustEqual
-              "SELECT CASE WHEN s.isUp IS NOT NULL AND 1 = s.isUp OR s.isUp IS NULL AND 1 = 0 THEN 1 ELSE 0 END FROM Node s"
+              "SELECT CASE WHEN 1 = s.isUp AND s.isUp IS NOT NULL OR 1 = 0 AND s.isUp IS NULL THEN 1 ELSE 0 END FROM Node s"
           }
           "simple" in {
             testContext.run {
@@ -163,13 +163,13 @@ class OptionSqlSpec extends Spec {
             testContext.run {
               query[Node].filter(s => s.isUp.map(n => n == true).getOrElse(false))
             }.string mustEqual
-              "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND s.isUp = 1 OR s.isUp IS NULL AND 1 = 0"
+              "SELECT s.name, s.isUp FROM Node s WHERE s.isUp = 1 AND s.isUp IS NOT NULL OR 1 = 0 AND s.isUp IS NULL"
           }
           "map to self" in {
             testContext.run {
               query[Node].filter(s => s.isUp.map(n => n).getOrElse(false))
             }.string mustEqual
-              "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND 1 = s.isUp OR s.isUp IS NULL AND 1 = 0"
+              "SELECT s.name, s.isUp FROM Node s WHERE 1 = s.isUp AND s.isUp IS NOT NULL OR 1 = 0 AND s.isUp IS NULL"
           }
           "simple" in {
             val q = quote(query[Node].filter(s => s.isUp.getOrElse(false)))
@@ -184,13 +184,13 @@ class OptionSqlSpec extends Spec {
             testContext.run {
               query[Node].map(s => s.isUp.map(n => n == true).getOrElse(lift(false)))
             }.string mustEqual
-              "SELECT CASE WHEN s.isUp IS NOT NULL AND s.isUp = 1 OR s.isUp IS NULL AND 1 = ? THEN 1 ELSE 0 END FROM Node s"
+              "SELECT CASE WHEN s.isUp = 1 AND s.isUp IS NOT NULL OR 1 = ? AND s.isUp IS NULL THEN 1 ELSE 0 END FROM Node s"
           }
           "map to self" in {
             testContext.run {
               query[Node].map(s => s.isUp.map(n => n).getOrElse(lift(false)))
             }.string mustEqual
-              "SELECT CASE WHEN s.isUp IS NOT NULL AND 1 = s.isUp OR s.isUp IS NULL AND 1 = ? THEN 1 ELSE 0 END FROM Node s"
+              "SELECT CASE WHEN 1 = s.isUp AND s.isUp IS NOT NULL OR 1 = ? AND s.isUp IS NULL THEN 1 ELSE 0 END FROM Node s"
           }
           "simple" in {
             testContext.run {
@@ -204,13 +204,13 @@ class OptionSqlSpec extends Spec {
             testContext.run {
               query[Node].filter(s => s.isUp.map(n => n == true).getOrElse(lift(false)))
             }.string mustEqual
-              "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND s.isUp = 1 OR s.isUp IS NULL AND 1 = ?"
+              "SELECT s.name, s.isUp FROM Node s WHERE s.isUp = 1 AND s.isUp IS NOT NULL OR 1 = ? AND s.isUp IS NULL"
           }
           "map to self" in {
             testContext.run {
               query[Node].filter(s => s.isUp.map(n => n).getOrElse(lift(false)))
             }.string mustEqual
-              "SELECT s.name, s.isUp FROM Node s WHERE s.isUp IS NOT NULL AND 1 = s.isUp OR s.isUp IS NULL AND 1 = ?"
+              "SELECT s.name, s.isUp FROM Node s WHERE 1 = s.isUp AND s.isUp IS NOT NULL OR 1 = ? AND s.isUp IS NULL"
           }
           "simple" in {
             testContext.run {
