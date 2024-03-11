@@ -1,4 +1,6 @@
 <configuration>
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex
@@ -9,7 +11,6 @@
     <logger name="io.getquill" level="INFO" />
     <logger name="com.zaxxer.hikari" level="INFO" />
     <logger name="io.netty" level="ERROR" />
-    <logger name="com.github.jasync" level="WARN" />
     <root level="WARN">
         <appender-ref ref="STDOUT" />
     </root>

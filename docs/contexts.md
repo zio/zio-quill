@@ -1023,373 +1023,6 @@ ctx.dataSource.portNumber=1521
 ctx.dataSource.serverName=host
 ```
 
-## NDBC Context
-
-Async support via [NDBC driver](https://ndbc.io/) is available with Postgres database.
-
-### quill-ndbc-postgres
-
-#### transactions
-
-Transaction support is provided out of the box by NDBC:
-
-```scala
-ctx.transaction {
-  ctx.run(query[Person].delete)
-  // other transactional code
-}
-```
-
-The body of transaction can contain calls to other methods and multiple run calls since the transaction is automatically handled.
-
-#### sbt dependencies
-
-```
-libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-ndbc-postgres" % "@VERSION@"
-)
-```
-
-#### context definition
-```scala
-lazy val ctx = new NdbcPostgresContext(Literal, "ctx")
-```
-
-#### application.properties
-```
-ctx.ndbc.dataSourceSupplierClass=io.trane.ndbc.postgres.netty4.DataSourceSupplier
-ctx.ndbc.host=host
-ctx.ndbc.port=1234
-ctx.ndbc.user=root
-ctx.ndbc.password=root
-ctx.ndbc.database=database
-```
-
-## quill-async
-
-The `quill-async` module provides simple async support for MySQL and Postgres databases.
-
-#### transactions
-
-The async module provides transaction support based on a custom implicit execution context:
-
-```
-ctx.transaction { implicit ec =>
-  ctx.run(query[Person].delete)
-  // other transactional code
-}
-```
-
-The body of `transaction` can contain calls to other methods and multiple `run` calls, but the transactional code must be done using the provided implicit execution context. For instance:
-
-```
-def deletePerson(name: String)(implicit ec: ExecutionContext) =
-  ctx.run(query[Person].filter(_.name == lift(name)).delete)
-
-ctx.transaction { implicit ec =>
-  deletePerson("John")
-}
-```
-
-Depending on how the main execution context is imported, it is possible to produce an ambiguous implicit resolution. A way to solve this problem is shadowing the multiple implicits by using the same name:
-
-```
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-
-def deletePerson(name: String)(implicit ec: ExecutionContext) =
-  ctx.run(query[Person].filter(_.name == lift(name)).delete)
-
-ctx.transaction { implicit ec =>
-  deletePerson("John")
-}
-```
-
-Note that the global execution context is renamed to ec.
-
-#### application.properties
-
-##### connection configuration
-```
-ctx.host=host
-ctx.port=1234
-ctx.user=root
-ctx.password=root
-ctx.database=database
-```
-
-or use connection URL with database-specific scheme (see below):
-
-```
-ctx.url=scheme://host:5432/database?user=root&password=root
-```
-
-##### connection pool configuration
-```
-ctx.poolMaxQueueSize=4
-ctx.poolMaxObjects=4
-ctx.poolMaxIdle=999999999
-ctx.poolValidationInterval=10000
-```
-
-Also see [`PoolConfiguration` documentation](https://github.com/mauricio/postgresql-async/blob/master/db-async-common/src/main/scala/com/github/mauricio/async/db/pool/PoolConfiguration.scala).
-
-##### SSL configuration
-```
-ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
-```
-
-##### other
-```
-ctx.charset=UTF-8
-ctx.maximumMessageSize=16777216
-ctx.connectTimeout=5s
-ctx.testTimeout=5s
-ctx.queryTimeout=10m
-```
-
-### quill-async-mysql
-
-#### sbt dependencies
-
-```
-libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-mysql" % "@VERSION@"
-)
-```
-
-#### context definition
-```scala
-lazy val ctx = new MysqlAsyncContext(SnakeCase, "ctx")
-```
-
-#### application.properties
-
-See [above](#applicationproperties-5)
-
-For `url` property use `mysql` scheme:
-
-```
-ctx.url=mysql://host:3306/database?user=root&password=root
-```
-
-### quill-async-postgres
-
-#### sbt dependencies
-
-```
-libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-async-postgres" % "@VERSION@"
-)
-```
-
-#### context definition
-```scala
-lazy val ctx = new PostgresAsyncContext(SnakeCase, "ctx")
-```
-
-#### application.properties
-
-See [common properties](#applicationproperties-5)
-
-For `url` property use `postgresql` scheme:
-
-```
-ctx.url=postgresql://host:5432/database?user=root&password=root
-```
-
-## quill-jasync
-
-The `quill-jasync` module provides simple async support for Postgres databases.
-
-#### transactions
-
-The async module provides transaction support based on a custom implicit execution context:
-
-```
-ctx.transaction { implicit ec =>
-  ctx.run(query[Person].delete)
-  // other transactional code
-}
-```
-
-The body of `transaction` can contain calls to other methods and multiple `run` calls, but the transactional code must be done using the provided implicit execution context. For instance:
-
-```
-def deletePerson(name: String)(implicit ec: ExecutionContext) =
-  ctx.run(query[Person].filter(_.name == lift(name)).delete)
-
-ctx.transaction { implicit ec =>
-  deletePerson("John")
-}
-```
-
-Depending on how the main execution context is imported, it is possible to produce an ambiguous implicit resolution. A way to solve this problem is shadowing the multiple implicits by using the same name:
-
-```
-import scala.concurrent.ExecutionContext.Implicits.{ global => ec }
-
-def deletePerson(name: String)(implicit ec: ExecutionContext) =
-  ctx.run(query[Person].filter(_.name == lift(name)).delete)
-
-ctx.transaction { implicit ec =>
-  deletePerson("John")
-}
-```
-
-Note that the global execution context is renamed to ec.
-
-#### application.properties
-
-##### connection configuration
-```
-ctx.host=host
-ctx.port=1234
-ctx.username=root
-ctx.password=root
-ctx.database=database
-```
-
-or use connection URL with database-specific scheme (see below):
-
-```
-ctx.url=scheme://host:5432/database?user=root&password=root
-```
-
-Also see full settings `ConnectionPoolConfiguration` [documentation](https://github.com/jasync-sql/jasync-sql/blob/master/db-async-common/src/main/java/com/github/jasync/sql/db/ConnectionPoolConfiguration.kt).
-
-##### SSL configuration
-```
-ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
-```
-
-### quill-jasync-mysql
-
-#### sbt dependencies
-
-```
-libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-mysql" % "@VERSION@"
-)
-```
-
-#### context definition
-```scala
-lazy val ctx = new MysqlJAsyncContext(SnakeCase, "ctx")
-```
-
-#### application.properties
-
-See [above](#applicationproperties-5)
-
-For `url` property use `mysql` scheme:
-
-```
-ctx.url=mysql://host:3306/database?user=root&password=root
-```
-
-
-### quill-jasync-postgres
-
-#### sbt dependencies
-
-```
-libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-postgres" % "@VERSION@"
-)
-```
-
-#### context definition
-
-```scala
-lazy val ctx = new PostgresJAsyncContext(SnakeCase, "ctx")
-```
-
-#### application.properties
-
-See [common properties](#applicationproperties-5)
-
-For `url` property use `postgresql` scheme:
-
-```
-ctx.url=postgresql://host:5432/database?user=root&password=root
-```
-
-## quill-jasync-zio
-
-The `quill-jasync-zio` module provides ZIO async support for Postgres databases.
-
-
-##### connection configuration
-```
-ctx.host=host
-ctx.port=1234
-ctx.username=root
-ctx.password=root
-ctx.database=database
-```
-
-or use connection URL with database-specific scheme (see below):
-
-```
-ctx.url=scheme://host:5432/database?user=root&password=root
-```
-
-Also see full settings `ConnectionPoolConfiguration` [documentation](https://github.com/jasync-sql/jasync-sql/blob/master/db-async-common/src/main/java/com/github/jasync/sql/db/ConnectionPoolConfiguration.kt).
-
-##### SSL configuration
-```
-ctx.sslmode=disable # optional, one of [disable|prefer|require|verify-ca|verify-full]
-ctx.sslrootcert=./path/to/cert/file # optional, required for sslmode=verify-ca or verify-full
-ctx.sslcert=./path/to/cert/file # optional, required to only allow connections from trusted clients
-ctx.sslkey=./path/to/key/file # optional, required to only allow connections from trusted clients
-```
-
-### quill-jasync-zio-postgres
-
-
-#### sbt dependencies
-
-```
-libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-jasync-zio-postgres" % "@VERSION@"
-)
-```
-
-#### context definition
-```scala
-lazy val ctx = new PostgresZioJAsyncContext(SnakeCase)
-// Also can be static:
-object MyContext extends PostgresZioJAsyncContext(Literal)
-```
-In order to run operation in this context we need to provide `ZioJAsyncConnection` instance.
-
-```scala
-object MyApp extends zio.App {
-  object DBContext extends PostgresZioJAsyncContext(Literal)
-  import DBContext._
-
-  val dependencies =
-    PostgresJAsyncContextConfig.loadConfig("testPostgresDB") >>>
-    ZioJAsyncConnection.live[PostgreSQLConnection]
-
-  val program = run(query[Person])
-
-  def run(args: List[String]) = program.provideLayer(dependencies).exitCode
-}
-```
-
-#### application.properties
-
-See [common properties](#applicationproperties-5)
-
-For `url` property use `postgresql` scheme:
-
-```
-ctx.url=postgresql://host:5432/database?user=root&password=root
-```
-
 ## quill-doobie
 
 Quill 3.16.5 and above supports Doobie starting 1.0.0-RC1. You can use quill quotes to construct `ConnectionIO` programs.
@@ -1719,37 +1352,37 @@ lazy val ctx = new CassandraMonixContext(SnakeCase, "ctx")
 lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 ```
 
-## quill-cassandra-alpakka
+## quill-cassandra-pekko
 
 #### sbt dependencies
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-alpakka" % "@VERSION@"
+  "io.getquill" %% "quill-cassandra-pekko" % "@VERSION@"
 )
 ```
 
-See [Alpakka Cassandra](https://doc.akka.io/docs/alpakka/current/cassandra.html) documentation page for more information.
+See [Pekko Cassandra](https://pekko.apache.org/docs/pekko-connectors/current/cassandra.html#apache-cassandra) documentation page for more information.
 
 #### context
 
 ```scala
-import akka.actor.ActorSystem
-import akka.stream.alpakka.cassandra.CassandraSessionSettings
-import akka.stream.alpakka.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.pekko.cassandra.CassandraSessionSettings
+import org.apache.pekko.stream.connectors.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
 import io.getquill.CassandraAlpakkaContext
 
 val system: ActorSystem = ???
-val alpakkaSessionSettings = CassandraSessionSettings("quill-test.alpakka.cassandra")
-val alpakkaSession: CassandraSession = CassandraSessionRegistry.get(system).sessionFor(alpakkaSessionSettings)
+val pekkoSessionSettings = CassandraSessionSettings("quill-test.pekko.cassandra")
+val pekkoSession: CassandraSession = CassandraSessionRegistry.get(system).sessionFor(pekkoSessionSettings)
 
-lazy val ctx = new CassandraAlpakkaContext(SnakeCase, alpakkaSession, preparedStatementCacheSize = 100)
+lazy val ctx = new CassandraAlpakkaContext(SnakeCase, pekkoSession, preparedStatementCacheSize = 100)
 ```
 
 #### application.properties
 ```
-// alpakka cassandra session with keyspace
-quill-test.alpakka.cassandra: ${alpakka.cassandra} { // inheritance of alpakka.cassandra session configuration
+// pekko cassandra session with keyspace
+quill-test.pekko.cassandra: ${pekko.cassandra} { // inheritance of pekko.cassandra session configuration
   // custom datastax driver setup
   datastax-java-driver-config = quill-test-datastax-java-driver
 }

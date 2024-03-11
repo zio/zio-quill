@@ -2039,8 +2039,7 @@ final case class Book(id: Int, notes: List[String], pages: Vector[Int], history:
 ctx.run(query[Book])
 // SELECT x.id, x.notes, x.pages, x.history FROM Book x
 ```
-Note that not all drivers/databases provides such feature hence only `PostgresJdbcContext` and
-`PostgresAsyncContext` support SQL Arrays.
+Note that not all drivers/databases provides such feature hence only `PostgresJdbcContext` support SQL Arrays.
 
 
 ## Cassandra-specific encoding

@@ -25,7 +25,8 @@ class PeopleZioReturningSpec extends PeopleReturningSpec {
         "org.postgresql.Driver",
         s"jdbc:postgresql://${System.getenv("POSTGRES_HOST")}:${System.getenv("POSTGRES_PORT")}/quill_test",
         "postgres",
-        System.getenv("POSTGRES_PASSWORD")
+        System.getenv("POSTGRES_PASSWORD"),
+        None
       ),
       HC.commit
     )

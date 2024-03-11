@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 export SQLITE_SCRIPT=quill-jdbc/src/test/resources/sql/sqlite-schema.sql
-export MYSQL_SCRIPT=quill-sql/src/test/sql/mysql-schema.sql
-export POSTGRES_SCRIPT=quill-sql/src/test/sql/postgres-schema.sql
-export POSTGRES_DOOBIE_SCRIPT=quill-sql/src/test/sql/postgres-doobie-schema.sql
-export SQL_SERVER_SCRIPT=quill-sql/src/test/sql/sqlserver-schema.sql
-export ORACLE_SCRIPT=quill-sql/src/test/sql/oracle-schema.sql
+export MYSQL_SCRIPT=quill-sql-test/src/test/sql/mysql-schema.sql
+export POSTGRES_SCRIPT=quill-sql-test/src/test/sql/postgres-schema.sql
+export POSTGRES_DOOBIE_SCRIPT=quill-sql-test/src/test/sql/postgres-doobie-schema.sql
+export SQL_SERVER_SCRIPT=quill-sql-test/src/test/sql/sqlserver-schema.sql
+export ORACLE_SCRIPT=quill-sql-test/src/test/sql/oracle-schema.sql
 export CASSANDRA_SCRIPT=quill-cassandra/src/test/cql/cassandra-schema.cql
 
 
@@ -32,6 +32,12 @@ function setup_sqlite() {
 
    # DB File in quill-jdbc-monix
    DB_FILE=quill-jdbc-monix/quill_test.db
+   rm -f $DB_FILE
+   sqlite3 $DB_FILE < $SQLITE_SCRIPT
+   chmod a+rw $DB_FILE
+
+   # DB File in quill-jdbc-monix
+   DB_FILE=quill-jdbc-test-sqlite/quill_test.db
    rm -f $DB_FILE
    sqlite3 $DB_FILE < $SQLITE_SCRIPT
    chmod a+rw $DB_FILE
