@@ -411,8 +411,8 @@ lazy val `quill-monix` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("io.monix" %% "monix-eval"     % "3.0.0").cross(CrossVersion.for3Use2_13),
-        ("io.monix" %% "monix-reactive" % "3.0.0").cross(CrossVersion.for3Use2_13)
+        ("io.monix" %% "monix-eval"     % "3.1.0").cross(CrossVersion.for3Use2_13),
+        ("io.monix" %% "monix-reactive" % "3.1.0").cross(CrossVersion.for3Use2_13)
       )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
