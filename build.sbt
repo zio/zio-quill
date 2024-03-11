@@ -167,7 +167,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.7.15")
+        ("org.scalameta" %% "scalafmt-core" % "3.8.0")
           .excludeAll(
             ({
               if (isScala3)
@@ -219,7 +219,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.1.16",
+        "dev.zio"                    %% "zio-logging"   % "2.1.17",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -548,8 +548,8 @@ lazy val `quill-cassandra-pekko` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.1",
-        "org.apache.pekko" %% "pekko-testkit"              % "1.0.1" % Test
+        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.2",
+        "org.apache.pekko" %% "pekko-testkit"              % "1.0.2" % Test
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -561,7 +561,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.24"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.29"
       )
     )
     .dependsOn(
@@ -583,10 +583,10 @@ lazy val `quill-test-kit` =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "5.1.0" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "8.2.0"       % Test,
+    "com.mysql"               % "mysql-connector-j"       % "8.3.0"       % Test,
     "com.h2database"          % "h2"                      % "2.2.224"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.0"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"    % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.45.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -650,13 +650,13 @@ def excludePaths(paths: Seq[String]) = {
 
 val scala_v_12 = "2.12.18"
 val scala_v_13 = "2.13.12"
-val scala_v_30 = "3.3.1"
+val scala_v_30 = "3.3.3"
 
 val scalaCollectionCompatVersion = "2.11.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.11" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.3" % Test
   )
 )
 
@@ -665,7 +665,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "org.scalatest"           %% "scalatest"               % "3.2.17" % Test,
+    "org.scalatest"           %% "scalatest"               % "3.2.18" % Test,
     "org.scala-lang.modules"  %% "scala-collection-compat" % scalaCollectionCompatVersion,
     "com.google.code.findbugs" % "jsr305"                  % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
