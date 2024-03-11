@@ -1,11 +1,11 @@
-package io.getquill.context.cassandra.alpakka
+package io.getquill.context.cassandra.pekko
 
 import io.getquill.Query
 import io.getquill.context.cassandra.EncodingSpecHelper
 
 import java.time.{Instant, LocalDate, ZoneId, ZonedDateTime}
 
-class EncodingSpec extends EncodingSpecHelper with CassandraAlpakkaSpec {
+class EncodingSpec extends EncodingSpecHelper with CassandraPekkoSpec {
 
   "encodes and decodes types" in {
     await {
