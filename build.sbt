@@ -548,8 +548,8 @@ lazy val `quill-cassandra-pekko` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.1",
-        "org.apache.pekko" %% "pekko-testkit"              % "1.0.1" % Test
+        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.2",
+        "org.apache.pekko" %% "pekko-testkit"              % "1.0.2" % Test
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -561,7 +561,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.26"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.29"
       )
     )
     .dependsOn(
@@ -656,7 +656,7 @@ val scalaCollectionCompatVersion = "2.11.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.14" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.3" % Test
   )
 )
 
