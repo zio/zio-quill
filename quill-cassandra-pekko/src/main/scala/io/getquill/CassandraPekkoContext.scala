@@ -1,8 +1,8 @@
 package io.getquill
 
-import akka.stream.alpakka.cassandra.scaladsl.{CassandraSession => CassandraAlpakkaSession}
-import akka.stream.scaladsl.Source
-import akka.{Done, NotUsed}
+import org.apache.pekko.stream.connectors.cassandra.scaladsl.{CassandraSession => CassandraPekkoSession}
+import org.apache.pekko.stream.scaladsl.Source
+import org.apache.pekko.{Done, NotUsed}
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.cql.{BoundStatement, PreparedStatement}
 import io.getquill.context.cassandra.{CassandraSessionContext, CqlIdiom, PrepareStatementCache}
@@ -14,16 +14,16 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Failure
 
-class CassandraAlpakkaContext[+N <: NamingStrategy](
+class CassandraPekkoContext[+N <: NamingStrategy](
   val naming: N,
-  val alpakkaSession: CassandraAlpakkaSession,
+  val pekkoSession: CassandraPekkoSession,
   val preparedStatementCacheSize: Long
 ) extends CassandraSessionContext[N]
     with CassandraSession
     with ContextVerbStream[CqlIdiom, N]
     with ScalaFutureIOMonad {
 
-  private val logger = ContextLogger(classOf[CassandraAlpakkaContext[_]])
+  private val logger = ContextLogger(classOf[CassandraPekkoContext[_]])
 
   override type StreamResult[T]         = Source[T, NotUsed]
   override type Result[T]               = Future[T]
@@ -33,13 +33,13 @@ class CassandraAlpakkaContext[+N <: NamingStrategy](
   override type RunActionResult         = Done
   override type RunBatchActionResult    = Done
 
-  override lazy val session: CqlSession = Await.result(alpakkaSession.underlying(), 30.seconds)
+  override lazy val session: CqlSession = Await.result(pekkoSession.underlying(), 30.seconds)
 
   lazy val asyncCache = new PrepareStatementCache[Future[PreparedStatement]](preparedStatementCacheSize)
 
   override def prepareAsync(cql: String)(implicit executionContext: ExecutionContext): Future[BoundStatement] = {
     val output = asyncCache(cql) { stmt =>
-      alpakkaSession.prepare(stmt)
+      pekkoSession.prepare(stmt)
     }
 
     output.onComplete {
@@ -63,14 +63,14 @@ class CassandraAlpakkaContext[+N <: NamingStrategy](
     info: ExecutionInfo,
     dc: Runner
   )(implicit ec: ExecutionContext): StreamResult[T] =
-    alpakkaSession.select(prepareAsyncAndGetStatement(cql, prepare, this, logger)).map(row => extractor(row, this))
+    pekkoSession.select(prepareAsyncAndGetStatement(cql, prepare, this, logger)).map(row => extractor(row, this))
 
   def executeQuery[T](cql: String, prepare: Prepare = identityPrepare, extractor: Extractor[T] = identityExtractor)(
     info: ExecutionInfo,
     dc: Runner
   )(implicit executionContext: ExecutionContext): Result[RunQueryResult[T]] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
-    statement.flatMap(st => alpakkaSession.selectAll(st)).map(rows => rows.map(row => extractor(row, this)).toList)
+    statement.flatMap(st => pekkoSession.selectAll(st)).map(rows => rows.map(row => extractor(row, this)).toList)
   }
 
   def executeQuerySingle[T](
@@ -87,7 +87,7 @@ class CassandraAlpakkaContext[+N <: NamingStrategy](
     executionContext: ExecutionContext
   ): Result[RunActionResult] = {
     val statement = prepareAsyncAndGetStatement(cql, prepare, this, logger)
-    statement.flatMap((st: BoundStatement) => alpakkaSession.executeWrite(st))
+    statement.flatMap((st: BoundStatement) => pekkoSession.executeWrite(st))
   }
 
   def executeBatchAction(
@@ -101,7 +101,7 @@ class CassandraAlpakkaContext[+N <: NamingStrategy](
       .map(_ => Done)
 
   override def close() = {
-    alpakkaSession.close(scala.concurrent.ExecutionContext.Implicits.global)
+    pekkoSession.close(scala.concurrent.ExecutionContext.Implicits.global)
     ()
   }
 

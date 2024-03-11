@@ -913,14 +913,14 @@ class SqlIdiomSpec extends Spec {
             qr1.filter(t => t.o.map(_ < 10).getOrElse(true)).map(t => t.i)
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i FROM TestEntity t WHERE t.o IS NOT NULL AND t.o < 10 OR t.o IS NULL AND true"
+            "SELECT t.i FROM TestEntity t WHERE t.o < 10 AND t.o IS NOT NULL OR true AND t.o IS NULL"
         }
         "is not null" in {
           val q = quote {
             qr1.filter(t => t.o.map(_ < 10).getOrElse(false)).map(t => t.i)
           }
           testContext.run(q).string mustEqual
-            "SELECT t.i FROM TestEntity t WHERE t.o IS NOT NULL AND t.o < 10 OR t.o IS NULL AND false"
+            "SELECT t.i FROM TestEntity t WHERE t.o < 10 AND t.o IS NOT NULL OR false AND t.o IS NULL"
         }
       }
     }

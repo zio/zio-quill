@@ -1,6 +1,6 @@
-package io.getquill.context.cassandra.alpakka
+package io.getquill.context.cassandra.pekko
 
-class DecodeNullSpec extends CassandraAlpakkaSpec {
+class DecodeNullSpec extends CassandraPekkoSpec {
 
   "no default values when reading null" in {
 

@@ -15,7 +15,7 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+      "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i = 1 OR b.i IS NULL"
   }
 
   "join + filter with null-check" in {
@@ -26,7 +26,7 @@ class JoinSpec extends Spec {
         .filter(_._2.map(_.i).forall(b => if (b == 1) true else false))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
+      "SELECT a.s, a.i, a.l, a.o, a.b, b.s, b.i, b.l, b.o FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE CASE WHEN b.i = 1 THEN true ELSE false END AND b.i IS NOT NULL OR b.i IS NULL"
   }
 
   "join + map + filter" in {
@@ -38,7 +38,7 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(_ == 1))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i = 1"
+      "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i = 1 OR b.i IS NULL"
   }
 
   "join + map + filter with null-check" in {
@@ -50,7 +50,7 @@ class JoinSpec extends Spec {
         .filter(_._2.forall(b => if (b == 1) true else false))
     }
     testContext.run(q).string mustEqual
-      "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE b.i IS NULL OR b.i IS NOT NULL AND CASE WHEN b.i = 1 THEN true ELSE false END"
+      "SELECT a.i AS _1, b.i AS _2 FROM TestEntity a LEFT JOIN TestEntity2 b ON a.i = b.i WHERE CASE WHEN b.i = 1 THEN true ELSE false END AND b.i IS NOT NULL OR b.i IS NULL"
   }
 
   "join + filter + leftjoin" in {

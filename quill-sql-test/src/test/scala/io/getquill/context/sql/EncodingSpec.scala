@@ -3,17 +3,7 @@ package io.getquill.context.sql
 import io.getquill.base.Spec
 
 import java.time
-import java.time.{
-  Instant,
-  LocalDate,
-  LocalDateTime,
-  LocalTime,
-  OffsetDateTime,
-  OffsetTime,
-  ZoneId,
-  ZoneOffset,
-  ZonedDateTime
-}
+import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, OffsetDateTime, OffsetTime, ZoneId, ZoneOffset, ZonedDateTime}
 import java.util.{Date, UUID}
 
 case class EncodingTestType(value: String)

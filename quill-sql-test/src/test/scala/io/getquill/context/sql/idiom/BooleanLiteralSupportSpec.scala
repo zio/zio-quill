@@ -206,7 +206,7 @@ class BooleanLiteralSupportSpec extends Spec {
         qr1.filter(t => t.o.exists(_ => if (false) false else true)).map(t => (t.b, true))
       }
       ctx.run(q).string mustEqual
-        "SELECT t.b AS _1, 1 AS _2 FROM TestEntity t WHERE t.o IS NOT NULL AND (1 = 0 AND 1 = 0 OR NOT (1 = 0) AND 1 = 1)"
+        "SELECT t.b AS _1, 1 AS _2 FROM TestEntity t WHERE (1 = 0 AND 1 = 0 OR NOT (1 = 0) AND 1 = 1) AND t.o IS NOT NULL"
     }
 
     "exists - lifted" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
@@ -215,7 +215,7 @@ class BooleanLiteralSupportSpec extends Spec {
         qr1.filter(t => t.o.exists(_ => if (lift(false)) lift(false) else lift(true))).map(t => (t.b, true))
       }
       ctx.run(q).string mustEqual
-        "SELECT t.b AS _1, 1 AS _2 FROM TestEntity t WHERE t.o IS NOT NULL AND (1 = ? AND 1 = ? OR NOT (1 = ?) AND 1 = ?)"
+        "SELECT t.b AS _1, 1 AS _2 FROM TestEntity t WHERE (1 = ? AND 1 = ? OR NOT (1 = ?) AND 1 = ?) AND t.o IS NOT NULL"
     }
   }
 
@@ -272,7 +272,7 @@ class BooleanLiteralSupportSpec extends Spec {
           .filter(_._2.forall(v => if (true) true else false))
       }
       ctx.run(q).string mustEqual
-        "SELECT a.i AS _1, b.s AS _2, 0 AS _3 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 0 WHERE b.s IS NULL OR b.s IS NOT NULL AND (1 = 1 AND 1 = 1 OR NOT (1 = 1) AND 1 = 0)"
+        "SELECT a.i AS _1, b.s AS _2, 0 AS _3 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 0 WHERE (1 = 1 AND 1 = 1 OR NOT (1 = 1) AND 1 = 0) AND b.s IS NOT NULL OR b.s IS NULL"
     }
 
     "join + map + filter (lifted)" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>
@@ -285,7 +285,7 @@ class BooleanLiteralSupportSpec extends Spec {
           .filter(_._2.forall(v => if (lift(true)) lift(true) else lift(false)))
       }
       ctx.run(q).string mustEqual
-        "SELECT a.i AS _1, b.s AS _2, 0 AS _3 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 0 WHERE b.s IS NULL OR b.s IS NOT NULL AND (1 = ? AND 1 = ? OR NOT (1 = ?) AND 1 = ?)"
+        "SELECT a.i AS _1, b.s AS _2, 0 AS _3 FROM TestEntity a LEFT JOIN TestEntity2 b ON 1 = 0 WHERE (1 = ? AND 1 = ? OR NOT (1 = ?) AND 1 = ?) AND b.s IS NOT NULL OR b.s IS NULL"
     }
 
     "for-comprehension with constant" in testContext.withDialect(MirrorSqlDialectWithBooleanLiterals) { ctx =>

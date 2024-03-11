@@ -1,6 +1,6 @@
-package io.getquill.context.cassandra.alpakka
+package io.getquill.context.cassandra.pekko
 
-class CaseClassQueryCassandraSpec extends CassandraAlpakkaSpec {
+class CaseClassQueryCassandraSpec extends CassandraPekkoSpec {
 
   import testDB._
 
