@@ -1352,37 +1352,37 @@ lazy val ctx = new CassandraMonixContext(SnakeCase, "ctx")
 lazy val ctx = new CassandraStreamContext(SnakeCase, "ctx")
 ```
 
-## quill-cassandra-alpakka
+## quill-cassandra-pekko
 
 #### sbt dependencies
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-alpakka" % "@VERSION@"
+  "io.getquill" %% "quill-cassandra-pekko" % "@VERSION@"
 )
 ```
 
-See [Alpakka Cassandra](https://doc.akka.io/docs/alpakka/current/cassandra.html) documentation page for more information.
+See [Pekko Cassandra](https://pekko.apache.org/docs/pekko-connectors/current/cassandra.html#apache-cassandra) documentation page for more information.
 
 #### context
 
 ```scala
-import akka.actor.ActorSystem
-import akka.stream.alpakka.cassandra.CassandraSessionSettings
-import akka.stream.alpakka.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.pekko.cassandra.CassandraSessionSettings
+import org.apache.pekko.stream.connectors.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
 import io.getquill.CassandraAlpakkaContext
 
 val system: ActorSystem = ???
-val alpakkaSessionSettings = CassandraSessionSettings("quill-test.alpakka.cassandra")
-val alpakkaSession: CassandraSession = CassandraSessionRegistry.get(system).sessionFor(alpakkaSessionSettings)
+val pekkoSessionSettings = CassandraSessionSettings("quill-test.pekko.cassandra")
+val pekkoSession: CassandraSession = CassandraSessionRegistry.get(system).sessionFor(pekkoSessionSettings)
 
-lazy val ctx = new CassandraAlpakkaContext(SnakeCase, alpakkaSession, preparedStatementCacheSize = 100)
+lazy val ctx = new CassandraAlpakkaContext(SnakeCase, pekkoSession, preparedStatementCacheSize = 100)
 ```
 
 #### application.properties
 ```
-// alpakka cassandra session with keyspace
-quill-test.alpakka.cassandra: ${alpakka.cassandra} { // inheritance of alpakka.cassandra session configuration
+// pekko cassandra session with keyspace
+quill-test.pekko.cassandra: ${pekko.cassandra} { // inheritance of pekko.cassandra session configuration
   // custom datastax driver setup
   datastax-java-driver-config = quill-test-datastax-java-driver
 }
