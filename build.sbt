@@ -395,8 +395,8 @@ lazy val `quill-doobie` =
     .settings(jdbcTestingSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC4",
-        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC4" % Test
+        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC5",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC5" % Test
       )
     )
     .dependsOn(
@@ -586,7 +586,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.mysql"               % "mysql-connector-j"       % "8.3.0"       % Test,
     "com.h2database"          % "h2"                      % "2.2.224"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.0"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.45.1.0"    % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.45.2.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -649,7 +649,7 @@ def excludePaths(paths: Seq[String]) = {
 }
 
 val scala_v_12 = "2.12.19"
-val scala_v_13 = "2.13.12"
+val scala_v_13 = "2.13.13"
 val scala_v_30 = "3.3.3"
 
 val scalaCollectionCompatVersion = "2.11.0"
