@@ -33,11 +33,11 @@ object extensions {
    * See:
    *   - https://github.com/zio/zio-logging/blob/v2.1.14/core/shared/src/main/scala/zio/logging/package.scala#L459-L468
    */
-  def makeFileLogger(config: FileLoggerConfig): ZIO[Scope, Throwable, ZLogger[String, Any]] =
+  private def makeFileLogger(config: FileLoggerConfig): ZIO[Scope, Throwable, ZLogger[String, Any]] =
     makeFileLogger(
       config.destination,
       config.format.toLogger,
-      config.filter,
+      config.filter.toFilter,
       config.charset,
       config.autoFlushBatchSize,
       config.bufferedIOSize,
@@ -54,7 +54,7 @@ object extensions {
    * See:
    *   - https://github.com/zio/zio-logging/blob/v2.1.14/core/shared/src/main/scala/zio/logging/package.scala#L470-L491
    */
-  def makeFileLogger(
+  private def makeFileLogger(
     destination: Path,
     logger: ZLogger[String, String],
     logFilter: LogFilter[String],
