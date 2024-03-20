@@ -5,8 +5,8 @@ import io.getquill._
 import io.getquill.context.ZioJdbc
 import io.getquill.context.ZioJdbc.scopedBestEffort
 import io.getquill.context.jdbc._
-import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.json.PostgresJsonExtensions
+import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.util.LoadConfig
 import zio.{Tag, ZIO, ZLayer}
 
@@ -98,16 +98,16 @@ object Quill {
   }
 
   object Connection {
-    def acquireScoped: ZLayer[DataSource, SQLException, Connection] =
+    val acquireScoped: ZLayer[DataSource, SQLException, Connection] =
       ZLayer.scoped {
         for {
-          blockingExecutor <- ZIO.blockingExecutor
-          ds               <- ZIO.service[DataSource]
-          r <- ZioJdbc
-                 .scopedBestEffort(ZIO.attempt(ds.getConnection))
-                 .refineToOrDie[SQLException]
-                 .onExecutor(blockingExecutor)
-        } yield r
+          ds <- ZIO.service[DataSource]
+          c <- ZIO.blocking {
+                 ZioJdbc
+                   .scopedBestEffort(ZIO.attempt(ds.getConnection))
+                   .refineToOrDie[SQLException]
+               }
+        } yield c
       }
   }
 

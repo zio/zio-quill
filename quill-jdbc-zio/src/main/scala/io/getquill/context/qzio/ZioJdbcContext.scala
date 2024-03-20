@@ -235,23 +235,30 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     }
 
   private def onConnection[T](qlio: ZIO[Connection, SQLException, T]): ZIO[DataSource, SQLException, T] =
-    currentConnection.get.flatMap {
-      case Some(connection) =>
-        blocking(qlio.provideEnvironment(ZEnvironment(connection)))
-      case None =>
-        blocking(qlio.provideLayer(Quill.Connection.acquireScoped))
+    ZIO.blocking {
+      currentConnection.get.flatMap {
+        case Some(connection) => qlio.provideEnvironment(ZEnvironment(connection))
+        case None             => qlio.provideLayer(Quill.Connection.acquireScoped)
+      }
     }
 
   private def onConnectionStream[T](
     qstream: ZStream[Connection, SQLException, T]
   ): ZStream[DataSource, SQLException, T] =
-    streamBlocker *> ZStream.fromZIO(currentConnection.get).flatMap {
-      case Some(connection) =>
-        qstream.provideEnvironment(ZEnvironment(connection))
-      case None =>
-        (for {
-          env <- ZStream.scoped(Quill.Connection.acquireScoped.build)
-          r   <- qstream.provideEnvironment(env)
-        } yield (r)).refineToOrDie[SQLException]
+    ZStream.blocking {
+      ZStream.unwrapScoped[DataSource] {
+        for {
+          maybeConnection <- currentConnection.get
+          stream <- maybeConnection match {
+                      case Some(connection) => ZIO.succeed(qstream.provideEnvironment(ZEnvironment(connection)))
+                      case None =>
+                        (
+                          for {
+                            connection <- Quill.Connection.acquireScoped.build
+                          } yield qstream.provideSomeEnvironment[DataSource](_.union(connection))
+                        ).refineToOrDie[SQLException]
+                    }
+        } yield stream
+      }
     }
 }

@@ -676,6 +676,11 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
         "org.scala-lang" % "scala-reflect"  % scalaVersion.value
       )
     else Seq.empty
+  } ++ {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq(compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"))
+      case _            => Seq.empty
+    }
   },
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
