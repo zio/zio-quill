@@ -1,5 +1,6 @@
 package io.getquill
 
+import io.getquill.ast.Ident
 import io.getquill.context.sql.idiom.{ConcatSupport, QuestionMarkBindVariables, SqlIdiom}
 import io.getquill.context._
 import io.getquill.norm.ProductAggregationToken
@@ -56,7 +57,7 @@ object MirrorSqlDialect extends MirrorSqlDialect {
   trait StrategizeElements extends SqlIdiom with QuestionMarkBindVariables with ConcatSupport with CanReturnField {
 
     override def tokenizeIdentName(strategy: NamingStrategy, name: String): String     = strategy.default(name)
-    override def tokenizeTableAlias(strategy: NamingStrategy, table: String): String   = strategy.default(table)
+    override def tokenizeTableAlias(strategy: NamingStrategy, table: Ident): String    = strategy.default(table.name)
     override def tokenizeColumnAlias(strategy: NamingStrategy, column: String): String = strategy.default(column)
     override def tokenizeFixedColumn(strategy: NamingStrategy, column: String): String = strategy.default(column)
     override def prepareForProbing(string: String)                                     = string
