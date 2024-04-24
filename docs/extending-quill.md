@@ -289,23 +289,26 @@ ctx.run(
 
 Quill uses `Encoder`s to encode query inputs and `Decoder`s to read values returned by queries. The library provides a few built-in encodings and two mechanisms to define custom encodings: mapped encoding and raw encoding.
 
-### Mapped Encoding
+### Custom Encoders
 
-If the correspondent database type is already supported, use `MappedEncoding`. In this example, `String` is already supported by Quill and the `UUID` encoding from/to `String` is defined through mapped encoding:
-
+If the correspondent database type is already supported, use `encoder.contramap` and `decoder.map` to define encoders/decoders for
+the custom type. In this example, `String` is already supported by Quill and the `UUID` encoding from/to `String` is defined through a custom encoding:
 ```scala
-import ctx._
 import java.util.UUID
+import ctx._
 
-implicit val encodeUUID = MappedEncoding[UUID, String](_.toString)
-implicit val decodeUUID = MappedEncoding[String, UUID](UUID.fromString(_))
+implicit val encodeUUID: Encoder[UUID] = 
+  implicitly[Encoder[String]].contramap((id: UUID) => id.toString)
+implicit val decodeUUID: Decoder[UUID] =
+  implicitly[Decoder[String]].map((idStr: String) => UUID.fromString(idStr))
 ```
 
-A mapped encoding also can be defined without a context instance by importing `io.getquill.MappedEncoding`:
+You can also MappedEncoding to define instances that convert to/from the target type.
 
 ```scala
-import io.getquill.MappedEncoding
 import java.util.UUID
+import ctx._                      // - Import MappedEncoding from the context 
+// import io.getquill.MappedEncoding - (or import MappedEncoding directly)
 
 implicit val encodeUUID = MappedEncoding[UUID, String](_.toString)
 implicit val decodeUUID = MappedEncoding[String, UUID](UUID.fromString(_))

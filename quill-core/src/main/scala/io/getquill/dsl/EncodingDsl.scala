@@ -35,6 +35,16 @@ trait EncodingDsl extends LowPriorityImplicits {
 
   type Encoder[T] <: BaseEncoder[T]
 
+  implicit class EncoderOps[T](self: Encoder[T]) {
+    def contramap[R](f: R => T)(implicit base: Encoder[T]): Encoder[R] =
+      mappedEncoder[R, T](MappedEncoding(f), base)
+  }
+
+  implicit class DecoderOps[T](self: Decoder[T]) {
+    def map[R](f: T => R)(implicit base: Decoder[T]): Decoder[R] =
+      mappedDecoder[T, R](MappedEncoding(f), base)
+  }
+
   type BaseDecoder[T] = (Index, ResultRow, Session) => T
 
   type Decoder[T] <: BaseDecoder[T]
