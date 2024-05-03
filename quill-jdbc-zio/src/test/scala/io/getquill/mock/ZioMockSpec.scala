@@ -170,7 +170,8 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
     when(conn.prepareStatement(any[String], any[Int], any[Int])) thenReturn stmt
     when(stmt.executeQuery()) thenReturn rs
     when(conn.getAutoCommit) thenReturn true
-    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((f: Boolean) => ()) andThenThrow (new SQLException(msg))
+    // The second call to `setAutoCommit` will fail. This second call is the one that sets backs the initial values
+    when(conn.setAutoCommit(any[Boolean])) thenAnswer ((_: Boolean) => ()) andThenThrow (new SQLException(msg))
 
     val ctx = new PostgresZioJdbcContext(Literal)
     import ctx._
