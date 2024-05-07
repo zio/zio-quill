@@ -26,7 +26,7 @@ trait PostgresJsonExtensions { this: Encoders with Decoders =>
 
   def astEncoder[Wrapper](valueToString: Wrapper => String, jsonType: String): Encoder[Wrapper] =
     encoder(
-      Types.VARCHAR,
+      Types.OTHER,
       (index, jsonValue, row) => {
         val obj = new org.postgresql.util.PGobject()
         obj.setType(jsonType)
@@ -56,7 +56,7 @@ trait PostgresJsonExtensions { this: Encoders with Decoders =>
     jsonEncoder: JsonEncoder[JsValue]
   ): Encoder[Wrapper] =
     encoder(
-      Types.VARCHAR,
+      Types.OTHER,
       (index, jsonValue, row) => {
         val obj = new org.postgresql.util.PGobject()
         obj.setType(jsonType)
