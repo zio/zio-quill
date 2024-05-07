@@ -30,18 +30,6 @@ function setup_sqlite() {
     echo "Setting permissions on sqlite DB File"
     chmod a+rw $DB_FILE
 
-   # DB File in quill-jdbc-monix
-   DB_FILE=quill-jdbc-monix/quill_test.db
-   rm -f $DB_FILE
-   sqlite3 $DB_FILE < $SQLITE_SCRIPT
-   chmod a+rw $DB_FILE
-
-   # DB File in quill-jdbc-monix
-   DB_FILE=quill-jdbc-test-sqlite/quill_test.db
-   rm -f $DB_FILE
-   sqlite3 $DB_FILE < $SQLITE_SCRIPT
-   chmod a+rw $DB_FILE
-
     echo "Sqlite ready!"
 }
 

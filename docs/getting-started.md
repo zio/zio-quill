@@ -56,5 +56,4 @@ Choose the quill module that works for you!
 
 * If you are starting from scratch with a regular RDBMS try using the `quill-jdbc-zio` module as shown above.
 * If you are developing a legacy Java project and don't want/need reactive, use `quill-jdbc`.
-* If you are developing a project with Cats and/or Monix, try `quill-jdbc-monix`.
 * If you are using Cassandra, Spark, or OrientDB, try the corresponding modules for each of them.

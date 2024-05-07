@@ -31,7 +31,6 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core`,
   `quill-sql`,
   `quill-sql-test`,
-  `quill-monix`,
   `quill-zio`,
   `quill-util`
 )
@@ -49,7 +48,6 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc-test-sqlite`,
   `quill-jdbc-test-sqlserver`,
   `quill-doobie`,
-  `quill-jdbc-monix`,
   `quill-jdbc-zio`
 )
 
@@ -61,7 +59,6 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-cassandra`,
-  `quill-cassandra-monix`,
   `quill-cassandra-zio`,
   `quill-cassandra-pekko`,
   `quill-orientdb`,
@@ -405,44 +402,6 @@ lazy val `quill-doobie` =
     )
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-monix` =
-  (project in file("quill-monix"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        ("io.monix" %% "monix-eval"     % "3.0.0").cross(CrossVersion.for3Use2_13),
-        ("io.monix" %% "monix-reactive" % "3.0.0").cross(CrossVersion.for3Use2_13)
-      )
-    )
-    .dependsOn(`quill-core` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jdbc-monix` =
-  (project in file("quill-jdbc-monix"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(
-      Test / testGrouping := {
-        (Test / definedTests).value map { test =>
-          if (test.name endsWith "IntegrationSpec")
-            Tests.Group(
-              name = test.name,
-              tests = Seq(test),
-              runPolicy = Tests.SubProcess(
-                ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
-              )
-            )
-          else
-            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(ForkOptions()))
-        }
-      }
-    )
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql` % "compile->compile")
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
 lazy val `quill-zio` =
   (project in file("quill-zio"))
     .settings(commonSettings: _*)
@@ -516,16 +475,6 @@ lazy val `quill-cassandra` =
       )
     )
     .dependsOn(`quill-core` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-cassandra-monix` =
-  (project in file("quill-cassandra-monix"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true
-    )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-cassandra-zio` =
@@ -752,7 +701,6 @@ lazy val docs = project
     ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(
       `quill-engine`,
       `quill-core`,
-      `quill-cassandra-monix`,
       `quill-orientdb`,
       `quill-doobie`
     ),
