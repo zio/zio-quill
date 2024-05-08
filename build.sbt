@@ -740,7 +740,12 @@ lazy val docs = project
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions += "-Xlog-implicits",
-    libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
+    libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio) ++ {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) => Seq(compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"))
+        case _            => Seq.empty
+      }
+    },
     projectName    := "ZIO Quill",
     mainModuleName := (`quill-core` / moduleName).value,
     // With Scala 2.12, these projects doc isn't compiling.
