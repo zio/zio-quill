@@ -32,11 +32,11 @@ trait ZioSpec extends Spec with BeforeAndAfterAll {
     }
 
   implicit class ZStreamTestExt[T](stream: ZStream[Any, Throwable, T]) {
-    def runSyncUnsafe() = collect[T](stream)
+    def runSyncUnsafe(): List[T] = collect[T](stream)
   }
 
   implicit class ZioTestExt[T](qzio: ZIO[Any, Throwable, T]) {
-    def runSyncUnsafe() = collect[T](qzio)
+    def runSyncUnsafe(): T = collect[T](qzio)
   }
 }
 
@@ -61,17 +61,17 @@ trait ZioProxySpec extends Spec with BeforeAndAfterAll {
     }
 
   implicit class ZioAnyOps[T](qzio: ZIO[Any, Throwable, T]) {
-    def runSyncUnsafe() =
+    def runSyncUnsafe(): T =
       Unsafe.unsafe { implicit u =>
         Runtime.default.unsafe.run(qzio).getOrThrow()
       }
   }
 
   implicit class ZStreamTestExt[T](stream: ZStream[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]) {
-    def runSyncUnsafe() = collect[T](stream)
+    def runSyncUnsafe(): List[T] = collect[T](stream)
   }
 
   implicit class ZioTestExt[T](qzio: ZIO[DataSource, Throwable, T])(implicit runtime: Implicit[DataSource]) {
-    def runSyncUnsafe() = collect[T](qzio)
+    def runSyncUnsafe(): T = collect[T](qzio)
   }
 }
