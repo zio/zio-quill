@@ -17,7 +17,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken}
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.{HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects}
+import io.getquill.sql.norm.{HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects, ValueizeSingleLeafSelects}
 import io.getquill.util.{Interleave, Interpolator, Messages, TraceConfig}
 import io.getquill.util.Messages.{TraceType, fail, trace}
 
@@ -82,7 +82,9 @@ trait SqlIdiom extends Idiom {
           val sql = querifyAst(q, idiomContext.traceConfig)
           trace"SQL: ${sql}".andLog()
           VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql, topLevelQuat)
+          val valueized = ValueizeSingleLeafSelects(naming)(sql, topLevelQuat)
+          trace"Valueized SQL: ${valueized}".andLog()
+          val expanded = ExpandNestedQueries(valueized, topLevelQuat)
           trace"Expanded SQL: ${expanded}".andLog()
           val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
           trace"Filtered SQL (only used selects): ${refined}".andLog()

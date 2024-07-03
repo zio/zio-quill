@@ -11,14 +11,27 @@ import io.getquill.sql.Common.ContainsImpurities
 
 final case class OrderByCriteria(ast: Ast, ordering: PropertyOrdering)
 
-sealed trait FromContext { def quat: Quat }
+sealed trait FromContext {
+  def quat: Quat
+  def mapAst(f: Ast => Ast): FromContext = this match {
+    case c: TableContext            => c
+    case QueryContext(query, alias) => QueryContext(query.mapAst(f), alias)
+    case c: InfixContext            => c.mapAsts(f)
+    case JoinContext(t, a, b, on)   => JoinContext(t, a.mapAst(f), b.mapAst(f), f(on))
+    case FlatJoinContext(t, a, on)  => FlatJoinContext(t, a.mapAst(f), f(on))
+  }
+}
 final case class TableContext(entity: Entity, alias: Ident) extends FromContext {
   override def quat: Quat = entity.quat
 }
 final case class QueryContext(query: SqlQuery, alias: Ident) extends FromContext {
   override def quat: Quat = query.quat
 }
-final case class InfixContext(infix: Infix, alias: Ident) extends FromContext { override def quat: Quat = infix.quat }
+final case class InfixContext(infix: Infix, alias: Ident) extends FromContext {
+  override def quat: Quat = infix.quat
+  def mapAsts(f: Ast => Ast): InfixContext =
+    copy(infix = infix.copy(params = infix.params.map(f)))
+}
 final case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast) extends FromContext {
   override def quat: Quat = Quat.Tuple(a.quat, b.quat)
 }
@@ -28,6 +41,16 @@ final case class FlatJoinContext(t: JoinType, a: FromContext, on: Ast) extends F
 
 sealed trait SqlQuery {
   def quat: Quat
+
+  def mapAst(f: Ast => Ast): SqlQuery =
+    this match {
+      case flatten: FlattenSqlQuery =>
+        flatten.mapAsts(f)
+      case SetOperationSqlQuery(a, op, b) =>
+        SetOperationSqlQuery(a.mapAst(f), op, b.mapAst(f))(quat)
+      case UnaryOperationSqlQuery(op, q) =>
+        UnaryOperationSqlQuery(op, q.mapAst(f))(quat)
+    }
 
   override def toString: String = {
     import io.getquill.MirrorSqlDialect._
@@ -83,6 +106,16 @@ final case class FlattenSqlQuery(
 )(quatType: Quat)
     extends SqlQuery {
   override def quat: Quat = quatType
+
+  def mapAsts(f: Ast => Ast): FlattenSqlQuery =
+    copy(
+      where = where.map(f),
+      groupBy = groupBy.map(f),
+      orderBy = orderBy.map(o => o.copy(ast = f(o.ast))),
+      limit = limit.map(f),
+      offset = offset.map(f),
+      select = select.map(s => s.copy(ast = f(s.ast)))
+    )(quatType)
 }
 
 object TakeDropFlatten {
