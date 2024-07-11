@@ -1,6 +1,7 @@
 package io.getquill.util
 
 import io.getquill.ast.{Ast, Ident, Pos}
+import io.getquill.context.sql.SqlQuery
 import io.getquill.context.sql.idiom.Error
 
 // Intentionally put all comments in 1st line. Want this to be a place
@@ -20,21 +21,24 @@ implicit class SeqExt[T](seq: Seq[T]) {
 }
 
 
-def JoinSynthesisError(errors: List[Error]) =
+def JoinSynthesisError(errors: List[Error], query: SqlQuery) =
   errors match {
-    case List(Error(List(id), ast)) => joinSynthesisErrorSingle(id, ast)
+    case List(Error(List(id), ast)) => joinSynthesisErrorSingle(id, ast, query)
     case _ => joinSynthesisErrorMulti(errors)
   }
 
 
 // make a special printout case for a single error since this is what happens 95% of the time
-private def joinSynthesisErrorSingle(id: Ident, ast: Ast) =
+private def joinSynthesisErrorSingle(id: Ident, ast: Ast, query: SqlQuery) =
 s"""
 When synthesizing Joins, Quill found a variable that could not be traced back to its origin: ${id.name}
 originally at: ${id.pos}
 
 with the following faulty expression:
 ${ast}
+
+in the query:
+${query}
 
 ${joinSynthesisExplanation}
 """.trimLeft

@@ -81,7 +81,7 @@ trait SqlIdiom extends Idiom {
         case q: Query =>
           val sql = querifyAst(q, idiomContext.traceConfig)
           trace"SQL: ${sql}".andLog()
-          VerifySqlQuery(sql).map(fail)
+          VerifySqlQuery(sql).verifyOrFail().map(fail)
           val valueized = ValueizeSingleLeafSelects(naming)(sql, topLevelQuat)
           trace"Valueized SQL: ${valueized}".andLog()
           val expanded = ExpandNestedQueries(valueized, topLevelQuat)

@@ -397,7 +397,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           val b = base(q, alias, nestNextMap)
           // If the filter body uses the filter alias, make sure it matches one of the aliases in the fromContexts
           if (
-            b.where.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from)
+            b.where.isEmpty && (!CollectAst.byType[Ident](p).contains(alias) || collectAliases(b.from)
               .contains(alias))
           )
             trace"Flattening| Filter(Ident) [Simple]" andReturn
@@ -415,7 +415,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           val criteria = orderByCriteria(p, o, b.from)
           // If the sortBy body uses the filter alias, make sure it matches one of the aliases in the fromContexts
           if (
-            b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).map(_.name).contains(alias) || collectAliases(b.from)
+            b.orderBy.isEmpty && (!CollectAst.byType[Ident](p).contains(alias) || collectAliases(b.from)
               .contains(alias))
           )
             trace"Flattening| SortBy(Ident) [Simple]" andReturn

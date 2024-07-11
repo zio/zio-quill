@@ -7,14 +7,14 @@ import io.getquill.quat.Quat
 import io.getquill.util.Text
 
 case class Error(free: List[Ident], ast: Ast)
-case class InvalidSqlQuery(errors: List[Error]) {
-  override def toString = Text.JoinSynthesisError(errors)
+case class InvalidSqlQuery(errors: List[Error], query: SqlQuery) {
+  override def toString = Text.JoinSynthesisError(errors, query)
 }
 
-object VerifySqlQuery {
+class VerifySqlQuery(originalQuery: SqlQuery) {
 
-  def apply(query: SqlQuery): Option[String] =
-    verify(query).map(_.toString)
+  def verifyOrFail(): Option[String] =
+    verify(originalQuery).map(_.toString)
 
   private def verify(query: SqlQuery): Option[InvalidSqlQuery] =
     query match {
@@ -96,7 +96,7 @@ object VerifySqlQuery {
 
     (freeVariableErrors ++ nestedErrors) match {
       case Nil    => None
-      case errors => Some(InvalidSqlQuery(errors))
+      case errors => Some(InvalidSqlQuery(errors, originalQuery))
     }
   }
 
@@ -138,4 +138,8 @@ object VerifySqlQuery {
         case other    => None
       })
   }
+}
+
+object VerifySqlQuery {
+  def apply(query: SqlQuery) = new VerifySqlQuery(query)
 }
