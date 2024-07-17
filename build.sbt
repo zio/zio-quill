@@ -423,7 +423,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.7.3" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.0"
+        "dev.zio"       %% "zio-json"   % "0.7.1"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -510,7 +510,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.31"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.32"
       )
     )
     .dependsOn(
@@ -532,8 +532,8 @@ lazy val `quill-test-kit` =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "5.1.0" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "8.4.0"       % Test,
-    "com.h2database"          % "h2"                      % "2.2.224"     % Test,
+    "com.mysql"               % "mysql-connector-j"       % "9.0.0"       % Test,
+    "com.h2database"          % "h2"                      % "2.3.230"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.3"      % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.46.0.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
@@ -614,7 +614,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "org.scalatest"           %% "scalatest"               % "3.2.18" % Test,
+    "org.scalatest"           %% "scalatest"               % "3.2.19" % Test,
     "org.scala-lang.modules"  %% "scala-collection-compat" % scalaCollectionCompatVersion,
     "com.google.code.findbugs" % "jsr305"                  % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
