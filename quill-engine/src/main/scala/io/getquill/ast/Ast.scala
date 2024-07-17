@@ -318,7 +318,7 @@ final case class Function(params: List[Ident], body: Ast) extends Ast {
   override def bestQuat: Quat = body.bestQuat
 }
 
-final class Ident private (val name: String)(theQuat: => Quat)(val visibility: Visibility) extends Terminal with Ast {
+final class Ident private (val name: String)(theQuat: => Quat)(val visibility: Visibility, val pos: Pos) extends Terminal with Ast {
   override lazy val quat: Quat = theQuat
   override def bestQuat: Quat  = quat
 
@@ -333,11 +333,11 @@ final class Ident private (val name: String)(theQuat: => Quat)(val visibility: V
   override def hashCode: Int = id.hashCode()
 
   override def withQuat(quat: => Quat): Ident =
-    Ident.Opinionated(this.name, quat, this.visibility)
+    Ident.Opinionated(this.name, quat, this.visibility, this.pos)
 
   // need to define a copy which will propagate current value of visibility into the copy
   def copy(name: String = this.name, quat: => Quat = this.quat): Ident =
-    Ident.Opinionated(name, quat, this.visibility)
+    Ident.Opinionated(name, quat, this.visibility, this.pos)
 }
 
 /**
@@ -356,14 +356,23 @@ final class Ident private (val name: String)(theQuat: => Quat)(val visibility: V
  */
 object Ident {
   private final case class Id(name: String)
-  def apply(name: String, quat: => Quat = Quat.Value) = new Ident(name)(quat)(Visibility.Visible)
+  def apply(name: String, quat: => Quat = Quat.Value) = new Ident(name)(quat)(Visibility.Visible, Pos.Synthetic)
   def unapply(p: Ident): Option[(String, Quat)]       = Some((p.name, p.quat))
 
+  // Represents an identifier used for temporary purposes (e.g. comparison to symbols) and or for various
+  // operational reasons. For example VerifySqlQuery needs Ident.trivial("*") to check if there are any
+  // star-operators that have been created within the query.
+  def trivial(name: String) = Ident(name, Quat.Unknown)
+
+  object WithPos {
+    def unapply(id: Ident): Option[(String, Pos)] = Some((id.name, id.pos))
+  }
+
   object Opinionated {
-    def apply(name: String, quatNew: => Quat, visibilityNew: Visibility) =
-      new Ident(name)(quatNew)(visibilityNew)
-    def unapply(p: Ident): Option[(String, Quat, Visibility)] =
-      Some((p.name, p.quat, p.visibility))
+    def apply(name: String, quatNew: => Quat, visibilityNew: Visibility, posNew: Pos) =
+      new Ident(name)(quatNew)(visibilityNew, posNew)
+    def unapply(p: Ident): Option[(String, Quat, Visibility, Pos)] =
+      Some((p.name, p.quat, p.visibility, p.pos))
   }
 }
 
@@ -414,6 +423,26 @@ object ExternalIdent {
 sealed trait Opinion[T]
 sealed trait OpinionValues[T <: Opinion[T]] {
   def neutral: T
+}
+
+sealed trait Pos extends Opinion[Pos] {
+  def print: String
+}
+object Pos extends OpinionValues[Pos] {
+  // Identifier was introduced by the Quill compilation phases
+  // Notably, the 'point' field is used specifically so that we can offset the scala-compiler to the right Position
+  // in the VerifyFreeVariables functionality. Scala derives line/column from the SourceFile and `point` data
+  // so for the sake of scala macros, only `point` is needed. The files `line` and `column` are used if when we build
+  // up error messages with variable positions and do not have the compiler to help us (e.g. if there are multiple
+  // places with error locations (e.g. multiple free variables have been found or the error is being thrown at runtime).
+  case class Real(fileName: String, line: Int, column: Int, point: Int, width: Int = 0) extends Pos {
+    override def print: String = s"${fileName}:${line}:${column}"
+  }
+  case object Synthetic extends Pos {
+    override def print: String = "<Position-Unknown>"
+  }
+
+  override def neutral: Pos = Synthetic
 }
 
 sealed trait Visibility extends Opinion[Visibility]

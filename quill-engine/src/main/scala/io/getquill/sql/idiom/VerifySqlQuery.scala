@@ -4,28 +4,17 @@ import io.getquill.ast._
 import io.getquill.context.sql._
 import io.getquill.quotation.FreeVariables
 import io.getquill.quat.Quat
+import io.getquill.util.Text
 
 case class Error(free: List[Ident], ast: Ast)
-case class InvalidSqlQuery(errors: List[Error]) {
-  override def toString = {
-    val allVars  = errors.flatMap(_.free).distinct
-    val firstVar = errors.headOption.flatMap(_.free.headOption).getOrElse("someVar")
-    s"""
-       |When synthesizing Joins, Quill found some variables that could not be traced back to their
-       |origin: ${allVars.map(_.name)}. Typically this happens when there are some flatMapped
-       |clauses that are missing data once they are flattened.
-       |Sometimes this is the result of a internal error in Quill. If that is the case, please
-       |reach out on our discord channel https://discord.gg/2ccFBr4 and/or file an issue
-       |on https://github.com/zio/zio-quill.
-       |""".stripMargin +
-      errors.map(error => s"Faulty expression: '${error.ast}'. Free variables: '${error.free}'.").mkString(",\n")
-  }
+case class InvalidSqlQuery(errors: List[Error], query: SqlQuery) {
+  override def toString = Text.JoinSynthesisError(errors, query)
 }
 
-object VerifySqlQuery {
+class VerifySqlQuery(originalQuery: SqlQuery) {
 
-  def apply(query: SqlQuery): Option[String] =
-    verify(query).map(_.toString)
+  def verifyOrFail(): Option[String] =
+    verify(originalQuery).map(_.toString)
 
   private def verify(query: SqlQuery): Option[InvalidSqlQuery] =
     query match {
@@ -36,7 +25,7 @@ object VerifySqlQuery {
 
   private def verifyFlatJoins(q: FlattenSqlQuery) = {
 
-    def loop(l: List[FromContext], available: Set[String]): Set[String] =
+    def loop(l: List[FromContext], available: Set[Ident]): Set[Ident] =
       l.foldLeft(available) {
         case (av, TableContext(_, alias)) => Set(alias)
         case (av, InfixContext(_, alias)) => Set(alias)
@@ -45,7 +34,7 @@ object VerifySqlQuery {
           av ++ loop(a :: Nil, av) ++ loop(b :: Nil, av)
         case (av, FlatJoinContext(_, a, on)) =>
           val nav     = av ++ loop(a :: Nil, av)
-          val free    = FreeVariables(on).map(_.name)
+          val free    = FreeVariables(on)
           val invalid = free -- nav
           require(
             invalid.isEmpty,
@@ -61,7 +50,7 @@ object VerifySqlQuery {
 
     verifyFlatJoins(query)
 
-    val aliases = query.from.flatMap(this.aliases).map(IdentName(_)) :+ IdentName("*") :+ IdentName("?")
+    val aliases = query.from.flatMap(this.aliases) :+ Ident.trivial("*") :+ Ident.trivial("?")
 
     def verifyAst(ast: Ast) = {
       val freeVariables =
@@ -107,11 +96,11 @@ object VerifySqlQuery {
 
     (freeVariableErrors ++ nestedErrors) match {
       case Nil    => None
-      case errors => Some(InvalidSqlQuery(errors))
+      case errors => Some(InvalidSqlQuery(errors, originalQuery))
     }
   }
 
-  private def aliases(s: FromContext): List[String] =
+  private def aliases(s: FromContext): List[Ident] =
     s match {
       case s: TableContext    => List(s.alias)
       case s: QueryContext    => List(s.alias)
@@ -149,4 +138,8 @@ object VerifySqlQuery {
         case other    => None
       })
   }
+}
+
+object VerifySqlQuery {
+  def apply(query: SqlQuery) = new VerifySqlQuery(query)
 }
