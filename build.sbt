@@ -202,7 +202,7 @@ lazy val `quill-engine` =
         "com.typesafe"                  % "config"        % "1.4.3",
         "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
-        "io.suzaku"                    %% "boopickle"     % "1.4.0",
+        "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.0",
         "com.github.ben-manes.caffeine" % "caffeine"      % "3.1.8"
       ),
