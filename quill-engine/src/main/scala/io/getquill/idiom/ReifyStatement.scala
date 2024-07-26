@@ -196,6 +196,6 @@ object ReifyStatementWithInjectables {
 }
 
 private[idiom] object Tokens {
-  val `, ` : StringToken = StringToken(", ")
-  val `)` : StringToken  = StringToken(")")
+  val `, `: StringToken = StringToken(", ")
+  val `)`: StringToken  = StringToken(")")
 }
