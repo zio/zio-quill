@@ -230,8 +230,8 @@ trait MirrorIdiomBase extends Idiom {
       case FunctionApply(function, values)                    => stmt"${scopedTokenizer(function)}.apply(${values.token})"
     }
 
-  private final val `!=` : Statement = stmt"!="
-  private final val `==` : Statement = stmt"=="
+  private final val `!=`: Statement = stmt"!="
+  private final val `==`: Statement = stmt"=="
   private final val _operatorTokenizer: Tokenizer[Any] = Tokenizer[Any] {
     case EqualityOperator.`_!=` => `!=`
     case EqualityOperator.`_==` => `==`
