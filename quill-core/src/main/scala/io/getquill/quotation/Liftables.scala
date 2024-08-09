@@ -124,6 +124,11 @@ trait Liftables extends QuatLiftable {
     case Visibility.Hidden  => q"$pack.Visibility.Hidden"
   }
 
+  implicit val positionLiftable: Liftable[Pos] = Liftable[Pos] {
+    case Pos.Real(a, b, c, d, e) => q"$pack.Pos.Real($a, $b, $c, $d, $e)"
+    case Pos.Synthetic           => q"$pack.Pos.Synthetic"
+  }
+
   implicit val queryLiftable: Liftable[Query] = Liftable[Query] {
     case Entity.Opinionated(a, b, quat, renameable) => q"$pack.Entity.Opinionated($a, $b, $quat, $renameable)"
     case Filter(a, b, c)                            => q"$pack.Filter($a, $b, $c)"
@@ -206,8 +211,8 @@ trait Liftables extends QuatLiftable {
     case CaseClass(n, a)   => q"$pack.CaseClass($n, $a)"
   }
 
-  implicit val identLiftable: Liftable[Ident] = Liftable[Ident] { case Ident(a, quat) =>
-    q"$pack.Ident($a, $quat)"
+  implicit val identLiftable: Liftable[Ident] = Liftable[Ident] { case Ident.Opinionated(a, quat, vis, pos) =>
+    q"$pack.Ident.Opinionated($a, $quat, $vis, $pos)"
   }
   implicit val externalIdentLiftable: Liftable[ExternalIdent] = Liftable[ExternalIdent] { case ExternalIdent(a, quat) =>
     q"$pack.ExternalIdent($a, $quat)"

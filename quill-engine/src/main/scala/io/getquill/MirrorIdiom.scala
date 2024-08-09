@@ -270,7 +270,7 @@ trait MirrorIdiomBase extends Idiom {
   }
 
   implicit final val identTokenizer: Tokenizer[Ident] = Tokenizer[Ident] {
-    case Ident.Opinionated(name, _, visibility) =>
+    case Ident.Opinionated(name, _, visibility, _) =>
       stmt"${bracketIfHidden(name, visibility).token}"
   }
 

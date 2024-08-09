@@ -27,7 +27,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
 
   // Variables that need to be sanitized out in various places due to internal conflicts with the way
   // macros hard handled in MetaDsl
-  private[getquill] val dangerousVariables: Set[IdentName] = Set(IdentName("v"))
+  private[getquill] val dangerousVariables: Set[Ident] = Set(Ident.trivial("v"))
 
   case class Parser[T](p: PartialFunction[Tree, T])(implicit ct: ClassTag[T]) {
 
@@ -81,14 +81,14 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"{..$exprs}" if exprs.size > 1 => Block(exprs.map(astParser(_)))
   }
 
-  val valParser: Parser[Val] = Parser[Val] { case q"val $name: $typ = $body" =>
+  val valParser: Parser[Val] = Parser[Val] { case wholeExpr @ q"val $name: $typ = $body" =>
     // for some reason inferQuat(typ.tpe) causes a compile hang in scala.reflect.internal
     val bodyAst = astParser(body)
-    Val(ident(name, bodyAst.quat), bodyAst)
+    Val(ident(name, bodyAst.quat, wholeExpr.pos), bodyAst)
   }
 
-  val patMatchValParser: Parser[Val] = Parser[Val] { case q"$mods val $name: $typ = ${patMatchParser(value)}" =>
-    Val(ident(name, inferQuat(q"$typ".tpe)), value)
+  val patMatchValParser: Parser[Val] = Parser[Val] { case wholeExpr @ q"$mods val $name: $typ = ${patMatchParser(value)}" =>
+    Val(ident(name, inferQuat(q"$typ".tpe), wholeExpr.pos), value)
   }
 
   val patMatchParser: Parser[Ast] = Parser[Ast] { case q"$expr match { case ($fields) => $body }" =>
@@ -462,16 +462,28 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   val identParser: Parser[Ident] = Parser[Ident] {
     // TODO Check to see that all these conditions work
     case t: ValDef =>
-      identClean(Ident(t.name.decodedName.toString, inferQuat(t.symbol.typeSignature)))
-    case id @ c.universe.Ident(TermName(name)) => identClean(Ident(name, inferQuat(id.symbol.typeSignature)))
-    case t @ q"$cls.this.$i"                   => identClean(Ident(i.decodedName.toString, inferQuat(t.symbol.typeSignature)))
+      identClean(t.name.decodedName.toString, inferQuat(t.symbol.typeSignature), t.pos)
+    case id @ c.universe.Ident(TermName(name)) =>
+      identClean(name, inferQuat(id.symbol.typeSignature), id.pos)
+    case t @ q"$cls.this.$i" =>
+      identClean(i.decodedName.toString, inferQuat(t.symbol.typeSignature), t.pos)
     case t @ c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
-      identClean(
-        Ident(name, inferQuat(t.symbol.typeSignature))
-      ) // TODO Verify Quat what is the type of this thing? In what cases does it happen? Do we need to do something more clever with the tree and get a TypeRef?
+      // TODO Verify Quat what is the type of this thing? In what cases does it happen? Do we need to do something more clever with the tree and get a TypeRef?
+      identClean(name, inferQuat(t.symbol.typeSignature), t.pos)
   }
-  private def identClean(x: Ident): Ident           = x.copy(name = x.name.replace("$", ""))
-  private def ident(x: TermName, quat: Quat): Ident = identClean(Ident(x.decodedName.toString, quat))
+  private def identClean(name: String, quat: Quat, pos: Position): Ident =
+    Ident.Opinionated(
+      name.replace("$", ""),
+      quat,
+      Visibility.Visible,
+      if (pos != NoPosition)
+        Pos.Real(pos.source.path, pos.line, pos.column, pos.point, 0)
+      else
+        Pos.Synthetic
+    )
+
+  private def ident(x: TermName, quat: Quat, pos: Position): Ident =
+    identClean(x.decodedName.toString, quat, pos)
 
   /**
    * In order to guarantee consistent behavior across multiple databases, we
