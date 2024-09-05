@@ -1,12 +1,12 @@
 package io.getquill.quotation
 
-import io.getquill.Spec
 import io.getquill.ast.Dynamic
 import io.getquill.ast.Property
 import io.getquill.ast.Renameable.Fixed
 import io.getquill.ast.Visibility.Visible
-import io.getquill.testContext.qr1
-import io.getquill.testContext.qrRegular
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts.testContext.qr1
+import io.getquill.MirrorContexts.testContext.qrRegular
 
 class IsDynamicSpec extends Spec {
 

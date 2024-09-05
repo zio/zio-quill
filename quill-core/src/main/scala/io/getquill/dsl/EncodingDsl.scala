@@ -23,9 +23,27 @@ trait EncodingDsl extends LowPriorityImplicits {
   type Session
   type Index = Int
 
+  // Make sure the signature of this is different then the decoder, otherwise in abstract contexts
+  // it can be implicitly summoned up as the decoder and you'll see something like this when doing PrintMac:
+  // implicitly[Decoder[Boolean]](nullChecker). If session needs to be included, add a argument to differentiate
+  // it from Decoder[T] or use a inner-trait.
+  type BaseNullChecker = (Index, ResultRow) => Boolean
+
+  type NullChecker <: BaseNullChecker
+
   type BaseEncoder[T] = (Index, T, PrepareRow, Session) => PrepareRow
 
   type Encoder[T] <: BaseEncoder[T]
+
+  implicit class EncoderOps[T](self: Encoder[T]) {
+    def contramap[R](f: R => T)(implicit base: Encoder[T]): Encoder[R] =
+      mappedEncoder[R, T](MappedEncoding(f), base)
+  }
+
+  implicit class DecoderOps[T](self: Decoder[T]) {
+    def map[R](f: T => R)(implicit base: Decoder[T]): Decoder[R] =
+      mappedDecoder[T, R](MappedEncoding(f), base)
+  }
 
   type BaseDecoder[T] = (Index, ResultRow, Session) => T
 
@@ -56,9 +74,15 @@ trait EncodingDsl extends LowPriorityImplicits {
   type MappedEncoding[I, O] = io.getquill.MappedEncoding[I, O]
   val MappedEncoding = io.getquill.MappedEncoding
 
-  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] = mappedEncoder
+  implicit def anyValMappedEncoder[I <: AnyVal, O](implicit
+    mapped: MappedEncoding[I, O],
+    encoder: Encoder[O]
+  ): Encoder[I] = mappedEncoder
 
-  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] = mappedDecoder
+  implicit def anyValMappedDecoder[I, O <: AnyVal](implicit
+    mapped: MappedEncoding[I, O],
+    decoder: Decoder[I]
+  ): Decoder[O] = mappedDecoder
 
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I]
 

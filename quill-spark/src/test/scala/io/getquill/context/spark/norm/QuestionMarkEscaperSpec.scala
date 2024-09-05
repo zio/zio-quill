@@ -1,7 +1,7 @@
 package io.getquill.context.spark.norm
 
-import io.getquill.Spec
 import QuestionMarkEscaper._
+import io.getquill.base.Spec
 
 class QuestionMarkEscaperSpec extends Spec {
 
@@ -19,9 +19,9 @@ class QuestionMarkEscaperSpec extends Spec {
   def plug3(str: String) = pluginValueSafe(plug2(str), "<3>")
   def plug4(str: String) = pluginValueSafe(plug3(str), "<4>")
 
-  def plug2Q(str: String) = pluginValueSafe(plug1(str), "<2?>")
+  def plug2Q(str: String)  = pluginValueSafe(plug1(str), "<2?>")
   def plug3QN(str: String) = pluginValueSafe(plug2Q(str), "<3>")
-  def plug4Q(str: String) = pluginValueSafe(plug3QN(str), "<4?>")
+  def plug4Q(str: String)  = pluginValueSafe(plug3QN(str), "<4?>")
 
   "should escape and replace variables correctly" in {
     val str = "foo ? bar ? ?"

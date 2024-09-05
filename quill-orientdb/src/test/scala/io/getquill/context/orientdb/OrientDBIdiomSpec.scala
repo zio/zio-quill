@@ -1,9 +1,9 @@
 package io.getquill.context.orientdb
 
-import io.getquill.Spec
 import io.getquill.Ord
 import io.getquill.Query
 import io.getquill.Action
+import io.getquill.base.Spec
 
 class OrientDBIdiomSpec extends Spec {
 
@@ -125,7 +125,7 @@ class OrientDBIdiomSpec extends Spec {
     }
     "function apply (not supported)" in {
       val q = quote {
-        qr1.filter(t => infix"f".as[Int => Boolean](t.i))
+        qr1.filter(t => sql"f".as[Int => Boolean](t.i))
       }
       "mirrorContext.run(q)" mustNot compile
     }
@@ -255,7 +255,7 @@ class OrientDBIdiomSpec extends Spec {
         qr1.map(t => (t.i, t.s))
       }
       ctx.run(q).string mustEqual
-        "SELECT i, s FROM TestEntity"
+        "SELECT i _1, s _2 FROM TestEntity"
     }
     "caseclass" in {
       case class IntString(intProp: Int, stringProp: String)
@@ -263,7 +263,7 @@ class OrientDBIdiomSpec extends Spec {
         qr1.map(t => new IntString(t.i, t.s))
       }
       ctx.run(q).string mustEqual
-        "SELECT i, s FROM TestEntity"
+        "SELECT i intProp, s stringProp FROM TestEntity"
     }
     "null" in {
       val q = quote {
@@ -277,7 +277,7 @@ class OrientDBIdiomSpec extends Spec {
   "action" - {
     "insert" in {
       val q = quote {
-        qr1.insert(lift(TestEntity("a", 1, 1L, None, true)))
+        qr1.insertValue(lift(TestEntity("a", 1, 1L, None, true)))
       }
       ctx.run(q).string mustEqual
         "INSERT INTO TestEntity (s, i, l, o, b) VALUES(?, ?, ?, ?, ?)"
@@ -285,14 +285,14 @@ class OrientDBIdiomSpec extends Spec {
     "update" - {
       "all" in {
         val q = quote {
-          qr1.update(lift(TestEntity("a", 1, 1L, None, true)))
+          qr1.updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "filtered" in {
         val q = quote {
-          qr1.filter(t => t.i == 1).update(lift(TestEntity("a", 1, 1L, None, true)))
+          qr1.filter(t => t.i == 1).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
@@ -316,18 +316,18 @@ class OrientDBIdiomSpec extends Spec {
     }
   }
 
-  "infix" - {
+  "sql" - {
     "query" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean])
+          qr1.filter(t => sql"${t.i} = 1".as[Boolean])
         }
         ctx.run(q).string mustEqual
           "SELECT s, i, l, o, b FROM TestEntity WHERE i = 1"
       }
       "full" in {
         val q = quote {
-          infix"SELECT MODE(i) FROM TestEntity".as[Query[Int]]
+          sql"SELECT MODE(i) FROM TestEntity".as[Query[Int]]
         }
         ctx.run(q).string mustEqual
           "SELECT * FROM (SELECT MODE(i) FROM TestEntity)"
@@ -336,14 +336,14 @@ class OrientDBIdiomSpec extends Spec {
     "action" - {
       "partial" in {
         val q = quote {
-          qr1.filter(t => infix"${t.i} = 1".as[Boolean]).update(lift(TestEntity("a", 1, 1L, None, true)))
+          qr1.filter(t => sql"${t.i} = 1".as[Boolean]).updateValue(lift(TestEntity("a", 1, 1L, None, true)))
         }
         ctx.run(q).string mustEqual
           "UPDATE TestEntity SET s = ?, i = ?, l = ?, o = ?, b = ? WHERE i = 1"
       }
       "full" in {
         val q = quote {
-          infix"DELETE FROM TestEntity".as[Action[Int]]
+          sql"DELETE FROM TestEntity".as[Action[Int]]
         }
         ctx.run(q).string mustEqual
           "DELETE FROM TestEntity"

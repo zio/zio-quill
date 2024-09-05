@@ -1,9 +1,9 @@
 package io.getquill.context
 
-import io.getquill.Spec
-import io.getquill.context.mirror.{ MirrorSession, Row }
-import io.getquill.testContext
-import io.getquill.testContext._
+import io.getquill.base.Spec
+import io.getquill.context.mirror.{MirrorSession, Row}
+import io.getquill.MirrorContexts.testContext
+import io.getquill.MirrorContexts.testContext._
 
 case class ValueClass(value: Int) extends AnyVal
 
@@ -25,8 +25,28 @@ class ContextInstanceSpec extends Spec {
         testContext.run(q).prepareRow mustEqual Row("s")
       }
 
+      "encoding - contramap" in {
+        implicit val testToString =
+          implicitly[Encoder[String]].contramap((v: StringValue) => v.s)
+
+        val q = quote {
+          query[Entity].insert(_.s -> lift(StringValue("s")))
+        }
+        testContext.run(q).prepareRow mustEqual Row("s")
+      }
+
       "decoding" in {
         implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
+        val q = quote {
+          query[Entity]
+        }
+        testContext.run(q).extractor(Row("s"), MirrorSession.default) mustEqual Entity(StringValue("s"))
+      }
+
+      "decoding - map" in {
+        implicit val stringToTest =
+          implicitly[Decoder[String]].map(str => StringValue(str))
+
         val q = quote {
           query[Entity]
         }

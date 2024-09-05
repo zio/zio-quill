@@ -2,7 +2,7 @@ package io.getquill.dsl
 
 import io.getquill.util.OptionalTypecheck
 import io.getquill.util.MacroContextExt._
-import scala.reflect.macros.blackbox.{ Context => MacroContext }
+import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 class EncodingDslMacro(val c: MacroContext) {
   import c.universe._
@@ -46,14 +46,16 @@ class EncodingDslMacro(val c: MacroContext) {
     }
 
   private def fail(enc: String, t: Type) =
-    c.fail(s"Can't find $enc for type '$t'. Note that ${enc}s are invariant. For example, use `lift(Option(1))` instead of `lift(Some(1))` since the available encoder is for `Option`, not `Some`. As an alternative for types that don't provide a method like `Option.apply`, you can use type widening: `lift(MyEnum.SomeValue: MyEnum.Value)`")
+    c.fail(
+      s"Can't find $enc for type '$t'. Note that ${enc}s are invariant. For example, use `lift(Option(1))` instead of `lift(Some(1))` since the available encoder is for `Option`, not `Some`. As an alternative for types that don't provide a method like `Option.apply`, you can use type widening: `lift(MyEnum.SomeValue: MyEnum.Value)`"
+    )
 
   private def withAnyValParam[R](tpe: Type)(f: Symbol => R): Option[R] =
     tpe.baseType(c.symbolOf[AnyVal]) match {
       case NoType => None
       case _ =>
-        primaryConstructor(tpe).map(_.paramLists.flatten).collect {
-          case param :: Nil => f(param)
+        primaryConstructor(tpe).map(_.paramLists.flatten).collect { case param :: Nil =>
+          f(param)
         }
     }
 

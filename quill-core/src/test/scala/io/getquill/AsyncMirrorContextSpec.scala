@@ -1,5 +1,8 @@
 package io.getquill
 
+import io.getquill.base.Spec
+import io.getquill.MirrorContexts._
+
 class AsyncMirrorContextSpec extends Spec {
   val ctx = testAsyncContext
   import ctx._
@@ -13,22 +16,22 @@ class AsyncMirrorContextSpec extends Spec {
   }
 
   "executeAction" in {
-    eval(ctx.run(qr4.insert(lift(TestEntity4(1)))))
+    eval(ctx.run(qr4.insertValue(lift(TestEntity4(1)))))
   }
 
   "executeActionReturning" in {
-    eval(ctx.run(qr4.insert(lift(TestEntity4(0))).returning(_.i)))
+    eval(ctx.run(qr4.insertValue(lift(TestEntity4(0))).returning(_.i)))
   }
 
   "executeBatchAction" in {
     eval(ctx.run {
-      liftQuery(List(TestEntity4(1))).foreach(e => qr4.insert(e))
+      liftQuery(List(TestEntity4(1))).foreach(e => qr4.insertValue(e))
     })
   }
 
   "executeBatchActionReturning" in {
     eval(ctx.run {
-      liftQuery(List(TestEntity4(0))).foreach(e => qr4.insert(e).returning(_.i))
+      liftQuery(List(TestEntity4(0))).foreach(e => qr4.insertValue(e).returning(_.i))
     })
   }
 

@@ -1,7 +1,7 @@
 package io.getquill.context.spark
 
-import io.getquill.Spec
 import io.getquill.Query
+import io.getquill.base.Spec
 
 case class Department(dpt: String)
 case class Employee(emp: String, dpt: String)
@@ -49,21 +49,20 @@ class DepartmentsSparkSpec extends Spec {
   }
 
   "Example 8 - nested naive" in {
-    val q = quote {
-      (u: String) =>
-        for {
-          d <- departments if (
-            (for {
-              e <- employees if (
-                e.dpt == d.dpt && (
-                  for {
-                    t <- tasks if (e.emp == t.emp && t.tsk == u)
-                  } yield {}
-                ).isEmpty
-              )
-            } yield {}).isEmpty
-          )
-        } yield d.dpt
+    val q = quote { (u: String) =>
+      for {
+        d <- departments if (
+          (for {
+            e <- employees if (
+              e.dpt == d.dpt && (
+                for {
+                  t <- tasks if (e.emp == t.emp && t.tsk == u)
+                } yield {}
+              ).isEmpty
+            )
+          } yield {}).isEmpty
+        )
+      } yield d.dpt
     }
     testContext.run(q("abstract")).collect().toList mustEqual
       List("Quality", "Research")
@@ -76,17 +75,21 @@ class DepartmentsSparkSpec extends Spec {
           for {
             d <- departments
           } yield {
-            (d.dpt,
+            (
+              d.dpt,
               for {
                 e <- employees if (d.dpt == e.dpt)
               } yield {
-                (e.emp,
+                (
+                  e.emp,
                   for {
                     t <- tasks if (e.emp == t.emp)
                   } yield {
                     t.tsk
-                  })
-              })
+                  }
+                )
+              }
+            )
           }
         }
 
@@ -107,13 +110,12 @@ class DepartmentsSparkSpec extends Spec {
           any(xs)(x => x == u)
         }
 
-      quote {
-        (u: String) =>
-          for {
-            (dpt, employees) <- nestedOrg if (all(employees) { case (emp, tasks) => contains(tasks)(u) })
-          } yield {
-            dpt
-          }
+      quote { (u: String) =>
+        for {
+          (dpt, employees) <- nestedOrg if (all(employees) { case (emp, tasks) => contains(tasks)(u) })
+        } yield {
+          dpt
+        }
       }
     }
     testContext.run(q("abstract")).collect().toList mustEqual

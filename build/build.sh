@@ -17,10 +17,13 @@ export ORACLE_PORT=11521
 export CASSANDRA_HOST=127.0.0.1
 export CASSANDRA_PORT=19042
 
+export CASSANDRA_CONTACT_POINT_0=127.0.0.1:19042
+export CASSANDRA_DC=datacenter1
+
 export ORIENTDB_HOST=127.0.0.1
 export ORIENTDB_PORT=12424
 
-export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms1024m -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms3g -Xmx3g -Xss5m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation"
 
 modules=$1
 echo "Start build modules: $modules"
@@ -68,12 +71,12 @@ fi
 function wait_for_databases() {
     show_mem
 
-    #sbt scalariformFormat test:scalariformFormat
-    #sbt checkUnformattedFiles
+    #sbt scalafmtAll
+    #sbt scalafmtCheckAll
 
     # Start sbt compilation and database setup in parallel
     echo "build.sh =:> Base Compile in wait_for_databases"
-    sbt -Dmodules=base -Doracle=true $SBT_ARGS  test & COMPILE=$!
+    sbt -Dmodules=base $SBT_ARGS  test & COMPILE=$!
     ./build/setup_databases.sh & SETUP=$!
 
     # Wait on database setup. If it has failed then kill compilation process and exit with error
@@ -102,8 +105,8 @@ function wait_for_databases() {
 function wait_for_mysql_postgres() {
     show_mem
 
-    #sbt scalariformFormat test:scalariformFormat
-    #sbt checkUnformattedFiles
+    #sbt scalafmtAll
+    #sbt scalafmtCheckAll
 
     # Start sbt compilation and database setup in parallel
     echo "build.sh =:> Base Compile in wait_for_mysql_postgres"
@@ -135,9 +138,9 @@ function wait_for_mysql_postgres() {
 function wait_for_bigdata() {
     show_mem
 
-    sbt scalariformFormat test:scalariformFormat
-    sbt checkUnformattedFiles
-    sbt $SBT_ARGS quill-coreJVM/test:compile & COMPILE=$!
+    sbt scalafmtAll
+    sbt scalafmtCheckAll
+    sbt $SBT_ARGS quill-core/Test/compile & COMPILE=$!
     ./build/setup_bigdata.sh & SETUP=$!
 
     wait $SETUP
@@ -159,27 +162,19 @@ function wait_for_bigdata() {
     show_mem
 }
 
+function base_build() {
+    echo "build.sh =:> Base Build Specified"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation "
+    echo "build.sh =:> Starting Base Build Primary"
+    sbt "sbt -Dmodules=base $SBT_ARGS test"
+}
+
 function db_build() {
     echo "build.sh =:> DB Build Specified"
     wait_for_databases
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+    export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation "
     echo "build.sh =:> Starting DB Build Primary"
     ./build/aware_run.sh "sbt -Dmodules=db $SBT_ARGS test"
-}
-
-function js_build() {
-    echo "build.sh =:> JS Build Specified"
-    show_mem
-    export JVM_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
-    echo "build.sh =:> Starting JS Build Primary"
-    sbt -Dmodules=js $SBT_ARGS test
-}
-
-function async_build() {
-    echo "build.sh =:> Async Build Specified"
-    wait_for_mysql_postgres
-    echo "build.sh =:> Starting Async Build Primary"
-    sbt -Dmodules=async $SBT_ARGS test
 }
 
 function codegen_build() {
@@ -222,8 +217,11 @@ fi
 echo "Building cache:"
 find ~/.cache/sbt-build/ -type d || true
 
-if [[ $modules == "db" ]]; then
-    echo "build.sh =:> Build Script: Doing Database Build"
+if [[ $modules == "base" ]]; then
+    echo "build.sh =:> Build Script: Doing Base Build"
+    db_build
+elif [[ $modules == "db" ]]; then
+    echo "build.sh =:> Build Script: Doing Base + Database Build"
     db_build
 elif [[ $modules == "js" ]]; then
     echo "build.sh =:> Build Script: Doing JavaScript Build"
@@ -231,9 +229,6 @@ elif [[ $modules == "js" ]]; then
 elif [[ $modules == "finagle" ]]; then
     echo "build.sh =:> Build Script: Doing Finagle Database Build"
     finagle_build
-elif [[ $modules == "async" ]]; then
-    echo "build.sh =:> Build Script: Doing Async Database Build"
-    async_build
 elif [[ $modules == "codegen" ]]; then
     echo "build.sh =:> Build Script: Doing Code Generator Build"
     codegen_build
@@ -241,8 +236,8 @@ elif [[ $modules == "bigdata" ]]; then
     echo "build.sh =:> Build Script: Doing BigData Build"
     bigdata_build
 else
-    echo "build.sh =:> Build Script: Doing Full Build"
-    full_build
+    echo "build.sh =:> UNKNOWN MODULE: $modules"
+    exit 1
 fi
 
 show_mem

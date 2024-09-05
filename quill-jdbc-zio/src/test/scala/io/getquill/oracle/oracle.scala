@@ -1,5 +1,9 @@
 package io.getquill
 
+import io.getquill.ZioSpec.runLayerUnsafe
+import io.getquill.jdbczio.Quill
+
 package object oracle {
-  object testContext extends OracleZioJdbcContext(Literal) with TestEntities
+  implicit val pool = runLayerUnsafe(Quill.DataSource.fromPrefix("testOracleDB"))
+  object testContext extends Quill.Oracle(Literal, pool) with TestEntities
 }
