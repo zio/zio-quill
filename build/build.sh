@@ -242,7 +242,7 @@ fi
 
 show_mem
 echo "Tests completed. Shutting down"
-time docker-compose down
+time docker compose down
 # for 2.12 publish coverage
 if [[ $SCALA_VERSION == 2.12* ]]; then
     echo "Coverage"
