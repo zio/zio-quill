@@ -16,7 +16,7 @@ If you are running Linux, you should also install Docker Compose separately, as 
 After installing Docker and Docker Compose you have to setup databases:
 
 ```bash
-docker-compose run --rm setup
+docker compose run --rm setup
 ```
 
 After that you are ready to build and test the project. The following steps describes how to test the project with
@@ -28,7 +28,7 @@ when running Docker on non-linux OS due to high IO overhead from running
 To build and test the project:
 
 ```bash
-docker-compose run --rm sbt sbt test
+docker compose run --rm sbt sbt test
 ```
 
 ## Building Scala.js targets
@@ -41,7 +41,7 @@ The CI build also sets this `project quill-with-js` to force the Scala.js compil
 If any file that creates a database schema was changed then you have to setup the databases again:
 
 ```bash
-docker-compose down && docker-compose run --rm setup
+docker compose down && docker compose run --rm setup
 ```
 
 ## Changing docker configuration
@@ -49,7 +49,7 @@ docker-compose down && docker-compose run --rm setup
 If `build/Dockerfile-sbt`, `build/Dockerfile-setup`, `docker-compose.yml` or any file used by them was changed then you have to rebuild docker images and to setup the databases again:
 
 ```bash
-docker-compose down && docker-compose build && docker-compose run --rm setup
+docker compose down && docker compose build && docker compose run --rm setup
 ```
 
 ## Tests
@@ -58,28 +58,28 @@ docker-compose down && docker-compose build && docker-compose run --rm setup
 
 Run all tests:
 ```bash
-docker-compose run --rm sbt sbt test
+docker compose run --rm sbt sbt test
 ```
 
 Run specific test:
 ```bash
-docker-compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
+docker compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
 ```
 
 Run all tests in specific sub-project:
 ```bash
-docker-compose run --rm sbt sbt "project quill-jdbc-zio" test
+docker compose run --rm sbt sbt "project quill-jdbc-zio" test
 ```
 
 Run specific test in specific sub-project:
 ```bash
-docker-compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
+docker compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
 ```
 
 ### Debugging tests
 1. Run sbt in interactive mode with docker container ports mapped to the host: 
 ```bash
-docker-compose run --service-ports --rm sbt
+docker compose run --service-ports --rm sbt
 ```
 
 2. Attach debugger to port 15005 of your docker host. In IntelliJ IDEA you should create Remote Run/Debug Configuration, 
@@ -97,8 +97,8 @@ In order to contribute to the project, just do as follows:
 2. Build it locally
 3. Code
 4. Compile (file will be formatted)
-5. Run the tests through `docker-compose run sbt sbt test`
-6. If you made changes in *.md files, run `docker-compose run sbt sbt tut` to validate them
+5. Run the tests through `docker compose run sbt sbt test`
+6. If you made changes in *.md files, run `docker compose run sbt sbt tut` to validate them
 7. If everything is ok, commit and push to your fork
 8. Create a Pull Request, we'll be glad to review it
 
@@ -136,7 +136,7 @@ branch will be capable of becoming a pull-request.
 To restart your database service with database ports exposed to your host machine run:
 
 ```bash
-docker-compose down && docker-compose run --rm --service-ports setup
+docker compose down && docker compose run --rm --service-ports setup
 ```
 
 After that we need to set some environment variables in order to run `sbt` locally.
@@ -169,7 +169,7 @@ Finally, you can use `sbt` locally.
 
 To restart the database services, rebuild them, and start with locally exposed ports run:
 
-docker-compose down && docker-compose build && docker-compose run --rm --service-ports setup
+docker compose down && docker compose build && docker compose run --rm --service-ports setup
 
 Note: Make sure you have exposed all the ports as mentioned above.
 

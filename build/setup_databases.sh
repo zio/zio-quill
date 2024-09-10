@@ -3,10 +3,10 @@
 set -e
 
 echo "### Bringing Down Any Docker Containers that May Be Running ###"
-time docker-compose down --rmi all
+time docker compose down --rmi all
 
 echo "### Bringing Up sqlserver, oracle, postgres, mysql Images ###"
-time docker-compose up -d sqlserver oracle postgres mysql
+time docker compose up -d sqlserver oracle postgres mysql
 echo "### DONE Bringing Up sqlserver and oracle Images ###"
 
 echo "### Checking Docker Images"
@@ -28,7 +28,7 @@ echo "### Running Setup for sqlserver ###"
 # setup sqlserver in docker
 send_script sqlserver $SQL_SERVER_SCRIPT sqlserver-schema.sql
 send_script sqlserver ./build/setup_db_scripts.sh setup_db_scripts.sh
-time docker-compose exec -T sqlserver bash -c ". setup_db_scripts.sh && setup_sqlserver 127.0.0.1 sqlserver-schema.sql"
+time docker compose exec -T sqlserver bash -c ". setup_db_scripts.sh && setup_sqlserver 127.0.0.1 sqlserver-schema.sql"
 
 # Can't do absolute paths here so need to do relative
 mkdir sqlline/

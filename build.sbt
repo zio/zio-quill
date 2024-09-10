@@ -164,7 +164,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.8.2")
+        ("org.scalameta" %% "scalafmt-core" % "3.8.3")
           .excludeAll(
             ({
               if (isScala3)
@@ -202,7 +202,7 @@ lazy val `quill-engine` =
         "com.typesafe"                  % "config"        % "1.4.3",
         "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
-        "io.suzaku"                    %% "boopickle"     % "1.4.0",
+        "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.0",
         "com.github.ben-manes.caffeine" % "caffeine"      % "3.1.8"
       ),
@@ -216,7 +216,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.3.0",
+        "dev.zio"                    %% "zio-logging"   % "2.3.1",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -422,8 +422,8 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.3" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.1"
+        "org.postgresql" % "postgresql" % "42.7.4" % "provided",
+        "dev.zio"       %% "zio-json"   % "0.7.3"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -510,7 +510,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.32"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.33"
       )
     )
     .dependsOn(
@@ -533,9 +533,9 @@ lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "5.1.0" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "9.0.0"       % Test,
-    "com.h2database"          % "h2"                      % "2.3.230"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.3"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.46.0.0"    % Test,
+    "com.h2database"          % "h2"                      % "2.3.232"     % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.4"      % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.46.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -597,7 +597,7 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.19"
+val scala_v_12 = "2.12.20"
 val scala_v_13 = "2.13.14"
 val scala_v_30 = "3.3.3"
 
@@ -605,7 +605,7 @@ val scalaCollectionCompatVersion = "2.12.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.5.6" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.8" % Test
   )
 )
 
