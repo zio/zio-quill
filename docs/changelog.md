@@ -1215,7 +1215,7 @@ historical moments (`java.sql.Timestamp` extents `java.util.Date`).
 * [Make decoder function public](https://github.com/getquill/quill/pull/487)
 * [set the scope of all cassandra context type definitions to public](https://github.com/getquill/quill/pull/492)
 * [make the cassandra decoder fail when encountering a column with value null](https://github.com/getquill/quill/pull/499)
-* [fix Option.{isEmpty, isDefined, nonEmpty} show on action.filter](https://github.com/getquill/quill/pull/505)
+* [fix Option.\{isEmpty, isDefined, nonEmpty\} show on action.filter](https://github.com/getquill/quill/pull/505)
 * [Encoder fix](https://github.com/getquill/quill/pull/503/files)
 * [enclose operand-queries of SetOperation in parentheses](https://github.com/getquill/quill/pull/510)
 
@@ -1292,7 +1292,7 @@ Migration steps:
 
 * [Schema mini-DSL and generated values](https://github.com/getquill/quill/pull/226/files#diff-04c6e90faac2675aa89e2176d2eec7d8R212)
 * [Support for inline vals in quotation blocks](https://github.com/getquill/quill/pull/271/files#diff-02749abf4d0d51be99715cff7074bc9eR775)
-* [Support for Option.{isEmpty, nonEmpty, isDefined}](https://github.com/getquill/quill/pull/238/files#diff-02749abf4d0d51be99715cff7074bc9eR688)
+* [Support for Option.\{isEmpty, nonEmpty, isDefined\}](https://github.com/getquill/quill/pull/238/files#diff-02749abf4d0d51be99715cff7074bc9eR688)
 * [Tolerant function parsing in option operation](https://github.com/getquill/quill/pull/243/files#diff-6858983f3617753cfb9852426edaa121R481)
 * [quill-sql: rename properties and assignments](https://github.com/getquill/quill/pull/250)
 * [quill-cassandra: rename properties and assignments](https://github.com/getquill/quill/pull/254)
