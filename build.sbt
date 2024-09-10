@@ -422,7 +422,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.3" % "provided",
+        "org.postgresql" % "postgresql" % "42.7.4" % "provided",
         "dev.zio"       %% "zio-json"   % "0.7.3"
       ),
       Test / testGrouping := {
@@ -534,7 +534,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              % "HikariCP"                % "5.1.0" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "9.0.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.230"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.3"      % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.4"      % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.46.0.1"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
