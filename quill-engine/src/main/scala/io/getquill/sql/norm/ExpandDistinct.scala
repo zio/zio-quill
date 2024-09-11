@@ -77,12 +77,15 @@ class ExpandDistinct(traceConfig: TraceConfig) {
           // Problems with distinct were first discovered in #1032. Basically, unless
           // the distinct is "expanded" adding an outer map, Ident's representing a Table will end up in invalid places
           // such as "ORDER BY tableIdent" etc...
-          case Distinct(Map(q, x, p)) =>
-            val newMap   = Map(q, x, Tuple(List(p)))
-            val newQuat  = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
-            val newIdent = Ident(x.name, newQuat)
-            trace"ExpandDistinct Distinct(Map(other))" andReturn
-              Map(Distinct(newMap), newIdent, Property(newIdent, "_1"))
+
+          // TODO EXPERIMENTING WITH THIS CLAUSE, TRY TO DISABLE``
+
+          // case Distinct(Map(q, x, p)) =>
+          //   val newMap   = Map(q, x, Tuple(List(p)))
+          //   val newQuat  = Quat.Tuple(valueQuat(p.quat)) // force quat recomputation for perf purposes
+          //   val newIdent = Ident(x.name, newQuat)
+          //   trace"ExpandDistinct Distinct(Map(other))" andReturn
+          //     Map(Distinct(newMap), newIdent, Property(newIdent, "_1"))
         }
     }
 }

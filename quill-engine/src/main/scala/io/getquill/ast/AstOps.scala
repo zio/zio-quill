@@ -1,13 +1,6 @@
 package io.getquill.ast
 
-// Represents an Ident without a Quat
-case class IdentName(name: String)
-
 object Implicits {
-  implicit final class IdentOps(private val id: Ident) extends AnyVal {
-    def idName: IdentName = IdentName(id.name)
-  }
-
   implicit final class AstOpsExt(private val body: Ast) extends AnyVal {
     def +||+(other: Ast): BinaryOperation = BinaryOperation(body, BooleanOperator.`||`, other)
     def +&&+(other: Ast): BinaryOperation = BinaryOperation(body, BooleanOperator.`&&`, other)
