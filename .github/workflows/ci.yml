@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.0.0
+      - uses: actions/checkout@v4.2.0
       - name: Cache sbt
         uses: actions/cache@v4
         with:
@@ -77,7 +77,7 @@ jobs:
     name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
     steps:
-    - uses: actions/checkout@v4.0.0
+    - uses: actions/checkout@v4.2.0
     - name: Cache sbt
       uses: actions/cache@v4
       with:
@@ -108,7 +108,7 @@ jobs:
       CI_RELEASE: publishSigned # By default, sbt-ci-release uses the `+publishSigned` which is publishing for all the Scala versions configured, which is not what we want
       CI_SNAPSHOT_RELEASE: publish # By default, sbt-ci-release uses the `+publish` which is publishing for all the Scala versions configured, which is not what we want
     steps:
-      - uses: actions/checkout@v4.0.0
+      - uses: actions/checkout@v4.2.0
       - name: Setup Java
         uses: actions/setup-java@v4.2.2
         with:
