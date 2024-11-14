@@ -17,7 +17,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken}
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.{HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects}
+import io.getquill.sql.norm.{HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects, ValueizeSingleLeafSelects}
 import io.getquill.util.{Interleave, Interpolator, Messages, TraceConfig}
 import io.getquill.util.Messages.{TraceType, fail, trace}
 
@@ -81,8 +81,10 @@ trait SqlIdiom extends Idiom {
         case q: Query =>
           val sql = querifyAst(q, idiomContext.traceConfig)
           trace"SQL: ${sql}".andLog()
-          VerifySqlQuery(sql).map(fail)
-          val expanded = ExpandNestedQueries(sql, topLevelQuat)
+          VerifySqlQuery(sql).verifyOrFail().map(fail)
+          val valueized = ValueizeSingleLeafSelects(naming)(sql, topLevelQuat)
+          trace"Valueized SQL: ${valueized}".andLog()
+          val expanded = ExpandNestedQueries(valueized, topLevelQuat)
           trace"Expanded SQL: ${expanded}".andLog()
           val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded
           trace"Filtered SQL (only used selects): ${refined}".andLog()
@@ -277,8 +279,8 @@ trait SqlIdiom extends Idiom {
   protected def tokenizeFixedColumn(strategy: NamingStrategy, column: String): String =
     column
 
-  protected def tokenizeTableAlias(strategy: NamingStrategy, table: String): String =
-    table
+  protected def tokenizeTableAlias(strategy: NamingStrategy, table: Ident): String =
+    table.name
 
   protected def tokenizeIdentName(strategy: NamingStrategy, name: String): String =
     name
@@ -498,7 +500,7 @@ trait SqlIdiom extends Idiom {
             stmt"${actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(emptyStatement)}${TokenizeProperty(name, prefix, strategy, renameable)}"
 
           // In the rare case that the Ident is invisible, do not show it. See the Ident documentation for more info.
-          case (Ident.Opinionated(_, _, Hidden), prefix) =>
+          case (Ident.Opinionated(_, _, Hidden, _), prefix) =>
             stmt"${TokenizeProperty(name, prefix, strategy, renameable)}"
 
           // The normal case where `Property(Property(Ident("realTable"), embeddedTableAlias), realPropertyAlias)`

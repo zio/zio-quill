@@ -52,20 +52,20 @@ case class InContext(from: List[FromContext]) {
   def contextReferenceType(ast: Ast) = {
     val references = collectTableAliases(from)
     ast match {
-      case Ident(v, _)                           => references.get(v)
-      case PropertyMatryoshka(Ident(v, _), _, _) => references.get(v)
-      case _                                     => None
+      case id: Ident                           => references.get(id)
+      case PropertyMatryoshka(id: Ident, _, _) => references.get(id)
+      case _                                   => None
     }
   }
 
-  private def collectTableAliases(contexts: List[FromContext]): Map[String, InContextType] =
+  private def collectTableAliases(contexts: List[FromContext]): Map[Ident, InContextType] =
     contexts.map {
       case c: TableContext             => Map(c.alias -> InTableContext)
       case c: QueryContext             => Map(c.alias -> InQueryContext)
       case c: InfixContext             => Map(c.alias -> InInfixContext)
       case JoinContext(_, a, b, _)     => collectTableAliases(List(a)) ++ collectTableAliases(List(b))
       case FlatJoinContext(_, from, _) => collectTableAliases(List(from))
-    }.foldLeft(Map[String, InContextType]())(_ ++ _)
+    }.foldLeft(Map[Ident, InContextType]())(_ ++ _)
 }
 object InContext {
   sealed trait InContextType

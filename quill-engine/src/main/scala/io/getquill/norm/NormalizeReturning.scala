@@ -47,7 +47,7 @@ class NormalizeReturning(normalize: Normalize) {
    */
   private def dealiasBody(body: Ast, alias: Ident): Ast =
     Transform(body) { case q: Query =>
-      AvoidAliasConflict.sanitizeQuery(q, Set(alias.idName), normalize)
+      AvoidAliasConflict.sanitizeQuery(q, Set(alias), normalize)
     }
 
   private def apply(e: Action, body: Ast, returningIdent: Ident): Action = e match {

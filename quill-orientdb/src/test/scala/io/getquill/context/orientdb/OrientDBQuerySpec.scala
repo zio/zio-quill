@@ -215,10 +215,10 @@ class OrientDBQuerySpec extends Spec {
         t.token(e.copy(select = List(x, x), distinct = DistinctKind.Distinct)(Quat.Value))
       ).getMessage mustBe "OrientDB DISTINCT with multiple columns is not supported"
 
-      val tb = TableContext(Entity("tb", Nil, QEP), "x1")
+      val tb = TableContext(Entity("tb", Nil, QEP), Ident.trivial("x1"))
       t.token(e.copy(from = List(tb, tb))(Quat.Value)) mustBe stmt"SELECT * FROM tb"
 
-      val jn = FlatJoinContext(InnerJoin, tb.copy(alias = "x2"), Ident("x"))
+      val jn = FlatJoinContext(InnerJoin, tb.copy(alias = Ident.trivial("x2")), Ident("x"))
       intercept[IllegalStateException](t.token(e.copy(from = List(tb, jn))(Quat.Value)))
 
       t.token(
