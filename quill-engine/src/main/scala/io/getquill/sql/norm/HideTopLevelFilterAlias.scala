@@ -20,13 +20,13 @@ import io.getquill.norm.BetaReduction
 // but with output causes the alias becomes OUTPUT so it can be different in those cases.
 object HideTopLevelFilterAlias extends StatelessTransformer {
   def hideAlias(alias: Ident, in: Ast) = {
-    val newAlias = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden)
+    val newAlias = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden, alias.pos)
     (newAlias, BetaReduction(in, alias -> newAlias))
   }
 
   def hideAssignmentAlias(assignment: Assignment) = {
     val alias         = assignment.alias
-    val newAlias      = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden)
+    val newAlias      = Ident.Opinionated(alias.name, alias.quat, Visibility.Hidden, alias.pos)
     val newValue      = BetaReduction(assignment.value, alias -> newAlias)
     val newProperty   = BetaReduction(assignment.property, alias -> newAlias)
     val newAssignment = Assignment(newAlias, newProperty, newValue)
