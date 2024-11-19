@@ -531,7 +531,7 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "6.0.0" exclude ("org.slf4j", "*"),
+    "com.zaxxer"              % "HikariCP"                % "6.2.1" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "9.0.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.232"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.4"      % Test,
@@ -598,7 +598,7 @@ def excludePaths(paths: Seq[String]) = {
 }
 
 val scala_v_12 = "2.12.20"
-val scala_v_13 = "2.13.14"
+val scala_v_13 = "2.13.15"
 val scala_v_30 = "3.3.4"
 
 val scalaCollectionCompatVersion = "2.12.0"
