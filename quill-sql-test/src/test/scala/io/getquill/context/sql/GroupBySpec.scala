@@ -225,7 +225,7 @@ class GroupBySpec extends Spec {
           .map { case (_, ageList) => ageList.map(_.age).max.getOrNull }
           .filter(a => a > 1000)
       }.string mustEqual
-        "SELECT p.* FROM (SELECT MAX(p.age) FROM Person p GROUP BY p.age) AS p WHERE p > 1000"
+        "SELECT p.value FROM (SELECT MAX(p.age) AS value FROM Person p GROUP BY p.age) AS p WHERE p.value > 1000"
     }
 
     "work with a map(to-leaf).groupBy.map.filter - no ApplyMap" in {
@@ -236,7 +236,7 @@ class GroupBySpec extends Spec {
           .map { case (_, ageList) => ageList.max.getOrNull }
           .filter(a => a > 1000)
       }.string mustEqual
-        "SELECT p.* FROM (SELECT MAX(p.age) FROM Person p GROUP BY p.age) AS p WHERE p > 1000"
+        "SELECT p.value FROM (SELECT MAX(p.age) AS value FROM Person p GROUP BY p.age) AS p WHERE p.value > 1000"
     }
 
     // Disable the apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
@@ -250,7 +250,7 @@ class GroupBySpec extends Spec {
           .map { case (_, ageList) => ageList.max.getOrNull }
           .filter(a => a > 1000)
       }.string mustEqual
-        "SELECT p.* FROM (SELECT MAX(p.age) FROM (SELECT p.age FROM Person p) AS p GROUP BY p.age) AS p WHERE p > 1000"
+        "SELECT p.value FROM (SELECT MAX(p.age) AS value FROM (SELECT p.age AS value FROM Person p) AS p GROUP BY p.value) AS p WHERE p.value > 1000"
     }
   }
 }

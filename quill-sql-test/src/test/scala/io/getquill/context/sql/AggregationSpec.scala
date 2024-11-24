@@ -30,18 +30,18 @@ class AggregationSpec extends Spec {
   "simple operation should not propagate from nested" in {
     ctx.run {
       query[Person].map(p => p.age + 1).nested.filter(p => p == 123)
-    }.string mustEqual "SELECT p.x FROM (SELECT p.age + 1 AS x FROM Person p) AS p WHERE p.x = 123"
+    }.string mustEqual "SELECT p.value FROM (SELECT p.age + 1 AS value FROM Person p) AS p WHERE p.value = 123"
   }
 
   "aggregation functions should" - {
     "work in a map clause that is last in a query" - {
-      "max" in { ctx.run(query[Person].map(p => max(p.name))).string mustEqual "SELECT MAX(p.name) FROM Person p" }
-      "min" in { ctx.run(query[Person].map(p => min(p.name))).string mustEqual "SELECT MIN(p.name) FROM Person p" }
+      "max" in { ctx.run(query[Person].map(p => max(p.name))).string mustEqual "SELECT MAX(p.name) AS value FROM Person p" }
+      "min" in { ctx.run(query[Person].map(p => min(p.name))).string mustEqual "SELECT MIN(p.name) AS value FROM Person p" }
       "count" in {
-        ctx.run(query[Person].map(p => count(p.name))).string mustEqual "SELECT COUNT(p.name) FROM Person p"
+        ctx.run(query[Person].map(p => count(p.name))).string mustEqual "SELECT COUNT(p.name) AS value FROM Person p"
       }
-      "avg" in { ctx.run(query[Person].map(p => avg(p.age))).string mustEqual "SELECT AVG(p.age) FROM Person p" }
-      "sum" in { ctx.run(query[Person].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) FROM Person p" }
+      "avg" in { ctx.run(query[Person].map(p => avg(p.age))).string mustEqual "SELECT AVG(p.age) AS value FROM Person p" }
+      "sum" in { ctx.run(query[Person].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) AS value FROM Person p" }
     }
 
     "work correctly with a filter cause that is BEFORE the aggregation" in {
@@ -62,42 +62,42 @@ class AggregationSpec extends Spec {
       val q = quote {
         query[PersonOpt].map(p => p.name.map(n => max(n)))
       }
-      ctx.run(q).string mustEqual "SELECT MAX(p.name) FROM PersonOpt p"
+      ctx.run(q).string mustEqual "SELECT MAX(p.name) AS value FROM PersonOpt p"
     }
     "work with optional mapping - external" in {
       val q = quote {
         query[PersonOpt].map(p => max(p.name))
       }
-      ctx.run(q).string mustEqual "SELECT MAX(p.name) FROM PersonOpt p"
+      ctx.run(q).string mustEqual "SELECT MAX(p.name) AS value FROM PersonOpt p"
     }
     "work with optional mapping - external (avg)" in {
       val q = quote {
         query[PersonOpt].map(p => avg(p.age))
       }
-      ctx.run(q).string mustEqual "SELECT AVG(p.age) FROM PersonOpt p"
+      ctx.run(q).string mustEqual "SELECT AVG(p.age) AS value FROM PersonOpt p"
     }
     "work with optional mapping + nested + filter" in {
       val q = quote {
         query[PersonOpt].map(p => p.name.map(n => max(n))).nested.filter(p => p == Option("Joe"))
       }
-      ctx.run(q).string mustEqual "SELECT p.x FROM (SELECT MAX(p.name) AS x FROM PersonOpt p) AS p WHERE p.x = 'Joe'"
+      ctx.run(q).string mustEqual "SELECT p.value FROM (SELECT MAX(p.name) AS value FROM PersonOpt p) AS p WHERE p.value = 'Joe'"
     }
 
     "work externally with optional mapping" - {
       "max" in {
-        ctx.run(query[PersonOpt].map(p => max(p.name))).string mustEqual "SELECT MAX(p.name) FROM PersonOpt p"
+        ctx.run(query[PersonOpt].map(p => max(p.name))).string mustEqual "SELECT MAX(p.name) AS value FROM PersonOpt p"
       }
       "min" in {
-        ctx.run(query[PersonOpt].map(p => min(p.name))).string mustEqual "SELECT MIN(p.name) FROM PersonOpt p"
+        ctx.run(query[PersonOpt].map(p => min(p.name))).string mustEqual "SELECT MIN(p.name) AS value FROM PersonOpt p"
       }
       "count" in {
-        ctx.run(query[PersonOpt].map(p => count(p.name))).string mustEqual "SELECT COUNT(p.name) FROM PersonOpt p"
+        ctx.run(query[PersonOpt].map(p => count(p.name))).string mustEqual "SELECT COUNT(p.name) AS value FROM PersonOpt p"
       }
       "avg" in {
-        ctx.run(query[PersonOpt].map(p => avg(p.age))).string mustEqual "SELECT AVG(p.age) FROM PersonOpt p"
+        ctx.run(query[PersonOpt].map(p => avg(p.age))).string mustEqual "SELECT AVG(p.age) AS value FROM PersonOpt p"
       }
       "sum" in {
-        ctx.run(query[PersonOpt].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) FROM PersonOpt p"
+        ctx.run(query[PersonOpt].map(p => sum(p.age))).string mustEqual "SELECT SUM(p.age) AS value FROM PersonOpt p"
       }
     }
   }
@@ -152,12 +152,12 @@ class AggregationSpec extends Spec {
 
     "work with a groupByMap(to-leaf).filter" in {
       ctx.run(query[Person].groupByMap(p => p.age)(p => max(p.age)).filter(a => a > 1000)).string mustEqual
-        "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM Person p GROUP BY p.age) AS p WHERE p.x > 1000"
+        "SELECT p.value FROM (SELECT MAX(p.age) AS value FROM Person p GROUP BY p.age) AS p WHERE p.value > 1000"
     }
 
     "work with a map(to-leaf).groupByMap.filter" in {
       ctx.run(query[Person].map(p => p.age).groupByMap(p => p)(p => max(p)).filter(a => a > 1000)).string mustEqual
-        "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM Person p GROUP BY p.age) AS p WHERE p.x > 1000"
+        "SELECT p.value FROM (SELECT MAX(p.age) AS value FROM Person p GROUP BY p.age) AS p WHERE p.value > 1000"
     }
 
     // Disable the apply-map phase to make sure these work in cases where this reduction is not possible (e.g. where they use infix etc...).
@@ -165,7 +165,7 @@ class AggregationSpec extends Spec {
     "work with a map(to-leaf).groupByMap.filter - no ApplyMap" in {
       implicit val d = new DisablePhase { override type Phase = OptionalPhase.ApplyMap :: HNil }
       ctx.run(query[Person].map(p => p.age).groupByMap(p => p)(p => max(p)).filter(a => a > 1000)).string mustEqual
-        "SELECT p.x FROM (SELECT MAX(p.age) AS x FROM (SELECT p.age FROM Person p) AS p GROUP BY p.age) AS p WHERE p.x > 1000"
+        "SELECT p.value FROM (SELECT MAX(p.age) AS value FROM (SELECT p.age AS value FROM Person p) AS p GROUP BY p.age) AS p WHERE p.value > 1000"
     }
 
     case class NameAge(name: String, age: Int)

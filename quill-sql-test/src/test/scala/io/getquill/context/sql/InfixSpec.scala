@@ -38,7 +38,7 @@ class InfixSpec extends Spec { // //
       val q = quote {
         query[Data].map(e => sql"RAND()".as[Int]).filter(r => r > 10).map(r => r + 1)
       }
-      ctx.run(q).string mustEqual "SELECT e.x + 1 FROM (SELECT RAND() AS x FROM Data e) AS e WHERE e.x > 10"
+      ctx.run(q).string mustEqual "SELECT e.value + 1 AS value FROM (SELECT RAND() AS value FROM Data e) AS e WHERE e.value > 10"
     }
 
     "do not double-nest" in {
@@ -56,14 +56,14 @@ class InfixSpec extends Spec { // //
       val q = quote {
         query[Data].map(e => sql"RAND()".as[Int] + 1).filter(r => r > 10).map(r => r + 1)
       }
-      ctx.run(q).string mustEqual "SELECT e.x + 1 FROM (SELECT RAND() + 1 AS x FROM Data e) AS e WHERE e.x > 10"
+      ctx.run(q).string mustEqual "SELECT e.value + 1 AS value FROM (SELECT RAND() + 1 AS value FROM Data e) AS e WHERE e.value > 10"
     }
 
     "preserve nesting with single value unary op" in {
       val q = quote {
         query[Data].map(e => !sql"RAND()".as[Boolean]).filter(r => r == true).map(r => !r)
       }
-      ctx.run(q).string mustEqual "SELECT NOT (e.x) FROM (SELECT NOT (RAND()) AS x FROM Data e) AS e WHERE e.x = true"
+      ctx.run(q).string mustEqual "SELECT NOT (e.value) AS value FROM (SELECT NOT (RAND()) AS value FROM Data e) AS e WHERE e.value = true"
     }
 
     "preserve triple nesting with filter in between" in {

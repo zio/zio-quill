@@ -30,6 +30,9 @@ class SqlNormalize(
   private def demarcate(heading: String) =
     ((ast: Ast) => title(heading, TraceType.SqlNormalizations)(ast))
 
+  // TODO for each of these add capabilty to turn on/off
+  //      add before-after time logging
+
   val ExpandJoinPhase             = new ExpandJoin(NormalizePhase)
   val RenamePropertiesPhase       = new RenameProperties(traceConfig)
   val ExpandDistinctPhase         = new ExpandDistinct(traceConfig)

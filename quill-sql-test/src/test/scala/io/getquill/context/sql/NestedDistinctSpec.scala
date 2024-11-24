@@ -59,7 +59,7 @@ class NestedDistinctSpec extends Spec {
             .map(tup => tup._2.map(_.myEmb.name).sum)
         }
 
-        ctx.run(q).string mustEqual "SELECT SUM(x5.myEmbname) FROM (SELECT DISTINCT x4.name AS myEmbname FROM MyParent x4 WHERE x4.name = 1) AS x5 WHERE x5.myEmbname = 2 GROUP BY x5.myEmbname"
+        ctx.run(q).string mustEqual "SELECT SUM(x5.myEmbname) AS value FROM (SELECT DISTINCT x4.name AS myEmbname FROM MyParent x4 WHERE x4.name = 1) AS x5 WHERE x5.myEmbname = 2 GROUP BY x5.myEmbname"
       }
 
       "first operation nesting with filter before and after - orderBy" in {
@@ -217,7 +217,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name, e.id)).distinct.map(tup => (tup._1, tup._2)).distinct
         }
-        ctx.run(q).string mustEqual "SELECT DISTINCT p._1theName AS _1, p._1id AS _2 FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
+        ctx.run(q).string mustEqual "SELECT DISTINCT e.theName AS _1, e.id AS _2 FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
       }
 
       "can be propagated across query with naming intact and then used further - nested" in {
@@ -231,7 +231,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => (e.name))
         }
-        ctx.run(q).string mustEqual "SELECT p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
+        ctx.run(q).string mustEqual "e.theName AS value FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
       }
 
       "can be propagated across query with naming intact - and the immediately returned" in {
@@ -252,7 +252,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Parent].map(p => p.emb).distinct.map(e => Parent(1, e))
         }
-        ctx.run(q).string mustEqual "SELECT 1 AS idP, p._1id AS id, p._1theName AS theName FROM (SELECT DISTINCT p.id AS _1id, p.theName AS _1theName FROM Parent p) AS p"
+        ctx.run(q).string mustEqual "SELECT 1 AS idP, e.id, e.theName FROM (SELECT DISTINCT p.id, p.theName FROM Parent p) AS e"
       }
 
       "can be propagated across query with naming intact and then re-wrapped in tuple" in {
@@ -279,7 +279,7 @@ class NestedDistinctSpec extends Spec {
             .map(p => p.name)
             .distinct
         }
-        ctx.run(q).string mustEqual "SELECT DISTINCT g._1embtheName AS theName FROM (SELECT DISTINCT g.id AS _1id, g.theParentName AS _1theParentName, g.id AS _1embid, g.theName AS _1embtheName FROM GrandParent g) AS g"
+        ctx.run(q).string mustEqual "SELECT DISTINCT p.embtheName AS value FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
       }
 
       "fully unwrapped name propagates with side property" in {
@@ -293,7 +293,7 @@ class NestedDistinctSpec extends Spec {
             .distinct
         }
         ctx.run(q).string mustEqual
-          "SELECT DISTINCT g._1theParentName AS _1, g._1embid AS id, g._1embtheName AS theName FROM (SELECT DISTINCT g.id AS _1id, g.theParentName AS _1theParentName, g.id AS _1embid, g.theName AS _1embtheName FROM GrandParent g) AS g"
+          "SELECT DISTINCT p.theParentName AS _1, p.embid AS id, p.embtheName AS theName FROM (SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g) AS p"
       }
 
       "fully unwrapped name propagates with side property - nested" in {
@@ -350,24 +350,7 @@ class NestedDistinctSpec extends Spec {
             .distinct
         }
         ctx.run(q).string(true).collapseSpace mustEqual //
-          """
-            |SELECT
-            |  DISTINCT g._1theParentName AS _1,
-            |  g._1embid AS id,
-            |  g._1embtheName AS theName,
-            |  g._1id AS _3,
-            |  g._1embid AS _4
-            |FROM
-            |  (
-            |    SELECT
-            |      DISTINCT g.id AS _1id,
-            |      g.theParentName AS _1theParentName,
-            |      g.id AS _1embid,
-            |      g.theName AS _1embtheName
-            |    FROM
-            |      GrandParent g
-            |  ) AS g
-            |""".collapseSpace
+          """SELECT DISTINCT p.theParentName AS _1, p.embid AS id, p.embtheName AS theName, p.id AS _3, p.embid AS _4 FROM ( SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g ) AS p""".collapseSpace
       }
 
       "fully unwrapped name propagates with un-renamed properties - with one property renamed" in {
@@ -387,24 +370,7 @@ class NestedDistinctSpec extends Spec {
             .distinct
         }
         ctx.run(q).string(true).collapseSpace mustEqual
-          """
-            |SELECT
-            |  DISTINCT g._1theParentName AS _1,
-            |  g._1embid AS id,
-            |  g._1embtheName AS theName,
-            |  g._1id AS _3,
-            |  g._1embid AS _4
-            |FROM
-            |  (
-            |    SELECT
-            |      DISTINCT g.id AS _1id,
-            |      g.theParentName AS _1theParentName,
-            |      g.id AS _1embid,
-            |      g.theName AS _1embtheName
-            |    FROM
-            |      GrandParent g
-            |  ) AS g
-            |""".collapseSpace
+          """SELECT DISTINCT p.theParentName AS _1, p.embid AS id, p.embtheName AS theName, p.id AS _3, p.embid AS _4 FROM ( SELECT DISTINCT g.id, g.theParentName, g.id AS embid, g.theName AS embtheName FROM GrandParent g ) AS p""".collapseSpace
       }
 
       "fully unwrapped and fully re-wrapped" in {
@@ -804,7 +770,7 @@ class NestedDistinctSpec extends Spec {
         val q = quote {
           query[Emb].map(e => Parent(1, e)).distinct.map(p => p.emb1.a)
         }
-        ctx.run(q).string mustEqual "SELECT e.emb1a AS a FROM (SELECT DISTINCT 1 AS id, e.a AS emb1a, e.b AS emb1b FROM Emb e) AS e"
+        ctx.run(q).string mustEqual "SELECT e.emb1a AS value FROM (SELECT DISTINCT 1 AS id, e.a AS emb1a, e.b AS emb1b FROM Emb e) AS e"
       }
 
       "should not use override from parent schema level - nested" in {

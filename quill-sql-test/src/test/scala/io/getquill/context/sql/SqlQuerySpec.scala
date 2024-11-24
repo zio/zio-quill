@@ -333,12 +333,12 @@ class SqlQuerySpec extends Spec {
           qr1.map(t => t.i).contains(1)
         }
         testContext.run(q).string mustEqual
-          "SELECT 1 IN (SELECT t.i FROM TestEntity t)"
+          "SELECT 1 IN (SELECT t.i FROM TestEntity t) AS value"
       }
       "simple value" in {
         val q = quote(1)
         testContext.run(q).string mustEqual
-          "SELECT 1"
+          "SELECT 1 AS value"
       }
     }
 
@@ -355,7 +355,7 @@ class SqlQuerySpec extends Spec {
           sql"""SELECT t.i FROM TestEntity t""".as[Query[Int]]
         }
         testContext.run(q).string mustEqual
-          """SELECT x.* FROM (SELECT t.i FROM TestEntity t) AS x"""
+          """SELECT x.value FROM (SELECT t.i FROM TestEntity t) AS x"""
       }
     }
 

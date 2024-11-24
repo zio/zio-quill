@@ -17,14 +17,14 @@ class VerifySqlQuerySpec extends Spec {
       val q = quote {
         qr1.flatMap(a => qr2.filter(b => b.s == a.s).sortBy(b => b.s).map(b => b.s))
       }
-      VerifySqlQuery(SqlQuery(q.ast)).isDefined mustEqual true
+      VerifySqlQuery(SqlQuery(q.ast)).verifyOrFail().isDefined mustEqual true
     }
 
     "take" in {
       val q = quote {
         qr1.flatMap(a => qr2.filter(b => b.s == a.s).take(10).map(b => b.s))
       }
-      VerifySqlQuery(SqlQuery(q.ast)).isDefined mustEqual true
+      VerifySqlQuery(SqlQuery(q.ast)).verifyOrFail().isDefined mustEqual true
     }
 
     "doesn't accept table reference" - {

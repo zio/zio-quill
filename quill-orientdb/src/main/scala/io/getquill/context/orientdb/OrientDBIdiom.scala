@@ -47,7 +47,7 @@ trait OrientDBIdiom extends Idiom {
       normalizedAst match {
         case q: Query =>
           val sql = new SqlQueryApply(idiomContext.traceConfig)(q)
-          VerifySqlQuery(sql).map(fail)
+          VerifySqlQuery(sql).verifyOrFail().map(fail)
           val expanded = ExpandNestedQueries(sql)
           trace("expanded sql")(expanded)
           val refined = if (Messages.pruneColumns) RemoveUnusedSelects(expanded) else expanded

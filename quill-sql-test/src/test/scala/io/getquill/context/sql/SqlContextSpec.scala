@@ -29,7 +29,7 @@ class SqlContextSpec extends Spec {
         qr1.filter(t => t.i == lift(1)).map(t => lift(2L))
       }
       val mirror = testContext.run(q)
-      mirror.string mustEqual "SELECT ? FROM TestEntity t WHERE t.i = ?"
+      mirror.string mustEqual "SELECT ? AS value FROM TestEntity t WHERE t.i = ?"
       mirror.prepareRow mustEqual Row(2L, 1)
     }
   }
