@@ -62,20 +62,25 @@ trait ContextTranslateProto {
     extractor: Extractor[T] = identityExtractor,
     prettyPrint: Boolean = false
   )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String] =
-    push(prepareParams(statement, prepare)) { params =>
-      val query =
-        if (params.nonEmpty) {
-          params.foldLeft(statement) { case (expanded, param) =>
-            expanded.replaceFirst("\\?", param)
+    try {
+      push(prepareParams(statement, prepare)) { params =>
+        val query =
+          if (params.nonEmpty) {
+            params.foldLeft(statement) { case (expanded, param) =>
+              expanded.replaceFirst("\\?", param)
+            }
+          } else {
+            statement
           }
-        } else {
-          statement
-        }
 
-      if (prettyPrint)
-        idiom.format(query)
-      else
-        query
+        if (prettyPrint)
+          idiom.format(query)
+        else
+          query
+      }
+    } catch {
+      case e: Exception =>
+        wrap("<!-- Cannot display parameters due to preparation error: " + e.getMessage + " -->\n" + statement)
     }
 
   def translateBatchQuery(
