@@ -2,7 +2,7 @@ import sbt.*
 import sbt.Keys.*
 
 object Version {
-  val zio = "2.1.9"
+  val zio = "2.1.13"
 }
 
 sealed trait ExcludeTests

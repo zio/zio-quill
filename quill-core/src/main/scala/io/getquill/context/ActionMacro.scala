@@ -293,7 +293,11 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
             }
         }
       case other =>
-        c.fail(s"Batch actions must be static quotations. Found: '$other'")
+        c.fail(s"""Batch actions must be static quotations. Found: '$other'.
+        |It's possible this is being caused by type ascription when declaring the implicit
+        |schema meta, so try removing it if that's the case, e.g.:
+        `implicit val schema: ctx.SchemaMeta[Row] = schemaMeta[Row]("rows")` ->
+        `implicit val schema = schemaMeta[Row]("rows")`""")
     }
 
   object ExtractLiftings {
