@@ -1,6 +1,6 @@
 package io.getquill.norm
 
-import io.getquill.ast._
+import io.getquill.ast.{+&&+, _}
 import io.getquill.MirrorContexts.testContext._
 import io.getquill.ast.Implicits._
 import io.getquill.norm.ConcatBehavior.{AnsiConcat, NonAnsiConcat}
@@ -8,7 +8,7 @@ import io.getquill.MoreAstOps._
 import io.getquill.base.Spec
 import io.getquill.util.TraceConfig
 
-class FlattenOptionOperationSpec extends Spec { // hello
+class FlattenOptionOperationSpec extends Spec {
 
   def o      = Ident("o")
   def c1     = Constant.auto(1)
@@ -156,7 +156,7 @@ class FlattenOptionOperationSpec extends Spec { // hello
       }
       new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(
         q.ast.body: Ast
-      ).toString mustEqual "((o != null) && (o < 1)) || ((o == null) && true)"
+      ).toString mustEqual "((o < 1) && (o != null)) || (true && (o == null))"
     }
     "map + getOrElse(false)" in {
       val q = quote { (o: Option[Int]) =>
@@ -164,7 +164,7 @@ class FlattenOptionOperationSpec extends Spec { // hello
       }
       new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(
         q.ast.body: Ast
-      ).toString mustEqual "((o != null) && (o < 1)) || ((o == null) && false)"
+      ).toString mustEqual "((o < 1) && (o != null)) || (false && (o == null))"
     }
     "forall" - {
       "regular operation" in {
@@ -172,35 +172,35 @@ class FlattenOptionOperationSpec extends Spec { // hello
           o.forall(i => i != 1)
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNullCheck(o) +||+ (o +!=+ c1))
+          ((o +!=+ c1) +||+ IsNullCheck(o))
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNullCheck(o) +||+ (o +!=+ c1))
+          ((o +!=+ c1) +||+ IsNullCheck(o))
       }
       "possible-fallthrough operation" in {
         val q = quote { (o: Option[String]) =>
           o.forall(s => s + "foo" == "bar")
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNullCheck(o) +||+ ((o +++ cFoo) +==+ cBar))
+          (((o +++ cFoo) +==+ cBar) +||+ IsNullCheck(o))
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNullCheck(o) +||+ (IsNotNullCheck(o) +&&+ ((o +++ cFoo) +==+ cBar)))
+          ((((o +++ cFoo) +==+ cBar) +&&+ IsNotNullCheck(o)) +||+ IsNullCheck(o))
       }
       "never-fallthrough operation" in {
         val q = quote { (o: Option[String]) =>
           o.forall(s => if (s + "foo" == "bar") true else false)
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNullCheck(o) +||+ (IsNotNullCheck(o) +&&+ If(
+          ((If(
             (o +++ cFoo) +==+ cBar,
             Constant.auto(true),
             Constant.auto(false)
-          )))
+          ) +&&+ IsNotNullCheck(o)) +||+ IsNullCheck(o))
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNullCheck(o) +||+ (IsNotNullCheck(o) +&&+ If(
+          ((If(
             (o +++ cFoo) +==+ cBar,
             Constant.auto(true),
             Constant.auto(false)
-          )))
+          ) +&&+ IsNotNullCheck(o)) +||+ IsNullCheck(o))
       }
     }
     "map + forall + binop" - {
@@ -209,19 +209,16 @@ class FlattenOptionOperationSpec extends Spec { // hello
           o.map(_.i).forall(i => i != 1) && true
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          ((IsNullCheck(Property(o, "i")) +||+ ((Property(o, "i") +!=+ c1))) +&&+ Constant.auto(true))
+          ((((Property(o, "i") +!=+ c1)) +||+ IsNullCheck(Property(o, "i"))) +&&+ Constant.auto(true))
       }
       "possible-fallthrough operation" in {
         val q = quote { (o: Option[TestEntity2]) =>
           o.map(_.s).forall(s => s + "foo" == "bar") && true
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          ((IsNullCheck(Property(o, "s")) +||+ ((Property(o, "s") +++ cFoo) +==+ cBar) +&&+ Constant.auto(true)))
+          ((((Property(o, "s") +++ cFoo) +==+ cBar) +||+ IsNullCheck(Property(o, "s")) +&&+ Constant.auto(true)))
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          ((IsNullCheck(Property(o, "s")) +||+ (IsNotNullCheck(Property(o, "s")) +&&+ ((Property(
-            o,
-            "s"
-          ) +++ cFoo) +==+ cBar))) +&&+ Constant.auto(true))
+          (((((Property(o, "s") +++ cFoo) +==+ cBar) +&&+ IsNotNullCheck(Property(o, "s"))) +||+ IsNullCheck(Property(o, "s"))) +&&+ Constant.auto(true))
       }
     }
     "exists" - {
@@ -241,16 +238,16 @@ class FlattenOptionOperationSpec extends Spec { // hello
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
           ((o +++ cFoo) +==+ cBar)
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNotNullCheck(o) +&&+ ((o +++ cFoo) +==+ cBar))
+          (((o +++ cFoo) +==+ cBar) +&&+ IsNotNullCheck(o))
       }
       "never-fallthrough operation" in {
         val q = quote { (o: Option[String]) =>
           o.exists(s => if (s + "foo" == "bar") true else false)
         }
         new FlattenOptionOperation(AnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNotNullCheck(o) +&&+ If((o +++ cFoo) +==+ cBar, Constant.auto(true), Constant.auto(false)))
+          (If((o +++ cFoo) +==+ cBar, Constant.auto(true), Constant.auto(false)) +&&+ IsNotNullCheck(o))
         new FlattenOptionOperation(NonAnsiConcat, TraceConfig.Empty)(q.ast.body: Ast) mustEqual
-          (IsNotNullCheck(o) +&&+ If((o +++ cFoo) +==+ cBar, Constant.auto(true), Constant.auto(false)))
+          (If((o +++ cFoo) +==+ cBar, Constant.auto(true), Constant.auto(false)) +&&+ IsNotNullCheck(o))
       }
     }
     "exists row" in {

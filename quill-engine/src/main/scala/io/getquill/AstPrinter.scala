@@ -18,7 +18,11 @@ object AstPrinter {
   }
 }
 
-class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: QuatTrace) extends pprint.Walker {
+class AstPrinter(
+  traceOpinions: Boolean = false,
+  traceAstSimple: Boolean = false,
+  traceQuats: QuatTrace = QuatTrace.None
+) extends pprint.Walker {
   val defaultWidth: Int             = 150
   val defaultHeight: Int            = Integer.MAX_VALUE
   val defaultIndent: Int            = 2
@@ -83,7 +87,8 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
     def apply(list: Any*): treemake = Content(list.toList.map(Elem.apply))
   }
 
-  override def treeify(x: Any, escapeUnicode: Boolean, showFieldNames: Boolean): Tree =
+  override def treeify(x: Any, escapeUnicode: Boolean, showFieldNames: Boolean): Tree = {
+    def treeify1(x: Any) = treeify(x, escapeUnicode, showFieldNames)
     x match {
       case ast: Ast if (traceAstSimple) =>
         Tree.Literal("" + ast) // Do not blow up if it is null
@@ -117,7 +122,16 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
 
       case s: ScalarValueLift => Tree.Apply("ScalarValueLift", treemake(s.name, s.source).withQuat(s.bestQuat).make)
 
-      case p: Property if (traceOpinions) =>
+      case i: Infix =>
+        TreeApplyList(
+          "Infix",
+          List(
+            Tree.KeyValue("parts", ltree(i.parts.map(treeify1(_)))),
+            Tree.KeyValue("params", ltree(i.params.map(treeify1(_))))
+          )
+        )
+
+      case p: Property =>
         TreeApplyList(
           "Property",
           l(treeify(p.ast, escapeUnicode, showFieldNames)) ++ l(treeify(p.name, escapeUnicode, showFieldNames)) ++
@@ -153,10 +167,12 @@ class AstPrinter(traceOpinions: Boolean, traceAstSimple: Boolean, traceQuats: Qu
 
       case _ => super.treeify(x, escapeUnicode, showFieldNames)
     }
+  }
 
   private def TreeApplyList(prefix: String, body: List[Tree]) = Tree.Apply(prefix, body.iterator)
 
   private def l(trees: Tree*): List[Tree] = List[Tree](trees: _*)
+  private def ltree(trees: List[Tree])    = Tree.Apply("List", trees.iterator)
 
   def apply(x: Any): fansi.Str =
     fansi.Str.join(this.tokenize(x).toSeq)

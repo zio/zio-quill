@@ -17,12 +17,7 @@ import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.{ConcatBehavior, EqualityBehavior, ExpandReturning, NormalizeCaching, ProductAggregationToken}
 import io.getquill.quat.Quat
-import io.getquill.sql.norm.{
-  HideTopLevelFilterAlias,
-  NormalizeFilteredActionAliases,
-  RemoveExtraAlias,
-  RemoveUnusedSelects
-}
+import io.getquill.sql.norm.{HideTopLevelFilterAlias, NormalizeFilteredActionAliases, RemoveExtraAlias, RemoveUnusedSelects}
 import io.getquill.util.{Interleave, Interpolator, Messages, TraceConfig}
 import io.getquill.util.Messages.{TraceType, fail, trace}
 
@@ -206,7 +201,7 @@ trait SqlIdiom extends Idiom {
       distinct match {
         case DistinctKind.Distinct          => stmt"DISTINCT "
         case DistinctKind.DistinctOn(props) => stmt"DISTINCT ON (${props.token}) "
-        case DistinctKind.None              => stmt""
+        case DistinctKind.None              => emptyStatement
       }
     )
 
@@ -418,7 +413,7 @@ trait SqlIdiom extends Idiom {
   private def ` AS` =
     useActionTableAliasAs match {
       case ActionTableAliasBehavior.UseAs => stmt" AS"
-      case _                              => stmt""
+      case _                              => emptyStatement
     }
 
   implicit val joinTypeTokenizer: Tokenizer[JoinType] = Tokenizer[JoinType] {
@@ -445,8 +440,8 @@ trait SqlIdiom extends Idiom {
     case BooleanOperator.`!`          => stmt"NOT"
     case StringOperator.`toUpperCase` => stmt"UPPER"
     case StringOperator.`toLowerCase` => stmt"LOWER"
-    case StringOperator.`toLong`      => stmt"" // cast is implicit
-    case StringOperator.`toInt`       => stmt"" // cast is implicit
+    case StringOperator.`toLong`      => emptyStatement // cast is implicit
+    case StringOperator.`toInt`       => emptyStatement // cast is implicit
     case SetOperator.`isEmpty`        => stmt"NOT EXISTS"
     case SetOperator.`nonEmpty`       => stmt"EXISTS"
   }
@@ -489,7 +484,7 @@ trait SqlIdiom extends Idiom {
 
         TokenizeProperty.unnest(ast) match {
           case (ExternalIdent.Opinionated(_: String, _, prefixRenameable), prefix) =>
-            stmt"${actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(stmt"")}${TokenizeProperty(name, prefix, strategy, renameable, prefixRenameable)}"
+            stmt"${actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(emptyStatement)}${TokenizeProperty(name, prefix, strategy, renameable, prefixRenameable)}"
 
           // When using ExternalIdent such as .returning(eid => eid.idColumn) clauses drop the 'eid' since SQL
           // returning clauses have no alias for the original table. I.e. INSERT [...] RETURNING idColumn there's no
@@ -500,7 +495,7 @@ trait SqlIdiom extends Idiom {
           // that there is an alias for the inserted table (i.e. `INSERT ... as theAlias values ... RETURNING`)
           // and the instances of ExternalIdent use it.
           case (ExternalIdent(_, _), prefix) =>
-            stmt"${actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(stmt"")}${TokenizeProperty(name, prefix, strategy, renameable)}"
+            stmt"${actionAlias.map(alias => stmt"${scopedTokenizer(alias)}.").getOrElse(emptyStatement)}${TokenizeProperty(name, prefix, strategy, renameable)}"
 
           // In the rare case that the Ident is invisible, do not show it. See the Ident documentation for more info.
           case (Ident.Opinionated(_, _, Hidden), prefix) =>
@@ -646,9 +641,10 @@ trait SqlIdiom extends Idiom {
 
   private[getquill] def ` AS [table]`(implicit astTokenizer: Tokenizer[Ast], strategy: NamingStrategy) =
     useActionTableAliasAs match {
-      case ActionTableAliasBehavior.UseAs  => actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(stmt"")
-      case ActionTableAliasBehavior.SkipAs => actionAlias.map(alias => stmt" ${alias.token}").getOrElse(stmt"")
-      case ActionTableAliasBehavior.Hide   => stmt""
+      case ActionTableAliasBehavior.UseAs =>
+        actionAlias.map(alias => stmt" AS ${alias.token}").getOrElse(emptyStatement)
+      case ActionTableAliasBehavior.SkipAs => actionAlias.map(alias => stmt" ${alias.token}").getOrElse(emptyStatement)
+      case ActionTableAliasBehavior.Hide   => emptyStatement
     }
 
   private[getquill] def returningEnabled = !Messages.disableReturning
@@ -860,7 +856,7 @@ object SqlIdiom {
       useActionTableAliasAs match {
         case ActionTableAliasBehavior.UseAs  => stmt" AS ${alias.name.token}"
         case ActionTableAliasBehavior.SkipAs => stmt" ${alias.name.token}"
-        case ActionTableAliasBehavior.Hide   => stmt""
+        case ActionTableAliasBehavior.Hide   => emptyStatement
       }
 
     query match {

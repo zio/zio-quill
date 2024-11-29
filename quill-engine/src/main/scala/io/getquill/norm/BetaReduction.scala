@@ -92,7 +92,7 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
         // Prepending IMap[Ast, Ast]() is needed otherwise 2.13 fails complaining:
         // Note: io.getquill.ast.Ident <: io.getquill.ast.Ast, but trait Map is invariant in type K.
         val bodyr =
-          new BetaReduction(IMap[Ast, Ast]() ++ conflicts ++ params.zip(newParams), typeBehavior, emptyBehavior)
+          new BetaReduction(IMap[Ast, Ast]() ++ conflicts, typeBehavior, emptyBehavior)
             .apply(body)
         apply(BetaReduction(map ++ newParams.zip(values).toMap, typeBehavior, emptyBehavior).apply(bodyr))
 

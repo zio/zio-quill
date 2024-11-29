@@ -1,14 +1,6 @@
 package io.getquill.context.cassandra.encoding
 
-import java.lang.{
-  Boolean => JBoolean,
-  Byte => JByte,
-  Double => JDouble,
-  Float => JFloat,
-  Integer => JInt,
-  Long => JLong,
-  Short => JShort
-}
+import java.lang.{Boolean => JBoolean, Byte => JByte, Double => JDouble, Float => JFloat, Integer => JInt, Long => JLong, Short => JShort}
 import java.math.{BigDecimal => JBigDecimal}
 import java.nio.ByteBuffer
 import java.util.{Date, UUID}
