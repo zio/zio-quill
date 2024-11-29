@@ -63,8 +63,8 @@ class SqlNormalize(
       .andThen(demarcate("ExpandJoin"))
       .andThen(ExpandMappedInfix.apply _)
       .andThen(demarcate("ExpandMappedInfix"))
-      .andThen(SheathLeafClausesPhase.apply _)
-      .andThen(demarcate("SheathLeaves"))
+      // .andThen(SheathLeafClausesPhase.apply _)
+      // .andThen(demarcate("SheathLeaves"))
       .andThen { ast =>
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.

@@ -5,6 +5,7 @@ import io.getquill.util.IndentUtil._
 import io.getquill.util.Messages.{debugEnabled, errorPrefix, prettyPrint}
 import io.getquill.quat.VerifyNoBranches
 
+import scala.reflect.api.Position
 import scala.reflect.macros.blackbox.{Context => MacroContext}
 
 object MacroContextExt {
@@ -15,6 +16,11 @@ object MacroContextExt {
 
     def error(msg: String): Unit =
       c.error(c.enclosingPosition, if (errorPrefix) s"[quill] $msg" else msg)
+
+    def failAtPoint(msg: String, point: Int): Nothing = {
+      val errorPos = c.enclosingPosition.withPoint(point)
+      c.abort(errorPos, if (errorPrefix) s"[quill] $msg" else msg)
+    }
 
     def fail(msg: String): Nothing =
       c.abort(c.enclosingPosition, if (errorPrefix) s"[quill] $msg" else msg)
