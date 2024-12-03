@@ -1,19 +1,20 @@
 package io.getquill.quotation
 
 import io.getquill.ast._
-import io.getquill.ast.Implicits._
+import io.getquill.util.Text
+
 import collection.immutable.Set
 
-case class State(seen: Set[IdentName], free: Set[IdentName])
+case class State(seen: Set[Ident], free: Set[Ident])
 
 case class FreeVariables(state: State) extends StatefulTransformer[State] {
 
   override def apply(ast: Ast): (Ast, StatefulTransformer[State]) =
     ast match {
-      case ident: Ident if (!state.seen.contains(ident.idName)) =>
-        (ident, FreeVariables(State(state.seen, state.free + ident.idName)))
+      case ident: Ident if (!state.seen.contains(ident)) =>
+        (ident, FreeVariables(State(state.seen, state.free + ident)))
       case f @ Function(params, body) =>
-        val (_, t) = FreeVariables(State(state.seen ++ params.map(_.idName), state.free))(body)
+        val (_, t) = FreeVariables(State(state.seen ++ params, state.free))(body)
         (f, FreeVariables(State(state.seen, state.free ++ t.state.free)))
       case q @ Foreach(a, b, c) =>
         (q, free(a, b, c))
@@ -48,7 +49,7 @@ case class FreeVariables(state: State) extends StatefulTransformer[State] {
   override def apply(e: Assignment): (Assignment, StatefulTransformer[State]) =
     e match {
       case Assignment(a, b, c) =>
-        val t         = FreeVariables(State(state.seen + a.idName, state.free))
+        val t         = FreeVariables(State(state.seen + a, state.free))
         val (bt, btt) = t(b)
         val (ct, ctt) = t(c)
         (Assignment(a, bt, ct), FreeVariables(State(state.seen, state.free ++ btt.state.free ++ ctt.state.free)))
@@ -57,7 +58,7 @@ case class FreeVariables(state: State) extends StatefulTransformer[State] {
   override def apply(e: AssignmentDual): (AssignmentDual, StatefulTransformer[State]) =
     e match {
       case AssignmentDual(a1, a2, b, c) =>
-        val t         = FreeVariables(State(state.seen + a1.idName + a2.idName, state.free))
+        val t         = FreeVariables(State(state.seen + a1 + a2, state.free))
         val (bt, btt) = t(b)
         val (ct, ctt) = t(c)
         (
@@ -97,44 +98,41 @@ case class FreeVariables(state: State) extends StatefulTransformer[State] {
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA)  = apply(a)
         val (_, freeB)  = apply(b)
-        val (_, freeOn) = FreeVariables(State(state.seen + iA.idName + iB.idName, Set.empty))(on)
+        val (_, freeOn) = FreeVariables(State(state.seen + iA + iB, Set.empty))(on)
         (q, FreeVariables(State(state.seen, state.free ++ freeA.state.free ++ freeB.state.free ++ freeOn.state.free)))
       case _: Entity | _: Take | _: Drop | _: Union | _: UnionAll | _: Aggregation | _: Distinct | _: Nested =>
         super.apply(query)
     }
 
-  private def free(a: Ast, ident: Ident, c: Ast): FreeVariables =
-    free(a, ident.idName, c)
-
-  private def free(a: Ast, ident: IdentName, c: Ast) = {
+  private def free(a: Ast, ident: Ident, c: Ast) = {
     val (_, ta) = apply(a)
     val (_, tc) = FreeVariables(State(state.seen + ident, state.free))(c)
     FreeVariables(State(state.seen, state.free ++ ta.state.free ++ tc.state.free))
   }
 }
 
+case class FreeVariableError(freeVars: List[Ident]) extends Exception {
+  lazy val msg = Text.FreeVariablesExitError(freeVars, true)
+  // For compile-time flows where the position is already passed down the the compiler do
+  // showing it again would just cause confusion
+  lazy val msgNoPos = Text.FreeVariablesExitError(freeVars, false)
+
+  override def getMessage: String = msg
+}
+
 object FreeVariables {
-  def apply(ast: Ast): Set[IdentName] =
+  def apply(ast: Ast): Set[Ident] =
     new FreeVariables(State(Set.empty, Set.empty))(ast) match {
       case (_, transformer) =>
         transformer.state.free
     }
 
-  def verify(ast: Ast): Either[String, Ast] =
+  def verify(ast: Ast): Either[FreeVariableError, Ast] =
     apply(ast) match {
       case free if free.isEmpty => Right(ast)
       case free =>
-        val firstVar = free.headOption.map(_.name).getOrElse("someVar")
-        Left(
-          s"""
-             |Found the following variables: ${free.map(_.name).toList} that seem to originate outside of a `quote {...}` or `run {...}` block.
-             |Quotes and run blocks cannot use values outside their scope directly (with the exception of inline expressions in Scala 3).
-             |In order to use runtime values in a quotation, you need to lift them, so instead
-             |of this `$firstVar` do this: `lift($firstVar)`.
-             |Here is a more complete example:
-             |Instead of this: `def byName(n: String) = quote(query[Person].filter(_.name == n))`
-             |        Do this: `def byName(n: String) = quote(query[Person].filter(_.name == lift(n)))`
-        """.stripMargin
-        )
+        val error =
+          FreeVariableError(free.toList)
+        Left(error)
     }
 }
