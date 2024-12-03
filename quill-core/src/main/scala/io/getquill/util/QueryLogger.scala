@@ -18,7 +18,7 @@ class QueryLogger(logToFile: LogToFile) {
           FileLoggerConfig(
             destination = Paths.get(logFile),
             format = LogFormat.line,
-            filter = LogFilter.logLevel(LogLevel.Info)
+            filter = LogFilter.LogLevelByNameConfig.default
           )
 
         executeWithLogger(config) {

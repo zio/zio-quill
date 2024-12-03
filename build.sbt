@@ -31,7 +31,6 @@ lazy val baseModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-core`,
   `quill-sql`,
   `quill-sql-test`,
-  `quill-monix`,
   `quill-zio`,
   `quill-util`
 )
@@ -49,7 +48,6 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-jdbc-test-sqlite`,
   `quill-jdbc-test-sqlserver`,
   `quill-doobie`,
-  `quill-jdbc-monix`,
   `quill-jdbc-zio`
 )
 
@@ -61,7 +59,6 @@ lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-cassandra`,
-  `quill-cassandra-monix`,
   `quill-cassandra-zio`,
   `quill-cassandra-pekko`,
   `quill-orientdb`,
@@ -167,7 +164,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.7.17")
+        ("org.scalameta" %% "scalafmt-core" % "3.8.3")
           .excludeAll(
             ({
               if (isScala3)
@@ -205,8 +202,8 @@ lazy val `quill-engine` =
         "com.typesafe"                  % "config"        % "1.4.3",
         "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
-        "io.suzaku"                    %% "boopickle"     % "1.4.0",
-        "com.lihaoyi"                  %% "pprint"        % "0.8.1",
+        "io.suzaku"                    %% "boopickle"     % "1.5.0",
+        "com.lihaoyi"                  %% "pprint"        % "0.9.0",
         "com.github.ben-manes.caffeine" % "caffeine"      % "3.1.8"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
@@ -219,7 +216,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.1.16",
+        "dev.zio"                    %% "zio-logging"   % "2.4.0",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -395,52 +392,14 @@ lazy val `quill-doobie` =
     .settings(jdbcTestingSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC4",
-        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC4" % Test
+        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC5",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC5" % Test
       )
     )
     .dependsOn(
       `quill-jdbc`     % "compile->compile",
       `quill-sql-test` % "test->test"
     )
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-monix` =
-  (project in file("quill-monix"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true,
-      libraryDependencies ++= Seq(
-        ("io.monix" %% "monix-eval"     % "3.0.0").cross(CrossVersion.for3Use2_13),
-        ("io.monix" %% "monix-reactive" % "3.0.0").cross(CrossVersion.for3Use2_13)
-      )
-    )
-    .dependsOn(`quill-core` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
-lazy val `quill-jdbc-monix` =
-  (project in file("quill-jdbc-monix"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(
-      Test / testGrouping := {
-        (Test / definedTests).value map { test =>
-          if (test.name endsWith "IntegrationSpec")
-            Tests.Group(
-              name = test.name,
-              tests = Seq(test),
-              runPolicy = Tests.SubProcess(
-                ForkOptions().withRunJVMOptions(Vector("-Xmx200m"))
-              )
-            )
-          else
-            Tests.Group(name = test.name, tests = Seq(test), runPolicy = Tests.SubProcess(ForkOptions()))
-        }
-      }
-    )
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .dependsOn(`quill-sql` % "compile->compile")
-    .dependsOn(`quill-jdbc` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
 lazy val `quill-zio` =
@@ -463,8 +422,8 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.0" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.6.2"
+        "org.postgresql" % "postgresql" % "42.7.4" % "provided",
+        "dev.zio"       %% "zio-json"   % "0.7.3"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -518,16 +477,6 @@ lazy val `quill-cassandra` =
     .dependsOn(`quill-core` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-lazy val `quill-cassandra-monix` =
-  (project in file("quill-cassandra-monix"))
-    .settings(commonSettings: _*)
-    .settings(
-      Test / fork := true
-    )
-    .dependsOn(`quill-cassandra` % "compile->compile;test->test")
-    .dependsOn(`quill-monix` % "compile->compile;test->test")
-    .enablePlugins(MimaPlugin)
-
 lazy val `quill-cassandra-zio` =
   (project in file("quill-cassandra-zio"))
     .settings(commonSettings: _*)
@@ -548,8 +497,8 @@ lazy val `quill-cassandra-pekko` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.1",
-        "org.apache.pekko" %% "pekko-testkit"              % "1.0.1" % Test
+        "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.0.2",
+        "org.apache.pekko" %% "pekko-testkit"              % "1.0.2" % Test
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
@@ -561,7 +510,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.24"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.36"
       )
     )
     .dependsOn(
@@ -582,11 +531,11 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "5.1.0" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "8.2.0"       % Test,
-    "com.h2database"          % "h2"                      % "2.2.224"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.0"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.42.0.1"    % Test,
+    "com.zaxxer"              % "HikariCP"                % "6.2.1" exclude ("org.slf4j", "*"),
+    "com.mysql"               % "mysql-connector-j"       % "9.1.0"       % Test,
+    "com.h2database"          % "h2"                      % "2.3.232"     % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.4"      % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.47.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -648,15 +597,15 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.18"
-val scala_v_13 = "2.13.12"
-val scala_v_30 = "3.3.1"
+val scala_v_12 = "2.12.20"
+val scala_v_13 = "2.13.15"
+val scala_v_30 = "3.3.4"
 
-val scalaCollectionCompatVersion = "2.11.0"
+val scalaCollectionCompatVersion = "2.12.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.11" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.12" % Test
   )
 )
 
@@ -665,7 +614,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "org.scalatest"           %% "scalatest"               % "3.2.17" % Test,
+    "org.scalatest"           %% "scalatest"               % "3.2.19" % Test,
     "org.scala-lang.modules"  %% "scala-collection-compat" % scalaCollectionCompatVersion,
     "com.google.code.findbugs" % "jsr305"                  % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
@@ -676,6 +625,11 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
         "org.scala-lang" % "scala-reflect"  % scalaVersion.value
       )
     else Seq.empty
+  } ++ {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq(compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"))
+      case _            => Seq.empty
+    }
   },
   Test / unmanagedClasspath ++= Seq(
     baseDirectory.value / "src" / "test" / "resources"
@@ -735,14 +689,18 @@ lazy val docs = project
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
     scalacOptions += "-Xlog-implicits",
-    libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio),
+    libraryDependencies ++= Seq("dev.zio" %% "zio" % Version.zio) ++ {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) => Seq(compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"))
+        case _            => Seq.empty
+      }
+    },
     projectName    := "ZIO Quill",
     mainModuleName := (`quill-core` / moduleName).value,
     // With Scala 2.12, these projects doc isn't compiling.
     ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(
       `quill-engine`,
       `quill-core`,
-      `quill-cassandra-monix`,
       `quill-orientdb`,
       `quill-doobie`
     ),

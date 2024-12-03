@@ -25,8 +25,28 @@ class ContextInstanceSpec extends Spec {
         testContext.run(q).prepareRow mustEqual Row("s")
       }
 
+      "encoding - contramap" in {
+        implicit val testToString =
+          implicitly[Encoder[String]].contramap((v: StringValue) => v.s)
+
+        val q = quote {
+          query[Entity].insert(_.s -> lift(StringValue("s")))
+        }
+        testContext.run(q).prepareRow mustEqual Row("s")
+      }
+
       "decoding" in {
         implicit val stringToTest = MappedEncoding[String, StringValue](StringValue)
+        val q = quote {
+          query[Entity]
+        }
+        testContext.run(q).extractor(Row("s"), MirrorSession.default) mustEqual Entity(StringValue("s"))
+      }
+
+      "decoding - map" in {
+        implicit val stringToTest =
+          implicitly[Decoder[String]].map(str => StringValue(str))
+
         val q = quote {
           query[Entity]
         }

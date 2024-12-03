@@ -19,9 +19,9 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.0.0
+      - uses: actions/checkout@v4.2.2
       - name: Cache sbt
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cache/coursier
@@ -29,7 +29,7 @@ jobs:
           key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
       - name: Setup Java
-        uses: actions/setup-java@v3.12.0
+        uses: actions/setup-java@v4.5.0
         with:
           distribution: temurin
           java-version: '17'
@@ -77,9 +77,9 @@ jobs:
     name: Build ${{matrix.scala_short_dot}} - ${{matrix.module}}
 
     steps:
-    - uses: actions/checkout@v4.0.0
+    - uses: actions/checkout@v4.2.2
     - name: Cache sbt
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cache/coursier
@@ -87,7 +87,7 @@ jobs:
         key: ${{ runner.os }}-${{matrix.scala}}-${{matrix.module}}-${{ hashFiles('**/build.sbt') }}
 
     - name: Setup Java
-      uses: actions/setup-java@v3.12.0
+      uses: actions/setup-java@v4.5.0
       with:
         distribution: temurin
         java-version: '17'
@@ -108,12 +108,12 @@ jobs:
       CI_RELEASE: publishSigned # By default, sbt-ci-release uses the `+publishSigned` which is publishing for all the Scala versions configured, which is not what we want
       CI_SNAPSHOT_RELEASE: publish # By default, sbt-ci-release uses the `+publish` which is publishing for all the Scala versions configured, which is not what we want
     steps:
-      - uses: actions/checkout@v4.0.0
+      - uses: actions/checkout@v4.2.2
       - name: Setup Java
-        uses: actions/setup-java@v3.12.0
+        uses: actions/setup-java@v4.5.0
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '11'
           check-latest: true
       - run: |
           sbt ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
@@ -122,5 +122,5 @@ jobs:
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.GETQUILL_SONATYPE_TOKEN_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.GETQUILL_SONATYPE_TOKEN_USER }}
