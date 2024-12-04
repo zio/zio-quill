@@ -91,7 +91,6 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
               expanded.liftings,
-              (row, session) => $decoder(0, row, session),
               options = ${argValue}
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
@@ -100,7 +99,6 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
               expanded.liftings,
-              (row, session) => $decoder(0, row, session),
               options = io.getquill.context.TranslateOptions()
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
