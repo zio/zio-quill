@@ -18,7 +18,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
   def translateQuery(quoted: Tree): Tree =
     translateQueryPrettyPrint(quoted, q"false")
 
-  def translateQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree = {
+  def translateQueryPrettyPrint(quoted: Tree, options: Tree): Tree = {
     val expanded = expand(extractAst(quoted), inferQuat(quoted.tpe))
     c.untypecheck {
       q"""
@@ -26,8 +26,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
         val (idiomContext, expanded) = $expanded
         ${c.prefix}.translateQuery(
           expanded.string,
-          expanded.prepare,
-          prettyPrint = ${prettyPrint}
+          options = ${options}
         )(io.getquill.context.ExecutionInfo.unknown, ())
       """
     }
@@ -36,7 +35,8 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
   def translateBatchQuery(quoted: Tree): Tree =
     translateBatchQueryPrettyPrint(quoted, q"false")
 
-  def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
+  // TODO need to change this to include liftings
+  def translateBatchQueryPrettyPrint(quoted: Tree, options: Tree): Tree =
     expandBatchActionNew(quoted, isReturning = false) {
       case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
         q"""
@@ -50,12 +50,12 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
           ${c.prefix}.translateBatchQuery(
             batches.map { subBatch =>
               val expanded = $expanded
-              (expanded.string, expanded.prepare)
+              (expanded.string, expanded.prepare, expanded.liftings)
             }.groupBy(_._1).map {
               case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
             }.toList,
-            $prettyPrint
+            $options
           )(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }

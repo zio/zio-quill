@@ -86,7 +86,7 @@ trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Result[List[Long]] =
     withConnectionWrapped { conn =>
-      groups.flatMap { case BatchGroup(sql, prepare) =>
+      groups.flatMap { case BatchGroup(sql, prepare, _) =>
         val ps = conn.prepareStatement(sql)
         logger.underlying.debug("Batch: {}", sql)
         prepare.foreach { f =>

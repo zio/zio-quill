@@ -169,7 +169,7 @@ trait DoobieContextBase[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   )(
     info: ExecutionInfo,
     dc: Runner
-  ): ConnectionIO[List[Long]] = groups.flatTraverse { case BatchGroup(sql, preps) =>
+  ): ConnectionIO[List[Long]] = groups.flatTraverse { case BatchGroup(sql, preps, _) =>
     HC.prepareStatement(sql) {
       useConnection { implicit connection =>
         for {

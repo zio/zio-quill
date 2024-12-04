@@ -135,7 +135,7 @@ class AsyncMirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
   )(executionInfo: ExecutionInfo, dc: Runner)(implicit ec: ExecutionContext) =
     Future {
       BatchActionMirror(
-        groups.map { case BatchGroup(string, prepare) =>
+        groups.map { case BatchGroup(string, prepare, _) =>
           (string, prepare.map(_(Row(), session)._2))
         },
         executionInfo

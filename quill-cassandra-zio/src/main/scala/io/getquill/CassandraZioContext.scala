@@ -153,7 +153,7 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
       env <- ZIO.service[CassandraZioSession]
       _ <- {
         val batchGroups =
-          groups.flatMap { case BatchGroup(cql, prepare) =>
+          groups.flatMap { case BatchGroup(cql, prepare, _) =>
             prepare
               .map(prep => executeAction(cql, prep)(info, dc).provideEnvironment(ZEnvironment(env)))
           }
