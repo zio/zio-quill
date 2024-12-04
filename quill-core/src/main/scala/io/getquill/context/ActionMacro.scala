@@ -16,7 +16,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
   import c.universe.{Function => _, Ident => _, _}
 
   def translateQuery(quoted: Tree): Tree =
-    translateQueryPrettyPrint(quoted, q"false")
+    translateQueryPrettyPrint(quoted, q"io.getquill.context.TranslateOptions()")
 
   def translateQueryPrettyPrint(quoted: Tree, options: Tree): Tree = {
     val expanded = expand(extractAst(quoted), inferQuat(quoted.tpe))
@@ -33,7 +33,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
   }
 
   def translateBatchQuery(quoted: Tree): Tree =
-    translateBatchQueryPrettyPrint(quoted, q"false")
+    translateBatchQueryPrettyPrint(quoted, q"io.getquill.context.TranslateOptions()")
 
   // TODO need to change this to include liftings
   def translateBatchQueryPrettyPrint(quoted: Tree, options: Tree): Tree =
