@@ -102,8 +102,8 @@ trait ContextTranslateProto {
     options: TranslateOptions = TranslateOptions()
   )(executionInfo: ExecutionInfo, dc: Runner): List[String] =
     groups.flatMap { group =>
-      group.prepare.map { _ =>
-        translateQuery(group.string, options = options)(executionInfo, dc)
+      (group.prepare zip group.liftings).map { case (_, liftings) =>
+        translateQuery(group.string, options = options, liftings = liftings)(executionInfo, dc)
       }
     }
 
