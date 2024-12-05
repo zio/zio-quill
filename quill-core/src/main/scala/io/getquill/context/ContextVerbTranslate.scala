@@ -75,25 +75,31 @@ trait ContextTranslateProto {
         case _         => s"${value}"
       }
 
-    if (liftings.isEmpty)
-      statement
-    else
-      options.plugLifts match {
-        case true =>
-          liftings.foldLeft(statement) { case (expanded, lift) =>
-            expanded.replaceFirst("\\?", if (options.demarcatePluggedLifts) s"lift(${quoteIfNeeded(lift.value)})" else quoteIfNeeded(lift.value))
-          }
-        case false =>
-          var varNum: Int = 0
-          val dol         = '$'
-          val numberedQuery =
+    val outputQuery =
+      if (liftings.isEmpty)
+        statement
+      else
+        options.plugLifts match {
+          case true =>
             liftings.foldLeft(statement) { case (expanded, lift) =>
-              val res = expanded.replaceFirst("\\?", s"${dol}${varNum + 1}")
-              varNum += 1
-              res
+              expanded.replaceFirst("\\?", if (options.demarcatePluggedLifts) s"lift(${quoteIfNeeded(lift.value)})" else quoteIfNeeded(lift.value))
             }
-          numberedQuery + "\n" + liftings.zipWithIndex.map { case (lift, i) => s"${dol}${i + 1} = ${lift.value}" }.mkString("\n")
-      }
+          case false =>
+            var varNum: Int = 0
+            val dol         = '$'
+            val numberedQuery =
+              liftings.foldLeft(statement) { case (expanded, lift) =>
+                val res = expanded.replaceFirst("\\?", s"${dol}${varNum + 1}")
+                varNum += 1
+                res
+              }
+            numberedQuery + "\n" + liftings.zipWithIndex.map { case (lift, i) => s"${dol}${i + 1} = ${lift.value}" }.mkString("\n")
+        }
+
+    if (options.prettyPrint)
+      idiom.format(outputQuery)
+    else
+      outputQuery
   }
 
   def translateBatchQuery(
