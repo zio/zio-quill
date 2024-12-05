@@ -26,6 +26,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
         val (idiomContext, expanded) = $expanded
         ${c.prefix}.translateQuery(
           expanded.string,
+          expanded.liftings,
           options = ${options}
         )(io.getquill.context.ExecutionInfo.unknown, ())
       """

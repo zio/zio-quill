@@ -20,7 +20,7 @@ trait ContextVerbTranslate extends ContextTranslateMacro {
 case class TranslateOptions(
   prettyPrint: Boolean = false,
   plugLifts: Boolean = true,
-  demarcateLifts: Boolean = false
+  demarcatePluggedLifts: Boolean = true
 )
 
 trait ContextTranslateMacro extends ContextTranslateProto {
@@ -67,25 +67,34 @@ trait ContextTranslateProto {
     statement: String,
     liftings: List[ScalarLift] = List(),
     options: TranslateOptions = TranslateOptions()
-  )(executionInfo: ExecutionInfo, dc: Runner): String =
-    (liftings.nonEmpty, options.plugLifts) match {
-      case (true, true) =>
-        liftings.foldLeft(statement) { case (expanded, lift) =>
-          expanded.replaceFirst("\\?", if (options.demarcateLifts) s"prep(${lift.value})" else s"${lift.value}")
-        }
-      case (true, false) =>
-        var varNum: Int = 0
-        val dol         = '$'
-        val numberedQuery =
+  )(executionInfo: ExecutionInfo, dc: Runner): String = {
+    def quoteIfNeeded(value: Any): String =
+      value match {
+        case _: String => s"'${value}'"
+        case _: Char   => s"'${value}'"
+        case _         => s"${value}"
+      }
+
+    if (liftings.isEmpty)
+      statement
+    else
+      options.plugLifts match {
+        case true =>
           liftings.foldLeft(statement) { case (expanded, lift) =>
-            val res = expanded.replaceFirst("\\?", s"${dol}${varNum}")
-            varNum += 1
-            res
+            expanded.replaceFirst("\\?", if (options.demarcatePluggedLifts) s"lift(${quoteIfNeeded(lift.value)})" else quoteIfNeeded(lift.value))
           }
-        numberedQuery + "\n" + liftings.map(lift => s"${dol} = ${lift.value}").mkString("\n")
-      case _ =>
-        statement
-    }
+        case false =>
+          var varNum: Int = 0
+          val dol         = '$'
+          val numberedQuery =
+            liftings.foldLeft(statement) { case (expanded, lift) =>
+              val res = expanded.replaceFirst("\\?", s"${dol}${varNum + 1}")
+              varNum += 1
+              res
+            }
+          numberedQuery + "\n" + liftings.zipWithIndex.map { case (lift, i) => s"${dol}${i + 1} = ${lift.value}" }.mkString("\n")
+      }
+  }
 
   def translateBatchQuery(
     // TODO these groups need to have liftings lists

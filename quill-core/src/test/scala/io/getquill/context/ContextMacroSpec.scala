@@ -119,19 +119,19 @@ class ContextMacroSpec extends Spec {
           qr1.filter(t => t.s == lift("a")).delete
         }
         testContext.translate(q) mustEqual
-          """querySchema("TestEntity").filter(t => t.s == 'a').delete"""
+          """querySchema("TestEntity").filter(t => t.s == lift('a')).delete"""
       }
       "sql" in {
         val q = quote {
           sql"t = ${lift("a")}".as[Action[TestEntity]]
         }
-        testContext.translate(q) mustEqual s"""sql"t = $${'a'}""""
+        testContext.translate(q) mustEqual s"""sql"t = $${lift('a')}""""
       }
       "dynamic" in {
         val q = quote {
           sql"t = ${lift("a")}".as[Action[TestEntity]]
         }
-        testContext.translate(q.dynamic) mustEqual s"""sql"t = $${'a'}""""
+        testContext.translate(q.dynamic) mustEqual s"""sql"t = $${lift('a')}""""
       }
       "dynamic type param" in {
         import language.reflectiveCalls
@@ -139,7 +139,7 @@ class ContextMacroSpec extends Spec {
           query[T].filter(t => t.i == lift(1)).delete
         }
         testContext.translate(test[TestEntity]) mustEqual
-          """querySchema("TestEntity").filter(t => t.i == 1).delete"""
+          """querySchema("TestEntity").filter(t => t.i == lift(1)).delete"""
       }
     }
   }
