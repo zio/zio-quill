@@ -162,7 +162,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
               (INSERT ... VALUES (? ?),         List(caboose))
             */
             batchesSharded.groupByOrdered(_._1).map {
-              case (string, items, liftings) =>
+              case (string, items) =>
                 ${c.prefix}.BatchGroup(string, items.map(_._2).toList, items.map(_._3).toList)
             }.toList
           })(io.getquill.context.ExecutionInfo.unknown, ())
