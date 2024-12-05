@@ -1,5 +1,6 @@
 package io.getquill.context
 
+import io.getquill.ast.ScalarLift
 import io.getquill.{Action, BatchAction, NamingStrategy, Query, Quoted}
 import io.getquill.idiom.Idiom
 
@@ -16,34 +17,40 @@ trait ContextVerbTranslate extends ContextTranslateMacro {
   override def seq[A](list: List[A]): List[A]      = list
 }
 
+case class TranslateOptions(
+  prettyPrint: Boolean = false,
+  plugLifts: Boolean = true,
+  demarcatePluggedLifts: Boolean = true
+)
+
 trait ContextTranslateMacro extends ContextTranslateProto {
   this: Context[_ <: Idiom, _ <: NamingStrategy] =>
 
-  def translate[T](quoted: Quoted[T]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
-  def translate[T](quoted: Quoted[Query[T]]): TranslateResult[String] = macro QueryMacro.translateQuery[T]
-  def translate(quoted: Quoted[Action[_]]): TranslateResult[String] = macro ActionMacro.translateQuery
-  def translate(quoted: Quoted[BatchAction[Action[_]]]): TranslateResult[List[String]] =
+  def translate[T](quoted: Quoted[T]): String = macro QueryMacro.translateQuery[T]
+  def translate[T](quoted: Quoted[Query[T]]): String = macro QueryMacro.translateQuery[T]
+  def translate(quoted: Quoted[Action[_]]): String = macro ActionMacro.translateQuery
+  def translate(quoted: Quoted[BatchAction[Action[_]]]): List[String] =
     macro ActionMacro.translateBatchQuery
 
-  def translate[T](quoted: Quoted[T], prettyPrint: Boolean): TranslateResult[String] =
+  def translate[T](quoted: Quoted[T], options: TranslateOptions): TranslateResult[String] =
     macro QueryMacro.translateQueryPrettyPrint[T]
-  def translate[T](quoted: Quoted[Query[T]], prettyPrint: Boolean): TranslateResult[String] =
+  def translate[T](quoted: Quoted[Query[T]], options: TranslateOptions): TranslateResult[String] =
     macro QueryMacro.translateQueryPrettyPrint[T]
-  def translate(quoted: Quoted[Action[_]], prettyPrint: Boolean): TranslateResult[String] =
+  def translate(quoted: Quoted[Action[_]], options: TranslateOptions): TranslateResult[String] =
     macro ActionMacro.translateQueryPrettyPrint
-  def translate(quoted: Quoted[BatchAction[Action[_]]], prettyPrint: Boolean): TranslateResult[List[String]] =
+  def translate(quoted: Quoted[BatchAction[Action[_]]], options: TranslateOptions): TranslateResult[List[String]] =
     macro ActionMacro.translateBatchQueryPrettyPrint
 
   def translateQuery[T](
     statement: String,
-    prepare: Prepare = identityPrepare,
-    extractor: Extractor[T] = identityExtractor,
-    prettyPrint: Boolean = false
-  )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String]
-  def translateBatchQuery(groups: List[BatchGroup], prettyPrint: Boolean = false)(
+    lifts: List[ScalarLift] = List(),
+    options: TranslateOptions
+  )(executionInfo: ExecutionInfo, dc: Runner): String
+
+  def translateBatchQuery(groups: List[BatchGroup], options: TranslateOptions = TranslateOptions())(
     executionInfo: ExecutionInfo,
     dc: Runner
-  ): TranslateResult[List[String]]
+  ): List[String]
 }
 
 trait ContextTranslateProto {
@@ -58,40 +65,51 @@ trait ContextTranslateProto {
 
   def translateQuery[T](
     statement: String,
-    prepare: Prepare = identityPrepare,
-    extractor: Extractor[T] = identityExtractor,
-    prettyPrint: Boolean = false
-  )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String] =
-    try {
-      push(prepareParams(statement, prepare)) { params =>
-        val query =
-          if (params.nonEmpty) {
-            params.foldLeft(statement) { case (expanded, param) =>
-              expanded.replaceFirst("\\?", param)
-            }
-          } else {
-            statement
-          }
-
-        if (prettyPrint)
-          idiom.format(query)
-        else
-          query
+    liftings: List[ScalarLift] = List(),
+    options: TranslateOptions = TranslateOptions()
+  )(executionInfo: ExecutionInfo, dc: Runner): String = {
+    def quoteIfNeeded(value: Any): String =
+      value match {
+        case _: String => s"'${value}'"
+        case _: Char   => s"'${value}'"
+        case _         => s"${value}"
       }
-    } catch {
-      case e: Exception =>
-        wrap("<!-- Cannot display parameters due to preparation error: " + e.getMessage + " -->\n" + statement)
-    }
+
+    val outputQuery =
+      if (liftings.isEmpty)
+        statement
+      else
+        options.plugLifts match {
+          case true =>
+            liftings.foldLeft(statement) { case (expanded, lift) =>
+              expanded.replaceFirst("\\?", if (options.demarcatePluggedLifts) s"lift(${quoteIfNeeded(lift.value)})" else quoteIfNeeded(lift.value))
+            }
+          case false =>
+            var varNum: Int = 0
+            val dol         = '$'
+            val numberedQuery =
+              liftings.foldLeft(statement) { case (expanded, lift) =>
+                val res = expanded.replaceFirst("\\?", s"${dol}${varNum + 1}")
+                varNum += 1
+                res
+              }
+            numberedQuery + "\n" + liftings.zipWithIndex.map { case (lift, i) => s"${dol}${i + 1} = ${lift.value}" }.mkString("\n")
+        }
+
+    if (options.prettyPrint)
+      idiom.format(outputQuery)
+    else
+      outputQuery
+  }
 
   def translateBatchQuery(
+    // TODO these groups need to have liftings lists
     groups: List[BatchGroup],
-    prettyPrint: Boolean = false
-  )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]] =
-    seq {
-      groups.flatMap { group =>
-        group.prepare.map { prepare =>
-          translateQuery(group.string, prepare, prettyPrint = prettyPrint)(executionInfo, dc)
-        }
+    options: TranslateOptions = TranslateOptions()
+  )(executionInfo: ExecutionInfo, dc: Runner): List[String] =
+    groups.flatMap { group =>
+      (group.prepare zip group.liftings).map { case (_, liftings) =>
+        translateQuery(group.string, options = options, liftings = liftings)(executionInfo, dc)
       }
     }
 

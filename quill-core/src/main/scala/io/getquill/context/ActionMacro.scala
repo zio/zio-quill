@@ -16,9 +16,9 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
   import c.universe.{Function => _, Ident => _, _}
 
   def translateQuery(quoted: Tree): Tree =
-    translateQueryPrettyPrint(quoted, q"false")
+    translateQueryPrettyPrint(quoted, q"io.getquill.context.TranslateOptions()")
 
-  def translateQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree = {
+  def translateQueryPrettyPrint(quoted: Tree, options: Tree): Tree = {
     val expanded = expand(extractAst(quoted), inferQuat(quoted.tpe))
     c.untypecheck {
       q"""
@@ -26,17 +26,18 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
         val (idiomContext, expanded) = $expanded
         ${c.prefix}.translateQuery(
           expanded.string,
-          expanded.prepare,
-          prettyPrint = ${prettyPrint}
+          expanded.liftings,
+          options = ${options}
         )(io.getquill.context.ExecutionInfo.unknown, ())
       """
     }
   }
 
   def translateBatchQuery(quoted: Tree): Tree =
-    translateBatchQueryPrettyPrint(quoted, q"false")
+    translateBatchQueryPrettyPrint(quoted, q"io.getquill.context.TranslateOptions()")
 
-  def translateBatchQueryPrettyPrint(quoted: Tree, prettyPrint: Tree): Tree =
+  // TODO need to change this to include liftings
+  def translateBatchQueryPrettyPrint(quoted: Tree, options: Tree): Tree =
     expandBatchActionNew(quoted, isReturning = false) {
       case (batch, param, expanded, injectableLiftList, idiomNamingOriginalAstVars, idiomContext, canDoBatch) =>
         q"""
@@ -50,12 +51,12 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
           ${c.prefix}.translateBatchQuery(
             batches.map { subBatch =>
               val expanded = $expanded
-              (expanded.string, expanded.prepare)
+              (expanded.string, expanded.prepare, expanded.liftings)
             }.groupBy(_._1).map {
               case (string, items) =>
-                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
+                ${c.prefix}.BatchGroup(string, items.map(_._2).toList, items.map(_._3).toList)
             }.toList,
-            $prettyPrint
+            $options
           )(io.getquill.context.ExecutionInfo.unknown, ())
         """
     }
@@ -142,11 +143,11 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
               } else {
                 $batch.toList.map(element => List(element))
               }
-            /* batchesSharded: List[(String, (Row, MirrorSession) => (List[Any], Row) <a.k.a: prepare>)] */
+            /* batchesSharded: List[(String, (Row, MirrorSession) => (List[Any], Row <a.k.a: prepare>), List[ScalarLift]) ] */
             val batchesSharded = batches.map { subBatch => {
                 /* `expanded` is io.getquill.context.ExpandWithInjectables(ast, subBatch, injectableLiftList) */
                 val expanded = $expanded
-                (expanded.string, expanded.prepare)
+                (expanded.string, expanded.prepare, expanded.liftings)
               }
             }
             /*
@@ -163,7 +164,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
             */
             batchesSharded.groupByOrdered(_._1).map {
               case (string, items) =>
-                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
+                ${c.prefix}.BatchGroup(string, items.map(_._2).toList, items.map(_._3).toList)
             }.toList
           })(io.getquill.context.ExecutionInfo.unknown, ())
         """
@@ -194,12 +195,12 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
             val batchesSharded = batches.map { subBatch => {
                 /* `expanded` is io.getquill.context.ExpandWithInjectables(ast, subBatch, injectableLiftList) */
                 val expanded = $expanded
-                ((expanded.string, $returningColumn), expanded.prepare)
+                ((expanded.string, $returningColumn), expanded.prepare, expanded.liftings)
               }
             }
             batchesSharded.groupByOrdered(_._1).map {
               case ((string, column), items) =>
-                ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2).toList)
+                ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2).toList, items.map(_._3).toList)
             }.toList
           }, ${returningExtractor[T]})(io.getquill.context.ExecutionInfo.unknown, ())
         """

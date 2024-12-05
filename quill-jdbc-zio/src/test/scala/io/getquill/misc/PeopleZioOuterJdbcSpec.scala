@@ -25,10 +25,6 @@ class PeopleZioOuterJdbcSpec extends Spec {
     val q = quote {
       query[Person].filter(p => p.name == "Bert")
     }
-    val a    = testContext.translate(q)
-    val exec = a.provideEnvironment(ZEnvironment(ds))
-    println(Unsafe.unsafe { implicit u =>
-      Runtime.default.unsafe.run(exec).getOrThrow()
-    })
+    println(testContext.translate(q))
   }
 }

@@ -1,7 +1,8 @@
 package io.getquill.jdbczio
 
+import io.getquill.ast.ScalarLift
 import io.getquill.{NamingStrategy, ReturnAction}
-import io.getquill.context.{ContextVerbStream, ExecutionInfo, ProtoContext}
+import io.getquill.context.{ContextVerbStream, ExecutionInfo, ProtoContext, TranslateOptions}
 import io.getquill.context.jdbc.JdbcContextTypes
 import io.getquill.context.qzio.{ZioContext, ZioJdbcContext, ZioTranslateContext}
 import io.getquill.context.sql.idiom.SqlIdiom
@@ -66,22 +67,19 @@ trait QuillBaseContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   override def translateQuery[T](
     statement: String,
-    prepare: Prepare = identityPrepare,
-    extractor: Extractor[T] = identityExtractor,
-    prettyPrint: Boolean = false
-  )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String] =
-    onDS(dsDelegate.translateQuery[T](statement, prepare, extractor, prettyPrint)(executionInfo, dc))
+    lifts: List[ScalarLift] = List(),
+    options: TranslateOptions
+  )(executionInfo: ExecutionInfo, dc: Runner): String =
+    dsDelegate.translateQuery[T](statement, lifts, options)(executionInfo, dc)
 
   override def translateBatchQuery(
     groups: List[BatchGroup],
-    prettyPrint: Boolean = false
-  )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]] =
-    onDS(
-      dsDelegate.translateBatchQuery(
-        groups.asInstanceOf[List[QuillBaseContext.this.dsDelegate.BatchGroup]],
-        prettyPrint
-      )(executionInfo, dc)
-    )
+    options: TranslateOptions
+  )(executionInfo: ExecutionInfo, dc: Runner): List[String] =
+    dsDelegate.translateBatchQuery(
+      groups.asInstanceOf[List[QuillBaseContext.this.dsDelegate.BatchGroup]],
+      options
+    )(executionInfo, dc)
 
   def streamQuery[T](
     fetchSize: Option[Int],
