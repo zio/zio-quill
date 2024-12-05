@@ -20,7 +20,7 @@ trait ContextVerbTranslate extends ContextTranslateMacro {
 case class TranslateOptions(
   prettyPrint: Boolean = false,
   plugLifts: Boolean = true,
-  demarcateLifts: Boolean = true
+  demarcateLifts: Boolean = false
 )
 
 trait ContextTranslateMacro extends ContextTranslateProto {
