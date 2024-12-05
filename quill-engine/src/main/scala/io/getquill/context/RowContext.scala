@@ -12,7 +12,7 @@ trait RowContext {
   protected def identityExtractor[T]: Extractor[T] = _identityExtractor.asInstanceOf[Extractor[T]]
 
   case class BatchGroup(string: String, prepare: List[Prepare], liftings: List[List[ScalarLift]])
-  case class BatchGroupReturning(string: String, returningBehavior: ReturnAction, prepare: List[Prepare])
+  case class BatchGroupReturning(string: String, returningBehavior: ReturnAction, prepare: List[Prepare], liftings: List[List[ScalarLift]])
 
   type Prepare      = (PrepareRow, Session) => (List[Any], PrepareRow)
   type Extractor[T] = (ResultRow, Session) => T

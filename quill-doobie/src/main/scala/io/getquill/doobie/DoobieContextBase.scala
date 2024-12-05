@@ -187,7 +187,7 @@ trait DoobieContextBase[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   )(
     info: ExecutionInfo,
     dc: Runner
-  ): ConnectionIO[List[A]] = groups.flatTraverse { case BatchGroupReturning(sql, returningBehavior, preps) =>
+  ): ConnectionIO[List[A]] = groups.flatTraverse { case BatchGroupReturning(sql, returningBehavior, preps, _) =>
     prepareConnections(returningBehavior)(sql) {
 
       useConnection { implicit connection =>

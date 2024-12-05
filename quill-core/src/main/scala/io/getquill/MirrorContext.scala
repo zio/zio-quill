@@ -139,7 +139,7 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     extractor: Extractor[T]
   )(info: ExecutionInfo, dc: Runner) =
     new BatchActionReturningMirror[T](
-      groups.map { case BatchGroupReturning(string, returningBehavior, prepare) =>
+      groups.map { case BatchGroupReturning(string, returningBehavior, prepare, _) =>
         (string, returningBehavior, prepare.map(_(Row(), session)._2))
       },
       extractor,

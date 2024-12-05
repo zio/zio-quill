@@ -103,7 +103,7 @@ trait JdbcContextVerbExecute[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     extractor: Extractor[T]
   )(info: ExecutionInfo, dc: Runner): Result[List[T]] =
     withConnectionWrapped { conn =>
-      groups.flatMap { case BatchGroupReturning(sql, returningBehavior, prepare) =>
+      groups.flatMap { case BatchGroupReturning(sql, returningBehavior, prepare, _) =>
         val ps = prepareWithReturning(sql, conn, returningBehavior)
         logger.underlying.debug("Batch: {}", sql)
         prepare.foreach { f =>
