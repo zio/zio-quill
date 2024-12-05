@@ -53,7 +53,7 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
               (expanded.string, expanded.prepare, expanded.liftings)
             }.groupBy(_._1).map {
               case (string, items) =>
-                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
+                ${c.prefix}.BatchGroup(string, items.map(_._2).toList, items.map(_._3).toList)
             }.toList,
             $options
           )(io.getquill.context.ExecutionInfo.unknown, ())
@@ -142,11 +142,11 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
               } else {
                 $batch.toList.map(element => List(element))
               }
-            /* batchesSharded: List[(String, (Row, MirrorSession) => (List[Any], Row) <a.k.a: prepare>)] */
+            /* batchesSharded: List[(String, (Row, MirrorSession) => (List[Any], Row <a.k.a: prepare>), List[ScalarLift]) ] */
             val batchesSharded = batches.map { subBatch => {
                 /* `expanded` is io.getquill.context.ExpandWithInjectables(ast, subBatch, injectableLiftList) */
                 val expanded = $expanded
-                (expanded.string, expanded.prepare)
+                (expanded.string, expanded.prepare, expanded.liftings)
               }
             }
             /*
@@ -162,8 +162,8 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
               (INSERT ... VALUES (? ?),         List(caboose))
             */
             batchesSharded.groupByOrdered(_._1).map {
-              case (string, items) =>
-                ${c.prefix}.BatchGroup(string, items.map(_._2).toList)
+              case (string, items, liftings) =>
+                ${c.prefix}.BatchGroup(string, items.map(_._2).toList, items.map(_._3).toList)
             }.toList
           })(io.getquill.context.ExecutionInfo.unknown, ())
         """
@@ -194,12 +194,12 @@ class ActionMacro(val c: MacroContext) extends ContextMacro with ReifyLiftings {
             val batchesSharded = batches.map { subBatch => {
                 /* `expanded` is io.getquill.context.ExpandWithInjectables(ast, subBatch, injectableLiftList) */
                 val expanded = $expanded
-                ((expanded.string, $returningColumn), expanded.prepare)
+                ((expanded.string, $returningColumn), expanded.prepare, expanded.liftings)
               }
             }
             batchesSharded.groupByOrdered(_._1).map {
               case ((string, column), items) =>
-                ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2).toList)
+                ${c.prefix}.BatchGroupReturning(string, column, items.map(_._2).toList, items.map(_._3).toList)
             }.toList
           }, ${returningExtractor[T]})(io.getquill.context.ExecutionInfo.unknown, ())
         """
