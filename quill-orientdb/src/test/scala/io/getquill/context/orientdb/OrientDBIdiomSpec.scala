@@ -330,7 +330,7 @@ class OrientDBIdiomSpec extends Spec {
           sql"SELECT MODE(i) FROM TestEntity".as[Query[Int]]
         }
         ctx.run(q).string mustEqual
-          "SELECT * FROM (SELECT MODE(i) FROM TestEntity)"
+          "SELECT MODE(i) FROM TestEntity"
       }
     }
     "action" - {
