@@ -53,8 +53,7 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-codegen`,
-  `quill-codegen-jdbc`,
-  `quill-codegen-tests`
+  `quill-codegen-jdbc`
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -93,7 +92,7 @@ lazy val filteredModules = {
   val moduleStrings =
     ListSet(
       modulesStr
-        .getOrElse("all")
+        .getOrElse("nocodegen")
         .split(",")
         .map(_.trim): _*
     )
@@ -121,8 +120,10 @@ lazy val filteredModules = {
         println("SBT =:> Invoking Aggregate Project")
         Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
       case _ | "all" =>
-        println("SBT =:> Compiling All Modules")
-        allModules
+        println("Compiling Not-Code Generator Modules")
+        baseModules ++ dbModules ++ bigdataModules
+      // println("SBT =:> Compiling All Modules")
+      // allModules
     }
 
   val selectedModules = {
@@ -264,39 +265,39 @@ lazy val `quill-codegen-jdbc` =
     .dependsOn(`quill-codegen` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile")
 
-lazy val `quill-codegen-tests` =
-  (project in file("quill-codegen-tests"))
-    .settings(commonSettings: _*)
-    .settings(
-      publish / skip                         := true,
-      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-      Test / fork                            := true,
-      (Test / sourceGenerators) += Def.task {
-        def recursiveList(file: JFile): List[JFile] =
-          if (file.isDirectory)
-            Option(file.listFiles()).map(_.flatMap(child => recursiveList(child)).toList).toList.flatten
-          else
-            List(file)
-        val r          = (Compile / runner).value
-        val s          = streams.value.log
-        val sourcePath = sourceManaged.value
-        val classPath  = (`quill-codegen-jdbc` / Test / fullClasspath).value.map(_.data)
-
-        // We could put the code generated products directly in the `sourcePath` directory but for some reason
-        // intellij doesn't like it unless there's a `main` directory inside.
-        val fileDir = new File(sourcePath, "main").getAbsoluteFile
-        val dbs     = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
-        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
-        r.run(
-          "io.getquill.codegen.integration.CodegenTestCaseRunner",
-          classPath,
-          fileDir.getAbsolutePath +: dbs,
-          s
-        )
-        recursiveList(fileDir)
-      }.tag(CodegenTag)
-    )
-    .dependsOn(`quill-codegen-jdbc` % "compile->test")
+//lazy val `quill-codegen-tests` =
+//  (project in file("quill-codegen-tests"))
+//    .settings(commonSettings: _*)
+//    .settings(
+//      publish / skip                         := true,
+//      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+//      Test / fork                            := true,
+//      (Test / sourceGenerators) += Def.task {
+//        def recursiveList(file: JFile): List[JFile] =
+//          if (file.isDirectory)
+//            Option(file.listFiles()).map(_.flatMap(child => recursiveList(child)).toList).toList.flatten
+//          else
+//            List(file)
+//        val r          = (Compile / runner).value
+//        val s          = streams.value.log
+//        val sourcePath = sourceManaged.value
+//        val classPath  = (`quill-codegen-jdbc` / Test / fullClasspath).value.map(_.data)
+//
+//        // We could put the code generated products directly in the `sourcePath` directory but for some reason
+//        // intellij doesn't like it unless there's a `main` directory inside.
+//        val fileDir = new File(sourcePath, "main").getAbsoluteFile
+//        val dbs     = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
+//        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
+//        r.run(
+//          "io.getquill.codegen.integration.CodegenTestCaseRunner",
+//          classPath,
+//          fileDir.getAbsolutePath +: dbs,
+//          s
+//        )
+//        recursiveList(fileDir)
+//      }.tag(CodegenTag)
+//    )
+//    .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false") match {

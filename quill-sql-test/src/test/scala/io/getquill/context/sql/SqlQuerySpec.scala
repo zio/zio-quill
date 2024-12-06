@@ -345,17 +345,38 @@ class SqlQuerySpec extends Spec {
     "raw queries with sql" - {
       "using tuples" in {
         val q = quote {
-          sql"""SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t""".as[Query[(String, Int)]]
+          sql"""SELECT foo, bar FROM baz""".as[Query[(String, Int)]]
         }
         testContext.run(q).string mustEqual
-          """SELECT x._1, x._2 FROM (SELECT t.s AS "_1", t.i AS "_2" FROM TestEntity t) AS x"""
+          """SELECT foo, bar FROM baz"""
+      }
+      "using tuples - pure" in {
+        val q = quote {
+          sql"""SELECT foo, bar FROM baz""".pure.as[Query[(String, Int)]]
+        }
+        testContext.run(q).string mustEqual
+          """SELECT foo, bar FROM baz"""
+      }
+      "using tuples - nested" in {
+        val q = quote {
+          sql"""SELECT foo, bar FROM baz""".as[Query[(String, Int)]].nested
+        }
+        testContext.run(q).string mustEqual
+          """SELECT x._1, x._2 FROM (SELECT foo, bar FROM baz) AS x"""
       }
       "using single value" in {
         val q = quote {
-          sql"""SELECT t.i FROM TestEntity t""".as[Query[Int]]
+          sql"""SELECT foo, bar FROM baz""".as[Query[Int]]
         }
         testContext.run(q).string mustEqual
-          """SELECT x.* FROM (SELECT t.i FROM TestEntity t) AS x"""
+          """SELECT foo, bar FROM baz"""
+      }
+      "using single value - nested" in {
+        val q = quote {
+          sql"""SELECT foo, bar FROM baz""".as[Query[Int]].nested
+        }
+        testContext.run(q).string mustEqual
+          """SELECT x.* FROM (SELECT foo, bar FROM baz) AS x"""
       }
     }
 
