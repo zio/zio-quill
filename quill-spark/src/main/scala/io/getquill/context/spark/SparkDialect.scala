@@ -21,6 +21,10 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
 
   def liftingPlaceholder(index: Int): String = "?"
 
+  // Do not allow top-level infix queries in spark by default because then run(liftQuery(myDataset)) will fail
+  // power-users may want to override this in rare cases.
+  def allowTopLevelInfix = false
+
   override def prepareForProbing(string: String) = string
 
   override implicit def externalIdentTokenizer(implicit
@@ -39,7 +43,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     val token =
       normalizedAst match {
         case q: Query =>
-          val sql = new SqlQueryApply(idiomContext.config.traceConfig)(q)
+          val sql = new SqlQueryApply(idiomContext.config.traceConfig, allowTopLevelInfix)(q)
           trace("sql")(sql)
           val expanded = SimpleNestedExpansion(sql)
           trace("expanded sql")(expanded)
@@ -123,14 +127,17 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     strategy: NamingStrategy,
     idiomContext: IdiomContext
   ): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
-    case q: TopInfixQuery =>
-      q.ast.token
     case q: FlattenSqlQuery =>
       new SparkFlattenSqlQueryTokenizerHelper(q).apply
     case SetOperationSqlQuery(a, op, b) =>
       stmt"(${a.token}) ${op.token} (${b.token})"
     case UnaryOperationSqlQuery(op, q) =>
       stmt"SELECT ${op.token} (${q.token})"
+    // Technically top-level infix queries are not allowed in Spark because
+    // run(liftQuery(myDataset)) then won't work but in case the user
+    // wants to override it, provide the translation.
+    case q: TopInfixQuery =>
+      q.ast.token
   }
 
   override implicit def propertyTokenizer(implicit

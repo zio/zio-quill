@@ -112,7 +112,7 @@ object CaseClassMake {
     }
 }
 
-class SqlQueryApply(traceConfig: TraceConfig) {
+class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true) {
 
   val interp: Interpolator = new Interpolator(TraceType.SqlQueryConstruct, traceConfig, 1)
   import interp._
@@ -155,7 +155,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           flatten(infix, "x")
         }
       case infix: Infix =>
-        if (isTopLevel)
+        if (allowTopLevelInfix && isTopLevel)
           TopInfixQuery(infix)
         else
           trace"Construct SqlQuery from: Infix" andReturn {
