@@ -1,5 +1,6 @@
 package io.getquill.norm
 
+import io.getquill.{NoCache, StatefulCache}
 import io.getquill.ast.Ast
 import io.getquill.ast.Query
 import io.getquill.ast.StatelessTransformer
@@ -11,6 +12,8 @@ import io.getquill.util.Messages.TraceType.Normalizations
 
 import scala.annotation.tailrec
 
+// TODO cache this whole thing? (need to stablize lifts first)
+//      perhaps rename this to NormalizeUnsafe, the safe version always stablizes the lifts first
 class Normalize(config: TranspileConfig) extends StatelessTransformer {
 
   val traceConf = config.traceConfig
@@ -19,7 +22,7 @@ class Normalize(config: TranspileConfig) extends StatelessTransformer {
 
   // These are the actual phases of core-normalization. Highlighting them as such.
   lazy val NormalizeReturningPhase   = new NormalizeReturning(this)
-  lazy val DealiasPhase              = new DealiasApply(traceConf)
+  lazy val DealiasPhase              = new DealiasApply(traceConf, StatefulCache.NoCache())
   lazy val AvoidAliasConflictPhase   = new AvoidAliasConflictApply(traceConf)
   val NormalizeNestedStructuresPhase = new NormalizeNestedStructures(this)
   val SymbolicReductionPhase         = new SymbolicReduction(traceConf)
@@ -58,6 +61,7 @@ class Normalize(config: TranspileConfig) extends StatelessTransformer {
       }
   }
 
+  // TODO cache this? (need to stablize lifts first)
   @tailrec
   private def norm(q: Query): Query =
     q match {

@@ -1,10 +1,16 @@
 package io.getquill.ast
 
-trait StatefulTransformer[T] {
+import io.getquill.{HasStatefulCache, NoCache, StatefulCache}
+
+trait StatefulTransformer[T] extends HasStatefulCache[T] {
 
   val state: T
 
-  def apply(e: Ast): (Ast, StatefulTransformer[T]) =
+  private val defaultCache = new NoCache[T]
+  // Override this value in implementations in order to use caching
+  override def cache: StatefulCache[T] = defaultCache
+
+  def apply(e: Ast): (Ast, StatefulTransformer[T]) = cached(e) {
     e match {
       case e: Query               => apply(e)
       case e: Operation           => apply(e)
@@ -52,6 +58,7 @@ trait StatefulTransformer[T] {
 
       case o: Ordering => (o, this)
     }
+  }
 
   def apply(o: OptionOperation): (OptionOperation, StatefulTransformer[T]) =
     o match {
@@ -146,7 +153,7 @@ trait StatefulTransformer[T] {
         (ListContains(at, ct), ctt)
     }
 
-  def apply(e: Query): (Query, StatefulTransformer[T]) =
+  def apply(e: Query): (Query, StatefulTransformer[T]) = cached(e) {
     e match {
       case e: Entity => (e, this)
       case Filter(a, b, c) =>
@@ -217,6 +224,7 @@ trait StatefulTransformer[T] {
         val (at, att) = apply(a)
         (Nested(at), att)
     }
+  }
 
   def apply(e: Assignment): (Assignment, StatefulTransformer[T]) =
     e match {
