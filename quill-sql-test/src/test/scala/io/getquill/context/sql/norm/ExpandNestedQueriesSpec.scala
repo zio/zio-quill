@@ -701,17 +701,26 @@ class ExpandNestedQueriesSpec extends Spec {
         sql"fromSomewhere()".as[Query[Person]]
       }
       testContext.run(q).string mustEqual
-        "SELECT x.first_name AS firstName, x.last_name AS lastName FROM (fromSomewhere()) AS x"
+        "fromSomewhere()"
     }
 
     "should be handled correctly in a regular schema - nested" in {
+      case class Person(firstName: String, lastName: String)
+      val q = quote {
+        sql"fromSomewhere()".as[Query[Person]].nested
+      }
+      testContext.run(q).string mustEqual
+        "SELECT x.first_name AS firstName, x.last_name AS lastName FROM (fromSomewhere()) AS x"
+    }
+
+    "should be handled correctly in a regular schema - multi-level" in {
       case class Name(firstName: String, lastName: String)
       case class Person(name: Name, theAge: Int)
       val q = quote {
         sql"fromSomewhere()".as[Query[Person]]
       }
       testContext.run(q).string mustEqual
-        "SELECT x.first_name AS firstName, x.last_name AS lastName, x.the_age AS theAge FROM (fromSomewhere()) AS x"
+        "fromSomewhere()"
     }
   }
 

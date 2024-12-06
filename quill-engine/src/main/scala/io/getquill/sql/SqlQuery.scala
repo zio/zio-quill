@@ -67,6 +67,14 @@ final case class UnaryOperationSqlQuery(
   override def quat: Quat = quatType
 }
 
+// A top-level infix query. This needs special rendering because we don't
+// want to tokenize column names, e.g. sql"select foo, bar from baz".as[Person]
+// should become just "select foo, bar from baz", not the fully expanded form
+// "select p.name, p.age from (select foo, bar from baz) as Person p"
+final case class TopInfixQuery(ast: Infix) extends SqlQuery {
+  override def quat: Quat = ast.quat
+}
+
 final case class SelectValue(ast: Ast, alias: Option[String] = None, concat: Boolean = false) extends PseudoAst {
   override def toString: String = s"${ast.toString}${alias.map("->" + _).getOrElse("")}"
 }
@@ -109,39 +117,53 @@ class SqlQueryApply(traceConfig: TraceConfig) {
   val interp: Interpolator = new Interpolator(TraceType.SqlQueryConstruct, traceConfig, 1)
   import interp._
 
-  def apply(query: Ast): SqlQuery =
+  def apply(query: Ast) = build(query, true)
+
+  private def build(query: Ast, isTopLevel: Boolean = false): SqlQuery =
     query match {
       case Union(a, b) =>
         trace"Construct SqlQuery from: Union" andReturn {
-          SetOperationSqlQuery(apply(a), UnionOperation, apply(b))(query.quat)
+          SetOperationSqlQuery(build(a), UnionOperation, build(b))(query.quat)
         }
       case UnionAll(a, b) =>
         trace"Construct SqlQuery from: UnionAll" andReturn {
-          SetOperationSqlQuery(apply(a), UnionAllOperation, apply(b))(query.quat)
+          SetOperationSqlQuery(build(a), UnionAllOperation, build(b))(query.quat)
         }
       case UnaryOperation(op, q: Query) =>
         trace"Construct SqlQuery from: UnaryOperation" andReturn {
-          UnaryOperationSqlQuery(op, apply(q))(query.quat)
+          UnaryOperationSqlQuery(op, build(q))(query.quat)
         }
       case _: Operation | _: Value =>
         trace"Construct SqlQuery from: Operation/Value" andReturn {
           FlattenSqlQuery(select = List(SelectValue(query)))(query.quat)
         }
+      // i.e. a transparent map that looks like `map(x => x)`
+      // in this case, don't even consider it a nesting (i.e. if it was top-level, it's still top-level)
       case Map(q, a, b) if a == b =>
         trace"Construct SqlQuery from: Map" andReturn {
-          apply(q)
+          build(q, isTopLevel)
         }
       case TakeDropFlatten(q, limit, offset) =>
         trace"Construct SqlQuery from: TakeDropFlatten" andReturn {
           flatten(q, "x").copy(limit = limit, offset = offset)(q.quat)
         }
+      // In the case of sql"select foo, bar from baz".as[Query[...]].nested
+      // make it only double nested (i.e. FlattenSqlQuery(from: InfixContext))
+      // instead of triple: (i.e. FlattenSqlQuery(from: FlattenSqlQuery(from: InfixContext)))
+      case Nested(infix: Infix) =>
+        trace"Construct SqlQuery from: Nested(Infix)" andReturn {
+          flatten(infix, "x")
+        }
+      case infix: Infix =>
+        if (isTopLevel)
+          TopInfixQuery(infix)
+        else
+          trace"Construct SqlQuery from: Infix" andReturn {
+            flatten(infix, "x")
+          }
       case q: Query =>
         trace"Construct SqlQuery from: Query" andReturn {
           flatten(q, "x")
-        }
-      case infix: Infix =>
-        trace"Construct SqlQuery from: Infix" andReturn {
-          flatten(infix, "x")
         }
       case other =>
         trace"Construct SqlQuery from: other" andReturn {
@@ -213,8 +235,8 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           // case Map(_, _, _) =>
           //  trace"base| Nesting Map(a=>ContainsImpurities(a)) $q" andReturn nest(source(q, alias))
 
-          case Nested(q)    => trace"base| Nesting Nested $q" andReturn nest(QueryContext(apply(q), alias))
-          case q: ConcatMap => trace"base| Nesting ConcatMap $q" andReturn nest(QueryContext(apply(q), alias))
+          case Nested(q)    => trace"base| Nesting Nested $q" andReturn nest(QueryContext(build(q), alias))
+          case q: ConcatMap => trace"base| Nesting ConcatMap $q" andReturn nest(QueryContext(build(q), alias))
           case Join(tpe, a, b, iA, iB, on) =>
             trace"base| Collecting join aliases $q" andReturn {
               val ctx = source(q, alias)
@@ -355,7 +377,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           else
             trace"Flattening| Map(Ident) [Complex]" andReturn
               FlattenSqlQuery(
-                from = QueryContext(apply(q), alias) :: Nil,
+                from = QueryContext(build(q), alias) :: Nil,
                 select = selectValues(p)
               )(quat)
 
@@ -372,7 +394,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           else
             trace"Flattening| Filter(Ident) [Complex]" andReturn
               FlattenSqlQuery(
-                from = QueryContext(apply(q), alias) :: Nil,
+                from = QueryContext(build(q), alias) :: Nil,
                 where = Some(p),
                 select = select(alias, quat)
               )(quat)
@@ -390,7 +412,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           else
             trace"Flattening| SortBy(Ident) [Complex]" andReturn
               FlattenSqlQuery(
-                from = QueryContext(apply(q), alias) :: Nil,
+                from = QueryContext(build(q), alias) :: Nil,
                 orderBy = criteria,
                 select = select(alias, quat)
               )(quat)
@@ -408,7 +430,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
             case other =>
               trace"Flattening| Aggregation(Query) [Complex]" andReturn
                 FlattenSqlQuery(
-                  from = QueryContext(apply(q), alias) :: Nil,
+                  from = QueryContext(build(q), alias) :: Nil,
                   select = List(
                     SelectValue(Aggregation(op, Ident("*", quat)))
                   ) // Quat of a * aggregation is same as for the entire query
@@ -430,7 +452,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           else
             trace"Flattening| Take [Complex]" andReturn
               FlattenSqlQuery(
-                from = QueryContext(apply(q), alias) :: Nil,
+                from = QueryContext(build(q), alias) :: Nil,
                 limit = Some(n),
                 select = select(alias, quat)
               )(quat)
@@ -443,7 +465,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
           else
             trace"Flattening| Drop [Complex]" andReturn
               FlattenSqlQuery(
-                from = QueryContext(apply(q), alias) :: Nil,
+                from = QueryContext(build(q), alias) :: Nil,
                 offset = Some(n),
                 select = select(alias, quat)
               )(quat)
@@ -477,7 +499,7 @@ class SqlQueryApply(traceConfig: TraceConfig) {
             case _ =>
               trace"Flattening| DistinctOn" andReturn
                 FlattenSqlQuery(
-                  from = QueryContext(apply(q), alias) :: Nil,
+                  from = QueryContext(build(q), alias) :: Nil,
                   select = select(alias, quat),
                   distinct = DistinctKind.DistinctOn(distinctList)
                 )(quat)
@@ -502,8 +524,8 @@ class SqlQueryApply(traceConfig: TraceConfig) {
       case infix: Infix              => InfixContext(infix, alias)
       case Join(t, a, b, ia, ib, on) => JoinContext(t, source(a, ia.name), source(b, ib.name), on)
       case FlatJoin(t, a, ia, on)    => FlatJoinContext(t, source(a, ia.name), on)
-      case Nested(q)                 => QueryContext(apply(q), alias)
-      case other                     => QueryContext(apply(other), alias)
+      case Nested(q)                 => QueryContext(build(q), alias)
+      case other                     => QueryContext(build(other), alias)
     }
 
   private def orderByCriteria(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =

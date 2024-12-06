@@ -3,7 +3,7 @@ package io.getquill.context.spark
 import io.getquill.{IdiomContext, NamingStrategy}
 import io.getquill.ast.{Ast, BinaryOperation, CaseClass, Constant, ExternalIdent, Ident, Operation, Property, Query, StringOperator, Tuple, Value}
 import io.getquill.context.spark.norm.EscapeQuestionMarks
-import io.getquill.context.sql.{FlattenSqlQuery, SelectValue, SetOperationSqlQuery, SqlQuery, SqlQueryApply, UnaryOperationSqlQuery}
+import io.getquill.context.sql.{FlattenSqlQuery, SelectValue, SetOperationSqlQuery, SqlQuery, SqlQueryApply, TopInfixQuery, UnaryOperationSqlQuery}
 import io.getquill.context.sql.idiom.SqlIdiom
 import io.getquill.context.sql.norm.SqlNormalize
 import io.getquill.idiom.StatementInterpolator._
@@ -123,6 +123,8 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     strategy: NamingStrategy,
     idiomContext: IdiomContext
   ): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+    case q: TopInfixQuery =>
+      q.ast.token
     case q: FlattenSqlQuery =>
       new SparkFlattenSqlQueryTokenizerHelper(q).apply
     case SetOperationSqlQuery(a, op, b) =>

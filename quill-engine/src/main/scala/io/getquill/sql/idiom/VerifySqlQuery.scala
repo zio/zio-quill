@@ -29,6 +29,8 @@ object VerifySqlQuery {
 
   private def verify(query: SqlQuery): Option[InvalidSqlQuery] =
     query match {
+      // if it's just an infix query no more verification to do
+      case p: TopInfixQuery               => None
       case q: FlattenSqlQuery             => verify(q)
       case SetOperationSqlQuery(a, op, b) => verify(a).orElse(verify(b))
       case UnaryOperationSqlQuery(op, q)  => verify(q)
