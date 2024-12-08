@@ -294,7 +294,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
   }
 }
 
-private[getquill] class AvoidAliasConflictApply(cache: StatefulCache[Set[Ident]], traceConfig: TraceConfig) {
+private[getquill] class AvoidAliasConflictApply(cache: StatefulCache[Set[IdentName]], traceConfig: TraceConfig) {
   def apply(q: Query, detemp: Boolean = false): Query =
     new AvoidAliasConflict(Set[IdentName](), detemp, cache, traceConfig)(q) match {
       case (q, _) => q

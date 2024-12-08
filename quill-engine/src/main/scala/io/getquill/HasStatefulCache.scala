@@ -14,6 +14,7 @@ object StatefulCache {
   object NoCache {
     def apply[State]() = new NoCache[State]
   }
+
 }
 
 trait StatelessCache {
