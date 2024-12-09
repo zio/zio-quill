@@ -18,6 +18,29 @@ case class NormalizeCaches(
   adHocReductionCache: StatelessCacheOpt,
   orderTermsCache: StatelessCacheOpt
 )
+object NormalizeCaches {
+  def noCache() =
+    NormalizeCaches(
+      StatelessCache.NoCache(),
+      StatefulCache.NoCache[Option[Ident]](),
+      StatefulCache.NoCache[Set[IdentName]](),
+      StatelessCacheOpt.NoCache(),
+      StatelessCacheOpt.NoCache(),
+      StatelessCacheOpt.NoCache(),
+      StatelessCacheOpt.NoCache()
+    )
+
+  def unlimitedCache() =
+    NormalizeCaches(
+      StatelessCache.NoCache(),
+      StatefulCache.Unlimited[Option[Ident]](),
+      StatefulCache.Unlimited[Set[IdentName]](),
+      StatelessCacheOpt.Unlimited(),
+      StatelessCacheOpt.Unlimited(),
+      StatelessCacheOpt.Unlimited(),
+      StatelessCacheOpt.Unlimited()
+    )
+}
 
 // TODO cache this whole thing? (need to stablize lifts first)
 //      perhaps rename this to NormalizeUnsafe, the safe version always stablizes the lifts first

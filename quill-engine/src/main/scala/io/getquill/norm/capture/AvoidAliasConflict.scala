@@ -51,7 +51,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
   val interp = new Interpolator(TraceType.AvoidAliasConflict, traceConfig, 3)
   import interp._
 
-  def AvoidAliasConflict(state: Set[IdentName]) =
+  def AvoidAliasConflict(state: Set[IdentName], detemp: Boolean = this.detemp) =
     new AvoidAliasConflict(state, detemp, cache, traceConfig)
 
   object Unaliased {
@@ -279,7 +279,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
         case ((body, state, newParams), param) => {
           val fresh    = freshIdent(param)
           val pr       = BetaReduction(body, param -> fresh)
-          val (prr, t) = AvoidAliasConflict(state + fresh.idName, false, cache, traceConfig)(pr)
+          val (prr, t) = AvoidAliasConflict(state + fresh.idName, false)(pr)
           (prr, t.state, newParams :+ fresh)
         }
       }
@@ -303,13 +303,13 @@ private[getquill] class AvoidAliasConflictApply(cache: StatefulCache[Set[IdentNa
 
 private[getquill] object AvoidAliasConflict {
 
-  def Ast(q: Ast, detemp: Boolean = false, traceConfig: TraceConfig): Ast =
-    new AvoidAliasConflict(Set[IdentName](), detemp, traceConfig)(q) match {
+  def Ast(q: Ast, detemp: Boolean = false, cache: StatefulCache[Set[IdentName]], traceConfig: TraceConfig): Ast =
+    new AvoidAliasConflict(Set[IdentName](), detemp, cache, traceConfig)(q) match {
       case (q, _) => q
     }
 
-  def apply(q: Query, detemp: Boolean = false, traceConfig: TraceConfig): Query =
-    AvoidAliasConflict(Set[IdentName](), detemp, traceConfig)(q) match {
+  def apply(q: Query, detemp: Boolean = false, cache: StatefulCache[Set[IdentName]], traceConfig: TraceConfig): Query =
+    AvoidAliasConflict(Set[IdentName](), detemp, cache, traceConfig)(q) match {
       case (q, _) => q
     }
 
@@ -319,17 +319,17 @@ private[getquill] object AvoidAliasConflict {
    * transforming and queries encountered.
    */
   def sanitizeVariables(f: Function, dangerousVariables: Set[IdentName], traceConfig: TraceConfig): Function =
-    AvoidAliasConflict(dangerousVariables, false, traceConfig).applyFunction(f)
+    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache(), traceConfig).applyFunction(f)
 
   /** Same is `sanitizeVariables` but for Foreach * */
   def sanitizeVariables(f: Foreach, dangerousVariables: Set[IdentName], traceConfig: TraceConfig): Foreach =
-    AvoidAliasConflict(dangerousVariables, false, traceConfig).applyForeach(f)
+    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache(), traceConfig).applyForeach(f)
 
   // TODO trying to move AvoidAliasConflict into the tests
   //      since it only does two things and we want less indirection.
   //      the interesting question is whether to pass a dealias cache into this function.
   def sanitizeQuery(q: Query, dangerousVariables: Set[IdentName], normalize: Normalize): Query =
-    AvoidAliasConflict(dangerousVariables, false, normalize.traceConf).apply(q) match {
+    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache(), normalize.traceConf).apply(q) match {
       // Propagate aliasing changes to the rest of the query
       case (q, _) => normalize(q)
     }

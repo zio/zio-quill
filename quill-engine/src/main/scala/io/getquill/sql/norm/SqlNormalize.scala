@@ -24,7 +24,8 @@ class SqlNormalize(
   transpileConfig: TranspileConfig
 ) {
 
-  val NormalizePhase = new Normalize(transpileConfig)
+  val caches = NormalizeCaches.unlimitedCache()
+  val NormalizePhase = new Normalize(caches, transpileConfig)
   val traceConfig    = transpileConfig.traceConfig
 
   private def demarcate(heading: String) =
@@ -68,9 +69,13 @@ class SqlNormalize(
       .andThen { ast =>
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.
-        NormalizePhase.apply(AvoidAliasConflict.Ast(ast, true, transpileConfig.traceConfig))
+        NormalizePhase.apply(AvoidAliasConflict.Ast(ast, true, caches.avoidAliasCache, transpileConfig.traceConfig))
       }
       .andThen(demarcate("Normalize"))
 
-  def apply(ast: Ast) = normalize(ast)
+  def apply(ast: Ast) = {
+    val (stableAst, state) = StabilizeLifts.stabilize(ast)
+    val outputAst          = normalize(stableAst)
+    StabilizeLifts.revert(outputAst, state)
+  }
 }

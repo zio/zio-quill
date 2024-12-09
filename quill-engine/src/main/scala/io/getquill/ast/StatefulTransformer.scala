@@ -1,6 +1,7 @@
 package io.getquill.ast
 
-import io.getquill.{HasStatefulCache, NoCache, StatefulCache}
+import io.getquill.StatefulCache.NoCache
+import io.getquill.{HasStatefulCache, StatefulCache}
 
 trait StatefulTransformer[T] extends HasStatefulCache[T] {
 
