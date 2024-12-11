@@ -2,7 +2,7 @@ package io.getquill.context.sql.norm
 
 import io.getquill.StatelessCache
 import io.getquill.norm.{SimplifyNullChecks, _}
-import io.getquill.ast.Ast
+import io.getquill.ast.{Ast, CollectStats, QueryStats}
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
 import io.getquill.norm.capture.{AvoidAliasConflict, DemarcateExternalAliases}
@@ -14,21 +14,22 @@ object SqlNormalize {
     ast: Ast,
     transpileConfig: TranspileConfig,
     concatBehavior: ConcatBehavior = AnsiConcat,
-    equalityBehavior: EqualityBehavior = AnsiEquality
+    equalityBehavior: EqualityBehavior = AnsiEquality,
+    caches: SqlNormalizeCaches = SqlNormalizeCaches.unlimitedLocal()
   ) =
-    new SqlNormalize(concatBehavior, equalityBehavior, transpileConfig)(ast)
+    new SqlNormalize(concatBehavior, equalityBehavior, transpileConfig, caches)(ast)
 }
 
-case class SqlNormalizeCaches(
+case class CompilePhaseCaches(
   expandJoinCache: StatelessCache,
   renamePropertiesCache: StatelessCache,
   expandDistinctCache: StatelessCache,
   flattenOptionCache: StatelessCache,
   simplifyNullChecksCache: StatelessCache
 )
-object SqlNormalizeCaches {
+object CompilePhaseCaches {
   def unlimitedCache() =
-    SqlNormalizeCaches(
+    CompilePhaseCaches(
       StatelessCache.Unlimited(),
       StatelessCache.Unlimited(),
       StatelessCache.Unlimited(),
@@ -37,17 +38,35 @@ object SqlNormalizeCaches {
     )
 }
 
+trait SqlNormalizeCaches {
+  def mainCache: StatelessCache
+  def normCaches: NormalizeCaches
+  def phaseCaches: CompilePhaseCaches
+}
+object SqlNormalizeCaches {
+  def unlimitedLocal() =
+    new SqlNormalizeCaches {
+      val mainCache   = StatelessCache.NoCache
+      val normCaches  = NormalizeCaches.unlimitedCache()
+      val phaseCaches = CompilePhaseCaches.unlimitedCache()
+    }
+
+  object Global extends SqlNormalizeCaches {
+    val mainCache   = StatelessCache.NoCache
+    val normCaches  = NormalizeCaches.noCache
+    val phaseCaches = CompilePhaseCaches.unlimitedCache()
+  }
+}
+
 class SqlNormalize(
   concatBehavior: ConcatBehavior,
   equalityBehavior: EqualityBehavior,
-  transpileConfig: TranspileConfig
+  transpileConfig: TranspileConfig,
+  caches: SqlNormalizeCaches
 ) {
 
-  val mainCache     = StatelessCache.Unlimited()
-  val caches        = NormalizeCaches.unlimitedCache()
-  val sqlNormCaches = SqlNormalizeCaches.unlimitedCache()
-
-  val NormalizePhase = new Normalize(caches, transpileConfig)
+  val sqlNormCaches  = caches.phaseCaches
+  val NormalizePhase = new Normalize(caches.normCaches, transpileConfig)
   val traceConfig    = transpileConfig.traceConfig
 
   private def demarcate(heading: String) =
@@ -61,45 +80,53 @@ class SqlNormalize(
   val FlattenOptionOperationPhase = new FlattenOptionOperation(sqlNormCaches.flattenOptionCache, concatBehavior, transpileConfig.traceConfig)
   val SimplifyNullChecksPhase     = new SimplifyNullChecks(sqlNormCaches.simplifyNullChecksCache, equalityBehavior)
 
-  private val normalize =
+  private def normalize(stats: QueryStats) =
     (identity[Ast] _)
       .andThen(demarcate("original"))
-      .andThen(DemarcateExternalAliases.apply _)
+      .andThen(if (stats.hasReturning) DemarcateExternalAliases.apply _ else identity[Ast] _)
       .andThen(demarcate("DemarcateReturningAliases"))
-      .andThen(FlattenOptionOperationPhase.apply _)
+      .andThen(if (stats.hasOptionOps) FlattenOptionOperationPhase.apply _ else identity[Ast] _)
       .andThen(demarcate("FlattenOptionOperation"))
-      .andThen(SimplifyNullChecksPhase.apply _)
+      .andThen(if (stats.hasOptionOps || stats.hasNullValues) SimplifyNullChecksPhase.apply _ else identity[Ast] _)
       .andThen(demarcate("SimplifyNullChecks"))
       .andThen(NormalizePhase.apply _)
       .andThen(demarcate("Normalize"))
       // Need to do RenameProperties before ExpandJoin which normalizes-out all the tuple indexes
       // on which RenameProperties relies
       // .andThen(RenameProperties.apply _)
-      .andThen(RenamePropertiesPhase.apply _)
+      .andThen(if (stats.hasRenames) RenamePropertiesPhase.apply _ else identity[Ast] _)
       .andThen(demarcate("RenameProperties"))
-      .andThen(ExpandDistinctPhase.apply _)
-      .andThen(demarcate("ExpandDistinct"))
-      .andThen(NormalizePhase.apply _)
-      .andThen(demarcate("Normalize")) // Needed only because ExpandDistinct introduces an alias.
-      .andThen(NormalizePhase.apply _)
-      .andThen(demarcate("Normalize"))
-      .andThen(ExpandJoinPhase.apply _)
+      .andThen { ast =>
+        if (stats.hasOptionOps) {
+          val expanded = ExpandDistinctPhase(ast)
+          demarcate("ExpandDistinct")
+          // Normalize is only needed only because ExpandDistinct introduces an alias.
+          // why are two normalize phases needed here???
+          val e1 = NormalizePhase(expanded)
+          demarcate("Normalize")
+          val e2 = NormalizePhase(expanded)
+          demarcate("Normalize")
+          e2
+        } else
+          ast
+      }
+      .andThen(if (stats.hasJoins) ExpandJoinPhase.apply _ else identity[Ast] _)
       .andThen(demarcate("ExpandJoin"))
-      .andThen(ExpandMappedInfix.apply _)
-      .andThen(demarcate("ExpandMappedInfix"))
+      .andThen(ExpandMappedInfix.apply _) // TODO disable if this has no infixes
+      .andThen(if (stats.hasInfixes) demarcate("ExpandMappedInfix") else identity[Ast] _)
       .andThen(SheathLeafClausesPhase.apply _)
       .andThen(demarcate("SheathLeaves"))
       .andThen { ast =>
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.
-        NormalizePhase.apply(AvoidAliasConflict.Ast(ast, true, caches.avoidAliasCache, transpileConfig.traceConfig))
+        NormalizePhase.apply(AvoidAliasConflict.Ast(ast, true, caches.normCaches.avoidAliasCache, transpileConfig.traceConfig))
       }
       .andThen(demarcate("Normalize"))
 
   def apply(ast: Ast) = {
     val (stableAst, state) = StabilizeLifts.stabilize(ast)
-
-    val outputAst = mainCache.getOrCache(stableAst, normalize(stableAst))
+    val stats              = CollectStats(stableAst)
+    val outputAst          = caches.mainCache.getOrCache(stableAst, normalize(stats)(stableAst))
     StabilizeLifts.revert(outputAst, state)
   }
 }

@@ -25,7 +25,6 @@ object StatefulCache {
   // e.g. Cache ident(x, Quat(Person)) should not be the same as ident(x, Quat(Address)) in the caching process
   // because incorrect queries will be generated.
   case class Unlimited[State](
-    // TODO rebuild and try again
     astMap: mutable.Map[(Ast, Quat, State), (Ast, StatefulTransformer[State])] = mutable.Map.empty[(Ast, Quat, State), (Ast, StatefulTransformer[State])],
     queryMap: mutable.Map[(Query, Quat, State), (Query, StatefulTransformer[State])] = mutable.Map.empty[(Query, Quat, State), (Query, StatefulTransformer[State])]
   ) extends StatefulCache[State] {

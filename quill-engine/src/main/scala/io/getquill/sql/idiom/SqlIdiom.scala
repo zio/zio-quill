@@ -42,7 +42,7 @@ trait SqlIdiom extends Idiom {
     equalityBehavior: EqualityBehavior,
     idiomContext: IdiomContext
   ) =
-    SqlNormalize(ast, idiomContext.config, concatBehavior, equalityBehavior)
+    SqlNormalize(ast, idiomContext.config, concatBehavior, equalityBehavior, SqlNormalizeCaches.Global)
 
   def querifyAst(ast: Ast, traceConfig: TraceConfig) = new SqlQueryApply(traceConfig)(ast)
 
