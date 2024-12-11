@@ -7,7 +7,7 @@ import io.getquill.norm.{Normalize, NormalizeCaches, TranspileConfig}
 
 class AvoidAliasConflictComplexSpec extends Spec {
 
-  val normalize = new Normalize(NormalizeCaches.noCache(), TranspileConfig.Empty)
+  val normalize = new Normalize(NormalizeCaches.noCache, TranspileConfig.Empty)
 
   "properly aliases explicit join sets" - {
     import io.getquill.norm.Normalize

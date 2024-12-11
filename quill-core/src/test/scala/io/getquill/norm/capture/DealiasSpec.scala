@@ -11,7 +11,7 @@ import io.getquill.util.TraceConfig
 
 class DealiasSpec extends Spec {
 
-  val Dealias = new DealiasApply(TraceConfig.Empty, StatefulCache.NoCache())
+  val Dealias = new DealiasApply(TraceConfig.Empty, StatefulCache.NoCache)
 
   "ensures that each entity is referenced by the same alias" - {
     "flatMap" in {

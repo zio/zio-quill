@@ -11,7 +11,7 @@ import io.getquill.util.TraceConfig
 
 class SymbolicReductionSpec extends Spec { // hello
 
-  def symbolicReduction = (new SymbolicReduction(StatelessCacheOpt.NoCache(), TraceConfig.Empty).unapply _).andThen(o => o.map(replaceTempIdent(_)))
+  def symbolicReduction = (new SymbolicReduction(StatelessCacheOpt.NoCache, TraceConfig.Empty).unapply _).andThen(o => o.map(replaceTempIdent(_)))
 
   "a.filter(b => c).flatMap(d => e.$)" - {
     "e is an entity" in {

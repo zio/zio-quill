@@ -18,6 +18,6 @@ class AvoidCaptureSpec extends Spec {
     val n = quote {
       qr1.filter(u => u.s == "s1").flatMap(u => qr2.filter(u1 => u1.s == "s1")).flatMap(u1 => qr3.map(u2 => u2.s))
     }
-    AvoidCapture(q.ast, StatefulCache.NoCache(), TraceConfig(List.empty)) mustEqual n.ast
+    AvoidCapture(q.ast, StatefulCache.NoCache, TraceConfig(List.empty)) mustEqual n.ast
   }
 }

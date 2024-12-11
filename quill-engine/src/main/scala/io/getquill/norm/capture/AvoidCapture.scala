@@ -10,5 +10,5 @@ import io.getquill.util.TraceConfig
 object AvoidCapture {
 
   def apply(q: Query, cache: StatefulCache[Set[IdentName]], traceConfig: TraceConfig): Query =
-    Dealias(AvoidAliasConflict(q, false, cache, traceConfig))(traceConfig, NoCache())
+    Dealias(AvoidAliasConflict(q, false, cache, traceConfig))(traceConfig, NoCache)
 }

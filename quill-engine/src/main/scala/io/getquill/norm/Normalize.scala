@@ -19,20 +19,20 @@ case class NormalizeCaches(
   orderTermsCache: StatelessCacheOpt
 )
 object NormalizeCaches {
-  def noCache() =
+  val noCache =
     NormalizeCaches(
-      StatelessCache.NoCache(),
-      StatefulCache.NoCache[Option[Ident]](),
-      StatefulCache.NoCache[Set[IdentName]](),
-      StatelessCacheOpt.NoCache(),
-      StatelessCacheOpt.NoCache(),
-      StatelessCacheOpt.NoCache(),
-      StatelessCacheOpt.NoCache()
+      StatelessCache.NoCache,
+      StatefulCache.NoCache,
+      StatefulCache.NoCache,
+      StatelessCacheOpt.NoCache,
+      StatelessCacheOpt.NoCache,
+      StatelessCacheOpt.NoCache,
+      StatelessCacheOpt.NoCache
     )
 
   def unlimitedCache() =
     NormalizeCaches(
-      StatelessCache.NoCache(),
+      StatelessCache.NoCache,
       StatefulCache.Unlimited[Option[Ident]](),
       StatefulCache.Unlimited[Set[IdentName]](),
       StatelessCacheOpt.Unlimited(),

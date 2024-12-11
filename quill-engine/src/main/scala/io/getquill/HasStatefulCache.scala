@@ -10,20 +10,24 @@ trait StatefulCache[State] {
   def getOrCache(q: Query, s: State, default: => (Query, StatefulTransformer[State])): (Query, StatefulTransformer[State])
 }
 object StatefulCache {
-  class NoCache[State] extends StatefulCache[State] {
-    override def getOrCache(q: Ast, s: State, default: => (Ast, StatefulTransformer[State])): (Ast, StatefulTransformer[State])       = default
-    override def getOrCache(q: Query, s: State, default: => (Query, StatefulTransformer[State])): (Query, StatefulTransformer[State]) = default
-  }
-  object NoCache {
-    def apply[State]() = new NoCache[State]
-  }
+
+  private val noCacheInstance =
+    new StatefulCache[Any] {
+      override def getOrCache(q: Ast, s: Any, default: => (Ast, StatefulTransformer[Any])): (Ast, StatefulTransformer[Any])       = default
+      override def getOrCache(q: Query, s: Any, default: => (Query, StatefulTransformer[Any])): (Query, StatefulTransformer[Any]) = default
+    }
+
+  // Since the sateless NoCache[T] just returns what it was passed in we can reuse the same instance
+  // (and typecast with impunity) since there is no internal logic
+  def NoCache[T]: StatefulCache[T] = noCacheInstance.asInstanceOf[StatefulCache[T]]
+
   // Make sure to store the Quat of the Ast since we don't want to cache the same Ast with different Quats
   // e.g. Cache ident(x, Quat(Person)) should not be the same as ident(x, Quat(Address)) in the caching process
   // because incorrect queries will be generated.
   case class Unlimited[State](
     // TODO rebuild and try again
-    astMap: mutable.Map[(Ast, Quat, State), (Ast, StatefulTransformer[State])] = mutable.Map.empty[(Ast, Quat), (Ast, StatefulTransformer[State])],
-    queryMap: mutable.Map[(Query, Quat, State), (Query, StatefulTransformer[State])] = mutable.Map.empty[(Query, Quat), (Query, StatefulTransformer[State])]
+    astMap: mutable.Map[(Ast, Quat, State), (Ast, StatefulTransformer[State])] = mutable.Map.empty[(Ast, Quat, State), (Ast, StatefulTransformer[State])],
+    queryMap: mutable.Map[(Query, Quat, State), (Query, StatefulTransformer[State])] = mutable.Map.empty[(Query, Quat, State), (Query, StatefulTransformer[State])]
   ) extends StatefulCache[State] {
     override def getOrCache(q: Ast, s: State, default: => (Ast, StatefulTransformer[State])): (Ast, StatefulTransformer[State]) = {
       val key = (q, q.quat, s)
@@ -36,7 +40,7 @@ object StatefulCache {
       }
     }
     override def getOrCache(q: Query, s: State, default: => (Query, StatefulTransformer[State])): (Query, StatefulTransformer[State]) = {
-      val key = (q, q.quat)
+      val key = (q, q.quat, s)
       queryMap.get(key) match {
         case Some(value) => value
         case None =>
@@ -53,12 +57,9 @@ trait StatelessCache {
   def getOrCache(q: Query, default: => Query): Query
 }
 object StatelessCache {
-  class NoCache extends StatelessCache {
+  object NoCache extends StatelessCache {
     override def getOrCache(q: Ast, default: => Ast): Ast       = default
     override def getOrCache(q: Query, default: => Query): Query = default
-  }
-  object NoCache {
-    def apply() = new NoCache
   }
   case class Unlimited(
     astCache: mutable.Map[(Ast, Quat), Ast] = mutable.Map.empty,
@@ -98,12 +99,9 @@ trait StatelessCacheOpt {
   def getOrCache(q: Query, default: => Option[Query]): Option[Query]
 }
 object StatelessCacheOpt {
-  class NoCache extends StatelessCacheOpt {
+  object NoCache extends StatelessCacheOpt {
     override def getOrCache(q: Ast, default: => Option[Ast]): Option[Ast]       = default
     override def getOrCache(q: Query, default: => Option[Query]): Option[Query] = default
-  }
-  object NoCache {
-    def apply() = new NoCache
   }
   case class Unlimited(
     astCache: mutable.Map[(Ast, Quat), Option[Ast]] = mutable.Map.empty,

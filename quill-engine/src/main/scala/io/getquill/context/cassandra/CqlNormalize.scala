@@ -1,6 +1,6 @@
 package io.getquill.context.cassandra
 
-import io.getquill.StatefulCache
+import io.getquill.{StatefulCache, StatelessCache}
 import io.getquill.ast._
 import io.getquill.norm.ConcatBehavior.AnsiConcat
 import io.getquill.norm.EqualityBehavior.AnsiEquality
@@ -9,7 +9,7 @@ import io.getquill.norm.{FlattenOptionOperation, Normalize, NormalizeCaches, Ren
 import io.getquill.quat.Quat
 
 class CqlNormalize(transpileConfig: TranspileConfig) {
-  val NormalizePhase = new Normalize(NormalizeCaches.noCache(), transpileConfig)
+  val NormalizePhase = new Normalize(NormalizeCaches.noCache, transpileConfig)
 
   def apply(ast: Ast) =
     normalize(ast)
@@ -28,9 +28,9 @@ class CqlNormalize(transpileConfig: TranspileConfig) {
         qry
     }
 
-  val RenamePropertiesPhase       = new RenameProperties(transpileConfig.traceConfig)
-  val FlattenOptionOperationPhase = new FlattenOptionOperation(AnsiConcat, transpileConfig.traceConfig)
-  val SimplifyNullChecksPhase     = new SimplifyNullChecks(AnsiEquality)
+  val RenamePropertiesPhase       = new RenameProperties(StatelessCache.NoCache, transpileConfig.traceConfig)
+  val FlattenOptionOperationPhase = new FlattenOptionOperation(StatelessCache.NoCache, AnsiConcat, transpileConfig.traceConfig)
+  val SimplifyNullChecksPhase     = new SimplifyNullChecks(StatelessCache.NoCache, AnsiEquality)
 
   private[this] val normalize =
     (identity[Ast] _)
@@ -43,6 +43,6 @@ class CqlNormalize(transpileConfig: TranspileConfig) {
       .andThen { ast =>
         // In the final stage of normalization, change all temporary aliases into
         // shorter ones of the form x[0-9]+.
-        NormalizePhase.apply(AvoidAliasConflict.Ast(ast, true, StatefulCache.NoCache(), transpileConfig.traceConfig))
+        NormalizePhase.apply(AvoidAliasConflict.Ast(ast, true, StatefulCache.NoCache, transpileConfig.traceConfig))
       }
 }

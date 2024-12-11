@@ -1,5 +1,6 @@
 package io.getquill.context.sql.norm
 
+import io.getquill.StatelessCache
 import io.getquill.norm.{SimplifyNullChecks, _}
 import io.getquill.ast.Ast
 import io.getquill.norm.ConcatBehavior.AnsiConcat
@@ -18,25 +19,47 @@ object SqlNormalize {
     new SqlNormalize(concatBehavior, equalityBehavior, transpileConfig)(ast)
 }
 
+case class SqlNormalizeCaches(
+  expandJoinCache: StatelessCache,
+  renamePropertiesCache: StatelessCache,
+  expandDistinctCache: StatelessCache,
+  flattenOptionCache: StatelessCache,
+  simplifyNullChecksCache: StatelessCache
+)
+object SqlNormalizeCaches {
+  def unlimitedCache() =
+    SqlNormalizeCaches(
+      StatelessCache.Unlimited(),
+      StatelessCache.Unlimited(),
+      StatelessCache.Unlimited(),
+      StatelessCache.Unlimited(),
+      StatelessCache.Unlimited()
+    )
+}
+
 class SqlNormalize(
   concatBehavior: ConcatBehavior,
   equalityBehavior: EqualityBehavior,
   transpileConfig: TranspileConfig
 ) {
 
-  val caches = NormalizeCaches.unlimitedCache()
+  val mainCache     = StatelessCache.Unlimited()
+  val caches        = NormalizeCaches.unlimitedCache()
+  val sqlNormCaches = SqlNormalizeCaches.unlimitedCache()
+
   val NormalizePhase = new Normalize(caches, transpileConfig)
   val traceConfig    = transpileConfig.traceConfig
 
   private def demarcate(heading: String) =
     ((ast: Ast) => title(heading, TraceType.SqlNormalizations)(ast))
 
-  val ExpandJoinPhase             = new ExpandJoin(NormalizePhase)
-  val RenamePropertiesPhase       = new RenameProperties(traceConfig)
-  val ExpandDistinctPhase         = new ExpandDistinct(traceConfig)
+  val ExpandJoinPhase       = new ExpandJoin(sqlNormCaches.expandJoinCache, NormalizePhase)
+  val RenamePropertiesPhase = new RenameProperties(sqlNormCaches.renamePropertiesCache, traceConfig) // can't really cache this because renames are not on the quat comparison
+  val ExpandDistinctPhase   = new ExpandDistinct(sqlNormCaches.expandDistinctCache, traceConfig)
+  // TODO want to get rid of this stage
   val SheathLeafClausesPhase      = new SheathLeafClausesApply(traceConfig)
-  val FlattenOptionOperationPhase = new FlattenOptionOperation(concatBehavior, transpileConfig.traceConfig)
-  val SimplifyNullChecksPhase     = new SimplifyNullChecks(equalityBehavior)
+  val FlattenOptionOperationPhase = new FlattenOptionOperation(sqlNormCaches.flattenOptionCache, concatBehavior, transpileConfig.traceConfig)
+  val SimplifyNullChecksPhase     = new SimplifyNullChecks(sqlNormCaches.simplifyNullChecksCache, equalityBehavior)
 
   private val normalize =
     (identity[Ast] _)
@@ -75,7 +98,8 @@ class SqlNormalize(
 
   def apply(ast: Ast) = {
     val (stableAst, state) = StabilizeLifts.stabilize(ast)
-    val outputAst          = normalize(stableAst)
+
+    val outputAst = mainCache.getOrCache(stableAst, normalize(stableAst))
     StabilizeLifts.revert(outputAst, state)
   }
 }

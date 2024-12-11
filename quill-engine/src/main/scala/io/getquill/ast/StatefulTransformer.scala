@@ -7,7 +7,7 @@ trait StatefulTransformer[T] extends HasStatefulCache[T] {
 
   val state: T
 
-  private val defaultCache = new NoCache[T]
+  private val defaultCache = NoCache[T]
   // Override this value in implementations in order to use caching
   override def cache: StatefulCache[T] = defaultCache
 

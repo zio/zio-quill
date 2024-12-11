@@ -319,17 +319,17 @@ private[getquill] object AvoidAliasConflict {
    * transforming and queries encountered.
    */
   def sanitizeVariables(f: Function, dangerousVariables: Set[IdentName], traceConfig: TraceConfig): Function =
-    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache(), traceConfig).applyFunction(f)
+    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache, traceConfig).applyFunction(f)
 
   /** Same is `sanitizeVariables` but for Foreach * */
   def sanitizeVariables(f: Foreach, dangerousVariables: Set[IdentName], traceConfig: TraceConfig): Foreach =
-    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache(), traceConfig).applyForeach(f)
+    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache, traceConfig).applyForeach(f)
 
   // TODO trying to move AvoidAliasConflict into the tests
   //      since it only does two things and we want less indirection.
   //      the interesting question is whether to pass a dealias cache into this function.
   def sanitizeQuery(q: Query, dangerousVariables: Set[IdentName], normalize: Normalize): Query =
-    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache(), normalize.traceConf).apply(q) match {
+    AvoidAliasConflict(dangerousVariables, false, StatefulCache.NoCache, normalize.traceConf).apply(q) match {
       // Propagate aliasing changes to the rest of the query
       case (q, _) => normalize(q)
     }

@@ -33,8 +33,8 @@ trait MirrorIdiomBase extends Idiom {
   )(implicit
     naming: NamingStrategy
   ): (Ast, Statement, ExecutionType) = {
-    // plugging in NormalizeCaches.noCache() into `Normalize` because NormalizeCaching does that work
-    val normalize     = new Normalize(NormalizeCaches.noCache(), idiomContext.config)
+    // plugging in NormalizeCaches.noCache into `Normalize` because NormalizeCaching does that work
+    val normalize     = new Normalize(NormalizeCaches.noCache, idiomContext.config)
     val normalizedAst = NormalizeCaching(normalize.apply)(ast)
     (normalizedAst, stmt"${normalizedAst.token}", executionType)
   }

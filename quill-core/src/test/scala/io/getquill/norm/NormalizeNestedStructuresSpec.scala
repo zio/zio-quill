@@ -18,7 +18,7 @@ class NormalizeNestedStructuresSpec extends Spec {
     qr1.take(1).map(x => x.i).size
   }
 
-  val NormalizeNestedStructures = new NormalizeNestedStructures(new Normalize(NormalizeCaches.noCache(), TranspileConfig.Empty), StatelessCacheOpt.NoCache())
+  val NormalizeNestedStructures = new NormalizeNestedStructures(new Normalize(NormalizeCaches.noCache, TranspileConfig.Empty), StatelessCacheOpt.NoCache)
 
   "returns Some if a nested structure changes" - {
     "flatMap" in {

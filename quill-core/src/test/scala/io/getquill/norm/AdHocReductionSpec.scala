@@ -10,7 +10,7 @@ import io.getquill.util.TraceConfig
 
 class AdHocReductionSpec extends Spec {
 
-  val AdHocReduction = new AdHocReduction(StatelessCacheOpt.NoCache(), TraceConfig.Empty)
+  val AdHocReduction = new AdHocReduction(StatelessCacheOpt.NoCache, TraceConfig.Empty)
 
   "*.filter" - {
     "a.filter(b => c).filter(d => e)" in {

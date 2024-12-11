@@ -11,7 +11,7 @@ import io.getquill.util.TraceConfig
 
 class OrderTermsSpec extends Spec {
 
-  val OrderTerms = new OrderTerms(StatelessCacheOpt.NoCache(), TraceConfig.Empty)
+  val OrderTerms = new OrderTerms(StatelessCacheOpt.NoCache, TraceConfig.Empty)
 
   "doesn't reorder groupBy.map" in {
     val q = quote {

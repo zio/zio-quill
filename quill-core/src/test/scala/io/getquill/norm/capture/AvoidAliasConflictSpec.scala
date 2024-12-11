@@ -7,7 +7,7 @@ import io.getquill.util.TraceConfig
 
 class AvoidAliasConflictSpec extends Spec {
 
-  val AvoidAliasConflict = new AvoidAliasConflictApply(StatefulCache.NoCache(), TraceConfig.Empty)
+  val AvoidAliasConflict = new AvoidAliasConflictApply(StatefulCache.NoCache, TraceConfig.Empty)
 
   "renames alias to avoid conflict between entities during normalization" - {
     "flatMap" in {
