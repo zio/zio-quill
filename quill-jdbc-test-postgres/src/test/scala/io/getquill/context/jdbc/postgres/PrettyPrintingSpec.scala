@@ -1,6 +1,7 @@
 package io.getquill.context.jdbc.postgres
 
 import io.getquill.base.Spec
+import io.getquill.context.TranslateOptions
 
 class PrettyPrintingSpec extends Spec {
 
@@ -11,7 +12,7 @@ class PrettyPrintingSpec extends Spec {
 
   "pretty prints query when enabled" in {
     val q = quote(query[Person])
-    translate(q, true) mustEqual
+    translate(q, TranslateOptions(prettyPrint = true)) mustEqual
       """SELECT
         |  x.name,
         |  x.age

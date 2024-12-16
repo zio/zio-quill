@@ -105,14 +105,14 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => t.i == lift(1)).map(t => t.i)
         }
         testContext.translate(q) mustEqual
-          """querySchema("TestEntity").filter(t => t.i == 1).map(t => t.i)"""
+          """querySchema("TestEntity").filter(t => t.i == lift(1)).map(t => t.i)"""
       }
       "two" in {
         val q = quote {
           qr1.filter(t => t.i == lift(1) && t.s == lift("a")).map(t => t.i)
         }
         testContext.translate(q) mustEqual
-          """querySchema("TestEntity").filter(t => (t.i == 1) && (t.s == 'a')).map(t => t.i)"""
+          """querySchema("TestEntity").filter(t => (t.i == lift(1)) && (t.s == lift('a'))).map(t => t.i)"""
       }
       "nested" in {
         val c = quote { (t: TestEntity) =>
@@ -122,7 +122,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)
         }
         testContext.translate(q) mustEqual
-          """querySchema("TestEntity").filter(t => (t.i == 1) && (t.s == 'a')).map(t => t.i)"""
+          """querySchema("TestEntity").filter(t => (t.i == lift(1)) && (t.s == lift('a'))).map(t => t.i)"""
       }
     }
     "dynamic" - {
@@ -131,14 +131,14 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => t.i == lift(1)).map(t => t.i)
         }
         testContext.translate(q.dynamic) mustEqual
-          """querySchema("TestEntity").filter(t => t.i == 1).map(t => t.i)"""
+          """querySchema("TestEntity").filter(t => t.i == lift(1)).map(t => t.i)"""
       }
       "two" in {
         val q = quote {
           qr1.filter(t => t.i == lift(1) && t.s == lift("a")).map(t => t.i)
         }
         val r = testContext.translate(q.dynamic) mustEqual
-          """querySchema("TestEntity").filter(t => (t.i == 1) && (t.s == 'a')).map(t => t.i)"""
+          """querySchema("TestEntity").filter(t => (t.i == lift(1)) && (t.s == lift('a'))).map(t => t.i)"""
       }
       "nested" in {
         val c = quote { (t: TestEntity) =>
@@ -148,7 +148,7 @@ class QueryMacroSpec extends Spec {
           qr1.filter(t => c(t) && t.s == lift("a")).map(t => t.i)
         }
         testContext.translate(q.dynamic) mustEqual
-          """querySchema("TestEntity").filter(t => (t.i == 1) && (t.s == 'a')).map(t => t.i)"""
+          """querySchema("TestEntity").filter(t => (t.i == lift(1)) && (t.s == lift('a'))).map(t => t.i)"""
       }
     }
   }

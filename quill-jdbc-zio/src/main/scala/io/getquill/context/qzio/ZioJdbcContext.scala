@@ -1,5 +1,6 @@
 package io.getquill.context.qzio
 
+import io.getquill.ast.ScalarLift
 import io.getquill.context.ZioJdbc._
 import io.getquill.context._
 import io.getquill.context.jdbc.JdbcContextTypes
@@ -104,22 +105,19 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
 
   override def translateQuery[T](
     statement: String,
-    prepare: Prepare = identityPrepare,
-    extractor: Extractor[T] = identityExtractor,
-    prettyPrint: Boolean = false
-  )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[String] =
-    onConnection(connDelegate.translateQuery[T](statement, prepare, extractor, prettyPrint)(executionInfo, dc))
+    liftings: List[ScalarLift] = List(),
+    options: TranslateOptions = TranslateOptions()
+  )(executionInfo: ExecutionInfo, dc: Runner): String =
+    connDelegate.translateQuery[T](statement, liftings, options)(executionInfo, dc)
 
   override def translateBatchQuery(
     groups: List[BatchGroup],
-    prettyPrint: Boolean = false
-  )(executionInfo: ExecutionInfo, dc: Runner): TranslateResult[List[String]] =
-    onConnection(
-      connDelegate.translateBatchQuery(
-        groups.asInstanceOf[List[ZioJdbcContext.this.connDelegate.BatchGroup]],
-        prettyPrint
-      )(executionInfo, dc)
-    )
+    options: TranslateOptions = TranslateOptions()
+  )(executionInfo: ExecutionInfo, dc: Runner): List[String] =
+    connDelegate.translateBatchQuery(
+      groups.asInstanceOf[List[ZioJdbcContext.this.connDelegate.BatchGroup]],
+      options
+    )(executionInfo, dc)
 
   def streamQuery[T](
     fetchSize: Option[Int],

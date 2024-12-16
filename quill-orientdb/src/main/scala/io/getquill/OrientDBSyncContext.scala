@@ -68,7 +68,7 @@ class OrientDBSyncContext[+N <: NamingStrategy](
   }
 
   def executeBatchAction[T](groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): Unit =
-    groups.foreach { case BatchGroup(orientQl, prepare) =>
+    groups.foreach { case BatchGroup(orientQl, prepare, _) =>
       prepare.foreach(executeAction(orientQl, _)(info, dc))
     }
 

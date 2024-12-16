@@ -14,16 +14,16 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
   case object UsesDefaultFetch             extends FetchSizeArg
   case object DoesNotUseFetch              extends FetchSizeArg
 
-  sealed trait PrettyPrintingArg
-  case class ExplicitPrettyPrint(tree: Tree) extends PrettyPrintingArg
-  case object DefaultPrint                   extends PrettyPrintingArg
+  sealed trait PrettyPrintingOptions
+  case class ExplicitOptions(tree: Tree) extends PrettyPrintingOptions
+  case object DefaultPrint               extends PrettyPrintingOptions
 
   sealed trait ContextMethod { def name: String }
-  case class StreamQuery(fetchSizeBehavior: FetchSizeArg)         extends ContextMethod { val name = "streamQuery"        }
-  case object ExecuteQuery                                        extends ContextMethod { val name = "executeQuery"       }
-  case object ExecuteQuerySingle                                  extends ContextMethod { val name = "executeQuerySingle" }
-  case class TranslateQuery(prettyPrintingArg: PrettyPrintingArg) extends ContextMethod { val name = "translateQuery"     }
-  case object PrepareQuery                                        extends ContextMethod { val name = "prepareQuery"       }
+  case class StreamQuery(fetchSizeBehavior: FetchSizeArg)              extends ContextMethod { val name = "streamQuery"        }
+  case object ExecuteQuery                                             extends ContextMethod { val name = "executeQuery"       }
+  case object ExecuteQuerySingle                                       extends ContextMethod { val name = "executeQuerySingle" }
+  case class TranslateQuery(prettyPrintingOpts: PrettyPrintingOptions) extends ContextMethod { val name = "translateQuery"     }
+  case object PrepareQuery                                             extends ContextMethod { val name = "prepareQuery"       }
 
   def streamQuery[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandQuery[T](quoted, StreamQuery(UsesDefaultFetch))
@@ -40,8 +40,8 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
   def translateQuery[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandQuery[T](quoted, TranslateQuery(DefaultPrint))
 
-  def translateQueryPrettyPrint[T](quoted: Tree, prettyPrint: Tree)(implicit t: WeakTypeTag[T]): Tree =
-    expandQuery[T](quoted, TranslateQuery(ExplicitPrettyPrint(prettyPrint)))
+  def translateQueryPrettyPrint[T](quoted: Tree, options: Tree)(implicit t: WeakTypeTag[T]): Tree =
+    expandQuery[T](quoted, TranslateQuery(ExplicitOptions(options)))
 
   def prepareQuery[T](quoted: Tree)(implicit t: WeakTypeTag[T]): Tree =
     expandQuery[T](quoted, PrepareQuery)
@@ -85,22 +85,21 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               (row, session) => $decoder(0, row, session)
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
-        case TranslateQuery(ExplicitPrettyPrint(argValue)) =>
+        case TranslateQuery(ExplicitOptions(argValue)) =>
+          // use 'liftings' instead of 'prepare' I.e. the List[ScalarLifts] extracted from the query during Expand
           q"""
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
-              expanded.prepare,
-              (row, session) => $decoder(0, row, session),
-              prettyPrint = ${argValue}
+              expanded.liftings,
+              options = ${argValue}
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
         case TranslateQuery(DefaultPrint) =>
           q"""
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
-              expanded.prepare,
-              (row, session) => $decoder(0, row, session),
-              prettyPrint = false
+              expanded.liftings,
+              options = io.getquill.context.TranslateOptions()
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
         case PrepareQuery =>
@@ -167,22 +166,20 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
               $meta.extract
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
-        case TranslateQuery(ExplicitPrettyPrint(argValue)) =>
+        case TranslateQuery(ExplicitOptions(argValue)) =>
           q"""
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
-              expanded.prepare,
-              $meta.extract,
-              prettyPrint = ${argValue}
+              expanded.liftings,
+              options = ${argValue}
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
         case TranslateQuery(DefaultPrint) =>
           q"""
             ${c.prefix}.${TermName(method.name)}(
               expanded.string,
-              expanded.prepare,
-              $meta.extract,
-              prettyPrint = false
+              expanded.liftings,
+              options = io.getquill.context.TranslateOptions()
             )(io.getquill.context.ExecutionInfo(expanded.executionType, expanded.ast, staticTopLevelQuat), ())
            """
         case PrepareQuery =>

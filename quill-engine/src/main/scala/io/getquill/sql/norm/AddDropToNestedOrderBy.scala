@@ -21,6 +21,7 @@ object AddDropToNestedOrderBy {
 
       case SetOperationSqlQuery(a, op, b) => SetOperationSqlQuery(applyInner(a), op, applyInner(b))(q.quat)
       case UnaryOperationSqlQuery(op, a)  => UnaryOperationSqlQuery(op, applyInner(a))(q.quat)
+      case q: TopInfixQuery               => q
     }
 
   private def applyInner(f: FromContext): FromContext =
@@ -36,5 +37,6 @@ object AddDropToNestedOrderBy {
       case q: FlattenSqlQuery             => q.copy(from = q.from.map(applyInner(_)))(q.quat)
       case SetOperationSqlQuery(a, op, b) => SetOperationSqlQuery(applyInner(a), op, applyInner(b))(q.quat)
       case UnaryOperationSqlQuery(op, a)  => UnaryOperationSqlQuery(op, applyInner(a))(q.quat)
+      case q: TopInfixQuery               => q
     }
 }

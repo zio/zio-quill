@@ -249,6 +249,8 @@ trait SqlIdiom extends Idiom {
     strategy: NamingStrategy,
     idiomContext: IdiomContext
   ): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+    case q: TopInfixQuery =>
+      q.ast.token
     case q: FlattenSqlQuery =>
       new FlattenSqlQueryTokenizerHelper(q).apply
     case SetOperationSqlQuery(a, op, b) =>

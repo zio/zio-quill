@@ -1,0 +1,6 @@
+# Builds a ubuntu-based postgres image whose latency can be modified to be highe
+# for performance experimentation.
+FROM mcr.microsoft.com/mssql/server:2022-CU13-ubuntu-22.04
+USER root
+RUN apt-get update && \
+    apt-get install iproute2 iputils-ping -y

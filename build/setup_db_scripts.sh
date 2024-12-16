@@ -30,17 +30,11 @@ function setup_sqlite() {
     echo "Setting permissions on sqlite DB File"
     chmod a+rw $DB_FILE
 
-   # DB File in quill-jdbc-monix
-   DB_FILE=quill-jdbc-monix/quill_test.db
-   rm -f $DB_FILE
-   sqlite3 $DB_FILE < $SQLITE_SCRIPT
-   chmod a+rw $DB_FILE
-
-   # DB File in quill-jdbc-monix
-   DB_FILE=quill-jdbc-test-sqlite/quill_test.db
-   rm -f $DB_FILE
-   sqlite3 $DB_FILE < $SQLITE_SCRIPT
-   chmod a+rw $DB_FILE
+    # DB File in quill-jdbc-test-sqlite
+    DB_FILE=quill-jdbc-test-sqlite/quill_test.db
+    rm -f $DB_FILE
+    sqlite3 $DB_FILE < $SQLITE_SCRIPT
+    chmod a+rw $DB_FILE
 
     echo "Sqlite ready!"
 }
@@ -141,7 +135,7 @@ function setup_sqlserver() {
 
 # Do a simple netcat poll to make sure the oracle database is ready.
 # All internal database creation and schema setup scripts are handled
-# by the container and docker-compose steps.
+# by the container and docker compose steps.
 
 function setup_oracle() {
     while ! nc -z $1 1521; do
@@ -170,7 +164,7 @@ function setup_oracle() {
 
 function send_script() {
   echo "Send Script Args: 1: $1 - 2 $2 - 3: $3"
-  docker cp $2 "$(docker-compose ps -q $1)":/$3
+  docker cp $2 "$(docker compose ps -q $1)":/$3
 }
 
 export -f setup_sqlite
