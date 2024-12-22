@@ -20,7 +20,7 @@ trait BooleanLiteralSupport extends SqlIdiom {
     equalityBehavior: EqualityBehavior,
     idiomContext: IdiomContext
   ) = {
-    val norm = SqlNormalize(ast, idiomContext.config, concatBehavior, equalityBehavior, SqlNormalizeCaches.Global)
+    val norm = SqlNormalize(ast, idiomContext.config, concatBehavior, equalityBehavior, SqlNormalizeCaches.unlimitedLocal())
     if (Messages.smartBooleans)
       VendorizeBooleans(norm)
     else

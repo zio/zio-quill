@@ -39,23 +39,15 @@ object CompilePhaseCaches {
 }
 
 trait SqlNormalizeCaches {
-  def mainCache: StatelessCache
   def normCaches: NormalizeCaches
   def phaseCaches: CompilePhaseCaches
 }
 object SqlNormalizeCaches {
   def unlimitedLocal() =
     new SqlNormalizeCaches {
-      val mainCache   = StatelessCache.NoCache
       val normCaches  = NormalizeCaches.unlimitedCache()
       val phaseCaches = CompilePhaseCaches.unlimitedCache()
     }
-
-  object Global extends SqlNormalizeCaches {
-    val mainCache   = StatelessCache.NoCache
-    val normCaches  = NormalizeCaches.noCache
-    val phaseCaches = CompilePhaseCaches.unlimitedCache()
-  }
 }
 
 class SqlNormalize(
@@ -126,7 +118,7 @@ class SqlNormalize(
   def apply(ast: Ast) = {
     val (stableAst, state) = StabilizeLifts.stabilize(ast)
     val stats              = CollectStats(stableAst)
-    val outputAst          = caches.mainCache.getOrCache(stableAst, normalize(stats)(stableAst))
+    val outputAst          = normalize(stats)(stableAst)
     StabilizeLifts.revert(outputAst, state)
   }
 }
