@@ -19,7 +19,7 @@ case class NormalizeCaches(
   orderTermsCache: StatelessCacheOpt
 )
 object NormalizeCaches {
-  val noCache =
+  val NoCache =
     NormalizeCaches(
       StatelessCache.NoCache,
       StatefulCache.NoCache,

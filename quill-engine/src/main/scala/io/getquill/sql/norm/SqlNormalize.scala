@@ -13,9 +13,9 @@ object SqlNormalize {
   def apply(
     ast: Ast,
     transpileConfig: TranspileConfig,
+    caches: SqlNormalizeCaches,
     concatBehavior: ConcatBehavior = AnsiConcat,
-    equalityBehavior: EqualityBehavior = AnsiEquality,
-    caches: SqlNormalizeCaches = SqlNormalizeCaches.unlimitedLocal()
+    equalityBehavior: EqualityBehavior = AnsiEquality
   ) =
     new SqlNormalize(concatBehavior, equalityBehavior, transpileConfig, caches)(ast)
 }
@@ -28,6 +28,15 @@ case class CompilePhaseCaches(
   simplifyNullChecksCache: StatelessCache
 )
 object CompilePhaseCaches {
+  val NoCache =
+    CompilePhaseCaches(
+      StatelessCache.NoCache,
+      StatelessCache.NoCache,
+      StatelessCache.NoCache,
+      StatelessCache.NoCache,
+      StatelessCache.NoCache
+    )
+
   def unlimitedCache() =
     CompilePhaseCaches(
       StatelessCache.Unlimited(),
@@ -43,6 +52,12 @@ trait SqlNormalizeCaches {
   def phaseCaches: CompilePhaseCaches
 }
 object SqlNormalizeCaches {
+  val NoCache =
+    new SqlNormalizeCaches {
+      val normCaches  = NormalizeCaches.NoCache
+      val phaseCaches = CompilePhaseCaches.NoCache
+    }
+
   def unlimitedLocal() =
     new SqlNormalizeCaches {
       val normCaches  = NormalizeCaches.unlimitedCache()
