@@ -72,7 +72,7 @@ object BottomTypedTerminal {
  * something like: <pre>`SELECT p.name FROM People p`</pre> comes from something
  * like: <pre>`Map(Entity("People", Nil), Ident("p"), Property(Ident(p),
  * "name"))`.</pre> When you define a `querySchema`, the fields you mention
- * inside become `PropertyAlias`s. For example something like:
+ * inside become `PropertyAlias` s. For example something like:
  * <pre>`querySchema[Person]("t_person", _.name -> "s_name")`</pre> Becomes
  * something like: <pre>`Entity("t_person", List(PropertyAlias(List("name"),
  * "s_name"))) { def renameable = Fixed }`</pre> Note that Entity has an Opinion

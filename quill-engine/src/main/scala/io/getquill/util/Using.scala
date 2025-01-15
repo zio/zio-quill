@@ -79,7 +79,7 @@ import scala.util.control.{ControlThrowable, NonFatal}
  * severity, the one thrown first is re-thrown, and the one thrown second is
  * added to it as a suppressed exception. If an exception is a
  * scala.util.control.ControlThrowable `ControlThrowable`, or if it does not
- * support suppression (see java.lang.Throwable `Throwable`'s constructor with
+ * support suppression (see java.lang.Throwable `Throwable` 's constructor with
  * an `enableSuppression` parameter), an exception that would have been
  * suppressed is instead discarded.
  *
@@ -435,7 +435,7 @@ object Using {
   object Releasable {
 
     /**
-     * An implicit `Releasable` for java.lang.AutoCloseable `AutoCloseable`s.
+     * An implicit `Releasable` for java.lang.AutoCloseable `AutoCloseable` s.
      */
     implicit object AutoCloseableIsReleasable extends Releasable[AutoCloseable] {
       def release(resource: AutoCloseable): Unit = resource.close()
