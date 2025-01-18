@@ -34,6 +34,8 @@ jobs:
           distribution: temurin
           java-version: '17'
           check-latest: true
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
       - name: Check scalafmt
         run: sbt 'scalafmtCheckAll' # https://scalameta.org/scalafmt/docs/installation.html#task-keys
 
@@ -92,6 +94,8 @@ jobs:
         distribution: temurin
         java-version: '17'
         check-latest: true
+    - name: Setup sbt
+      uses: sbt/setup-sbt@v1
 
     - name: Build modules
       run: |
@@ -115,6 +119,8 @@ jobs:
           distribution: temurin
           java-version: '11'
           check-latest: true
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
       - run: |
           sbt ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
           sbt ++2.13.x -Dquill.scala.version=2.13.x -Dquill.macro.log=false ci-release
