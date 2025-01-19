@@ -205,7 +205,7 @@ lazy val `quill-engine` =
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.0",
-        "com.github.ben-manes.caffeine" % "caffeine"      % "3.1.8"
+        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.0"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
@@ -423,7 +423,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.4" % "provided",
+        "org.postgresql" % "postgresql" % "42.7.5" % "provided",
         "dev.zio"       %% "zio-json"   % "0.7.3"
       ),
       Test / testGrouping := {
@@ -535,7 +535,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              % "HikariCP"                % "6.2.1" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "9.1.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.232"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.4"      % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.5"      % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.47.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
