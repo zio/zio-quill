@@ -205,7 +205,7 @@ lazy val `quill-engine` =
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.0",
-        "com.github.ben-manes.caffeine" % "caffeine"      % "3.1.8"
+        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.0"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
@@ -424,7 +424,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.7.5" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.3"
+        "dev.zio"       %% "zio-json"   % "0.7.4"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -511,7 +511,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.36"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.37"
       )
     )
     .dependsOn(
@@ -606,7 +606,7 @@ val scalaCollectionCompatVersion = "2.12.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.5.12" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.16" % Test
   )
 )
 
