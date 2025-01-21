@@ -511,7 +511,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.36"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.37"
       )
     )
     .dependsOn(
@@ -536,7 +536,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.mysql"               % "mysql-connector-j"       % "9.1.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.232"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.5"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.47.1.0"    % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.47.2.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -606,7 +606,7 @@ val scalaCollectionCompatVersion = "2.12.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.5.12" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.16" % Test
   )
 )
 
