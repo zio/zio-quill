@@ -392,7 +392,7 @@ In certain situations we also may want to return information from inserted recor
 
 ```scala
 val q = quote {
-  query[Product].insertValue(lift(Product(0, "My Product", 1011L))).returning(r => (id, description))
+  query[Product].insertValue(lift(Product(0, "My Product", 1011L))).returning(r => (r.id, r.description))
 }
 
 val returnedIds = ctx.run(q) //: List[(Int, String)]
@@ -404,7 +404,7 @@ from the insertion! We can fix this situation by manually specifying the columns
 
 ```scala
 val q = quote {
-  query[Product].insert(_.description -> "My Product", _.sku -> 1011L))).returning(r => (id, description))
+  query[Product].insert(_.description -> "My Product", _.sku -> 1011L))).returning(r => (r.id, r.description))
 }
 
 val returnedIds = ctx.run(q) //: List[(Int, String)]
@@ -416,7 +416,7 @@ We can also fix this situation by using an insert-meta.
 ```scala
 implicit val productInsertMeta = insertMeta[Product](_.id)
 val q = quote {
-  query[Product].insertValue(lift(Product(0L, "My Product", 1011L))).returning(r => (id, description))
+  query[Product].insertValue(lift(Product(0L, "My Product", 1011L))).returning(r => (r.id, r.description))
 }
 
 val returnedIds = ctx.run(q) //: List[(Int, String)]
