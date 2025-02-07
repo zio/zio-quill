@@ -165,7 +165,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.8.3")
+        ("org.scalameta" %% "scalafmt-core" % "3.8.6")
           .excludeAll(
             ({
               if (isScala3)
@@ -533,10 +533,10 @@ lazy val `quill-test-kit` =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "6.2.1" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "9.1.0"       % Test,
+    "com.mysql"               % "mysql-connector-j"       % "9.2.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.232"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.5"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.47.2.0"    % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.48.0.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -599,10 +599,10 @@ def excludePaths(paths: Seq[String]) = {
 }
 
 val scala_v_12 = "2.12.20"
-val scala_v_13 = "2.13.15"
-val scala_v_30 = "3.3.4"
+val scala_v_13 = "2.13.16"
+val scala_v_30 = "3.3.5"
 
-val scalaCollectionCompatVersion = "2.12.0"
+val scalaCollectionCompatVersion = "2.13.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
