@@ -1,6 +1,8 @@
 package io.getquill.context.spark
 
 import io.getquill.base.Spec
+import io.getquill.{Test => _, _}
+
 import scala.util.Success
 
 class QuillSparkContextSpec extends Spec {

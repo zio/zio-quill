@@ -229,7 +229,7 @@ class OrientDBQuerySpec extends Spec {
 
       intercept[IllegalStateException](
         t.token(UnaryOperationSqlQuery(BooleanOperator.`!`, e)(Quat.Value))
-      ).getMessage mustBe "Other operators are not supported yet. Please raise a ticket to support more operations"
+      ).getMessage must include("This operator is not supported")
     }
     "operation" in {
       val t = implicitly[Tokenizer[Operation]]

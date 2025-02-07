@@ -55,7 +55,7 @@ trait ZioPrepareContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): PrepareBatchActionResult =
     ZIO
       .collectAll[Connection, Throwable, PrepareRow, List] {
-        val batches = groups.flatMap { case BatchGroup(sql, prepares) =>
+        val batches = groups.flatMap { case BatchGroup(sql, prepares, _) =>
           prepares.map(sql -> _)
         }
         batches.map { case (sql, prepare) =>

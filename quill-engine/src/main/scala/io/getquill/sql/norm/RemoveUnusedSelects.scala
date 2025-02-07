@@ -1,7 +1,7 @@
 package io.getquill.sql.norm
 
 import io.getquill.ast.{Ast, CollectAst, Ident, Property, StatefulTransformer}
-import io.getquill.context.sql.{DistinctKind, FlatJoinContext, FlattenSqlQuery, FromContext, InfixContext, JoinContext, QueryContext, SelectValue, SetOperationSqlQuery, SqlQuery, TableContext, UnaryOperationSqlQuery}
+import io.getquill.context.sql.{DistinctKind, FlatJoinContext, FlattenSqlQuery, FromContext, InfixContext, JoinContext, TopInfixQuery, QueryContext, SelectValue, SetOperationSqlQuery, SqlQuery, TableContext, UnaryOperationSqlQuery}
 import io.getquill.norm.PropertyMatryoshka
 import io.getquill.quat.Quat
 
@@ -61,6 +61,7 @@ object RemoveUnusedSelects {
         SetOperationSqlQuery(apply(a, references), op, apply(b, references))(q.quat)
       case UnaryOperationSqlQuery(op, q) =>
         UnaryOperationSqlQuery(op, apply(q, references))(q.quat)
+      case p: TopInfixQuery => p
     }
 
   private def filterUnused(select: List[SelectValue], references: Set[Property]): List[SelectValue] = {

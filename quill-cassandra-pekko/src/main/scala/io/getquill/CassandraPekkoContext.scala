@@ -94,7 +94,7 @@ class CassandraPekkoContext[+N <: NamingStrategy](
     groups: List[BatchGroup]
   )(info: ExecutionInfo, dc: Runner)(implicit executionContext: ExecutionContext): Result[RunBatchActionResult] =
     Future.sequence {
-      groups.flatMap { case BatchGroup(cql, prepare) =>
+      groups.flatMap { case BatchGroup(cql, prepare, _) =>
         prepare.map(executeAction(cql, _)(info, dc))
       }
     }

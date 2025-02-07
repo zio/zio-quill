@@ -42,12 +42,16 @@ services:
     init: true
 
   sqlserver:
-    image: mcr.microsoft.com/azure-sql-edge:latest # use this because it supports ARM64 architecture for M1 Mac
+    build:
+      context: .
+      dockerfile: ./build/Dockerfile-sqlserver
     ports:
       - "11433:1433"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=QuillRocks!
+    cap_add:
+      - NET_ADMIN
 
   oracle:
     image: quillbuilduser/oracle-18-xe-micro-sq
