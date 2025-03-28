@@ -1,8 +1,9 @@
 package zio.quill.context.sql.idiom
 
+import zio.quill.Literal
+import zio.quill.NamingStrategy
 import zio.quill.PostgresDialect
 import zio.quill.SqlMirrorContext
-import zio.quill.Literal
 import zio.quill.TestEntities
 
 class PostgresDialectSpec extends OnConflictSpec {
@@ -67,4 +68,21 @@ class PostgresDialectSpec extends OnConflictSpec {
         "INSERT INTO TestEntity AS t (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET l = foo(t.l, EXCLUDED.l), l = bar(t.l, EXCLUDED.l)"
     }
   }
+
+  "apply naming strategy OnConflict" - `onConflict with query and schemaMeta` { i =>
+    "cols target - update with custom names" in {
+      object CustomNaming extends NamingStrategy {
+        override def column(s: String): String = s match {
+          case "l" => "ll"
+          case _   => default(s)
+        }
+        override def default(s: String): String = s
+      }
+      val ctx = new SqlMirrorContext(PostgresDialect, CustomNaming) with TestEntities
+
+      ctx.run(`cols target - update`(i)).string mustEqual
+        "INSERT INTO TestEntity AS t (s,i,ll,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET ll = ((t.ll + EXCLUDED.ll) / 2), s = EXCLUDED.s"
+    }
+  }
+
 }
