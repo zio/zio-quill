@@ -10,7 +10,7 @@ In order to get this project to build on a Mac with an M1 or later chip, you wil
 ## Setup
 To get started - be sure to setup the databases needed for the build/test process.  Do so by executing the following:
 
-`docker compose -f docker-compose-m1.yml --rm setup`
+`docker compose -f docker-compose-m1.yml run --rm setup`
 
 Any time you want to re-setup your databases (i.e. you run `docker compose down`) - you will need to run that command pointed at the right YAML.
 

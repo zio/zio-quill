@@ -13,7 +13,7 @@ Instructions on how to install Docker can be found [here](https://docs.docker.co
 If you are running Linux, you should also install Docker Compose separately, as described
 [here](https://docs.docker.com/compose/install/).
 
-After installing Docker and Docker Compose you have to setup databases:
+After installing Docker and Docker Compose you have to setup databases (see build/m1/README.MD for Apple M1 instructions):
 
 ```bash
 docker compose run --rm setup
