@@ -43,7 +43,7 @@ done;
 
 echo "Running Oracle Setup Script"
 java -cp 'sqlline/sqlline.jar:sqlline/ojdbc.jar' 'sqlline.SqlLine' \
-  -u 'jdbc:oracle:thin:@localhost:11521:xe' \
+  -u 'jdbc:oracle:thin:@localhost:11521:FREE' \
   -n quill_test -p 'QuillRocks!' \
   -f "$ORACLE_SCRIPT" \
   --showWarnings=false
