@@ -76,7 +76,7 @@ services:
     volumes:
       - ./:/app:delegated
     command:
-      - ./build/setup_local.sh
+      - ./build/m1/setup_local.sh
 
 
   sbt:
