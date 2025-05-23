@@ -393,8 +393,8 @@ lazy val `quill-doobie` =
     .settings(jdbcTestingSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC5",
-        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC5" % Test
+        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC9",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC9" % Test
       )
     )
     .dependsOn(
@@ -424,7 +424,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.7.5" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.39"
+        "dev.zio"       %% "zio-json"   % "0.7.43"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
