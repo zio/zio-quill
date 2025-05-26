@@ -393,8 +393,8 @@ lazy val `quill-doobie` =
     .settings(jdbcTestingSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC5",
-        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC5" % Test
+        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC9",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC9" % Test
       )
     )
     .dependsOn(
@@ -424,7 +424,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.7.5" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.39"
+        "dev.zio"       %% "zio-json"   % "0.7.43"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -511,7 +511,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.38"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.39"
       )
     )
     .dependsOn(
@@ -533,7 +533,7 @@ lazy val `quill-test-kit` =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "6.3.0" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "9.2.0"       % Test,
+    "com.mysql"               % "mysql-connector-j"       % "9.3.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.232"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.5"      % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.49.1.0"    % Test,
@@ -600,7 +600,7 @@ def excludePaths(paths: Seq[String]) = {
 
 val scala_v_12 = "2.12.20"
 val scala_v_13 = "2.13.16"
-val scala_v_30 = "3.3.5"
+val scala_v_30 = "3.3.6"
 
 val scalaCollectionCompatVersion = "2.13.0"
 
