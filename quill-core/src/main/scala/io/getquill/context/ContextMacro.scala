@@ -8,6 +8,8 @@ import io.getquill.util.MacroContextExt._
 import io.getquill.{IdiomContext, NamingStrategy}
 import io.getquill.idiom._
 import io.getquill.quat.Quat
+import io.getquill.util.ExceptionOps.ThrowableOpsMethods
+
 import scala.util.Failure
 import scala.util.Success
 
@@ -89,9 +91,15 @@ trait ContextMacro extends Quotation {
           )
         } catch {
           case e: Exception =>
-            c.fail(s"Query compilation failed. ${e.getMessage}")
+            c.fail(
+              s"""Query compilation failed due to: ${e.getMessage}
+                 |================= Error Stack: =================
+                 |${e.stackTraceToString}
+                 |""".stripMargin
+            )
         }
     }
+
   }
 
   private def translateStatic(ast: Ast, topLevelQuat: Quat, batchAlias: Option[String]): Tree = {

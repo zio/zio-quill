@@ -128,7 +128,7 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
 
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner) =
     BatchActionMirror(
-      groups.map { case BatchGroup(string, prepare) =>
+      groups.map { case BatchGroup(string, prepare, _) =>
         (string, prepare.map(_(Row(), session)._2))
       },
       info
@@ -139,7 +139,7 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
     extractor: Extractor[T]
   )(info: ExecutionInfo, dc: Runner) =
     new BatchActionReturningMirror[T](
-      groups.map { case BatchGroupReturning(string, returningBehavior, prepare) =>
+      groups.map { case BatchGroupReturning(string, returningBehavior, prepare, _) =>
         (string, returningBehavior, prepare.map(_(Row(), session)._2))
       },
       extractor,
@@ -151,7 +151,7 @@ class MirrorContext[+Idiom <: BaseIdiom, +Naming <: NamingStrategy](
 
   def prepareBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner) =
     (session: Session) =>
-      groups.flatMap { case BatchGroup(string, prepare) =>
+      groups.flatMap { case BatchGroup(string, prepare, _) =>
         prepare.map(_(Row(), session)._2)
       }
 

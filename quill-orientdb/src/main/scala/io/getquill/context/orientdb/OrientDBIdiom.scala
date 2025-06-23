@@ -5,7 +5,7 @@ import io.getquill.idiom.StatementInterpolator._
 import io.getquill.context.sql.norm._
 import io.getquill.ast.{AggregationOperator, External, _}
 import io.getquill.context.sql._
-import io.getquill.{IdiomContext, NamingStrategy}
+import io.getquill.{AstPrinter, IdiomContext, NamingStrategy}
 import io.getquill.context.{CannotReturn, ExecutionType}
 import io.getquill.util.Messages.{fail, trace}
 import io.getquill.idiom._
@@ -129,6 +129,9 @@ trait OrientDBIdiom extends Idiom {
     strategy: NamingStrategy,
     idiomContext: IdiomContext
   ): Tokenizer[SqlQuery] = Tokenizer[SqlQuery] {
+    case q: TopInfixQuery =>
+      q.ast.token
+
     case FlattenSqlQuery(from, where, groupBy, orderBy, limit, offset, select, distinct) =>
       val distinctTokenizer = (if (distinct == DistinctKind.Distinct) "DISTINCT" else "").token
 
@@ -183,8 +186,8 @@ trait OrientDBIdiom extends Idiom {
     case SetOperationSqlQuery(a, op, b) =>
       val str = f"SELECT $$c LET $$a = (${a.token}), $$b = (${b.token}), $$c = UNIONALL($$a, $$b)"
       str.token
-    case _ =>
-      fail("Other operators are not supported yet. Please raise a ticket to support more operations")
+    case other =>
+      fail("This operator is not supported (below). Please raise a ticket to support more operations\n" + new AstPrinter()(other))
   }
 
   implicit def operationTokenizer(implicit

@@ -379,7 +379,6 @@ class ActionMacroSpec extends Spec {
       )
     }
   }
-
   "translate non-batched action" - {
     "normal" in {
       val q = quote {
@@ -393,21 +392,21 @@ class ActionMacroSpec extends Spec {
         qr1.insert(t => t.i -> lift(1))
       }
       testContext.translate(q) mustEqual
-        """querySchema("TestEntity").insert(t => t.i -> 1)"""
+        """querySchema("TestEntity").insert(t => t.i -> lift(1))"""
     }
     "case class lifting" in {
       val q = quote {
         qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true)))
       }
       testContext.translate(q) mustEqual
-        """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null, v => v.b -> true)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s'), v => v.i -> lift(1), v => v.l -> lift(2), v => v.o -> lift(None), v => v.b -> lift(true))"""
     }
     "nested case class lifting" in {
       val q = quote { t: TestEntity =>
         qr1.insertValue(t)
       }
       testContext.translate(q(lift(TestEntity("s", 1, 2L, None, true)))) mustEqual
-        """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null, v => v.b -> true)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s'), v => v.i -> lift(1), v => v.l -> lift(2), v => v.o -> lift(None), v => v.b -> lift(true))"""
     }
     "returning value" in {
       val q = quote {
@@ -421,21 +420,21 @@ class ActionMacroSpec extends Spec {
         qr1.insert(t => t.i -> lift(1)).returning(t => t.l)
       }
       testContext.translate(q) mustEqual
-        """querySchema("TestEntity").insert(t => t.i -> 1).returning((t) => t.l)"""
+        """querySchema("TestEntity").insert(t => t.i -> lift(1)).returning((t) => t.l)"""
     }
     "case class lifting + returning value" in {
       val q = quote {
         qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returning(t => t.l)
       }
       testContext.translate(q) mustEqual
-        """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.l -> 2, v => v.o -> null, v => v.b -> true).returning((t) => t.l)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s'), v => v.i -> lift(1), v => v.l -> lift(2), v => v.o -> lift(None), v => v.b -> lift(true)).returning((t) => t.l)"""
     }
     "case class lifting + returning generated value" in {
       val q = quote {
         qr1.insertValue(lift(TestEntity("s", 1, 2L, None, true))).returningGenerated(t => t.l)
       }
       testContext.translate(q) mustEqual
-        """querySchema("TestEntity").insert(v => v.s -> 's', v => v.i -> 1, v => v.o -> null, v => v.b -> true).returningGenerated((t) => t.l)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s'), v => v.i -> lift(1), v => v.o -> lift(None), v => v.b -> lift(true)).returningGenerated((t) => t.l)"""
     }
   }
 
@@ -454,8 +453,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").insert(t => t.i -> 1)""",
-        """querySchema("TestEntity").insert(t => t.i -> 2)"""
+        """querySchema("TestEntity").insert(t => t.i -> lift(1))""",
+        """querySchema("TestEntity").insert(t => t.i -> lift(2))"""
       )
     }
     "case class" in {
@@ -463,8 +462,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities).foreach(p => qr1.insertValue(p))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true)""",
-        """querySchema("TestEntity").insert(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8, v => v.b -> false)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.l -> lift(3), v => v.o -> lift(Some(4)), v => v.b -> lift(true))""",
+        """querySchema("TestEntity").insert(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.l -> lift(7), v => v.o -> lift(Some(8)), v => v.b -> lift(false))"""
       )
     }
     "case class + nested action" in {
@@ -475,8 +474,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities).foreach(p => nested(p))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true)""",
-        """querySchema("TestEntity").insert(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8, v => v.b -> false)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.l -> lift(3), v => v.o -> lift(Some(4)), v => v.b -> lift(true))""",
+        """querySchema("TestEntity").insert(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.l -> lift(7), v => v.o -> lift(Some(8)), v => v.b -> lift(false))"""
       )
     }
     "tuple + case class + nested action" in {
@@ -487,8 +486,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities).foreach(p => nested(lift("s"), p))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").filter(t1 => t1.s == 's').update(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true)""",
-        """querySchema("TestEntity").filter(t1 => t1.s == 's').update(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8, v => v.b -> false)"""
+        """querySchema("TestEntity").filter(t1 => t1.s == lift('s')).update(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.l -> lift(3), v => v.o -> lift(Some(4)), v => v.b -> lift(true))""",
+        """querySchema("TestEntity").filter(t1 => t1.s == lift('s')).update(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.l -> lift(7), v => v.o -> lift(Some(8)), v => v.b -> lift(false))"""
       )
     }
     "zipWithIndex" in {
@@ -499,8 +498,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities.zipWithIndex).foreach(p => nested(p._1, p._2))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").filter(t1 => t1.i == 0).update(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true)""",
-        """querySchema("TestEntity").filter(t1 => t1.i == 1).update(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8, v => v.b -> false)"""
+        """querySchema("TestEntity").filter(t1 => t1.i == lift(0)).update(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.l -> lift(3), v => v.o -> lift(Some(4)), v => v.b -> lift(true))""",
+        """querySchema("TestEntity").filter(t1 => t1.i == lift(1)).update(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.l -> lift(7), v => v.o -> lift(Some(8)), v => v.b -> lift(false))"""
       )
     }
     "scalar + returning" in {
@@ -511,8 +510,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(List(1, 2)).foreach((p: Int) => insert(p))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").insert(t => t.i -> 1).returning((t) => t.l)""",
-        """querySchema("TestEntity").insert(t => t.i -> 2).returning((t) => t.l)"""
+        """querySchema("TestEntity").insert(t => t.i -> lift(1)).returning((t) => t.l)""",
+        """querySchema("TestEntity").insert(t => t.i -> lift(2)).returning((t) => t.l)"""
       )
     }
     "case class + returning" in {
@@ -520,8 +519,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities).foreach(p => qr1.insertValue(p).returning(t => t.l))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true).returning((t) => t.l)""",
-        """querySchema("TestEntity").insert(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8, v => v.b -> false).returning((t) => t.l)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.l -> lift(3), v => v.o -> lift(Some(4)), v => v.b -> lift(true)).returning((t) => t.l)""",
+        """querySchema("TestEntity").insert(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.l -> lift(7), v => v.o -> lift(Some(8)), v => v.b -> lift(false)).returning((t) => t.l)"""
       )
     }
     "case class + returning + nested action" in {
@@ -529,8 +528,8 @@ class ActionMacroSpec extends Spec {
         qr1.insertValue(p).returning(t => t.l)
       }
       testContext.translate(liftQuery(entities).foreach(p => insert(p))) mustEqual List(
-        """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.l -> 3, v => v.o -> 4, v => v.b -> true).returning((t) => t.l)""",
-        """querySchema("TestEntity").insert(v => v.s -> 's5', v => v.i -> 6, v => v.l -> 7, v => v.o -> 8, v => v.b -> false).returning((t) => t.l)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.l -> lift(3), v => v.o -> lift(Some(4)), v => v.b -> lift(true)).returning((t) => t.l)""",
+        """querySchema("TestEntity").insert(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.l -> lift(7), v => v.o -> lift(Some(8)), v => v.b -> lift(false)).returning((t) => t.l)"""
       )
     }
     "case class + returning generated" in {
@@ -538,8 +537,8 @@ class ActionMacroSpec extends Spec {
         liftQuery(entities).foreach(p => qr1.insertValue(p).returningGenerated(t => t.l))
       }
       testContext.translate(q) mustEqual List(
-        """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.o -> 4, v => v.b -> true).returningGenerated((t) => t.l)""",
-        """querySchema("TestEntity").insert(v => v.s -> 's5', v => v.i -> 6, v => v.o -> 8, v => v.b -> false).returningGenerated((t) => t.l)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.o -> lift(Some(4)), v => v.b -> lift(true)).returningGenerated((t) => t.l)""",
+        """querySchema("TestEntity").insert(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.o -> lift(Some(8)), v => v.b -> lift(false)).returningGenerated((t) => t.l)"""
       )
     }
     "case class + returning generated + nested action" in {
@@ -547,8 +546,8 @@ class ActionMacroSpec extends Spec {
         qr1.insertValue(p).returningGenerated(t => t.l)
       }
       testContext.translate(liftQuery(entities).foreach(p => insert(p))) mustEqual List(
-        """querySchema("TestEntity").insert(v => v.s -> 's1', v => v.i -> 2, v => v.o -> 4, v => v.b -> true).returningGenerated((t) => t.l)""",
-        """querySchema("TestEntity").insert(v => v.s -> 's5', v => v.i -> 6, v => v.o -> 8, v => v.b -> false).returningGenerated((t) => t.l)"""
+        """querySchema("TestEntity").insert(v => v.s -> lift('s1'), v => v.i -> lift(2), v => v.o -> lift(Some(4)), v => v.b -> lift(true)).returningGenerated((t) => t.l)""",
+        """querySchema("TestEntity").insert(v => v.s -> lift('s5'), v => v.i -> lift(6), v => v.o -> lift(Some(8)), v => v.b -> lift(false)).returningGenerated((t) => t.l)"""
       )
     }
   }

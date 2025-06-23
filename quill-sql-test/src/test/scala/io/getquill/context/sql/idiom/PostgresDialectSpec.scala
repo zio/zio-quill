@@ -62,5 +62,9 @@ class PostgresDialectSpec extends OnConflictSpec {
       ctx.run(`cols target - update`(i)).string mustEqual
         "INSERT INTO TestEntity AS t (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET l = ((t.l + EXCLUDED.l) / 2), s = EXCLUDED.s"
     }
+    "cols target - update + infix" in {
+      ctx.run(`cols target - update + infix`(i)).string mustEqual
+        "INSERT INTO TestEntity AS t (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET l = foo(t.l, EXCLUDED.l), l = bar(t.l, EXCLUDED.l)"
+    }
   }
 }

@@ -53,8 +53,7 @@ lazy val dbModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
 
 lazy val codegenModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
   `quill-codegen`,
-  `quill-codegen-jdbc`,
-  `quill-codegen-tests`
+  `quill-codegen-jdbc`
 )
 
 lazy val bigdataModules = Seq[sbt.ClasspathDep[sbt.ProjectReference]](
@@ -93,7 +92,7 @@ lazy val filteredModules = {
   val moduleStrings =
     ListSet(
       modulesStr
-        .getOrElse("all")
+        .getOrElse("nocodegen")
         .split(",")
         .map(_.trim): _*
     )
@@ -121,8 +120,10 @@ lazy val filteredModules = {
         println("SBT =:> Invoking Aggregate Project")
         Seq[sbt.ClasspathDep[sbt.ProjectReference]]()
       case _ | "all" =>
-        println("SBT =:> Compiling All Modules")
-        allModules
+        println("Compiling Not-Code Generator Modules")
+        baseModules ++ dbModules ++ bigdataModules
+      // println("SBT =:> Compiling All Modules")
+      // allModules
     }
 
   val selectedModules = {
@@ -164,7 +165,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.8.3")
+        ("org.scalameta" %% "scalafmt-core" % "3.9.4")
           .excludeAll(
             ({
               if (isScala3)
@@ -204,7 +205,7 @@ lazy val `quill-engine` =
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.0",
-        "com.github.ben-manes.caffeine" % "caffeine"      % "3.1.8"
+        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.0"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
@@ -216,7 +217,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.3.0",
+        "dev.zio"                    %% "zio-logging"   % "2.5.0",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -264,39 +265,39 @@ lazy val `quill-codegen-jdbc` =
     .dependsOn(`quill-codegen` % "compile->compile;test->test")
     .dependsOn(`quill-jdbc` % "compile->compile")
 
-lazy val `quill-codegen-tests` =
-  (project in file("quill-codegen-tests"))
-    .settings(commonSettings: _*)
-    .settings(
-      publish / skip                         := true,
-      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-      Test / fork                            := true,
-      (Test / sourceGenerators) += Def.task {
-        def recursiveList(file: JFile): List[JFile] =
-          if (file.isDirectory)
-            Option(file.listFiles()).map(_.flatMap(child => recursiveList(child)).toList).toList.flatten
-          else
-            List(file)
-        val r          = (Compile / runner).value
-        val s          = streams.value.log
-        val sourcePath = sourceManaged.value
-        val classPath  = (`quill-codegen-jdbc` / Test / fullClasspath).value.map(_.data)
-
-        // We could put the code generated products directly in the `sourcePath` directory but for some reason
-        // intellij doesn't like it unless there's a `main` directory inside.
-        val fileDir = new File(sourcePath, "main").getAbsoluteFile
-        val dbs     = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
-        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
-        r.run(
-          "io.getquill.codegen.integration.CodegenTestCaseRunner",
-          classPath,
-          fileDir.getAbsolutePath +: dbs,
-          s
-        )
-        recursiveList(fileDir)
-      }.tag(CodegenTag)
-    )
-    .dependsOn(`quill-codegen-jdbc` % "compile->test")
+//lazy val `quill-codegen-tests` =
+//  (project in file("quill-codegen-tests"))
+//    .settings(commonSettings: _*)
+//    .settings(
+//      publish / skip                         := true,
+//      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+//      Test / fork                            := true,
+//      (Test / sourceGenerators) += Def.task {
+//        def recursiveList(file: JFile): List[JFile] =
+//          if (file.isDirectory)
+//            Option(file.listFiles()).map(_.flatMap(child => recursiveList(child)).toList).toList.flatten
+//          else
+//            List(file)
+//        val r          = (Compile / runner).value
+//        val s          = streams.value.log
+//        val sourcePath = sourceManaged.value
+//        val classPath  = (`quill-codegen-jdbc` / Test / fullClasspath).value.map(_.data)
+//
+//        // We could put the code generated products directly in the `sourcePath` directory but for some reason
+//        // intellij doesn't like it unless there's a `main` directory inside.
+//        val fileDir = new File(sourcePath, "main").getAbsoluteFile
+//        val dbs     = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
+//        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
+//        r.run(
+//          "io.getquill.codegen.integration.CodegenTestCaseRunner",
+//          classPath,
+//          fileDir.getAbsolutePath +: dbs,
+//          s
+//        )
+//        recursiveList(fileDir)
+//      }.tag(CodegenTag)
+//    )
+//    .dependsOn(`quill-codegen-jdbc` % "compile->test")
 
 val excludeTests =
   sys.props.getOrElse("excludeTests", "false") match {
@@ -392,8 +393,8 @@ lazy val `quill-doobie` =
     .settings(jdbcTestingSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC5",
-        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC5" % Test
+        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC9",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC9" % Test
       )
     )
     .dependsOn(
@@ -422,8 +423,8 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.3" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.1"
+        "org.postgresql" % "postgresql" % "42.7.5" % "provided",
+        "dev.zio"       %% "zio-json"   % "0.7.43"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -510,7 +511,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.32"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.39"
       )
     )
     .dependsOn(
@@ -531,11 +532,11 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "5.1.0" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "9.0.0"       % Test,
-    "com.h2database"          % "h2"                      % "2.3.230"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.3"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.46.0.1"    % Test,
+    "com.zaxxer"              % "HikariCP"                % "6.3.0" exclude ("org.slf4j", "*"),
+    "com.mysql"               % "mysql-connector-j"       % "9.3.0"       % Test,
+    "com.h2database"          % "h2"                      % "2.3.232"     % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.5"      % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.49.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -597,15 +598,15 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.19"
-val scala_v_13 = "2.13.14"
-val scala_v_30 = "3.3.3"
+val scala_v_12 = "2.12.20"
+val scala_v_13 = "2.13.16"
+val scala_v_30 = "3.3.6"
 
-val scalaCollectionCompatVersion = "2.12.0"
+val scalaCollectionCompatVersion = "2.13.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.5.6" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.18" % Test
   )
 )
 

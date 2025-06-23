@@ -949,7 +949,7 @@ class SqlIdiomSpec extends Spec {
       }
       "full infix query" in {
         testContext.run(sql"SELECT * FROM TestEntity".as[Query[TestEntity]]).string mustEqual
-          "SELECT x.s, x.i, x.l, x.o, x.b FROM (SELECT * FROM TestEntity) AS x"
+          "SELECT * FROM TestEntity"
       }
       "full infix action" in {
         testContext.run(sql"DELETE FROM TestEntity".as[Action[TestEntity]]).string mustEqual

@@ -189,7 +189,7 @@ class OracleDialectSpec extends Spec {
   case class Person(name: String, age: Int)
   "No 'AS' aliases" in {
     ctx.run(sql"SELECT name, age FROM Person p".as[Query[Person]]).string mustEqual
-      "SELECT x.name, x.age FROM (SELECT name, age FROM Person p) x"
+      "SELECT name, age FROM Person p"
   }
 
   case class Document(filename: String)
