@@ -38,7 +38,7 @@ Learn more on the [ZIO Quill homepage](https://zio.dev/zio-quill)!
 
 ## Contributing
 
-For the general guidelines, see ZIO [contributor's guide](https://zio.dev/about/contributing).
+For the general guidelines, see ZIO [contributor's guide](https://github.com/zio/zio-quill/blob/1cee8bfe17dd98cbe1f9dadc0961481a0cb50450/docs/CONTRIBUTING.md).
 
 ## Code of Conduct
 
