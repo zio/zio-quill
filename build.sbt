@@ -217,7 +217,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.5.0",
+        "dev.zio"                    %% "zio-logging"   % "2.5.1",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
