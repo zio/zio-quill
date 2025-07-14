@@ -1,9 +1,6 @@
 package io.getquill.context
 
-import io.getquill.SqlMirrorContext
-import io.getquill.MirrorSqlDialect
-import io.getquill.TestEntities
-import io.getquill.Literal
+import io.getquill.{Literal, MirrorSqlDialect, Query, SqlMirrorContext, TestEntities}
 import io.getquill.base.Spec
 import io.getquill.norm.EnableTrace
 import io.getquill.util.Messages.TraceType
@@ -165,5 +162,14 @@ class InfixSpec extends Spec { // //
         ctx.run(q).string mustEqual "SELECT p._2 AS _1, p._3 AS _2 FROM (SELECT DISTINCT ON (p.other) AS _1, p.name AS _2, p.id AS _3 FROM Person p) AS p"
       }
     }
+
+    "use set notation when interpolating liftQuery" in {
+      val q = quote {
+        val ids = liftQuery(List(1, 2))
+        sql"select id from Data where id in ($ids)".as[Query[Data]]
+      }
+      ctx.translate(q) mustEqual "select id from Data where id in (lift(1), lift(2))"
+    }
+
   }
 }
