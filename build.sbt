@@ -205,7 +205,7 @@ lazy val `quill-engine` =
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.0",
-        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.0"
+        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.2"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
