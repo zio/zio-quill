@@ -111,6 +111,7 @@ services:
       - SQL_SERVER_PORT=1433
       - ORACLE_HOST=oracle
       - ORACLE_PORT=1521
+      - ORACLE_DB=xe
       # for lagom project compatibility
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
