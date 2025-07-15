@@ -32,7 +32,9 @@ trait H2JdbcTypes[+D <: H2Dialect, +N <: NamingStrategy]
     with ObjectGenericTimeEncoders
     with ObjectGenericTimeDecoders
     with BooleanObjectEncoding
-    with UUIDObjectEncoding {
+    with UUIDObjectEncoding
+    with ArrayDecoders
+    with ArrayEncoders {
 
   val idiom: D
 }
