@@ -393,8 +393,8 @@ lazy val `quill-doobie` =
     .settings(jdbcTestingSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC9",
-        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC9" % Test
+        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC10",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC10" % Test
       )
     )
     .dependsOn(
