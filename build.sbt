@@ -200,12 +200,12 @@ lazy val `quill-engine` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                  % "config"        % "1.4.3",
+        "com.typesafe"                  % "config"        % "1.4.4",
         "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.0",
-        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.0"
+        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.2"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
     )
@@ -216,8 +216,8 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                % "config"        % "1.4.3",
-        "dev.zio"                    %% "zio-logging"   % "2.5.0",
+        "com.typesafe"                % "config"        % "1.4.4",
+        "dev.zio"                    %% "zio-logging"   % "2.5.1",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
@@ -423,8 +423,8 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.5" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.43"
+        "org.postgresql" % "postgresql" % "42.7.7" % "provided",
+        "dev.zio"       %% "zio-json"   % "0.7.44"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -511,7 +511,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.39"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.42"
       )
     )
     .dependsOn(
@@ -532,11 +532,11 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "6.3.0" exclude ("org.slf4j", "*"),
+    "com.zaxxer"              % "HikariCP"                % "6.3.1" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "9.3.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.232"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.5"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.49.1.0"    % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.7"      % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.50.2.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
