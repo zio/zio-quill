@@ -3,7 +3,6 @@ package io.getquill.context.jdbc.postgres
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.util.UUID
-
 import io.getquill.context.sql.encoding.ArrayEncodingBaseSpec
 import io.getquill.{Literal, PostgresJdbcContext}
 
@@ -38,7 +37,7 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   "Catch invalid decoders" in {
     val newCtx = new PostgresJdbcContext(Literal, "testPostgresDB") {
       // avoid transforming from java.sql.Date to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit
+      override implicit def arrayLocalDateDecoder[Col <: collection.Seq[LocalDate]](implicit
         bf: CBF[LocalDate, Col]
       ): Decoder[Col] =
         arrayDecoder[LocalDate, LocalDate, Col](identity)

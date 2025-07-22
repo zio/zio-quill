@@ -2,10 +2,11 @@ package io.getquill.context.sql.encoding
 
 import java.time.LocalDate
 import java.util.Date
-
 import io.getquill.MappedEncoding
 import io.getquill.base.Spec
 import org.scalatest.{Assertion, BeforeAndAfterEach}
+
+import scala.collection.mutable
 
 trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
 
@@ -19,9 +20,9 @@ trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
     ints: Seq[Int],
     longs: Seq[Long],
     floats: Seq[Float],
-    doubles: Seq[Double],
-    timestamps: Seq[Date],
-    dates: Seq[LocalDate]
+    doubles: mutable.Stack[Double],
+    timestamps: mutable.Seq[Date],
+    dates: mutable.Buffer[LocalDate]
   )
 
   val e = ArraysTestEntity(
@@ -33,9 +34,9 @@ trait ArrayEncodingBaseSpec extends Spec with BeforeAndAfterEach {
     Seq(2),
     Seq(1, 2, 3),
     Seq(1f, 2f),
-    Seq(4d, 3d),
-    Seq(new Date(System.currentTimeMillis())),
-    Seq(LocalDate.now())
+    mutable.Stack(4d, 3d),
+    mutable.Seq(new Date(System.currentTimeMillis())),
+    mutable.ArrayBuffer(LocalDate.now())
   )
 
   // casting types can be dangerous so we need to ensure that everything is ok
