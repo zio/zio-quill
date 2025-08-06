@@ -204,7 +204,7 @@ lazy val `quill-engine` =
         "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
-        "com.lihaoyi"                  %% "pprint"        % "0.9.0",
+        "com.lihaoyi"                  %% "pprint"        % "0.9.3",
         "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.2"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
@@ -533,7 +533,7 @@ lazy val `quill-test-kit` =
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
     "com.zaxxer"              % "HikariCP"                % "6.3.2" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "9.3.0"       % Test,
+    "com.mysql"               % "mysql-connector-j"       % "9.4.0"       % Test,
     "com.h2database"          % "h2"                      % "2.3.232"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.7"      % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.50.3.0"    % Test,
