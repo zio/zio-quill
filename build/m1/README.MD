@@ -3,14 +3,14 @@ In order to get this project to build on a Mac with an M1 or later chip, you wil
 
 1. Ensure your Docker Desktop has enough resources.  We recommend you set it for at least 4 CPUs and 8.25GB of RAM.  Anything less will likely result in mysterious hangs/crashes and much wailing and gnashing of teeth during the build process.
     ![docker-resources.png](docker-resources.png)
-2. Enable the Experimental 'Big Sur Virtualization'.  Doing so will reduce your build time by nearly 1 hour!  On a MacBook Air with 16gb of ram and the 1st gen M1 chip - the build (w/o codegen) should take around 25 minutes give or take with this setting enabled.
-    ![img.png](experimental.png)
+2. Enable the 'Apple Virtualization framework' in General settings with Rosetta.  This is required for the M1 chip to run x86_64 images.  
+    ![apple-virtualization-framework.png](apple-virtualization-framework.png)
 3. Use the `docker-compose-m1.yml` file instead of the default `docker-compose.yml` - this adjusts the platform where necessary to match up with the ARM based M1 chip.
 
 ## Setup
 To get started - be sure to setup the databases needed for the build/test process.  Do so by executing the following:
 
-`docker compose -f docker-compose-m1.yml --rm setup`
+`docker compose -f docker-compose-m1.yml run --rm setup`
 
 Any time you want to re-setup your databases (i.e. you run `docker compose down`) - you will need to run that command pointed at the right YAML.
 

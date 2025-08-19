@@ -31,7 +31,7 @@ services:
       - JAVA_OPTS=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m
 
   orientdb:
-    image: orientdb:3.0.11
+    image: orientdb:3.2.6
     platform: linux/amd64
     ports:
       - "12424:2424"
@@ -41,21 +41,24 @@ services:
       - ORIENTDB_OPTS_MEMORY=-XX:NativeMemoryTracking=summary -XX:CompressedClassSpaceSize=200m -Xms256m -Xmx512m -XX:MetaspaceSize=32m -XX:MaxMetaspaceSize=64m -Xss256k
 
   sqlserver:
-    image: mcr.microsoft.com/azure-sql-edge:latest # use this because it supports ARM64 architecture for M1 Mac
+    image: mcr.microsoft.com/mssql/server:2022-latest # use this because it supports ARM64 architecture for M1 Mac (see: https://github.com/docker/for-mac/issues/7368)
     ports:
       - "11433:1433"
+    platform: linux/amd64
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=QuillRocks!
 
   oracle:
-    image: quillbuilduser/oracle-18-xe-micro-sq
-    platform: linux/amd64
+    image: gvenzl/oracle-free:23.5-slim
     ports:
       - "11521:1521"
     # Opatch is an internal java-based daemon in the Oracle container that updates components, don't really need it here. Reduce it's memory settings.
     environment:
+      - ORACLE_PASSWORD=QuillRocks!
       - OPATCH_JRE_MEMORY_OPTIONS=-Xms128m -Xmx256m -XX:PermSize=16m -XX:MaxPermSize=32m -Xss1m
+    volumes:
+      - ./build/m1/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
   setup:
     build:
@@ -73,7 +76,7 @@ services:
     volumes:
       - ./:/app:delegated
     command:
-      - ./build/setup_local.sh
+      - ./build/m1/setup_local.sh
 
 
   sbt:
@@ -108,6 +111,7 @@ services:
       - SQL_SERVER_PORT=1433
       - ORACLE_HOST=oracle
       - ORACLE_PORT=1521
+      - ORACLE_DB=FREE
       # for lagom project compatibility
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_PORT=9042
