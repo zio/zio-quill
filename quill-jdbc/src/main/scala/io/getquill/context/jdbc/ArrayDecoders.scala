@@ -15,35 +15,35 @@ import scala.reflect.ClassTag
 trait ArrayDecoders extends ArrayEncoding {
   self: JdbcContextTypes[_, _] =>
 
-  implicit def arrayStringDecoder[Col <: Seq[String]](implicit bf: CBF[String, Col]): Decoder[Col] =
+  implicit def arrayStringDecoder[Col <: collection.Seq[String]](implicit bf: CBF[String, Col]): Decoder[Col] =
     arrayRawDecoder[String, Col]
-  implicit def arrayBigDecimalDecoder[Col <: Seq[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] =
+  implicit def arrayBigDecimalDecoder[Col <: collection.Seq[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] =
     arrayDecoder[JBigDecimal, BigDecimal, Col](BigDecimal.apply)
-  implicit def arrayBooleanDecoder[Col <: Seq[Boolean]](implicit bf: CBF[Boolean, Col]): Decoder[Col] =
+  implicit def arrayBooleanDecoder[Col <: collection.Seq[Boolean]](implicit bf: CBF[Boolean, Col]): Decoder[Col] =
     arrayRawDecoder[Boolean, Col]
-  implicit def arrayByteDecoder[Col <: Seq[Byte]](implicit bf: CBF[Byte, Col]): Decoder[Col] =
+  implicit def arrayByteDecoder[Col <: collection.Seq[Byte]](implicit bf: CBF[Byte, Col]): Decoder[Col] =
     arrayRawDecoder[Byte, Col]
-  implicit def arrayShortDecoder[Col <: Seq[Short]](implicit bf: CBF[Short, Col]): Decoder[Col] =
+  implicit def arrayShortDecoder[Col <: collection.Seq[Short]](implicit bf: CBF[Short, Col]): Decoder[Col] =
     arrayRawDecoder[Short, Col]
-  implicit def arrayIntDecoder[Col <: Seq[Int]](implicit bf: CBF[Int, Col]): Decoder[Col] = arrayRawDecoder[Int, Col]
-  implicit def arrayLongDecoder[Col <: Seq[Long]](implicit bf: CBF[Long, Col]): Decoder[Col] =
+  implicit def arrayIntDecoder[Col <: collection.Seq[Int]](implicit bf: CBF[Int, Col]): Decoder[Col] = arrayRawDecoder[Int, Col]
+  implicit def arrayLongDecoder[Col <: collection.Seq[Long]](implicit bf: CBF[Long, Col]): Decoder[Col] =
     arrayRawDecoder[Long, Col]
-  implicit def arrayFloatDecoder[Col <: Seq[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] =
+  implicit def arrayFloatDecoder[Col <: collection.Seq[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] =
     arrayRawDecoder[Float, Col]
-  implicit def arrayDoubleDecoder[Col <: Seq[Double]](implicit bf: CBF[Double, Col]): Decoder[Col] =
+  implicit def arrayDoubleDecoder[Col <: collection.Seq[Double]](implicit bf: CBF[Double, Col]): Decoder[Col] =
     arrayRawDecoder[Double, Col]
-  implicit def arrayDateDecoder[Col <: Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] =
+  implicit def arrayDateDecoder[Col <: collection.Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] =
     arrayRawDecoder[Date, Col]
-  implicit def arrayTimestampDecoder[Col <: Seq[Timestamp]](implicit bf: CBF[Timestamp, Col]): Decoder[Col] =
+  implicit def arrayTimestampDecoder[Col <: collection.Seq[Timestamp]](implicit bf: CBF[Timestamp, Col]): Decoder[Col] =
     arrayRawDecoder[Timestamp, Col]
-  implicit def arrayLocalDateDecoder[Col <: Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
+  implicit def arrayLocalDateDecoder[Col <: collection.Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
     arrayDecoder[SqlDate, LocalDate, Col](_.toLocalDate)
 
   /**
    * Generic encoder for JDBC arrays.
    *
    * @param mapper
-   *   retrieved raw types fro JDBC array may be mapped via this mapper to
+   *   retrieved raw types for JDBC array may be mapped via this mapper to
    *   satisfy encoder type
    * @param bf
    *   builder factory is needed to create instances of decoder's collection
@@ -56,22 +56,24 @@ trait ArrayDecoders extends ArrayEncoding {
    * @return
    *   JDBC array decoder
    */
-  def arrayDecoder[I, O, Col <: Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], tag: ClassTag[I]): Decoder[Col] =
+  def arrayDecoder[I, O, Col <: collection.Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], tag: ClassTag[I]): Decoder[Col] =
     decoder[Col] { (idx: Index, row: ResultRow, session: Session) =>
-      val arr = row.getArray(idx)
-      if (arr == null) bf.newBuilder.result()
-      else
-        arr.getArray
+      val arr  = row.getArray(idx)
+      val bldr = bf.newBuilder
+      if (arr == null) bldr.result()
+      else {
+        val a = arr.getArray
           .asInstanceOf[Array[AnyRef]]
-          .foldLeft(bf.newBuilder) {
-            case (b, x: I)                => b += mapper(x)
-            case (b, x: java.lang.Number) => b += mapper(x.asInstanceOf[I])
-            case (_, x) =>
-              fail(
-                s"Retrieved ${x.getClass.getCanonicalName} type from JDBC array, but expected $tag. Re-check your decoder implementation"
-              )
-          }
-          .result()
+        bldr.sizeHint(a)
+        a.foldLeft(bldr) {
+          case (b, x: I)                => b += mapper(x)
+          case (b, x: java.lang.Number) => b += mapper(x.asInstanceOf[I])
+          case (_, x) =>
+            fail(
+              s"Retrieved ${x.getClass.getCanonicalName} type from JDBC array, but expected $tag. Re-check your decoder implementation"
+            )
+        }.result()
+      }
     }
 
   /**
@@ -87,6 +89,6 @@ trait ArrayDecoders extends ArrayEncoding {
    * @return
    *   JDBC array decoder
    */
-  def arrayRawDecoder[T: ClassTag, Col <: Seq[T]](implicit bf: CBF[T, Col]): Decoder[Col] =
+  def arrayRawDecoder[T: ClassTag, Col <: collection.Seq[T]](implicit bf: CBF[T, Col]): Decoder[Col] =
     arrayDecoder[T, T, Col](identity)
 }
