@@ -37,7 +37,7 @@ class ArrayJdbcEncodingSpec extends ArrayEncodingBaseSpec {
   "Catch invalid decoders" in {
     val newCtx = new PostgresJdbcContext(Literal, "testPostgresDB") {
       // avoid transforming from java.sql.Date to java.time.LocalDate
-      override implicit def arrayLocalDateDecoder[Col <: collection.Seq[LocalDate]](implicit
+      override implicit def arrayLocalDateDecoder[Col <: Iterable[LocalDate]](implicit
         bf: CBF[LocalDate, Col]
       ): Decoder[Col] =
         arrayDecoder[LocalDate, LocalDate, Col](identity)

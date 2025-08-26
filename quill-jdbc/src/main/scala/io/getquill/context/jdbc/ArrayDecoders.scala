@@ -15,28 +15,28 @@ import scala.reflect.ClassTag
 trait ArrayDecoders extends ArrayEncoding {
   self: JdbcContextTypes[_, _] =>
 
-  implicit def arrayStringDecoder[Col <: collection.Seq[String]](implicit bf: CBF[String, Col]): Decoder[Col] =
+  implicit def arrayStringDecoder[Col <: Iterable[String]](implicit bf: CBF[String, Col]): Decoder[Col] =
     arrayRawDecoder[String, Col]
-  implicit def arrayBigDecimalDecoder[Col <: collection.Seq[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] =
+  implicit def arrayBigDecimalDecoder[Col <: Iterable[BigDecimal]](implicit bf: CBF[BigDecimal, Col]): Decoder[Col] =
     arrayDecoder[JBigDecimal, BigDecimal, Col](BigDecimal.apply)
-  implicit def arrayBooleanDecoder[Col <: collection.Seq[Boolean]](implicit bf: CBF[Boolean, Col]): Decoder[Col] =
+  implicit def arrayBooleanDecoder[Col <: Iterable[Boolean]](implicit bf: CBF[Boolean, Col]): Decoder[Col] =
     arrayRawDecoder[Boolean, Col]
-  implicit def arrayByteDecoder[Col <: collection.Seq[Byte]](implicit bf: CBF[Byte, Col]): Decoder[Col] =
+  implicit def arrayByteDecoder[Col <: Iterable[Byte]](implicit bf: CBF[Byte, Col]): Decoder[Col] =
     arrayRawDecoder[Byte, Col]
-  implicit def arrayShortDecoder[Col <: collection.Seq[Short]](implicit bf: CBF[Short, Col]): Decoder[Col] =
+  implicit def arrayShortDecoder[Col <: Iterable[Short]](implicit bf: CBF[Short, Col]): Decoder[Col] =
     arrayRawDecoder[Short, Col]
-  implicit def arrayIntDecoder[Col <: collection.Seq[Int]](implicit bf: CBF[Int, Col]): Decoder[Col] = arrayRawDecoder[Int, Col]
-  implicit def arrayLongDecoder[Col <: collection.Seq[Long]](implicit bf: CBF[Long, Col]): Decoder[Col] =
+  implicit def arrayIntDecoder[Col <: Iterable[Int]](implicit bf: CBF[Int, Col]): Decoder[Col] = arrayRawDecoder[Int, Col]
+  implicit def arrayLongDecoder[Col <: Iterable[Long]](implicit bf: CBF[Long, Col]): Decoder[Col] =
     arrayRawDecoder[Long, Col]
-  implicit def arrayFloatDecoder[Col <: collection.Seq[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] =
+  implicit def arrayFloatDecoder[Col <: Iterable[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] =
     arrayRawDecoder[Float, Col]
-  implicit def arrayDoubleDecoder[Col <: collection.Seq[Double]](implicit bf: CBF[Double, Col]): Decoder[Col] =
+  implicit def arrayDoubleDecoder[Col <: Iterable[Double]](implicit bf: CBF[Double, Col]): Decoder[Col] =
     arrayRawDecoder[Double, Col]
-  implicit def arrayDateDecoder[Col <: collection.Seq[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] =
+  implicit def arrayDateDecoder[Col <: Iterable[Date]](implicit bf: CBF[Date, Col]): Decoder[Col] =
     arrayRawDecoder[Date, Col]
-  implicit def arrayTimestampDecoder[Col <: collection.Seq[Timestamp]](implicit bf: CBF[Timestamp, Col]): Decoder[Col] =
+  implicit def arrayTimestampDecoder[Col <: Iterable[Timestamp]](implicit bf: CBF[Timestamp, Col]): Decoder[Col] =
     arrayRawDecoder[Timestamp, Col]
-  implicit def arrayLocalDateDecoder[Col <: collection.Seq[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
+  implicit def arrayLocalDateDecoder[Col <: Iterable[LocalDate]](implicit bf: CBF[LocalDate, Col]): Decoder[Col] =
     arrayDecoder[SqlDate, LocalDate, Col](_.toLocalDate)
 
   /**
@@ -56,7 +56,7 @@ trait ArrayDecoders extends ArrayEncoding {
    * @return
    *   JDBC array decoder
    */
-  def arrayDecoder[I, O, Col <: collection.Seq[O]](mapper: I => O)(implicit bf: CBF[O, Col], tag: ClassTag[I]): Decoder[Col] =
+  def arrayDecoder[I, O, Col <: Iterable[O]](mapper: I => O)(implicit bf: CBF[O, Col], tag: ClassTag[I]): Decoder[Col] =
     decoder[Col] { (idx: Index, row: ResultRow, session: Session) =>
       val arr  = row.getArray(idx)
       val bldr = bf.newBuilder
@@ -89,6 +89,6 @@ trait ArrayDecoders extends ArrayEncoding {
    * @return
    *   JDBC array decoder
    */
-  def arrayRawDecoder[T: ClassTag, Col <: collection.Seq[T]](implicit bf: CBF[T, Col]): Decoder[Col] =
+  def arrayRawDecoder[T: ClassTag, Col <: Iterable[T]](implicit bf: CBF[T, Col]): Decoder[Col] =
     arrayDecoder[T, T, Col](identity)
 }
