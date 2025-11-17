@@ -10,8 +10,10 @@ class BatchUpdateValuesJdbcSpec extends BatchUpdateValuesSpec { //
   import testContext._
 
   override def beforeEach(): Unit = {
-    val schema = quote(querySchema[ContactBase]("Contact"))
+    val schema  = quote(querySchema[ContactBase]("Contact"))
+    val schema2 = quote(querySchema[ContactBase]("contact_snake"))
     testContext.run(schema.delete)
+    testContext.run(schema2.delete)
     super.beforeEach()
   }
 
@@ -71,6 +73,14 @@ class BatchUpdateValuesJdbcSpec extends BatchUpdateValuesSpec { //
     val agesReturned = context.run(update, 2)
     agesReturned mustEqual expectedReturn
     context.run(get).toSet mustEqual (expect.toSet)
+  }
+
+  "Ex 4 - Returning Multiple (Snake Case)" in {
+    import `Ex 4 - Returning Multiple (Snake Case)`._
+    testContextSnake.run(insert)
+    val agesReturned = testContextSnake.run(update, 2)
+    agesReturned mustEqual expectedReturn
+    testContextSnake.run(get).toSet mustEqual (expect.toSet)
   }
 
   "Ex 5 - Append Data" in {

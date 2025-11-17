@@ -11,4 +11,10 @@ package object postgres {
       with TestEncoders
       with TestDecoders
 
+  object testContextSnake
+      extends PostgresJdbcContext(SnakeCase, "testPostgresDB")
+      with TestEntities
+      with TestEncoders
+      with TestDecoders
+
 }
