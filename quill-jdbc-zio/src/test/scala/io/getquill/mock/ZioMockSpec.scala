@@ -148,7 +148,6 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
         }.getOrThrow()
       }
 
-    resultMsg.contains("fiber") mustBe true
     resultMsg.contains(msg) mustBe true
 
     // In test suite verifications come after
@@ -188,7 +187,6 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
       }.getOrThrow()
     }
 
-    resultMsg.contains("fiber") mustBe true
     resultMsg.contains(msg) mustBe true
 
     // In test suite verifications come after

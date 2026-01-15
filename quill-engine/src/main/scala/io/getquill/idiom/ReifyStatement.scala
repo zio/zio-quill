@@ -65,6 +65,12 @@ object ReifyStatement {
                 val separators = List.fill(liftings.size - 1)(`, `)
                 tokens ++= (stmt"$a $op (" +: Interleave(liftings, separators) :+ `)`)
             }
+          case (tokens, ScalarLiftToken(lift: ScalarQueryLift)) =>
+            val liftings = lift.value.asInstanceOf[Iterable[Any]]
+              .toList
+              .map(v => ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat)))
+            val separators = List.fill(liftings.size - 1)(`, `)
+            tokens ++= Interleave(liftings, separators)
           case (tokens, token) =>
             tokens += token
         }
