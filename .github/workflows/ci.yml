@@ -117,7 +117,7 @@ jobs:
         uses: actions/setup-java@v4.7.1
         with:
           distribution: temurin
-          java-version: '11'
+          java-version: '17'
           check-latest: true
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
