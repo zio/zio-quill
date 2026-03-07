@@ -16,3 +16,4 @@ jobs:
         uses: scala-steward-org/scala-steward-action@v2.76.0
         with:
           github-token: ${{ secrets.SCALA_STEWARD_TOKEN }}
+          branches: main
