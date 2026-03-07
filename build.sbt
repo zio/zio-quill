@@ -18,6 +18,7 @@ inThisBuild(
     scmInfo := Some(
       ScmInfo(url("https://github.com/li-nkSN/zio-quill"), "git:git@github.com:li-nkSN/zio-quill.git")
     ),
+    sonatypeCredentialHost := "central.sonatype.com",
     scalafmtCheck     := true,
     scalafmtSbtCheck  := true,
     scalafmtOnCompile := !insideCI.value
