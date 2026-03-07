@@ -4,7 +4,7 @@ on:
   pull_request: {}
   push:
     branches:
-      - master
+      - main
   release:
     types: [ published ] # Triggers the CI when a new Github Release is published
 
@@ -128,5 +128,5 @@ jobs:
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-          SONATYPE_PASSWORD: ${{ secrets.GETQUILL_SONATYPE_TOKEN_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.GETQUILL_SONATYPE_TOKEN_USER }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
