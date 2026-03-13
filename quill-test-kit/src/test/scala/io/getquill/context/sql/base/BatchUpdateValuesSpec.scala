@@ -208,6 +208,24 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
   }
 
   // noinspection TypeAnnotation
+  object `Ex 4 - Returning Multiple (Snake Case)` extends Adaptable {
+    case class ContactSnake(firstName: String, lastName: String, age: Int)
+    type Row = ContactSnake
+    override def makeData(c: ContactBase): ContactSnake = ContactSnake(c.firstName, c.lastName, c.age)
+
+    val insert = quote {
+      liftQuery(data: List[ContactSnake]).foreach(ps => query[ContactSnake].insertValue(ps))
+    }
+    val update = quote {
+      liftQuery(updateData: List[ContactSnake]).foreach(ps =>
+        query[ContactSnake].filter(p => p.firstName == ps.firstName).updateValue(ps).returning(r => (r.lastName, r.age))
+      )
+    }
+    val expectedReturn = updateData.map(r => (r.lastName, r.age))
+    val get            = quote(query[ContactSnake])
+  }
+
+  // noinspection TypeAnnotation
   object `Ex 5 - Append Data` extends Adaptable {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
