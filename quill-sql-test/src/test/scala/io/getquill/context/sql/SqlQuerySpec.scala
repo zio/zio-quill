@@ -378,6 +378,24 @@ class SqlQuerySpec extends Spec {
         testContext.run(q).string mustEqual
           """SELECT x.* FROM (SELECT foo, bar FROM baz) AS x"""
       }
+      // Case classes decode positionally in field-declaration order, so raw
+      // passthrough would mis-decode whenever the raw SQL's column order differs
+      // (e.g. SELECT * returning table-DDL order). They keep the wrapping query
+      // whose projection pins the column order. See #3403.
+      "using a case class - wrapped to pin column order" in {
+        val q = quote {
+          sql"""SELECT * FROM TestEntity""".as[Query[TestEntity]]
+        }
+        testContext.run(q).string mustEqual
+          """SELECT x.s, x.i, x.l, x.o, x.b FROM (SELECT * FROM TestEntity) AS x"""
+      }
+      "using a case class - pure is also wrapped" in {
+        val q = quote {
+          sql"""SELECT * FROM TestEntity""".pure.as[Query[TestEntity]]
+        }
+        testContext.run(q).string mustEqual
+          """SELECT x.s, x.i, x.l, x.o, x.b FROM (SELECT * FROM TestEntity) AS x"""
+      }
     }
 
     "nested infix query" - {
