@@ -700,8 +700,9 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         sql"fromSomewhere()".as[Query[Person]]
       }
+      // Case-class result: wrapped to pin column order for positional decoding (see #3403).
       testContext.run(q).string mustEqual
-        "fromSomewhere()"
+        "SELECT x.first_name AS firstName, x.last_name AS lastName FROM (fromSomewhere()) AS x"
     }
 
     "should be handled correctly in a regular schema - nested" in {
@@ -719,8 +720,9 @@ class ExpandNestedQueriesSpec extends Spec {
       val q = quote {
         sql"fromSomewhere()".as[Query[Person]]
       }
+      // Case-class result: wrapped to pin column order for positional decoding (see #3403).
       testContext.run(q).string mustEqual
-        "fromSomewhere()"
+        "SELECT x.first_name AS firstName, x.last_name AS lastName, x.the_age AS theAge FROM (fromSomewhere()) AS x"
     }
   }
 
