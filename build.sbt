@@ -705,9 +705,7 @@ lazy val docs = project
       `quill-orientdb`,
       `quill-doobie`
     ),
-    projectStage                          := ProjectStage.ProductionReady,
-    checkArtifactBuildProcessWorkflowStep := None,
-    docsPublishBranch                     := "master",
+    projectStage := ProjectStage.ProductionReady,
     readmeBanner :=
       """|<p align="center">
          |  <img src="https://raw.githubusercontent.com/getquill/quill/master/quill.png">
