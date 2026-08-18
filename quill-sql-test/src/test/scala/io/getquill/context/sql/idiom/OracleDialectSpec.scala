@@ -188,8 +188,9 @@ class OracleDialectSpec extends Spec {
 
   case class Person(name: String, age: Int)
   "No 'AS' aliases" in {
+    // Case-class result: wrapped to pin column order (see #3403); Oracle still omits AS on the alias.
     ctx.run(sql"SELECT name, age FROM Person p".as[Query[Person]]).string mustEqual
-      "SELECT name, age FROM Person p"
+      "SELECT x.name, x.age FROM (SELECT name, age FROM Person p) x"
   }
 
   case class Document(filename: String)

@@ -168,7 +168,7 @@ class InfixSpec extends Spec { // //
         val ids = liftQuery(List(1, 2))
         sql"select id from Data where id in ($ids)".as[Query[Data]]
       }
-      ctx.translate(q) mustEqual "select id from Data where id in (lift(1), lift(2))"
+      ctx.translate(q) mustEqual "SELECT x.id FROM (select id from Data where id in (lift(1), lift(2))) AS x"
     }
 
   }
