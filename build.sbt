@@ -7,15 +7,16 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 inThisBuild(
   List(
-    organization := "io.getquill",
-    homepage     := Some(url("https://zio.dev/zio-quill")),
+    organization := "org.li-nk.quill",
+    homepage     := Some(url("https://github.com/li-nkSN/zio-quill")),
     licenses     := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
     developers := List(
       Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
-      Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
+      Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus")),
+      Developer("li-nkSN", "Colin K. Williams", "colin@li-nk.org", url("https://github.com/li-nkSN"))
     ),
     scmInfo := Some(
-      ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
+      ScmInfo(url("https://github.com/li-nkSN/zio-quill"), "git:git@github.com:li-nkSN/zio-quill.git")
     ),
     scalafmtCheck     := true,
     scalafmtSbtCheck  := true,
