@@ -68,14 +68,19 @@ trait PostgresDialect
       e match {
         case Returning(action, alias, property) =>
           val newAlias    = alias.copy(name = batchAlias)
-          val newProperty = BetaReduction(property, alias -> newAlias)
+          val newProperty = BetaReduction(FixedProp(property), alias -> newAlias)
           Returning(action, newAlias, newProperty)
         case ReturningGenerated(action, alias, property) =>
           val newAlias    = alias.copy(name = batchAlias)
-          val newProperty = BetaReduction(property, alias -> newAlias)
+          val newProperty = BetaReduction(FixedProp(property), alias -> newAlias)
           ReturningGenerated(action, newAlias, newProperty)
         case _ => super.apply(e)
       }
+  }
+
+  private[getquill] object FixedProp extends StatelessTransformer {
+    override def apply(p: ast.Property): ast.Property =
+      p.copyAll(renameable = Renameable.Fixed)
   }
 
   override protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit
