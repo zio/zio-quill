@@ -33,7 +33,10 @@ jobs:
     - name: Check if the README file is up to date
       run: sbt  docs/checkReadme
     - name: Check website build process
-      run: sbt docs/clean; sbt  docs/buildWebsite
+      # The checkReadme step above runs mdoc, which creates website/docs. Since
+      # zio-sbt-website 0.7.0, installWebsite skips scaffolding when the website
+      # directory already exists, which leaves buildWebsite without a package.json.
+      run: rm -rf website; sbt docs/clean; sbt  docs/buildWebsite
   publish-docs:
     name: Publish Docs
     runs-on: ubuntu-latest
