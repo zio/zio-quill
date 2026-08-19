@@ -276,7 +276,7 @@ class SqlActionMacroSpec extends Spec {
         ) { ctx =>
           import ctx._
           val value = 123
-          val q = quote {
+          val q     = quote {
             qr1
               .insertValue(lift(TestEntity("s", 0, 1L, None, true)))
               .returningGenerated(r => (query[Dummy].filter(r => r.i == lift(value)).max))

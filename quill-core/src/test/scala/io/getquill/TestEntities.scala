@@ -36,7 +36,7 @@ trait TestEntities {
   private val QV  = Quat.Value
   private val QBV = Quat.BooleanValue
 
-  val TestEntityQuat = Quat.Product("TestEntity", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV, "b" -> QBV)
+  val TestEntityQuat    = Quat.Product("TestEntity", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV, "b" -> QBV)
   val TestEntityEmbQuat =
     Quat.Product("TestEntityEmb", "emb" -> Quat.Product("Emb", "s" -> QV, "i" -> QV), "l" -> QV, "o" -> QV)
   val TestEntity2Quat    = Quat.Product("TestEntity2", "s" -> QV, "i" -> QV, "l" -> QV, "o" -> QV)

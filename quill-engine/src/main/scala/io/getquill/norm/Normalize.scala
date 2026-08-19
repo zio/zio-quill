@@ -46,8 +46,8 @@ class Normalize(config: TranspileConfig) extends StatelessTransformer {
   // This is a simple way of not running the phase at all if it is not configured to run.
   object ApplyMapPhase {
     // For logging that ApplyMap has been disabled
-    val applyMapInterp   = new Interpolator(TraceType.ApplyMap, traceConf, 1)
-    val applyMapInstance = new ApplyMap(traceConf)
+    val applyMapInterp                       = new Interpolator(TraceType.ApplyMap, traceConf, 1)
+    val applyMapInstance                     = new ApplyMap(traceConf)
     def unapply(query: Query): Option[Query] =
       if (config.disablePhases.contains(OptionalPhase.ApplyMap)) {
         import applyMapInterp._

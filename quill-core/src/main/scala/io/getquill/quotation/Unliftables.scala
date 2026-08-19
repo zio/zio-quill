@@ -14,21 +14,21 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val astUnliftable: Unliftable[Ast] = Unliftable[Ast] {
-    case liftUnliftable(ast)                                                        => ast
-    case tagUnliftable(ast)                                                         => ast
-    case queryUnliftable(ast)                                                       => ast
-    case actionUnliftable(ast)                                                      => ast
-    case valueUnliftable(ast)                                                       => ast
-    case identUnliftable(ast)                                                       => ast
-    case orderingUnliftable(ast)                                                    => ast
-    case optionOperationUnliftable(ast)                                             => ast
-    case traversableOperationUnliftable(ast)                                        => ast
-    case propertyUnliftable(ast)                                                    => ast
-    case q"$pack.Function.apply(${a: List[Ident]}, ${b: Ast})"                      => Function(a, b)
-    case q"$pack.FunctionApply.apply(${a: Ast}, ${b: List[Ast]})"                   => FunctionApply(a, b)
-    case q"$pack.BinaryOperation.apply(${a: Ast}, ${b: BinaryOperator}, ${c: Ast})" => BinaryOperation(a, b, c)
-    case q"$pack.UnaryOperation.apply(${a: UnaryOperator}, ${b: Ast})"              => UnaryOperation(a, b)
-    case q"$pack.Aggregation.apply(${a: AggregationOperator}, ${b: Ast})"           => Aggregation(a, b)
+    case liftUnliftable(ast)                                                                                                 => ast
+    case tagUnliftable(ast)                                                                                                  => ast
+    case queryUnliftable(ast)                                                                                                => ast
+    case actionUnliftable(ast)                                                                                               => ast
+    case valueUnliftable(ast)                                                                                                => ast
+    case identUnliftable(ast)                                                                                                => ast
+    case orderingUnliftable(ast)                                                                                             => ast
+    case optionOperationUnliftable(ast)                                                                                      => ast
+    case traversableOperationUnliftable(ast)                                                                                 => ast
+    case propertyUnliftable(ast)                                                                                             => ast
+    case q"$pack.Function.apply(${a: List[Ident]}, ${b: Ast})"                                                               => Function(a, b)
+    case q"$pack.FunctionApply.apply(${a: Ast}, ${b: List[Ast]})"                                                            => FunctionApply(a, b)
+    case q"$pack.BinaryOperation.apply(${a: Ast}, ${b: BinaryOperator}, ${c: Ast})"                                          => BinaryOperation(a, b, c)
+    case q"$pack.UnaryOperation.apply(${a: UnaryOperator}, ${b: Ast})"                                                       => UnaryOperation(a, b)
+    case q"$pack.Aggregation.apply(${a: AggregationOperator}, ${b: Ast})"                                                    => Aggregation(a, b)
     case q"$pack.Infix.apply(${a: List[String]}, ${b: List[Ast]}, ${pure: Boolean}, ${transparent: Boolean}, ${quat: Quat})" =>
       Infix(a, b, pure, transparent, quat)
     case q"$pack.If.apply(${a: Ast}, ${b: Ast}, ${c: Ast})" => If(a, b, c)
@@ -107,21 +107,21 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val queryUnliftable: Unliftable[Query] = Unliftable[Query] {
-    case q"$pack.Entity.apply(${a: String}, ${b: List[PropertyAlias]}, ${quat: Quat.Product})" => Entity(a, b, quat)
+    case q"$pack.Entity.apply(${a: String}, ${b: List[PropertyAlias]}, ${quat: Quat.Product})"                                        => Entity(a, b, quat)
     case q"$pack.Entity.Opinionated.apply(${a: String}, ${b: List[PropertyAlias]}, ${quat: Quat.Product}, ${renameable: Renameable})" =>
       Entity.Opinionated(a, b, quat, renameable)
-    case q"$pack.Filter.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"            => Filter(a, b, c)
-    case q"$pack.Map.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"               => Map(a, b, c)
-    case q"$pack.FlatMap.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"           => FlatMap(a, b, c)
-    case q"$pack.ConcatMap.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"         => ConcatMap(a, b, c)
-    case q"$pack.SortBy.apply(${a: Ast}, ${b: Ident}, ${c: Ast}, ${d: Ast})" => SortBy(a, b, c, d)
-    case q"$pack.GroupBy.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"           => GroupBy(a, b, c)
+    case q"$pack.Filter.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"                             => Filter(a, b, c)
+    case q"$pack.Map.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"                                => Map(a, b, c)
+    case q"$pack.FlatMap.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"                            => FlatMap(a, b, c)
+    case q"$pack.ConcatMap.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"                          => ConcatMap(a, b, c)
+    case q"$pack.SortBy.apply(${a: Ast}, ${b: Ident}, ${c: Ast}, ${d: Ast})"                  => SortBy(a, b, c, d)
+    case q"$pack.GroupBy.apply(${a: Ast}, ${b: Ident}, ${c: Ast})"                            => GroupBy(a, b, c)
     case q"$pack.GroupByMap.apply(${a: Ast}, ${b: Ident}, ${c: Ast}, ${d: Ident}, ${e: Ast})" =>
       GroupByMap(a, b, c, d, e)
-    case q"$pack.Take.apply(${a: Ast}, ${b: Ast})"     => Take(a, b)
-    case q"$pack.Drop.apply(${a: Ast}, ${b: Ast})"     => Drop(a, b)
-    case q"$pack.Union.apply(${a: Ast}, ${b: Ast})"    => Union(a, b)
-    case q"$pack.UnionAll.apply(${a: Ast}, ${b: Ast})" => UnionAll(a, b)
+    case q"$pack.Take.apply(${a: Ast}, ${b: Ast})"                                                         => Take(a, b)
+    case q"$pack.Drop.apply(${a: Ast}, ${b: Ast})"                                                         => Drop(a, b)
+    case q"$pack.Union.apply(${a: Ast}, ${b: Ast})"                                                        => Union(a, b)
+    case q"$pack.UnionAll.apply(${a: Ast}, ${b: Ast})"                                                     => UnionAll(a, b)
     case q"$pack.Join.apply(${t: JoinType}, ${a: Ast}, ${b: Ast}, ${iA: Ident}, ${iB: Ident}, ${on: Ast})" =>
       Join(t, a, b, iA, iB, on)
     case q"$pack.FlatJoin.apply(${t: JoinType}, ${a: Ast}, ${iA: Ident}, ${on: Ast})" =>
@@ -156,7 +156,7 @@ trait Unliftables extends QuatUnliftable {
   }
 
   implicit val propertyUnliftable: Unliftable[Property] = Unliftable[Property] {
-    case q"$pack.Property.apply(${a: Ast}, ${b: String})" => Property(a, b)
+    case q"$pack.Property.apply(${a: Ast}, ${b: String})"                                                                   => Property(a, b)
     case q"$pack.Property.Opinionated.apply(${a: Ast}, ${b: String}, ${renameable: Renameable}, ${visibility: Visibility})" =>
       Property.Opinionated(a, b, renameable, visibility)
   }

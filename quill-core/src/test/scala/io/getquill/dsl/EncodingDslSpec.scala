@@ -55,7 +55,7 @@ class EncodingDslSpec extends Spec {
     }
 
     "Encoder" in {
-      val value = 3
+      val value   = 3
       val encoder =
         (i: Index, v: Int, r: ResultRow) => {
           i mustEqual idx

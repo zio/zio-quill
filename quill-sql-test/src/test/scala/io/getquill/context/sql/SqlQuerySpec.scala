@@ -481,7 +481,7 @@ class SqlQuerySpec extends Spec {
       "fails if the sortBy criteria is malformed" in {
         case class Test(a: (Int, Int))
         implicit val o: Ordering[TestEntity] = null
-        val q = quote {
+        val q                                = quote {
           query[Test].sortBy(_.a)(Ord(Ord.asc, Ord.desc))
         }
         val e = intercept[IllegalStateException] {

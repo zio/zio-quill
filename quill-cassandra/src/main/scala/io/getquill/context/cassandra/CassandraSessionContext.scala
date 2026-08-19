@@ -35,7 +35,7 @@ trait CassandraPrepareContext[+N <: NamingStrategy] extends CassandraRowContext[
     implicit executionContext: ExecutionContext
   ): Future[BoundStatement] = {
     val prepareResult = this.prepareAsync(cql).map(row => prepare(row, session))
-    val preparedRow = prepareResult.map { case (params, bs) =>
+    val preparedRow   = prepareResult.map { case (params, bs) =>
       logger.logQuery(cql, params)
       bs
     }

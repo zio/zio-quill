@@ -71,12 +71,12 @@ object CanDoBatchedInsert {
     import io.getquill.idiom._
     def valueClauseExistsIn(token: Token): Boolean =
       token match {
-        case _: ValuesClauseToken           => true
-        case _: StringToken                 => false
-        case _: ScalarTagToken              => false
-        case _: QuotationTagToken           => false
-        case _: ScalarLiftToken             => false
-        case Statement(tokens: List[Token]) => tokens.exists(valueClauseExistsIn)
+        case _: ValuesClauseToken                            => true
+        case _: StringToken                                  => false
+        case _: ScalarTagToken                               => false
+        case _: QuotationTagToken                            => false
+        case _: ScalarLiftToken                              => false
+        case Statement(tokens: List[Token])                  => tokens.exists(valueClauseExistsIn)
         case SetContainsToken(a: Token, op: Token, b: Token) =>
           valueClauseExistsIn(a) || valueClauseExistsIn(op) || valueClauseExistsIn(b)
       }

@@ -84,12 +84,12 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
     elem: T
   )(ext: T => (Ast, Ident, Ast))(f: (Ast, Ident, Ast) => T): (T, StatefulTransformer[Set[IdentName]]) =
     trace"Uncapture RecurseAndApply $elem ".andReturnIf {
-      val (newElem, newTrans) = super.apply(elem)
+      val (newElem, newTrans)           = super.apply(elem)
       val ((query, alias, body), state) =
         (ext(newElem.asInstanceOf[T]), newTrans.state)
 
       val fresh = freshIdent(alias)
-      val pr =
+      val pr    =
         trace"RecurseAndApply Replace: $alias -> $fresh: ".andReturnIf {
           BetaReduction(body, alias -> fresh)
         }(pr => pr != body)
@@ -101,7 +101,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
     trace"Uncapture ApplyBodies $pairs ".andReturnIf {
       val newPairs =
         pairs.map { case (alias, body) =>
-          val fresh = freshIdent(alias)
+          val fresh   = freshIdent(alias)
           val newBody =
             trace"RecurseAndApply Replace: $alias -> $fresh: ".andReturnIf {
               BetaReduction(body, alias -> fresh)
@@ -159,8 +159,8 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
           recurseAndApply(m)(m => (m.query, m.alias, m.body))(GroupBy(_, _, _))
 
         case m @ GroupByMap(CanRealias(), _, _, _, _) =>
-          val (newQuery, newTrans) = super.apply(m)
-          val m1                   = newQuery.asInstanceOf[GroupByMap]
+          val (newQuery, newTrans)                                  = super.apply(m)
+          val m1                                                    = newQuery.asInstanceOf[GroupByMap]
           val (List((byAlias, byBody), (mapAlias, mapBody)), state) =
             applyBodies(List(m1.byAlias -> m1.byBody, m1.mapAlias -> m1.mapBody))
           (
@@ -182,7 +182,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
             val (br, brt) = art.apply(b)
             val freshA    = freshIdent(iA, brt.state)
             val freshB    = freshIdent(iB, brt.state + freshA.idName)
-            val or =
+            val or        =
               trace"Uncapturing Join: Replace $iA -> $freshA, $iB -> $freshB".andReturnIf {
                 BetaReduction(o, iA -> freshA, iB -> freshB)
               }(_ != o)
@@ -198,7 +198,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
           trace"Uncapturing FlatJoin $qq".andReturnIf {
             val (ar, art) = apply(a)
             val freshA    = freshIdent(iA)
-            val or =
+            val or        =
               trace"Uncapturing FlatJoin: Reducing $iA -> $freshA".andReturnIf {
                 BetaReduction(o, iA -> freshA)
               }(_ != o)
@@ -219,7 +219,7 @@ private[getquill] case class AvoidAliasConflict(state: Set[IdentName], detemp: B
   private def apply[Q](x: Ident, p: Ast)(f: (Ident, Ast) => Q): (Q, StatefulTransformer[Set[IdentName]]) =
     trace"Uncapture Apply ($x, $p)".andReturnIf {
       val fresh = freshIdent(x)
-      val pr =
+      val pr    =
         trace"Uncapture Apply: $x -> $fresh".andReturnIf {
           BetaReduction(p, x -> fresh)
         }(_ != p)

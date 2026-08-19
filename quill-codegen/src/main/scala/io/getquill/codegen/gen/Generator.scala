@@ -44,7 +44,7 @@ trait Generator {
 
       // combine the generated elements as dictated by the packaging strategy and write the generator
       val genProcess = new StereotypePackager[Emitter, TableMeta, ColumnMeta]
-      val emitters =
+      val emitters   =
         genProcess.packageIntoEmitters(someGenMaker, packagingStrategy, stereotype(schemas))
 
       emitters
@@ -135,7 +135,7 @@ trait Generator {
       with PackageGen {
     import io.getquill.codegen.util.ScalaLangUtil._
 
-    val caseClassTables: Seq[TableStereotype[TableMeta, ColumnMeta]] = emitterSettings.caseClassTables
+    val caseClassTables: Seq[TableStereotype[TableMeta, ColumnMeta]]   = emitterSettings.caseClassTables
     val querySchemaTables: Seq[TableStereotype[TableMeta, ColumnMeta]] =
       if (nameParser.generateQuerySchemas) emitterSettings.querySchemaTables else Seq()
     override def codeWrapper: CodeWrapper = emitterSettings.codeWrapper
@@ -167,7 +167,7 @@ trait Generator {
       class MemberGen(val column: ColumnFusion[ColumnMeta])
           extends super.AbstractMemberGen
           with FieldNaming[ColumnMeta] {
-        override def rawType: String = column.dataType.toString()
+        override def rawType: String    = column.dataType.toString()
         override def actualType: String = {
           val tpe = escape(rawType).replaceFirst("java\\.lang\\.", "")
           if (column.nullable) s"Option[${tpe}]" else tpe

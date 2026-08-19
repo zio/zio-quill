@@ -40,7 +40,7 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
     }
 
     "Single insert with inlined free variable" in {
-      val prd = Product(0L, "test1", 1L)
+      val prd                         = Product(0L, "test1", 1L)
       val (inserted, returnedProduct) =
         (for {
           i <- testContext.run {
@@ -56,7 +56,7 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
 
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
-      val q1 = quote {
+      val q1  = quote {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
       }
       val (inserted, returnedProduct) =
@@ -71,7 +71,7 @@ class ProductJdbcSpec extends ProductSpec with ZioSpec {
     }
 
     "Single product insert with a method quotation" in {
-      val prd = Product(0L, "test3", 3L)
+      val prd                         = Product(0L, "test3", 3L)
       val (inserted, returnedProduct) =
         (for {
           i   <- testContext.run(productInsert(lift(prd)))

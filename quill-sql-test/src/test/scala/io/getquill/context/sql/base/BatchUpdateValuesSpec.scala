@@ -25,7 +25,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
   val updatePeople: List[String]               = List("Joe", "Jan", "James", "Dale", "Caboose")
   def includeInUpdate(name: String): Boolean   = updatePeople.contains(name)
   def includeInUpdate(c: ContactBase): Boolean = includeInUpdate(c.firstName)
-  val updateBase: List[ContactBase] =
+  val updateBase: List[ContactBase]            =
     dataBase.filter(includeInUpdate).map(r => r.copy(lastName = r.lastName + "U"))
   val expectBase: List[ContactBase] = dataBase.map { r =>
     if (includeInUpdate(r)) r.copy(lastName = r.lastName + "U") else r
@@ -93,7 +93,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
           .update(_.lastName -> (ps.lastName + lift(" Jr.")))
       )
     }
-    val get = quote(query[Contact])
+    val get                  = quote(query[Contact])
     override lazy val expect =
       data.map(p => if (p.firstName == "Joe" || p.firstName == "Jan") p.copy(lastName = p.lastName + "U Jr.") else p)
   }
@@ -117,7 +117,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
           .updateValue(ps)
       )
     }
-    val get = quote(query[Contact])
+    val get                  = quote(query[Contact])
     override lazy val expect = data.map(p =>
       if (p.firstName == "Joe" || p.firstName == "Dale" || p.firstName == "Caboose") p.copy(lastName = p.lastName + "U")
       else p
@@ -212,7 +212,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
     override def makeData(c: ContactBase): Contact = Contact(c.firstName, c.lastName, c.age)
-    val insert = quote {
+    val insert                                     = quote {
       liftQuery(data: List[Contact]).foreach(ps => query[Contact].insertValue(ps))
     }
     val updateDataSpecific = List(
@@ -243,7 +243,7 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
     case class Contact(firstName: String, lastName: String, age: Int)
     type Row = Contact
     override def makeData(c: ContactBase): Contact = Contact(c.firstName, c.lastName, c.age)
-    val insert = quote {
+    val insert                                     = quote {
       liftQuery(data: List[Contact]).foreach(ps => query[Contact].insertValue(ps))
     }
     val updateDataSpecific = List(

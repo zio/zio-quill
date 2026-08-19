@@ -196,7 +196,7 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
         // because the op is execute___ which will lookup the connection from the fiber ref via onConnection/onConnectionStream
         // This will typically happen for nested transactions e.g. transaction(transaction(a *> b) *> c)
         case Some(_) => op
-        case None =>
+        case None    =>
           val connection: ZIO[DataSource with Scope, SQLException, Unit] = {
             @inline def attemptSQL[T](code: => T): ZIO[Any, SQLException, T] =
               ZIO.attempt(code).refineToOrDie[SQLException]
@@ -247,9 +247,9 @@ abstract class ZioJdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
       ZStream.unwrapScoped[DataSource] {
         for {
           maybeConnection <- currentConnection.get
-          stream <- maybeConnection match {
+          stream          <- maybeConnection match {
                       case Some(connection) => ZIO.succeed(qstream.provideEnvironment(ZEnvironment(connection)))
-                      case None =>
+                      case None             =>
                         (
                           for {
                             connection <- Quill.Connection.acquireScoped.build

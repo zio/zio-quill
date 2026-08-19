@@ -121,9 +121,9 @@ trait StatelessTransformer {
 
   def apply(e: Value): Value =
     e match {
-      case e: Constant   => e
-      case NullValue     => NullValue
-      case Tuple(values) => Tuple(values.map(apply))
+      case e: Constant          => e
+      case NullValue            => NullValue
+      case Tuple(values)        => Tuple(values.map(apply))
       case CaseClass(n, tuples) => {
         val (keys, values) = tuples.unzip
         CaseClass(n, keys.zip(values.map(apply)))
@@ -132,10 +132,10 @@ trait StatelessTransformer {
 
   def apply(e: Action): Action =
     e match {
-      case Update(query, assignments)        => Update(apply(query), assignments.map(apply))
-      case Insert(query, assignments)        => Insert(apply(query), assignments.map(apply))
-      case Delete(query)                     => Delete(apply(query))
-      case Returning(query, alias, property) => Returning(apply(query), applyIdent(alias), apply(property))
+      case Update(query, assignments)                 => Update(apply(query), assignments.map(apply))
+      case Insert(query, assignments)                 => Insert(apply(query), assignments.map(apply))
+      case Delete(query)                              => Delete(apply(query))
+      case Returning(query, alias, property)          => Returning(apply(query), applyIdent(alias), apply(property))
       case ReturningGenerated(query, alias, property) =>
         ReturningGenerated(apply(query), applyIdent(alias), apply(property))
       case Foreach(query, alias, body)       => Foreach(apply(query), applyIdent(alias), apply(body))

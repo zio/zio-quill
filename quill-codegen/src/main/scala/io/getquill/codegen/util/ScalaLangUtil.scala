@@ -5,7 +5,7 @@ object ScalaLangUtil {
     if (isKeyword(str)) s"`${str}`" else str
 
   def isKeyword(word: String) = keywords.contains(word.trim)
-  private val keywords = Set(
+  private val keywords        = Set(
     "abstract",
     "case",
     "catch",

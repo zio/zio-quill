@@ -84,7 +84,7 @@ object SingleValuePrimitive {
       case l: Lift                                          => true
       // idents should not be directly tokenized as sql values since they always need to be a start-select in a query
       case id: Ident => false
-      case _ =>
+      case _         =>
         import io.getquill.util.Messages._
         trace(
           s"Unaccounted-for primitive SelectValue type: ${qprintCustom(traceQuats = QuatTrace.Full)(ast).plainText}. Assuming it can be used as a value-level placeholder and be aliased as 'single'.",

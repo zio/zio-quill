@@ -99,7 +99,7 @@ class PostgresDoobieContextSuite extends AnyFreeSpec with Matchers {
 
   "executeBatchActionReturning should correctly retrieve a list of generated keys" in {
     val values = List(QuillTest(0, "Foo"), QuillTest(0, "Bar"), QuillTest(0, "Baz"))
-    val stmt = quote {
+    val stmt   = quote {
       liftQuery(values).foreach(a => query[QuillTest].insertValue(a).returningGenerated(_.id))
     }
     val actual   = (create *> dc.run(stmt)).transact(xa).unsafeRunSync()

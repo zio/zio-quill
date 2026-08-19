@@ -40,9 +40,9 @@ object VerifySqlQuery {
 
     def loop(l: List[FromContext], available: Set[String]): Set[String] =
       l.foldLeft(available) {
-        case (av, TableContext(_, alias)) => Set(alias)
-        case (av, InfixContext(_, alias)) => Set(alias)
-        case (av, QueryContext(_, alias)) => Set(alias)
+        case (av, TableContext(_, alias))   => Set(alias)
+        case (av, InfixContext(_, alias))   => Set(alias)
+        case (av, QueryContext(_, alias))   => Set(alias)
         case (av, JoinContext(_, a, b, on)) =>
           av ++ loop(a :: Nil, av) ++ loop(b :: Nil, av)
         case (av, FlatJoinContext(_, a, on)) =>
@@ -70,7 +70,7 @@ object VerifySqlQuery {
         (FreeVariables(ast) -- aliases).toList
       checkIllegalIdents(ast)
       freeVariables match {
-        case Nil => None
+        case Nil  => None
         case free =>
           Some(
             Error(free.map(f => Ident(f.name, Quat.Value)), ast)

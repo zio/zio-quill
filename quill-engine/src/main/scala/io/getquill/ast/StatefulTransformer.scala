@@ -148,7 +148,7 @@ trait StatefulTransformer[T] {
 
   def apply(e: Query): (Query, StatefulTransformer[T]) =
     e match {
-      case e: Entity => (e, this)
+      case e: Entity       => (e, this)
       case Filter(a, b, c) =>
         val (at, att) = apply(a)
         val (ct, ctt) = att.apply(c)
@@ -260,7 +260,7 @@ trait StatefulTransformer[T] {
     e match {
       case e: Constant => (e, this)
       case NullValue   => (e, this)
-      case Tuple(a) =>
+      case Tuple(a)    =>
         val (at, att) = apply(a)(_.apply)
         (Tuple(at), att)
       case CaseClass(n, a) =>
@@ -303,7 +303,7 @@ trait StatefulTransformer[T] {
 
   def apply(e: OnConflict.Target): (OnConflict.Target, StatefulTransformer[T]) =
     e match {
-      case OnConflict.NoTarget => (e, this)
+      case OnConflict.NoTarget      => (e, this)
       case OnConflict.Properties(a) =>
         val (at, att) = apply(a)(_.apply)
         (OnConflict.Properties(at), att)
@@ -311,7 +311,7 @@ trait StatefulTransformer[T] {
 
   def apply(e: OnConflict.Action): (OnConflict.Action, StatefulTransformer[T]) =
     e match {
-      case OnConflict.Ignore => (e, this)
+      case OnConflict.Ignore    => (e, this)
       case OnConflict.Update(a) =>
         val (at, att) = apply(a)(_.apply)
         (OnConflict.Update(at), att)

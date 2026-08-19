@@ -30,7 +30,7 @@ class GroupBySpec extends Spec {
     "with QuerySchema" in {
       implicit val citySchema    = schemaMeta[City]("theCity", _.name -> "theCityName")
       implicit val countrySchema = schemaMeta[Country]("theCountry", _.name -> "theCountryName")
-      val q = quote(
+      val q                      = quote(
         query[City]
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }
@@ -56,7 +56,7 @@ class GroupBySpec extends Spec {
     "with QuerySchema nested" in {
       implicit val citySchema    = schemaMeta[City]("theCity", _.name -> "theCityName")
       implicit val countrySchema = schemaMeta[Country]("theCountry", _.name -> "theCountryName")
-      val q = quote(
+      val q                      = quote(
         query[City]
           .join(query[Country])
           .on { case (city, country) => city.countryId == country.id }

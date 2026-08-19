@@ -94,7 +94,7 @@ trait IOMonadSpec extends Spec {
     "foldLeft" - {
       "success" in {
         val ios = List(IO(1), IO(2))
-        val io =
+        val io  =
           IO.foldLeft(ios)(0) { case (a, b) =>
             a + b
           }
@@ -111,7 +111,7 @@ trait IOMonadSpec extends Spec {
         "ios" in {
           val ex  = new Exception
           val ios = List(IO(1), IO.failed[Int](ex))
-          val io =
+          val io  =
             IO.foldLeft(ios)(0) { case (a, b) =>
               a + b
             }
@@ -120,7 +120,7 @@ trait IOMonadSpec extends Spec {
         "op" in {
           val ex  = new Exception
           val ios = List(IO(1), IO(2))
-          val io =
+          val io  =
             IO.foldLeft(ios)(0) { case (a, b) =>
               throw ex
             }
@@ -132,7 +132,7 @@ trait IOMonadSpec extends Spec {
     "reduceLeft" - {
       "success" in {
         val ios = List(IO(1), IO(2))
-        val io =
+        val io  =
           IO.reduceLeft(ios) { case (a, b) =>
             a + b
           }
@@ -149,7 +149,7 @@ trait IOMonadSpec extends Spec {
         "ios" in {
           val ex  = new Exception
           val ios = List(IO(1), IO.failed[Int](ex))
-          val io =
+          val io  =
             IO.reduceLeft(ios) { case (a, b) =>
               a + b
             }
@@ -158,7 +158,7 @@ trait IOMonadSpec extends Spec {
         "op" in {
           val ex  = new Exception
           val ios = List(IO(1), IO(2))
-          val io =
+          val io  =
             IO.reduceLeft(ios) { case (a, b) =>
               throw ex
             }
@@ -391,7 +391,7 @@ trait IOMonadSpec extends Spec {
       "flatMap and recoverWith" in {
         val evalCount = new AtomicInteger(0)
         val e         = new Exception("failure")
-        val io = IO.unit
+        val io        = IO.unit
           .map(_ => resultValue[Int](evalCount.incrementAndGet()))
           .flatMap { _ =>
             IO.failed(e)

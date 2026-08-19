@@ -58,9 +58,9 @@ object CodegenTestCases {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
       implicit val prefix = dbPrefix
       implicit val base   = basePath
-      val snakeCaseGen = new SimpleJdbcCodegen(dbPrefix.loadConfig, `package`) with DatabaseBasedNumericTyping {
-        override def defaultNamespace: String = "public"
-        override def nameParser               = SnakeCaseNames
+      val snakeCaseGen    = new SimpleJdbcCodegen(dbPrefix.loadConfig, `package`) with DatabaseBasedNumericTyping {
+        override def defaultNamespace: String                                      = "public"
+        override def nameParser                                                    = SnakeCaseNames
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
         override def namespacer: Namespacer[JdbcTableMeta] = ts => {
@@ -75,9 +75,9 @@ object CodegenTestCases {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
       implicit val prefix = dbPrefix
       implicit val base   = basePath
-      val literalGen = new SimpleJdbcCodegen(dbPrefix.loadConfig, `package`) with DatabaseBasedNumericTyping {
-        override def defaultNamespace: String = "public"
-        override def nameParser               = LiteralNames // Should be default
+      val literalGen      = new SimpleJdbcCodegen(dbPrefix.loadConfig, `package`) with DatabaseBasedNumericTyping {
+        override def defaultNamespace: String                                      = "public"
+        override def nameParser                                                    = LiteralNames // Should be default
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
         override def namespacer: Namespacer[JdbcTableMeta] = ts => {
@@ -92,10 +92,10 @@ object CodegenTestCases {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
       implicit val prefix = dbPrefix
       implicit val base   = basePath
-      val gen = new ComposeableTraitsJdbcCodegen(dbPrefix.loadConfig, `package`, false)
+      val gen             = new ComposeableTraitsJdbcCodegen(dbPrefix.loadConfig, `package`, false)
         with DatabaseBasedNumericTyping {
-        override def defaultNamespace: String = "public"
-        override def nameParser: NameParser   = SnakeCaseNames
+        override def defaultNamespace: String                                      = "public"
+        override def nameParser: NameParser                                        = SnakeCaseNames
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
         override def namespacer: Namespacer[JdbcTableMeta] = ts => {
@@ -110,10 +110,10 @@ object CodegenTestCases {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
       implicit val prefix = dbPrefix
       implicit val base   = basePath
-      val gen = new ComposeableTraitsJdbcCodegen(dbPrefix.loadConfig, `package`, false)
+      val gen             = new ComposeableTraitsJdbcCodegen(dbPrefix.loadConfig, `package`, false)
         with DatabaseBasedNumericTyping {
         override def defaultNamespace: String = "public"
-        override def nameParser: NameParser =
+        override def nameParser: NameParser   =
           CustomNames(col => col.columnName.toLowerCase.replace("_name", ""))
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
@@ -129,16 +129,16 @@ object CodegenTestCases {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
       implicit val prefix = dbPrefix
       implicit val base   = basePath
-      val gen = new ComposeableTraitsJdbcCodegen(
+      val gen             = new ComposeableTraitsJdbcCodegen(
         databaseConnections,
         `package`,
         nestedTrait = true
       ) with DatabaseBasedNumericTyping {
-        override def defaultNamespace: String = "public"
-        override def nameParser: NameParser   = CustomNames()
+        override def defaultNamespace: String                                      = "public"
+        override def nameParser: NameParser                                        = CustomNames()
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
-        override def namespacer: Namespacer[JdbcTableMeta] = ts => "public"
+        override def namespacer: Namespacer[JdbcTableMeta]    = ts => "public"
         override def querySchemaNaming: JdbcQuerySchemaNaming = ts => {
           val schema = super.namespacer(ts)
           (if (schema startsWith "codegenTest") "public" else schema) + ts.tableName.toLowerCase.capitalize
@@ -153,10 +153,10 @@ object CodegenTestCases {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
       implicit val prefix = dbPrefix
       implicit val base   = basePath
-      val gen = new ComposeableTraitsJdbcCodegen(databaseConnections, `package`, false)
+      val gen             = new ComposeableTraitsJdbcCodegen(databaseConnections, `package`, false)
         with DatabaseBasedNumericTyping {
-        override def defaultNamespace: String = "public"
-        override def nameParser: NameParser   = CustomNames()
+        override def defaultNamespace: String                                      = "public"
+        override def nameParser: NameParser                                        = CustomNames()
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
         override def querySchemaNaming: JdbcQuerySchemaNaming = ts => {
@@ -183,12 +183,12 @@ object CodegenTestCases {
     override def generate(dbPrefix: ConfigPrefix, basePath: String) = {
       implicit val prefix = dbPrefix
       implicit val base   = basePath
-      val gen = new ComposeableTraitsJdbcCodegen(databaseConnections, `package`, nestedTrait = true)
+      val gen             = new ComposeableTraitsJdbcCodegen(databaseConnections, `package`, nestedTrait = true)
         with DatabaseBasedNumericTyping {
-        override def defaultNamespace: String = "public"
+        override def defaultNamespace: String                                      = "public"
         override def filter(tc: RawSchema[JdbcTableMeta, JdbcColumnMeta]): Boolean =
           schemaFilter(databaseType, tc) && super.filter(tc)
-        override def nameParser: NameParser = CustomNames()
+        override def nameParser: NameParser                = CustomNames()
         override def namespacer: Namespacer[JdbcTableMeta] = ts => {
           val schema = super.namespacer(ts)
           databaseType match {

@@ -15,10 +15,10 @@ case class Row private (data: List[Any]) {
       case _    => new Row((data :+ value))
     }
 
-  def nullAt(index: Int): Boolean = data.apply(index) == null
+  def nullAt(index: Int): Boolean                      = data.apply(index) == null
   def apply[T](index: Int)(implicit t: ClassTag[T]): T =
     data(index) match {
-      case v: T => v
+      case v: T  => v
       case other =>
         throw new IllegalStateException(s"Invalid column type. Expected '${t.runtimeClass}', but got '$other'")
     }

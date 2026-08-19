@@ -10,7 +10,7 @@ inThisBuild(
     organization := "io.getquill",
     homepage     := Some(url("https://zio.dev/zio-quill")),
     licenses     := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
-    developers := List(
+    developers   := List(
       Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
       Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
     ),
@@ -88,7 +88,7 @@ def isScala2 = {
 }
 
 lazy val filteredModules = {
-  val modulesStr = sys.props.get("modules")
+  val modulesStr    = sys.props.get("modules")
   val moduleStrings =
     ListSet(
       modulesStr
@@ -165,7 +165,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.9.4")
+        ("org.scalameta" %% "scalafmt-core" % "3.9.10")
           .excludeAll(
             ({
               if (isScala3)
