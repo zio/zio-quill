@@ -35,8 +35,8 @@ class MultiLevelServiceSpec extends PeopleZioSpec with ZioSpec {
     import dataService._
     import dataService.quill.{run => qrun, _}
 
-    val joes                                          = quote(peopleByName("Joe"))
-    def getJoes: ZIO[Any, SQLException, List[Person]] = qrun(joes)
+    val joes                                                                 = quote(peopleByName("Joe"))
+    def getJoes: ZIO[Any, SQLException, List[Person]]                        = qrun(joes)
     def getPeopleByName3(name: String): ZIO[Any, SQLException, List[Person]] = qrun(
       somePeopleByName(query[Person], lift(name))
     )

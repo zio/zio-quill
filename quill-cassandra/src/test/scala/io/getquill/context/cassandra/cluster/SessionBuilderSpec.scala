@@ -26,7 +26,7 @@ class SessionBuilderSpec extends Spec {
           |""".stripMargin
       val sessionBuilder = SessionBuilder(ConfigFactory.parseString(cfgString).resolve())
       val session        = sessionBuilder.build()
-      val sessionConfig = session.getContext.getConfig.getDefaultProfile
+      val sessionConfig  = session.getContext.getConfig.getDefaultProfile
         .entrySet()
         .asScala
         .map(entry => entry.getKey -> entry.getValue)
@@ -50,7 +50,7 @@ class SessionBuilderSpec extends Spec {
           |""".stripMargin
       val sessionBuilder = SessionBuilder(ConfigFactory.parseString(cfgString).resolve())
       val session        = sessionBuilder.build()
-      val sessionConfig = session.getContext.getConfig.getDefaultProfile
+      val sessionConfig  = session.getContext.getConfig.getDefaultProfile
         .entrySet()
         .asScala
         .map(entry => entry.getKey -> entry.getValue)
@@ -72,7 +72,7 @@ class SessionBuilderSpec extends Spec {
           |""".stripMargin
       val sessionBuilder = SessionBuilder(ConfigFactory.parseString(cfgString).resolve())
       val session        = sessionBuilder.build()
-      val sessionConfig = session.getContext.getConfig.getDefaultProfile
+      val sessionConfig  = session.getContext.getConfig.getDefaultProfile
         .entrySet()
         .asScala
         .map(entry => entry.getKey -> entry.getValue)

@@ -20,7 +20,7 @@ object CodegenTestCaseRunner {
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   def main(args: Array[String]): Unit = {
-    val path = args(0)
+    val path     = args(0)
     val prefixes =
       if (args.drop(1).contains("all")) ConfigPrefix.all
       else args.drop(1).map(ConfigPrefix.fromValue(_).orThrow).toList

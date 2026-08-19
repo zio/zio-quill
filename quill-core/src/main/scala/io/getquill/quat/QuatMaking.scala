@@ -29,7 +29,7 @@ trait QuatMaking extends QuatMakingBase with MacroUtilBase {
   def onlyDecoder: Boolean = true
 
   val cachedEncoderLookups: HashMap[Type, Boolean] = HashMap();
-  def existsEncoderFor(tpe: Type): Boolean =
+  def existsEncoderFor(tpe: Type): Boolean         =
     cachedEncoderLookups.get(tpe) match {
       case Some(value) =>
         value
@@ -113,7 +113,7 @@ object RuntimeEntityQuat {
 
   def forClass(cls: Class[_]): Quat =
     cls match {
-      case AnyVal() => Quat.Value
+      case AnyVal()          => Quat.Value
       case Embedded(methods) =>
         Quat.Product(cls.getName.split('.').last, methods.map(m => (m.getName, forClass(m.getReturnType))))
       // If we are here we are already inside of a product which means if we are not a embedded, we have to be value-level

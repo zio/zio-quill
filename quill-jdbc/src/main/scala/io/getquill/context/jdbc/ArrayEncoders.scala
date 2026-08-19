@@ -11,7 +11,7 @@ import scala.collection.compat._
 trait ArrayEncoders extends ArrayEncoding {
   self: JdbcContextTypes[_, _] =>
 
-  implicit def arrayStringEncoder[Col <: Seq[String]]: Encoder[Col] = arrayRawEncoder[String, Col](VARCHAR)
+  implicit def arrayStringEncoder[Col <: Seq[String]]: Encoder[Col]         = arrayRawEncoder[String, Col](VARCHAR)
   implicit def arrayBigDecimalEncoder[Col <: Seq[BigDecimal]]: Encoder[Col] =
     arrayEncoder[BigDecimal, Col](parseJdbcType(NUMERIC), _.bigDecimal)
   implicit def arrayBooleanEncoder[Col <: Seq[Boolean]]: Encoder[Col]     = arrayRawEncoder[Boolean, Col](BOOLEAN)

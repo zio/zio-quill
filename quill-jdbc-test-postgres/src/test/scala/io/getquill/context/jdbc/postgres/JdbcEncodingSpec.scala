@@ -35,9 +35,9 @@ class JdbcEncodingSpec extends EncodingSpec {
 
   "LocalDateTime" in {
     case class EncodingTestEntity(v11: Option[LocalDateTime])
-    val now = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS) // See https://stackoverflow.com/a/74781779/2431728
-    val e1  = EncodingTestEntity(Some(now))
-    val e2  = EncodingTestEntity(None)
+    val now                                                       = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS) // See https://stackoverflow.com/a/74781779/2431728
+    val e1                                                        = EncodingTestEntity(Some(now))
+    val e2                                                        = EncodingTestEntity(None)
     val res: (List[EncodingTestEntity], List[EncodingTestEntity]) = performIO {
       val steps = for {
         _           <- testContext.runIO(query[EncodingTestEntity].delete)

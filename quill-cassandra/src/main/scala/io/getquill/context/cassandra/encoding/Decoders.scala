@@ -39,16 +39,16 @@ trait Decoders extends CollectionDecoders {
   implicit def mappedDecoder[I, O](implicit mapped: MappedEncoding[I, O], decoder: Decoder[I]): Decoder[O] =
     CassandraDecoder(mappedBaseDecoder(mapped, decoder.decoder))
 
-  implicit val stringDecoder: Decoder[String] = decoder(_.getString)
+  implicit val stringDecoder: Decoder[String]         = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
     decoder((index, row, session) => row.getBigDecimal(index))
-  implicit val booleanDecoder: Decoder[Boolean] = decoder(_.getBoolean)
-  implicit val byteDecoder: Decoder[Byte]       = decoder(_.getByte)
-  implicit val shortDecoder: Decoder[Short]     = decoder(_.getShort)
-  implicit val intDecoder: Decoder[Int]         = decoder(_.getInt)
-  implicit val longDecoder: Decoder[Long]       = decoder(_.getLong)
-  implicit val floatDecoder: Decoder[Float]     = decoder(_.getFloat)
-  implicit val doubleDecoder: Decoder[Double]   = decoder(_.getDouble)
+  implicit val booleanDecoder: Decoder[Boolean]       = decoder(_.getBoolean)
+  implicit val byteDecoder: Decoder[Byte]             = decoder(_.getByte)
+  implicit val shortDecoder: Decoder[Short]           = decoder(_.getShort)
+  implicit val intDecoder: Decoder[Int]               = decoder(_.getInt)
+  implicit val longDecoder: Decoder[Long]             = decoder(_.getLong)
+  implicit val floatDecoder: Decoder[Float]           = decoder(_.getFloat)
+  implicit val doubleDecoder: Decoder[Double]         = decoder(_.getDouble)
   implicit val byteArrayDecoder: Decoder[Array[Byte]] =
     decoder { (index, row, session) =>
       val bb = row.getByteBuffer(index)

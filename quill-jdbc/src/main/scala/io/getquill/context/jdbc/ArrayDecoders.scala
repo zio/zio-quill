@@ -25,7 +25,7 @@ trait ArrayDecoders extends ArrayEncoding {
     arrayRawDecoder[Byte, Col]
   implicit def arrayShortDecoder[Col <: Seq[Short]](implicit bf: CBF[Short, Col]): Decoder[Col] =
     arrayRawDecoder[Short, Col]
-  implicit def arrayIntDecoder[Col <: Seq[Int]](implicit bf: CBF[Int, Col]): Decoder[Col] = arrayRawDecoder[Int, Col]
+  implicit def arrayIntDecoder[Col <: Seq[Int]](implicit bf: CBF[Int, Col]): Decoder[Col]    = arrayRawDecoder[Int, Col]
   implicit def arrayLongDecoder[Col <: Seq[Long]](implicit bf: CBF[Long, Col]): Decoder[Col] =
     arrayRawDecoder[Long, Col]
   implicit def arrayFloatDecoder[Col <: Seq[Float]](implicit bf: CBF[Float, Col]): Decoder[Col] =
@@ -66,7 +66,7 @@ trait ArrayDecoders extends ArrayEncoding {
           .foldLeft(bf.newBuilder) {
             case (b, x: I)                => b += mapper(x)
             case (b, x: java.lang.Number) => b += mapper(x.asInstanceOf[I])
-            case (_, x) =>
+            case (_, x)                   =>
               fail(
                 s"Retrieved ${x.getClass.getCanonicalName} type from JDBC array, but expected $tag. Re-check your decoder implementation"
               )

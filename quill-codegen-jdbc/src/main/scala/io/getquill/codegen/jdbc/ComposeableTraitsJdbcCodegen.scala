@@ -142,7 +142,7 @@ class ComposeableTraitsJdbcCodegen(
   ) = this(Seq(connectionMaker), packagePrefix, false)
 
   override def makeGenerators: Seq[ContextifiedUnitGenerator] = new MultiGeneratorFactory(generatorMaker).apply
-  override def generatorMaker = new SingleGeneratorFactory[ContextifiedUnitGenerator] {
+  override def generatorMaker                                 = new SingleGeneratorFactory[ContextifiedUnitGenerator] {
     override def apply(emitterSettings: EmitterSettings[JdbcTableMeta, JdbcColumnMeta]): ContextifiedUnitGenerator =
       new ContextifiedUnitGenerator(emitterSettings)
   }

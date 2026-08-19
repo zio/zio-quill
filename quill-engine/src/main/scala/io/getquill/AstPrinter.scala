@@ -58,7 +58,7 @@ class AstPrinter(
     def withQuat(q: Quat): treemake        = toContent.andWith(treemake.Quat(q))
     def withTree(t: pprint.Tree): treemake = toContent.andWith(treemake.Tree(t))
     def withElem(a: Any): treemake         = toContent.andWith(treemake.Elem(a))
-    private def treeifyList: List[Tree] =
+    private def treeifyList: List[Tree]    =
       toContent.list.flatMap {
         case e: treemake.Quat =>
           traceQuats match {
@@ -76,7 +76,7 @@ class AstPrinter(
     private case class Quat(q: io.getquill.quat.Quat) extends treemake
     private case class Elem(any: Any)                 extends treemake
     private case class Tree(any: pprint.Tree)         extends treemake
-    private case class Content(list: List[treemake]) extends treemake {
+    private case class Content(list: List[treemake])  extends treemake {
       def andWith(elem: treemake): Content =
         elem match {
           case c: Content => Content(list ++ c.list)

@@ -34,7 +34,7 @@ class DefaultJdbcSchemaReader(
     val output = Using.Manager { use =>
       val conn   = use(connectionMaker())
       val schema = conn.getSchema
-      val rs = use {
+      val rs     = use {
         conn.getMetaData.getTables(
           null,
           schemaPattern(schema),
@@ -57,7 +57,7 @@ class DefaultJdbcSchemaReader(
     val output = Using.Manager { use =>
       val conn   = use(connectionMaker())
       val schema = conn.getSchema
-      val rs = use {
+      val rs     = use {
         conn.getMetaData.getColumns(
           null,
           schemaPattern(schema),
@@ -79,7 +79,7 @@ class DefaultJdbcSchemaReader(
         .map(t => ((t.tableCat, t.tableSchema, t.tableName), t))
         .toMap
 
-    val columns = extractColumns(connectionMaker)
+    val columns      = extractColumns(connectionMaker)
     val tableColumns =
       columns
         .groupBy(c => (c.tableCat, c.tableSchema, c.tableName))

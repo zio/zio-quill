@@ -42,7 +42,7 @@ trait PostgresJsonExtensions { this: Encoders with Decoders =>
       val jsonString = obj.getValue
       Json.decoder.decodeJson(jsonString) match {
         case Right(value) => valueFromString(value)
-        case Left(error) =>
+        case Left(error)  =>
           throw new IllegalArgumentException(
             s"Error decoding the Json value '${jsonString}' into a zio.json.ast.Json. Message: ${error}"
           )
@@ -77,7 +77,7 @@ trait PostgresJsonExtensions { this: Encoders with Decoders =>
       val jsonString = obj.getValue
       jsonDecoder.decodeJson(jsonString) match {
         case Right(value) => wrap(value)
-        case Left(error) =>
+        case Left(error)  =>
           throw new IllegalArgumentException(
             s"Error decoding the Json value '${jsonString}' into a ${classTag[JsValue]}. Message: ${error}"
           )

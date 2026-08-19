@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 
 trait CassandraPekkoSpec extends Spec {
 
-  val actorSystem: ActorSystem = ActorSystem("test")
+  val actorSystem: ActorSystem            = ActorSystem("test")
   val pekkoSession: CassandraPekkoSession =
     CassandraSessionRegistry.get(actorSystem).sessionFor(CassandraSessionSettings())
 

@@ -15,10 +15,10 @@ object OrderedGroupByExt {
     def groupByGen[K, C[_]](makeBuilder: => mutable.Builder[A, C[A]])(f: A => K): Map[K, C[A]] = {
       val map = MMap[K, mutable.Builder[A, C[A]]]()
       for (i <- t) {
-        val key = f(i)
+        val key     = f(i)
         val builder = map.get(key) match {
           case Some(existing) => existing
-          case None =>
+          case None           =>
             val newBuilder = makeBuilder
             map(key) = newBuilder
             newBuilder

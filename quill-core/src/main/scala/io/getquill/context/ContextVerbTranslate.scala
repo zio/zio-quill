@@ -85,8 +85,8 @@ trait ContextTranslateProto {
               expanded.replaceFirst("\\?", if (options.demarcatePluggedLifts) s"lift(${quoteIfNeeded(lift.value)})" else quoteIfNeeded(lift.value))
             }
           case false =>
-            var varNum: Int = 0
-            val dol         = '$'
+            var varNum: Int   = 0
+            val dol           = '$'
             val numberedQuery =
               liftings.foldLeft(statement) { case (expanded, lift) =>
                 val res = expanded.replaceFirst("\\?", s"${dol}${varNum + 1}")

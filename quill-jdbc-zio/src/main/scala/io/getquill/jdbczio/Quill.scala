@@ -34,7 +34,7 @@ object Quill {
   }
 
   object Postgres {
-    def apply[N <: NamingStrategy](naming: N, ds: DataSource) = new PostgresLite[N](naming, ds)
+    def apply[N <: NamingStrategy](naming: N, ds: DataSource)                                                       = new PostgresLite[N](naming, ds)
     def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Postgres[N]] =
       ZLayer.fromFunction((ds: javax.sql.DataSource) => new Postgres[N](naming, ds))
   }
@@ -47,7 +47,7 @@ object Quill {
     lazy val ds: DataSource     = dataSourceInput
   }
   object SqlServer {
-    def apply[N <: NamingStrategy](naming: N, ds: DataSource) = new SqlServer[N](naming, ds)
+    def apply[N <: NamingStrategy](naming: N, ds: DataSource)                                                        = new SqlServer[N](naming, ds)
     def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, SqlServer[N]] =
       ZLayer.fromFunction((ds: javax.sql.DataSource) => new SqlServer[N](naming, ds))
   }
@@ -60,7 +60,7 @@ object Quill {
     lazy val ds: DataSource = dataSourceInput
   }
   object H2 {
-    def apply[N <: NamingStrategy](naming: N, ds: DataSource) = new H2[N](naming, ds)
+    def apply[N <: NamingStrategy](naming: N, ds: DataSource)                                                 = new H2[N](naming, ds)
     def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, H2[N]] =
       ZLayer.fromFunction((ds: javax.sql.DataSource) => new H2[N](naming, ds))
   }
@@ -73,7 +73,7 @@ object Quill {
     lazy val ds: DataSource = dataSourceInput
   }
   object Mysql {
-    def apply[N <: NamingStrategy](naming: N, ds: DataSource) = new Mysql[N](naming, ds)
+    def apply[N <: NamingStrategy](naming: N, ds: DataSource)                                                    = new Mysql[N](naming, ds)
     def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Mysql[N]] =
       ZLayer.fromFunction((ds: javax.sql.DataSource) => new Mysql[N](naming, ds))
   }
@@ -86,7 +86,7 @@ object Quill {
     lazy val ds: DataSource  = dataSourceInput
   }
   object Sqlite {
-    def apply[N <: NamingStrategy](naming: N, ds: DataSource) = new Sqlite[N](naming, ds)
+    def apply[N <: NamingStrategy](naming: N, ds: DataSource)                                                     = new Sqlite[N](naming, ds)
     def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Sqlite[N]] =
       ZLayer.fromFunction((ds: javax.sql.DataSource) => new Sqlite[N](naming, ds))
   }
@@ -99,7 +99,7 @@ object Quill {
     lazy val ds: DataSource  = dataSourceInput
   }
   object Oracle {
-    def apply[N <: NamingStrategy](naming: N, ds: DataSource) = new Oracle[N](naming, ds)
+    def apply[N <: NamingStrategy](naming: N, ds: DataSource)                                                     = new Oracle[N](naming, ds)
     def fromNamingStrategy[N <: NamingStrategy: Tag](naming: N): ZLayer[javax.sql.DataSource, Nothing, Oracle[N]] =
       ZLayer.fromFunction((ds: javax.sql.DataSource) => new Oracle[N](naming, ds))
   }
@@ -109,7 +109,7 @@ object Quill {
       ZLayer.scoped {
         for {
           ds <- ZIO.service[DataSource]
-          c <- ZIO.blocking {
+          c  <- ZIO.blocking {
                  ZioJdbc
                    .scopedBestEffort(ZIO.attempt(ds.getConnection))
                    .refineToOrDie[SQLException]

@@ -9,7 +9,7 @@ import io.getquill.Udt
 
 class UdtEncodingSessionContextSpec extends UdtSpec {
 
-  val ctx1 = testSyncDB
+  val ctx1    = testSyncDB
   val config0 = CassandraContextConfig(
     LoadConfig("testSyncDB").withValue("keyspace", ConfigValueFactory.fromAnyRef("system"))
   )

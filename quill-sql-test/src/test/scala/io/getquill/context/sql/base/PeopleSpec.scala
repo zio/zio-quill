@@ -143,7 +143,7 @@ trait PeopleSpec extends Spec {
     query[Person].sortBy(p => p.name)(Ord.asc).drop(0).take(3)
   }
   val `Ex 10 page 1 expected` = peopleEntries.sortBy(_.name).slice(0, 3)
-  val `Ex 10 page 2 query` = quote {
+  val `Ex 10 page 2 query`    = quote {
     query[Person].sortBy(p => p.name)(Ord.asc).drop(3).take(3)
   }
   val `Ex 10 page 2 expected` = peopleEntries.sortBy(_.name).slice(3, 6)

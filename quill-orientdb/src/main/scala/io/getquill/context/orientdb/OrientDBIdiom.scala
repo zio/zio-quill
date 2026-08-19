@@ -39,7 +39,7 @@ trait OrientDBIdiom extends Idiom {
     naming: NamingStrategy
   ): (Ast, Statement, ExecutionType) = {
     implicit val implicitIdiomContext: IdiomContext = idiomContext
-    val normalizedAst =
+    val normalizedAst                               =
       if (cached)
         NormalizeCaching { ast: Ast => SqlNormalize(ast, idiomContext.config) }(ast)
       else SqlNormalize(ast, TranspileConfig.Empty)
@@ -112,7 +112,7 @@ trait OrientDBIdiom extends Idiom {
             (List.empty, other)
         }
 
-      val (l, e) = flatten(ast)
+      val (l, e)     = flatten(ast)
       val conditions =
         for ((cond, body) <- l) yield {
           stmt"if(${cond.token}, ${body.token}, ${e.token})"
@@ -148,7 +148,7 @@ trait OrientDBIdiom extends Idiom {
 
       val withFrom =
         from match {
-          case Nil => selectClause
+          case Nil          => selectClause
           case head :: tail =>
             val t = tail.foldLeft(stmt"${head.token}") {
               case (a, b: FlatJoinContext) =>
@@ -161,7 +161,7 @@ trait OrientDBIdiom extends Idiom {
 
       val withWhere =
         where match {
-          case None => withFrom
+          case None        => withFrom
           case Some(where) =>
             stmt"$withFrom WHERE ${where.token}"
         }
@@ -201,7 +201,7 @@ trait OrientDBIdiom extends Idiom {
     case BinaryOperation(a, EqualityOperator.`_!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
     case BinaryOperation(NullValue, EqualityOperator.`_!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
     case BinaryOperation(a, op @ SetOperator.`contains`, b)    => SetContainsToken(scopedTokenizer(b), op.token, a.token)
-    case BinaryOperation(a, op, b) =>
+    case BinaryOperation(a, op, b)                             =>
       stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
     case e: FunctionApply => fail(s"Can't translate the ast to sql: '$e'")
   }
@@ -289,9 +289,9 @@ trait OrientDBIdiom extends Idiom {
     idiomContext: IdiomContext
   ): Tokenizer[Property] =
     Tokenizer[Property] {
-      case Property(ast, "isEmpty")   => stmt"${ast.token} IS NULL"
-      case Property(ast, "nonEmpty")  => stmt"${ast.token} IS NOT NULL"
-      case Property(ast, "isDefined") => stmt"${ast.token} IS NOT NULL"
+      case Property(ast, "isEmpty")                       => stmt"${ast.token} IS NULL"
+      case Property(ast, "nonEmpty")                      => stmt"${ast.token} IS NOT NULL"
+      case Property(ast, "isDefined")                     => stmt"${ast.token} IS NOT NULL"
       case Property.Opinionated(ast, name, renameable, _) =>
         renameable.fixedOr(name.token)(strategy.column(name).token)
     }

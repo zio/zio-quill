@@ -71,7 +71,7 @@ class JdbcContextSpec extends Spec {
 
   "Insert with returning generated with single column table using query" in {
     ctx.run(qr5.delete)
-    val id = ctx.run(qr5.insertValue(lift(TestEntity5(0, "foo"))).returningGenerated(_.i))
+    val id  = ctx.run(qr5.insertValue(lift(TestEntity5(0, "foo"))).returningGenerated(_.i))
     val id2 = ctx.run {
       qr5.insert(_.s -> "bar").returningGenerated(r => query[TestEntity5].filter(_.s == "foo").map(_.i).max)
     }.get

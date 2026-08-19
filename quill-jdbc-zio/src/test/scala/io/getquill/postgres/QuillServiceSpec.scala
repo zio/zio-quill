@@ -30,7 +30,7 @@ class QuillServiceSpec extends ZioSpec {
     }
     "success - stream" in {
       (for {
-        _ <- testContext.run(qr1.delete)
+        _   <- testContext.run(qr1.delete)
         seq <- testContext.transaction {
                  for {
                    _ <- testContext.run(qr1.insert(_.i -> 33))

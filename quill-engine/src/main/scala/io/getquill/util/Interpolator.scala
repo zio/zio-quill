@@ -45,7 +45,7 @@ class Interpolator(
       val objectString = qprint(value).string(color)
       val oneLine      = objectString.fitsOnOneLine
       oneLine match {
-        case true => s"${indent.prefix}> ${objectString}"
+        case true  => s"${indent.prefix}> ${objectString}"
         case false =>
           s"${indent.prefix}>\n${objectString.multiline(indent, elementPrefix)}"
       }
@@ -59,7 +59,7 @@ class Interpolator(
       }
 
     sealed trait Splice { def value: String }
-    object Splice {
+    object Splice       {
       case class Simple(value: String) extends Splice // Simple splice into the string, don't indent etc...
       case class Show(value: String)   extends Splice // Indent, colorize the element etc...
     }
@@ -67,17 +67,17 @@ class Interpolator(
     private def readBuffers() = {
       def orZero(i: Int): Int = if (i < 0) 0 else i
 
-      val parts = sc.parts.iterator.toList
+      val parts    = sc.parts.iterator.toList
       val elements = elementsSeq.toList.map { elem =>
         if (elem.isInstanceOf[String]) Splice.Simple(elem.asInstanceOf[String])
         else Splice.Show(qprint(elem).string(color))
       }
 
       val (firstStr, explicitIndent) = readFirst(parts.head)
-      val indent =
+      val indent                     =
         explicitIndent match {
           case Some(value) => value
-          case None => {
+          case None        => {
             // A trick to make nested calls of andReturn indent further out which makes andReturn MUCH more usable.
             // Just count the number of times it has occurred on the thread stack.
             val returnInvocationCount = Thread

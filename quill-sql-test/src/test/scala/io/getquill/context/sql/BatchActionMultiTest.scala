@@ -14,7 +14,7 @@ class BatchActionMultiTest extends Spec {
   val insertPeople                                          = quote((p: Person) => query[Person].insertValue(p))
   val insertPeopleDynamic: Quoted[Person => Insert[Person]] = quote((p: Person) => query[Person].insertValue(p))
 
-  val updatePeopleById = quote((p: Person) => query[Person].filter(pt => pt.id == p.id).updateValue(p))
+  val updatePeopleById                                          = quote((p: Person) => query[Person].filter(pt => pt.id == p.id).updateValue(p))
   val updatePeopleByIdDynamic: Quoted[Person => Update[Person]] =
     quote((p: Person) => query[Person].filter(pt => pt.id == p.id).updateValue(p))
 
@@ -43,7 +43,7 @@ class BatchActionMultiTest extends Spec {
     }
 
     "batch insert - (2rows + 2rows)" - {
-      val people = List(Person(1, "A", 111), Person(2, "B", 222), Person(3, "C", 333), Person(4, "D", 444))
+      val people                               = List(Person(1, "A", 111), Person(2, "B", 222), Person(3, "C", 333), Person(4, "D", 444))
       def expect(executionType: ExecutionType) =
         List(
           (
@@ -60,7 +60,7 @@ class BatchActionMultiTest extends Spec {
     }
 
     "inserts == batch-size" - {
-      val people = List(Person(1, "A", 111), Person(2, "B", 222))
+      val people                               = List(Person(1, "A", 111), Person(2, "B", 222))
       def expect(executionType: ExecutionType) =
         List(
           (
@@ -77,7 +77,7 @@ class BatchActionMultiTest extends Spec {
     }
 
     "inserts < batch-size - (1row)" - {
-      val people = List(Person(1, "A", 111))
+      val people                               = List(Person(1, "A", 111))
       def expect(executionType: ExecutionType) =
         List(
           (

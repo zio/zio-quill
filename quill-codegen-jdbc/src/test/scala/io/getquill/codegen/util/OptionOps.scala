@@ -4,7 +4,7 @@ import scala.util.{Failure, Success, Try}
 object OptionOps {
   implicit final class OptExt[T](private val o: Option[T]) extends AnyVal {
     def mapIfThen(`if`: T, `then`: T): Option[T] = o.map(v => if (v == `if`) `then` else v)
-    def toTry(e: Throwable): Try[T] = o match {
+    def toTry(e: Throwable): Try[T]              = o match {
       case Some(value) => Success(value)
       case None        => Failure(e)
     }

@@ -199,7 +199,7 @@ object Quat {
       // Possibly improve the quat if an infix clause if it has exactly one inner Ast element and the type of it's quat is Generic
       case i @ Infix(parts, List(param), pure, transparent, _) if (transparent) =>
         val possiblyBetterQuat = param.quat
-        val newQuat =
+        val newQuat            =
           possiblyBetterQuat match {
             case Quat.Unknown => Quat.Unknown
             case Quat.Value   => Quat.Generic
@@ -275,7 +275,7 @@ object Quat {
             (key, value)
           }
       val newFields = mutable.LinkedHashMap(newFieldsIter.toList: _*)
-      val newTpe =
+      val newTpe    =
         if (this.tpe == Product.Type.Abstract || other.tpe == Product.Type.Abstract)
           Product.Type.Abstract
         else
@@ -432,7 +432,7 @@ object Quat {
     }
   }
   object Tuple {
-    def apply(fields: Quat*): Quat.Product = apply(fields)
+    def apply(fields: Quat*): Quat.Product          = apply(fields)
     def apply(fields: Iterable[Quat]): Quat.Product = {
       val fieldsList = fields.toList
       Quat.Product(

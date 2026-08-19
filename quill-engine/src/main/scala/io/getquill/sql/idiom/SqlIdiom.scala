@@ -170,7 +170,7 @@ trait SqlIdiom extends Idiom {
             (List.empty, other)
         }
 
-      val (l, e) = flatten(ast)
+      val (l, e)     = flatten(ast)
       val conditions =
         for ((cond, body) <- l) yield {
           stmt"WHEN ${cond.token} THEN ${body.token}"
@@ -209,7 +209,7 @@ trait SqlIdiom extends Idiom {
 
     def withFrom: Statement =
       from match {
-        case Nil => withDistinct
+        case Nil          => withDistinct
         case head :: tail =>
           val t = tail.foldLeft(stmt"${head.token}") {
             case (a, b: FlatJoinContext) =>
@@ -352,12 +352,12 @@ trait SqlIdiom extends Idiom {
     case BinaryOperation(NullValue, EqualityOperator.`_==`, b) => stmt"${scopedTokenizer(b)} IS NULL"
     case BinaryOperation(a, EqualityOperator.`_!=`, NullValue) => stmt"${scopedTokenizer(a)} IS NOT NULL"
     case BinaryOperation(NullValue, EqualityOperator.`_!=`, b) => stmt"${scopedTokenizer(b)} IS NOT NULL"
-    case BinaryOperation(a, StringOperator.`startsWith`, b) =>
+    case BinaryOperation(a, StringOperator.`startsWith`, b)    =>
       stmt"${scopedTokenizer(a)} LIKE (${(BinaryOperation(b, StringOperator.`+`, Constant.auto("%")): Ast).token})"
     case BinaryOperation(a, op @ StringOperator.`split`, b) =>
       stmt"${op.token}(${scopedTokenizer(a)}, ${scopedTokenizer(b)})"
     case BinaryOperation(a, op @ SetOperator.`contains`, b) => SetContainsToken(scopedTokenizer(b), op.token, a.token)
-    case BinaryOperation(a, op @ `&&`, b) =>
+    case BinaryOperation(a, op @ `&&`, b)                   =>
       (a, b) match {
         case (BinaryOperation(_, `||`, _), BinaryOperation(_, `||`, _)) =>
           stmt"${scopedTokenizer(a)} ${op.token} ${scopedTokenizer(b)}"
@@ -614,7 +614,7 @@ trait SqlIdiom extends Idiom {
     idiomContext: IdiomContext
   ) =
     Tokenizer.withFallback[Ast](SqlIdiom.this.astTokenizer(_, strategy, idiomContext)) {
-      case q: Query => astTokenizer.token(q)
+      case q: Query                                                          => astTokenizer.token(q)
       case Property(Property.Opinionated(_, name, renameable, _), "isEmpty") =>
         stmt"${renameable.fixedOr(name)(tokenizeColumn(strategy, name, renameable)).token} IS NULL"
       case Property(Property.Opinionated(_, name, renameable, _), "isDefined") =>

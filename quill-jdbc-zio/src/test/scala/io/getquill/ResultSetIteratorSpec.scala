@@ -42,7 +42,7 @@ class ResultSetIteratorSpec extends ZioProxySpec {
         .acquireReleaseWithAuto { conn =>
           ZIO.attempt {
             val stmt = conn.prepareStatement("select * from person")
-            val rs =
+            val rs   =
               new ResultSetIterator[String](stmt.executeQuery(), conn, extractor = (rs, conn) => { rs.getString(1) })
             val accum = ArrayBuffer[String]()
             while (rs.hasNext) accum += rs.next()

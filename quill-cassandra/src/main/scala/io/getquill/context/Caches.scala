@@ -10,7 +10,7 @@ import scala.util.Failure
 import scala.compat.java8.FutureConverters._
 
 trait SyncCache { this: CassandraSession =>
-  lazy val syncCache = new PrepareStatementCache[PreparedStatement](preparedStatementCacheSize)
+  lazy val syncCache                       = new PrepareStatementCache[PreparedStatement](preparedStatementCacheSize)
   def prepare(cql: String): BoundStatement =
     syncCache(cql)(stmt => session.prepare(stmt)).bind()
 }

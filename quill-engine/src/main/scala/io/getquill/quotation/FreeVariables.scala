@@ -93,7 +93,7 @@ case class FreeVariables(state: State) extends StatefulTransformer[State] {
         val s1 = free(a, b, c)
         val s2 = new FreeVariables(s1.state).free(a, d, e)
         (q, s2)
-      case q @ FlatJoin(t, a, b, c) => (q, free(a, b, c))
+      case q @ FlatJoin(t, a, b, c)      => (q, free(a, b, c))
       case q @ Join(t, a, b, iA, iB, on) =>
         val (_, freeA)  = apply(a)
         val (_, freeB)  = apply(b)
@@ -123,7 +123,7 @@ object FreeVariables {
   def verify(ast: Ast): Either[String, Ast] =
     apply(ast) match {
       case free if free.isEmpty => Right(ast)
-      case free =>
+      case free                 =>
         val firstVar = free.headOption.map(_.name).getOrElse("someVar")
         Left(
           s"""

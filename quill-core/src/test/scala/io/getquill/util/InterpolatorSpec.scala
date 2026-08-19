@@ -131,8 +131,8 @@ and bar $small""".generateString() mustEqual (
 
   "should log to print stream" - {
     "do not log if traces disabled" in {
-      val buff = new ByteArrayOutputStream()
-      val ps   = new PrintStream(buff)
+      val buff   = new ByteArrayOutputStream()
+      val ps     = new PrintStream(buff)
       val interp = new Interpolator(
         Standard,
         TraceConfig.Empty,
@@ -149,8 +149,8 @@ and bar $small""".generateString() mustEqual (
     }
 
     "log if traces disabled" in {
-      val buff = new ByteArrayOutputStream()
-      val ps   = new PrintStream(buff)
+      val buff   = new ByteArrayOutputStream()
+      val ps     = new PrintStream(buff)
       val interp = new Interpolator(
         Standard,
         TraceConfig.Empty,
@@ -167,8 +167,8 @@ and bar $small""".generateString() mustEqual (
     }
 
     "traces large objects on multiple line - multi - with return" in {
-      val buff = new ByteArrayOutputStream()
-      val ps   = new PrintStream(buff)
+      val buff   = new ByteArrayOutputStream()
+      val ps     = new PrintStream(buff)
       val interp = new Interpolator(
         Standard,
         TraceConfig.Empty,

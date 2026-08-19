@@ -55,7 +55,7 @@ trait Context[+Idiom <: io.getquill.idiom.Idiom, +Naming <: NamingStrategy]
       case Nil =>
         fail(s"Expected a single result from the query: `${sql}` but got a empty result-set!")
       case value :: Nil => value
-      case other =>
+      case other        =>
         io.getquill.log.ContextLog(
           s"Expected a single result from the query: `${sql}` but got: ${abbrevList(other)}. Only the 1st result will be returned!"
         )
