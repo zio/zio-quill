@@ -424,7 +424,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.7.7" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.44"
+        "dev.zio"       %% "zio-json"   % "0.9.2"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -599,7 +599,7 @@ def excludePaths(paths: Seq[String]) = {
 }
 
 val scala_v_12 = "2.12.20"
-val scala_v_13 = "2.13.16"
+val scala_v_13 = "2.13.18"
 val scala_v_30 = "3.3.6"
 
 val scalaCollectionCompatVersion = "2.13.0"
