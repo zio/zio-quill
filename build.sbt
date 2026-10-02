@@ -3,6 +3,9 @@ import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 
 import scala.collection.immutable.ListSet
 
+import zio.sbt.ZioSbtCiPlugin.{releaseJobs, CacheDependencies, Checkout, SetupJava, SetupSBT}
+import zio.sbt.githubactions.{Job, Step, Strategy}
+
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 inThisBuild(
@@ -20,7 +23,97 @@ inThisBuild(
     scalafmtCheck     := true,
     scalafmtSbtCheck  := true,
     scalafmtOnCompile := !insideCI.value
-  )
+  ) ++ ciSettings
+)
+
+lazy val ciSettings: Seq[Setting[_]] = Seq(
+  ciEnabledBranches := Seq("master"),
+  // See:
+  //  - https://stackoverflow.com/a/73708006
+  //  - https://stackoverflow.com/questions/73465937/apache-spark-3-3-0-breaks-on-java-17-with-cannot-access-class-sun-nio-ch-direct
+  ciWorkflowEnv := Map(
+    "JDK_JAVA_OPTIONS" -> "-Xms6G -Xmx6G -XX:+UseG1GC --add-exports java.base/sun.nio.ch=ALL-UNNAMED"
+  ),
+  ciLintJobs := Def.setting {
+    Seq(
+      Job(
+        id = "lint",
+        name = "Lint",
+        steps = Seq(Checkout.value, SetupJava("17"), SetupSBT, CacheDependencies) ++
+          ciCheckGithubWorkflowSteps.value ++
+          Seq(Step.SingleStep(name = "Check scalafmt", run = Some("sbt --no-colors scalafmtCheckAll")))
+      )
+    )
+  }.value,
+  // Tests run as part of the build via `build/build.sh`, so there are no separate test jobs
+  ciTestJobs := Seq.empty,
+  // The readme check and the docs publishing are handled by the hand-maintained `site.yml`
+  ciUpdateReadmeJobs := Seq.empty,
+  ciPostReleaseJobs  := Seq.empty,
+  ciBuildJobs := Def.setting {
+    Seq(
+      Job(
+        id = "build",
+        name = "Build ${{ matrix.build }}",
+        // Each entry is "<scala version> <module>". For Scala 3 only the `base` modules are built; for
+        // the other Scala versions `base` is already covered by the 3.x build.
+        strategy = Some(
+          Strategy(
+            matrix = Map(
+              "build" -> ("3.3.x base" :: (for {
+                scala  <- List("2.12.x", "2.13.x")
+                module <- List("db", "codegen", "bigdata")
+              } yield s"$scala $module"))
+            ),
+            failFast = false
+          )
+        ),
+        steps = Seq(
+          Checkout.value,
+          SetupJava("17"),
+          SetupSBT,
+          CacheDependencies,
+          Step.SingleStep(
+            name = "Build modules",
+            run = Some(
+              """read -r SCALA_VERSION MODULE <<< "${{ matrix.build }}"
+                |export SCALA_VERSION
+                |echo "SCALA_VERSION='$SCALA_VERSION'"
+                |./build/build.sh "$MODULE"""".stripMargin
+            ),
+            env = Map(
+              "POSTGRES_PASSWORD" -> "postgres",
+              "MYSQL_PASSWORD"    -> "root"
+            )
+          )
+        )
+      )
+    )
+  }.value,
+  // By default sbt-ci-release uses `+publishSigned` / `+publish`, which publishes for all configured Scala
+  // versions; Quill publishes one Scala version at a time instead.
+  ciReleaseJobs := Def.setting {
+    releaseJobs.value.map { job =>
+      job.withSteps(
+        (job.steps.init :+ Step.SingleStep(
+          name = "Release",
+          run = Some(
+            Seq("2.12.x", "2.13.x", "3.3.x")
+              .map(v => s"sbt --no-colors ++$v -Dquill.scala.version=$v -Dquill.macro.log=false ci-release")
+              .mkString("\n")
+          ),
+          env = Map(
+            "CI_RELEASE"          -> "publishSigned",
+            "CI_SNAPSHOT_RELEASE" -> "publish",
+            "PGP_PASSPHRASE"      -> "${{ secrets.PGP_PASSPHRASE }}",
+            "PGP_SECRET"          -> "${{ secrets.PGP_SECRET }}",
+            "SONATYPE_PASSWORD"   -> "${{ secrets.GETQUILL_SONATYPE_TOKEN_PASSWORD }}",
+            "SONATYPE_USERNAME"   -> "${{ secrets.GETQUILL_SONATYPE_TOKEN_USER }}"
+          )
+        )): _*
+      )
+    }
+  }.value
 )
 
 val CodegenTag = Tags.Tag("CodegenTag")
