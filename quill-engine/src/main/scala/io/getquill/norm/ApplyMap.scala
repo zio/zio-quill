@@ -119,6 +119,15 @@ class ApplyMap(traceConfig: TraceConfig) {
         val er = BetaReduction(e, d -> c)
         trace"ApplyMap inside filter for $q" andReturn Some(Map(Filter(a, b, er), b, c))
 
+      // FlatJoin maps are not generally detachable (FlatJoin must stay inside
+      // a Map), but for Filter we can safely beta-reduce the predicate through
+      // the map body while keeping FlatJoin wrapped in Map(Filter(FlatJoin)).
+      // Without this, Dealias renames the filter ident to match the FlatJoin
+      // alias, causing wrong column references in WHERE clauses. See #396, #239.
+      case Filter(Map(a: FlatJoin, b, c), d, e) =>
+        val er = BetaReduction(e, d -> c)
+        trace"ApplyMap inside filter (FlatJoin) for $q" andReturn Some(Map(Filter(a, b, er), b, c))
+
       // a.map(b => c).sortBy(d => e) =>
       //    a.sortBy(b => e[d := c]).map(b => c)
       case SortBy(DetachableMap(a, b, c), d, e, f) =>
