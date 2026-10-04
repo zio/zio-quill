@@ -7,9 +7,9 @@ trait Ops {
   this: CassandraContext[_] =>
 
   abstract class Options[A](q: A) {
-    def usingTimestamp(ts: Int)  = quote(sql"$q USING TIMESTAMP $ts".as[A])
-    def usingTtl(ttl: Int)       = quote(sql"$q USING TTL $ttl".as[A])
-    def using(ts: Int, ttl: Int) = quote(sql"$q USING TIMESTAMP $ts AND TTL $ttl".as[A])
+    def usingTimestamp(ts: Long)  = quote(sql"$q USING TIMESTAMP $ts".as[A])
+    def usingTtl(ttl: Int)        = quote(sql"$q USING TTL $ttl".as[A])
+    def using(ts: Long, ttl: Int) = quote(sql"$q USING TIMESTAMP $ts AND TTL $ttl".as[A])
   }
 
   implicit final class QueryOps[Q <: Query[_]](q: Q) {

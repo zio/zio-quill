@@ -29,10 +29,10 @@ class CassandraOpsSpec extends Spec {
     "options" - {
       "timestamp" in {
         val q = quote {
-          query[TestEntity].insert(_.s -> "s").usingTimestamp(1)
+          query[TestEntity].insert(_.s -> "s").usingTimestamp(Long.MaxValue)
         }
         mirrorContext.run(q).string mustEqual
-          "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP 1"
+          "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP 9223372036854775807"
       }
       "ttl" in {
         val q = quote {
@@ -43,10 +43,10 @@ class CassandraOpsSpec extends Spec {
       }
       "both" in {
         val q = quote {
-          query[TestEntity].insert(_.s -> "s").using(1, 2)
+          query[TestEntity].insert(_.s -> "s").using(Long.MaxValue, 2)
         }
         mirrorContext.run(q).string mustEqual
-          "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP 1 AND TTL 2"
+          "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP 9223372036854775807 AND TTL 2"
       }
     }
   }
@@ -55,10 +55,10 @@ class CassandraOpsSpec extends Spec {
     "options" - {
       "timestamp" in {
         val q = quote {
-          query[TestEntity].usingTimestamp(99).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity].usingTimestamp(Long.MaxValue).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity USING TIMESTAMP 99 SET s = ?, i = ?, l = ?, o = ?, b = ?"
+          "UPDATE TestEntity USING TIMESTAMP 9223372036854775807 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
       "ttl" in {
         val q = quote {
@@ -69,10 +69,10 @@ class CassandraOpsSpec extends Spec {
       }
       "both" in {
         val q = quote {
-          query[TestEntity].using(1, 2).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
+          query[TestEntity].using(Long.MaxValue, 2).updateValue(lift(TestEntity("s", 1, 2L, None, true)))
         }
         mirrorContext.run(q).string mustEqual
-          "UPDATE TestEntity USING TIMESTAMP 1 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?, b = ?"
+          "UPDATE TestEntity USING TIMESTAMP 9223372036854775807 AND TTL 2 SET s = ?, i = ?, l = ?, o = ?, b = ?"
       }
     }
     "ifExists" in {
