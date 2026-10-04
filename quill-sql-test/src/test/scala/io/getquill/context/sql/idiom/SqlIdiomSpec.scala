@@ -948,8 +948,9 @@ class SqlIdiomSpec extends Spec {
           "SELECT a.i FROM (SELECT 1 i FROM DUAL) AS a"
       }
       "full infix query" in {
+        // Case-class result: wrapped to pin column order for positional decoding (see #3403).
         testContext.run(sql"SELECT * FROM TestEntity".as[Query[TestEntity]]).string mustEqual
-          "SELECT * FROM TestEntity"
+          "SELECT x.s, x.i, x.l, x.o, x.b FROM (SELECT * FROM TestEntity) AS x"
       }
       "full infix action" in {
         testContext.run(sql"DELETE FROM TestEntity".as[Action[TestEntity]]).string mustEqual

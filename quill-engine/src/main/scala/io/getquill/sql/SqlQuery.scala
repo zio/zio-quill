@@ -68,9 +68,11 @@ final case class UnaryOperationSqlQuery(
 }
 
 // A top-level infix query. This needs special rendering because we don't
-// want to tokenize column names, e.g. sql"select foo, bar from baz".as[Person]
+// want to tokenize column names, e.g. sql"select foo, bar from baz".as[Query[(String, Int)]]
 // should become just "select foo, bar from baz", not the fully expanded form
-// "select p.name, p.age from (select foo, bar from baz) as Person p"
+// "select x._1, x._2 from (select foo, bar from baz) as x".
+// Only used for values and tuples; case-class results keep the expanded form
+// to pin column order for positional decoding (see SqlQueryApply below, #3403).
 final case class TopInfixQuery(ast: Infix) extends SqlQuery {
   override def quat: Quat = ast.quat
 }
@@ -119,6 +121,22 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
 
   def apply(query: Ast) = build(query, true)
 
+  // Raw passthrough is only safe when positional decoding can't mismatch the raw
+  // SQL's column order: single values (one column) and tuples (order is explicit
+  // in the same expression). Case classes decode in field-declaration order, so e.g.
+  // sql"SELECT t.* FROM TestEntity t".as[Query[TestEntity]] would decode whatever
+  // order the table's DDL has; they keep the wrapping query whose projection
+  // pins the column order. See #3403.
+  private def infixSafeForRawPassthrough(infix: Infix): Boolean =
+    infix.quat match {
+      case p: Quat.Product => isTupleQuat(p)
+      case _               => true
+    }
+
+  private def isTupleQuat(p: Quat.Product): Boolean =
+    p.name.matches("Tuple[0-9]+") &&
+      p.fields.keysIterator.zipWithIndex.forall { case (f, i) => f == s"_${i + 1}" }
+
   private def build(query: Ast, isTopLevel: Boolean = false): SqlQuery =
     query match {
       case Union(a, b) =>
@@ -155,7 +173,7 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
           flatten(infix, "x")
         }
       case infix: Infix =>
-        if (allowTopLevelInfix && isTopLevel)
+        if (allowTopLevelInfix && isTopLevel && infixSafeForRawPassthrough(infix))
           TopInfixQuery(infix)
         else
           trace"Construct SqlQuery from: Infix" andReturn {
