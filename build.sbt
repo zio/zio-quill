@@ -4,13 +4,13 @@ import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 import scala.collection.immutable.ListSet
 
 import zio.sbt.ZioSbtCiPlugin.{releaseJobs, CacheDependencies, Checkout, SetupJava, SetupSBT}
-import zio.sbt.githubactions.{Job, Step, Strategy}
+import zio.sbt.githubactions.{Condition, Job, Step, Strategy}
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 inThisBuild(
   List(
-    organization := "io.getquill",
+    organization := "dev.zio",
     homepage     := Some(url("https://zio.dev/zio-quill")),
     licenses     := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
     developers   := List(
@@ -20,6 +20,11 @@ inThisBuild(
     scmInfo := Some(
       ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
     ),
+    publishTo := {
+      val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+      if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+      else localStaging.value
+    },
     scalafmtCheck     := true,
     scalafmtSbtCheck  := true,
     scalafmtOnCompile := !insideCI.value
@@ -46,10 +51,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
     )
   }.value,
   // Tests run as part of the build via `build/build.sh`, so there are no separate test jobs
-  ciTestJobs := Seq.empty,
-  // The readme check and the docs publishing are not run by the generated CI workflow
-  ciUpdateReadmeJobs := Seq.empty,
-  ciPostReleaseJobs  := Seq.empty,
+  ciTestJobs  := Seq.empty,
   ciBuildJobs := Def.setting {
     Seq(
       Job(
@@ -87,6 +89,25 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
             )
           )
         )
+      ),
+      // Replaces the former `site.yml` pull request check: the README must be up to date and the website must build.
+      // `rm -rf website` is needed because `docs/checkReadme` runs mdoc, which creates `website/docs`, and
+      // `installWebsite` skips scaffolding when the website directory already exists.
+      Job(
+        id = "docs",
+        name = "Docs",
+        condition = Some(Condition.Expression("github.event_name == 'pull_request'")),
+        steps = Seq(
+          Checkout.value,
+          SetupJava("17"),
+          SetupSBT,
+          CacheDependencies,
+          Step.SingleStep(name = "Check if the README file is up to date", run = Some("sbt --no-colors docs/checkReadme")),
+          Step.SingleStep(
+            name = "Check website build process",
+            run = Some("rm -rf website; sbt --no-colors docs/clean; sbt --no-colors docs/buildWebsite")
+          )
+        )
       )
     )
   }.value,
@@ -107,8 +128,8 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
             "CI_SNAPSHOT_RELEASE" -> "publish",
             "PGP_PASSPHRASE"      -> "${{ secrets.PGP_PASSPHRASE }}",
             "PGP_SECRET"          -> "${{ secrets.PGP_SECRET }}",
-            "SONATYPE_PASSWORD"   -> "${{ secrets.GETQUILL_SONATYPE_TOKEN_PASSWORD }}",
-            "SONATYPE_USERNAME"   -> "${{ secrets.GETQUILL_SONATYPE_TOKEN_USER }}"
+            "SONATYPE_PASSWORD"   -> "${{ secrets.SONATYPE_PASSWORD }}",
+            "SONATYPE_USERNAME"   -> "${{ secrets.SONATYPE_USERNAME }}"
           )
         )): _*
       )
