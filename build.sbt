@@ -321,7 +321,7 @@ lazy val `quill-engine` =
         "com.lihaoyi"                  %% "pprint"        % "0.9.3",
         "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.2"
       ),
-      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
+      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;zio.quill.Model;zio.quill.ScalarTag;zio.quill.QuotationTag"
     )
     .enablePlugins(MimaPlugin)
 
@@ -403,7 +403,7 @@ lazy val `quill-codegen-jdbc` =
 //        val dbs     = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
 //        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
 //        r.run(
-//          "io.getquill.codegen.integration.CodegenTestCaseRunner",
+//          "zio.quill.codegen.integration.CodegenTestCaseRunner",
 //          classPath,
 //          fileDir.getAbsolutePath +: dbs,
 //          s
@@ -687,17 +687,17 @@ def excludePaths(paths: Seq[String]) = {
         def keepFilter(path: String) = {
           val keep =
             path.matches(regex) ||
-              path.contains("io/getquill/context/sql/base") ||
-              path.contains("io/getquill/context/sql/ProductSpec") ||
+              path.contains("zio/quill/context/sql/base") ||
+              path.contains("zio/quill/context/sql/ProductSpec") ||
               path.contains("TestContext") ||
               path.contains("package.scala") ||
               path.contains("oracle.scala") ||
-              path.contains("io/getquill/UpperCaseNonDefault") ||
-              path.contains("io/getquill/base") ||
-              path.contains("io/getquill/TestEntities") ||
-              path.contains("io/getquill/context/sql/TestEncoders") ||
-              path.contains("io/getquill/context/sql/TestDecoders") ||
-              path.contains("io/getquill/context/sql/encoding/ArrayEncodingBaseSpec") ||
+              path.contains("zio/quill/UpperCaseNonDefault") ||
+              path.contains("zio/quill/base") ||
+              path.contains("zio/quill/TestEntities") ||
+              path.contains("zio/quill/context/sql/TestEncoders") ||
+              path.contains("zio/quill/context/sql/TestDecoders") ||
+              path.contains("zio/quill/context/sql/encoding/ArrayEncodingBaseSpec") ||
               path.contains("EncodingSpec")
           if (keep) println(s"KEEPING: ${path}")
           keep

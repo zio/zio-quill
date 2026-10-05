@@ -97,8 +97,8 @@ You can invoke the SimpleJdbcCodegen like so:
 ````scala
 // provide DB credentials with a com.typesafe.config.Config object
 // (under the hood the credentials are used to create a HikariPool DataSource)
-import io.getquill.codegen.jdbc.SimpleJdbcCodegen
-import io.getquill.util.LoadConfig
+import zio.quill.codegen.jdbc.SimpleJdbcCodegen
+import zio.quill.util.LoadConfig
 
 val snakecaseConfig = LoadConfig(configPrefix: String)
 val gen = new SimpleJdbcCodegen(snakecaseConfig, "com.my.project") {
@@ -107,7 +107,7 @@ val gen = new SimpleJdbcCodegen(snakecaseConfig, "com.my.project") {
 gen.writeFiles("src/main/scala/com/my/project")
 
 // or, provide an initialized DataSource
-import io.getquill.codegen.jdbc.SimpleJdbcCodegen
+import zio.quill.codegen.jdbc.SimpleJdbcCodegen
 import org.postgresql.ds.PGSimpleDataSource
 
 val pgDataSource = new PGSimpleDataSource()
@@ -197,8 +197,8 @@ case class Person(id: Int, first: Option[String], last: Option[String], age: Int
 case class Address(person_fk: Int, street: Option[String], zip: Option[Int])
 
 // Note that by default this is formatted as "${namespace}Extensions"
-trait PublicExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
-  this:io.getquill.context.Context[Idiom, Naming] =>
+trait PublicExtensions[Idiom <: zio.quill.idiom.Idiom, Naming <: zio.quill.NamingStrategy] {
+  this:zio.quill.context.Context[Idiom, Naming] =>
 
   object PublicSchema {
     object PersonDao {
@@ -241,8 +241,8 @@ object MyCustomContext extends SqlMirrorContext[H2Dialect, Literal](H2Dialect, L
 `ComposeableTraitsJdbcCodegen` is designed to be customizable via composition. This is a longer list of customizable strategies:
 
 ```scala
-import io.getquill.codegen.jdbc.ComposeableTraitsJdbcCodegen
-import io.getquill.codegen.model._
+import zio.quill.codegen.jdbc.ComposeableTraitsJdbcCodegen
+import zio.quill.codegen.model._
 
 new ComposeableTraitsJdbcCodegen(...) {
 
@@ -329,8 +329,8 @@ package com.my.project.common
   
 case class Person(id: Int, firstName: Option[String], lastName: Option[String], age: Int, numTrinkets: Option[Long], trinketType: String)
   
-trait CommonExtensions[Idiom <: io.getquill.idiom.Idiom, Naming <: io.getquill.NamingStrategy] {
-  this:io.getquill.context.Context[Idiom, Naming] =>
+trait CommonExtensions[Idiom <: zio.quill.idiom.Idiom, Naming <: zio.quill.NamingStrategy] {
+  this:zio.quill.context.Context[Idiom, Naming] =>
   
   object PersonDao {
       def alphaPerson = quote {

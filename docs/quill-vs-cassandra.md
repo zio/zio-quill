@@ -161,7 +161,7 @@ Phantom requires mapping classes to lift the database model to DSL types. The qu
 
 **Quill**
 ```scala
-import io.getquill._
+import zio.quill._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -315,7 +315,7 @@ Phantom allows the user certain level of composability, but it gets a bit verbos
 
 **Quill**
 ```scala
-import io.getquill._
+import zio.quill._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -367,7 +367,7 @@ You could extend Phantom by extending the DSL to add new features, although it m
 
 **Quill**
 
-Quill provides an easy mechanism to add non-supported features through [infix](https://github.com/getquill/quill#infix). In fact, most of the [CQL specific features](https://github.com/getquill/quill/blob/master/quill-cassandra/src/main/scala/io/getquill/sources/cassandra/ops/package.scala) are added using infix.
+Quill provides an easy mechanism to add non-supported features through [infix](https://github.com/getquill/quill#infix). In fact, most of the [CQL specific features](https://github.com/getquill/quill/blob/master/quill-cassandra/src/main/scala/zio/quill/sources/cassandra/ops/package.scala) are added using infix.
 
 ## Custom data types ##
 
@@ -540,7 +540,7 @@ It is necessary to define a new `Column` type to be used when defining the data 
 
 **Quill**
 ```scala
-import io.getquill._
+import zio.quill._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

@@ -8,7 +8,7 @@
 		</encoder>
 	</appender>
 
-	<!-- <logger name="io.getquill" level="DEBUG" /> -->
+	<!-- <logger name="zio.quill" level="DEBUG" /> -->
 	<logger name="com.datastax.oss.driver.internal" level="INFO" />
 	<logger name="io.netty" level="ERROR" />
 	<root level="INFO">

@@ -116,5 +116,5 @@ The last stable version (3.1) features a major rewrite of the query compiler. Be
 
 The reader is invited to compare the libraries' normalization code:
 
-https://github.com/getquill/quill/tree/master/quill-core/src/main/scala/io/getquill/norm
+https://github.com/getquill/quill/tree/master/quill-core/src/main/scala/zio/quill/norm
 https://github.com/slick/slick/tree/master/slick/src/main/scala/slick/compiler
