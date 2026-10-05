@@ -47,7 +47,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
   }.value,
   // Tests run as part of the build via `build/build.sh`, so there are no separate test jobs
   ciTestJobs := Seq.empty,
-  // The readme check and the docs publishing are handled by the hand-maintained `site.yml`
+  // The readme check and the docs publishing are not run by the generated CI workflow
   ciUpdateReadmeJobs := Seq.empty,
   ciPostReleaseJobs  := Seq.empty,
   ciBuildJobs := Def.setting {
