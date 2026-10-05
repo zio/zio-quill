@@ -18,7 +18,7 @@ final case class TableContext(entity: Entity, alias: String) extends FromContext
 final case class QueryContext(query: SqlQuery, alias: String) extends FromContext {
   override def quat: Quat = query.quat
 }
-final case class InfixContext(infix: Infix, alias: String) extends FromContext { override def quat: Quat = infix.quat }
+final case class InfixContext(infix: Infix, alias: String)                         extends FromContext { override def quat: Quat = infix.quat }
 final case class JoinContext(t: JoinType, a: FromContext, b: FromContext, on: Ast) extends FromContext {
   override def quat: Quat = Quat.Tuple(a.quat, b.quat)
 }
@@ -44,7 +44,7 @@ case object UnionOperation    extends SetOperation
 case object UnionAllOperation extends SetOperation
 
 sealed trait DistinctKind { def isDistinct: Boolean }
-case object DistinctKind {
+case object DistinctKind  {
   case object Distinct                          extends DistinctKind { override val isDistinct: Boolean = true  }
   final case class DistinctOn(props: List[Ast]) extends DistinctKind { override val isDistinct: Boolean = true  }
   case object None                              extends DistinctKind { override val isDistinct: Boolean = false }
@@ -216,7 +216,7 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
           FlattenSqlQuery(from = sources :+ ctx, select = select(alias, q.quat))(q.quat)
         }
         q match {
-          case _: GroupByMap => trace"base| Nesting GroupByMap $q" andReturn nest(source(q, alias))
+          case _: GroupByMap                    => trace"base| Nesting GroupByMap $q" andReturn nest(source(q, alias))
           case Map(GroupBy(input, id, _), _, _) =>
             trace"base| Nesting Map(GroupBy) $q" andReturn {
               nest(source(q, alias))
@@ -235,11 +235,11 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
           // case Map(_, _, _) =>
           //  trace"base| Nesting Map(a=>ContainsImpurities(a)) $q" andReturn nest(source(q, alias))
 
-          case Nested(q)    => trace"base| Nesting Nested $q" andReturn nest(QueryContext(build(q), alias))
-          case q: ConcatMap => trace"base| Nesting ConcatMap $q" andReturn nest(QueryContext(build(q), alias))
+          case Nested(q)                   => trace"base| Nesting Nested $q" andReturn nest(QueryContext(build(q), alias))
+          case q: ConcatMap                => trace"base| Nesting ConcatMap $q" andReturn nest(QueryContext(build(q), alias))
           case Join(tpe, a, b, iA, iB, on) =>
             trace"base| Collecting join aliases $q" andReturn {
-              val ctx = source(q, alias)
+              val ctx                                             = source(q, alias)
               def aliases(ctx: FromContext): List[(String, Quat)] =
                 ctx match {
                   case TableContext(_, alias)   => (alias, ctx.quat) :: Nil
@@ -259,7 +259,7 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
             trace"base| Flattening Filter/Entity $q" andReturn { flatten(sources, q, alias, nestNextMap) }
           case q @ (_: Map) if (nestNextMap) => trace"base| Map + nest $q" andReturn { nest(source(q, alias)) }
           case q @ (_: Map)                  => trace"base| Map $q" andReturn { flatten(sources, q, alias, nestNextMap) }
-          case q if (sources == Nil) =>
+          case q if (sources == Nil)         =>
             trace"base| Flattening Empty-Sources $q" andReturn { flatten(sources, q, alias, nestNextMap) }
           case other => trace"base| Nesting 'other' $q" andReturn { nest(source(q, alias)) }
         }
@@ -351,7 +351,7 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
             val b = base(q, alias, nestNextMap = true)
             // Same as ExpandSelection in Map(GroupBy)
             val flatGroupByAsts = new ExpandSelection(b.from).ofSubselect(List(SelectValue(g))).map(_.ast)
-            val groupByClause =
+            val groupByClause   =
               if (flatGroupByAsts.length > 1) Tuple(flatGroupByAsts)
               else flatGroupByAsts.head
 
@@ -367,7 +367,7 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
           }
 
         case Map(q, Ident(alias, _), p) =>
-          val b = base(q, alias, nestNextMap = false)
+          val b   = base(q, alias, nestNextMap = false)
           val agg = b.select.collect { case s @ SelectValue(_: Aggregation, _, _) =>
             s
           }
@@ -531,7 +531,7 @@ class SqlQueryApply(traceConfig: TraceConfig, allowTopLevelInfix: Boolean = true
   private def orderByCriteria(ast: Ast, ordering: Ast, from: List[FromContext]): List[OrderByCriteria] =
     (ast, ordering) match {
       case (Tuple(properties), ord: PropertyOrdering) => properties.flatMap(orderByCriteria(_, ord, from))
-      case (Tuple(properties), TupleOrdering(ord)) =>
+      case (Tuple(properties), TupleOrdering(ord))    =>
         properties.zip(ord).flatMap { case (a, o) => orderByCriteria(a, o, from) }
       // if its a quat product, use ExpandSelection to break it down into its component fields and apply the ordering to all of them
       case (Ident(_, _: Quat.Product), ord) =>

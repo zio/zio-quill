@@ -23,7 +23,7 @@ trait OnConflictSpec extends Spec {
   }
 
   object `onConflictIgnore(_.i)` {
-    val name = "ON CONFLICT (...) DO NOTHING"
+    val name                   = "ON CONFLICT (...) DO NOTHING"
     val testQuery1, testQuery2 = quote {
       qr1.insertValue(lift(TestEntity("s", 2, 0, None, true))).onConflictIgnore(_.i)
     }

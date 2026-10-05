@@ -112,9 +112,9 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
   }
 
   override def apply(qq: Query)(implicit parent: History): (Query, StatefulTransformerWithStack[Option[String]]) = {
-    implicit lazy val nextHistory = History.Child(qq, parent)
-    lazy val prevType             = parent.ast.map(_.getClass.getSimpleName).getOrElse("Root")
-    lazy val stateInfo            = s" [state:${state.toString},prev:${prevType.toString}] "
+    implicit lazy val nextHistory        = History.Child(qq, parent)
+    lazy val prevType                    = parent.ast.map(_.getClass.getSimpleName).getOrElse("Root")
+    lazy val stateInfo                   = s" [state:${state.toString},prev:${prevType.toString}] "
     lazy val parentShouldNeverHaveLeaves =
       parent.ast match {
         case Some(_: Aggregation) => false
@@ -130,7 +130,7 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
       // we don't need to do anything (since that is what the SqlQuery.apply expects).
       case Aggregation(op, LeafQuat(ast)) =>
         val (ast1, s) = apply(ast)
-        val ast2 =
+        val ast2      =
           s.state match {
             case Some(prop) => Map(ast1, Ident("e", ast1.quat), Property(Ident("e", ast1.quat), prop))
             case None       => ast1
@@ -253,9 +253,9 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
       //    Note that in certain phases that automatically expect a leaf-project e.g. aggregations we do not want to do this phase.
       //    that means that we need to track what the parent-ast (that contains this one) is.
       case MapClause(NotGroupBy(ent), e, LeafQuat(body), remake) =>
-        val (ent1, s) = apply(ent)
-        val e1        = Ident(e.name, ent1.quat)
-        val bodyA     = elaborateSheath(body)(s.state, e, e1)
+        val (ent1, s)   = apply(ent)
+        val e1          = Ident(e.name, ent1.quat)
+        val bodyA       = elaborateSheath(body)(s.state, e, e1)
         val (bodyB, s1) =
           if (parentShouldNeverHaveLeaves)
             sheathLeaf(bodyA)
@@ -316,8 +316,8 @@ case class SheathLeafClauses(state: Option[String], traceConfig: TraceConfig)
       // we need to climb back into the CaseClasses that both created and change the property that they map
       // to to be the same
       case UnionClause(LeafQuat(left), LeafQuat(right), remake) =>
-        val (left1, sl)  = apply(left)
-        val (right1, sr) = apply(right)
+        val (left1, sl)        = apply(left)
+        val (right1, sr)       = apply(right)
         val (left2, right2, s) =
           (sl.state, sr.state) match {
             // If they both have the same state content e.g. U(M(ent,e,CC(v->e.v)),M(ent,e,CC(v->e.v)))

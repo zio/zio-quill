@@ -41,7 +41,7 @@ trait OnConflictSupport {
         // See the "cols target - update + infix" example for more detail
         case _: OnConflict.Excluded => stmt"EXCLUDED"
         case _: OnConflict.Existing => stmt"${entityAlias.token}"
-        case a: Action =>
+        case a: Action              =>
           self.actionTokenizer(customEntityTokenizer)(actionAstTokenizer, strategy, idiomContext).token(a)
       }
 

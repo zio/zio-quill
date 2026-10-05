@@ -23,7 +23,7 @@ class QuerySchemaSpec extends Spec {
 
     "schemaMeta" in {
       implicit val personSchemaMeta = schemaMeta[Person]("thePerson", _.id -> "theId", _.name -> "theName")
-      val q = quote {
+      val q                         = quote {
         query[Person]
           .insertValue(lift(p))
           .onConflictUpdate(_.id)(_.name -> _.name)

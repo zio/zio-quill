@@ -22,7 +22,7 @@ private[getquill] object QuatOps {
           val goInto =
             quat.lookup(head, true) match {
               case p: Quat.Product => p
-              case _ =>
+              case _               =>
                 QuatException(s"Quat at ${curr.mkString("/", ".", "")} is not a product but we need to go into ${tail
                     .mkString("./", ".", "")} and write renames: [${renames.mkString(",")}]")
             }

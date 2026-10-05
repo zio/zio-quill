@@ -8,8 +8,8 @@ object Messages {
   private def variable(propName: String, envName: String, default: String) =
     Option(System.getProperty(propName)).orElse(sys.env.get(envName)).getOrElse(default)
 
-  def resetCache(): Unit                        = cacheMap.clear()
-  private val cacheMap: MutableMap[String, Any] = MutableMap()
+  def resetCache(): Unit                             = cacheMap.clear()
+  private val cacheMap: MutableMap[String, Any]      = MutableMap()
   private def cache[T](name: String, value: => T): T =
     cacheMap.getOrElseUpdate(name, value).asInstanceOf[T]
 
@@ -38,7 +38,7 @@ object Messages {
   def debugEnabled = cache("quill.macro.log", variable("quill.macro.log", "quill_macro_log", "true").toBoolean)
   def traceEnabled =
     cache("quill.trace.enabled", variable("quill.trace.enabled", "quill_trace_enabled", "false").toBoolean)
-  def traceColors = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
+  def traceColors   = cache("quill.trace.color", variable("quill.trace.color", "quill_trace_color,", "false").toBoolean)
   def traceOpinions =
     cache("quill.trace.opinion", variable("quill.trace.opinion", "quill_trace_opinion", "false").toBoolean)
   def traceAstSimple =
@@ -55,13 +55,13 @@ object Messages {
   )
   def querySubexpand =
     cache("quill.query.subexpand", variable("quill.query.subexpand", "query_query_subexpand", "true").toBoolean)
-  def quillLogFile = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
-  def errorDetail  = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
+  def quillLogFile     = cache("quill.log.file", LogToFile(variable("quill.log.file", "quill_log_file", "false")))
+  def errorDetail      = cache("quill.error.detail", variable("quill.error.detail", "quill_error_detail", "false").toBoolean)
   def disableReturning = cache(
     "quill.query.disableReturning",
     variable("quill.query.disableReturning", "quill_query_disableReturning", "false").toBoolean
   )
-  def logBinds = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
+  def logBinds            = cache("quill.binds.log", variable("quill.binds.log", "quill_binds_log", "false").toBoolean)
   def queryTooLongForLogs =
     cache("quill.query.tooLong", variable("quill.query.tooLong", "quill_query_tooLong", "200").toInt)
   def errorPrefix = cache("quill.error.prefix", variable("quill.error.prefix", "quill_error_prefix", "false").toBoolean)
@@ -78,12 +78,12 @@ object Messages {
   }
 
   sealed trait QuatTrace { def value: String }
-  object QuatTrace {
+  object QuatTrace       {
     case object Short extends QuatTrace { val value = "short" }
     case object Full  extends QuatTrace { val value = "full"  }
     case object All   extends QuatTrace { val value = "all"   }
     case object None  extends QuatTrace { val value = "none"  }
-    val values: List[QuatTrace] = List(Short, Full, All, None)
+    val values: List[QuatTrace]       = List(Short, Full, All, None)
     def apply(str: String): QuatTrace =
       values
         .find(_.value == str)

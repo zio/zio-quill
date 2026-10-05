@@ -50,7 +50,7 @@ trait Encoders {
   implicit val sqlTimestampEncoder: Encoder[java.sql.Timestamp] =
     encoder(Types.TIMESTAMP, (index, value, row) => row.setTimestamp(index, value))
 
-  implicit val stringEncoder: Encoder[String] = encoder(Types.VARCHAR, _.setString)
+  implicit val stringEncoder: Encoder[String]         = encoder(Types.VARCHAR, _.setString)
   implicit val bigDecimalEncoder: Encoder[BigDecimal] =
     encoder(Types.NUMERIC, (index, value, row) => row.setBigDecimal(index, value.bigDecimal))
   implicit val byteEncoder: Encoder[Byte]             = encoder(Types.TINYINT, _.setByte)
@@ -60,7 +60,7 @@ trait Encoders {
   implicit val floatEncoder: Encoder[Float]           = encoder(Types.FLOAT, _.setFloat)
   implicit val doubleEncoder: Encoder[Double]         = encoder(Types.DOUBLE, _.setDouble)
   implicit val byteArrayEncoder: Encoder[Array[Byte]] = encoder(Types.VARBINARY, _.setBytes)
-  implicit val dateEncoder: Encoder[util.Date] =
+  implicit val dateEncoder: Encoder[util.Date]        =
     encoder(
       Types.TIMESTAMP,
       (index, value, row) =>

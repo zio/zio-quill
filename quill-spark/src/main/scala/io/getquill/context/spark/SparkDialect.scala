@@ -146,7 +146,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
   ): Tokenizer[Property] = {
     def path(ast: Ast): Token =
       ast match {
-        case Ident(name, _) => name.token
+        case Ident(name, _)                            => name.token
         case Property.Opinionated(a, b, renameable, _) =>
           stmt"${path(a)}.${renameable.fixedOr(b.token)(strategy.column(b).token)}"
         case other =>
@@ -170,7 +170,7 @@ trait SparkIdiom extends SqlIdiom with CannotReturn { self =>
     strategy: NamingStrategy
   ): Tokenizer[Value] = Tokenizer[Value] {
     case Constant(v: String, _) => stmt"'${v.replaceAll("""[\\']""", """\\$0""").token}'"
-    case Tuple(values) =>
+    case Tuple(values)          =>
       stmt"struct(${values.zipWithIndex.map { case (value, index) =>
           stmt"${value.token} AS _${(index + 1).toString.token}"
         }.token})"

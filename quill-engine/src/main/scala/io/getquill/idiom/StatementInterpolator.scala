@@ -59,7 +59,7 @@ object StatementInterpolator {
   implicit val liftTokenizer: Tokenizer[Lift] =
     Tokenizer[Lift] {
       case lift: ScalarLift => ScalarLiftToken(lift)
-      case lift: Lift =>
+      case lift: Lift       =>
         fail(
           s"Can't tokenize a non-scalar lifting. ${lift.name}\n" +
             s"\n" +
@@ -96,7 +96,7 @@ object StatementInterpolator {
         )
     }
 
-  implicit val tokenTokenizer: Tokenizer[Token] = Tokenizer[Token](identity)
+  implicit val tokenTokenizer: Tokenizer[Token]         = Tokenizer[Token](identity)
   implicit val statementTokenizer: Tokenizer[Statement] =
     Tokenizer[Statement](identity)
   implicit val stringTokenTokenizer: Tokenizer[StringToken] =

@@ -65,7 +65,7 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
           case (key, None, Some(value))               => (key, value)
         }
       val newFields = mutable.LinkedHashMap(newFieldsIter.toList: _*)
-      val newTpe =
+      val newTpe    =
         if (q.tpe == Product.Type.Abstract || other.tpe == Product.Type.Abstract)
           Product.Type.Abstract
         else
@@ -99,11 +99,11 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
   override def apply(e: Query): Query =
     e match {
       case Filter(a, b, c) => applyBody(a, b, c)(Filter)
-      case Map(a, b, c) =>
+      case Map(a, b, c)    =>
         applyBody(a, b, c)(Map)
-      case FlatMap(a, b, c)   => applyBody(a, b, c)(FlatMap)
-      case ConcatMap(a, b, c) => applyBody(a, b, c)(ConcatMap)
-      case GroupBy(a, b, c)   => applyBody(a, b, c)(GroupBy)
+      case FlatMap(a, b, c)              => applyBody(a, b, c)(FlatMap)
+      case ConcatMap(a, b, c)            => applyBody(a, b, c)(ConcatMap)
+      case GroupBy(a, b, c)              => applyBody(a, b, c)(GroupBy)
       case GroupByMap(a, iA1, c, iA2, e) =>
         val ar   = apply(a)
         val iA1r = iA1.retypeQuatFrom(ar.quat)
@@ -111,8 +111,8 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
         val cr   = BetaReduction(c, RWR, iA1 -> iA1r)
         val er   = BetaReduction(e, RWR, iA2 -> iA2r)
         trace"Repropagate ${a.quat.suppress(msg)} from $a into:" andReturn GroupByMap(ar, iA1r, cr, iA2r, er)
-      case DistinctOn(a, b, c) => applyBody(a, b, c)(DistinctOn)
-      case SortBy(a, b, c, d)  => applyBody(a, b, c)(SortBy(_, _, _, d))
+      case DistinctOn(a, b, c)       => applyBody(a, b, c)(DistinctOn)
+      case SortBy(a, b, c, d)        => applyBody(a, b, c)(SortBy(_, _, _, d))
       case Join(t, a, b, iA, iB, on) =>
         val ar  = apply(a)
         val br  = apply(b)
@@ -200,8 +200,8 @@ class RepropagateQuats(traceConfig: TraceConfig) extends StatelessTransformer {
           case OnConflict.Update(assignments) =>
             val assignmentsR =
               assignments.map { assignment =>
-                val alias1R = assignment.alias1.copy(quat = oca.quat)
-                val alias2R = assignment.alias2.copy(quat = oca.quat)
+                val alias1R   = assignment.alias1.copy(quat = oca.quat)
+                val alias2R   = assignment.alias2.copy(quat = oca.quat)
                 val propertyR =
                   BetaReduction(assignment.property, RWR, assignment.alias1 -> alias1R, assignment.alias2 -> alias2R)
                 trace"OnConflict.Update property ${assignment.property} becomes ${propertyR}".andLog()

@@ -84,7 +84,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
     val isNull =
       OptionalTypecheck(c)(q"implicitly[${c.prefix}.NullChecker]") match {
         case Some(nullChecker) => nullChecker
-        case None =>
+        case None              =>
           c.fail(
             s"""Can't find a NullChecker for the context ${show(c.prefix.tree)}. // actualType.widen
                |Have you imported the context e.g.

@@ -14,7 +14,7 @@ object Rebind {
 
   def apply(c: Context)(tree: c.Tree, ast: Ast, astParser: c.Tree => Ast): Option[Ast] = {
     import c.universe.{Function => _, Ident => _, _}
-    val ctx = c
+    val ctx   = c
     val infer = new QuatMaking {
       override val c: whitebox.Context = ctx
     }

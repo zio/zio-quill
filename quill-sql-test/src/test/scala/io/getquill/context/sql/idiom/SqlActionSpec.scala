@@ -133,7 +133,7 @@ class SqlActionSpec extends Spec {
         "reuse field name - with no filter" in {
           case class Timeslot(id: Int, booked: Int)
           val timeslotId = 123
-          val q = quote {
+          val q          = quote {
             query[Timeslot]
               .update(ts => ts.booked -> (ts.booked + lift(1)))
           }
@@ -143,7 +143,7 @@ class SqlActionSpec extends Spec {
         "reuse field name - with filter" in {
           case class Timeslot(id: Int, booked: Int)
           val timeslotId = 123
-          val q = quote {
+          val q          = quote {
             query[Timeslot]
               .filter(tsl => tsl.id == lift(timeslotId))
               .update(ts => ts.booked -> (ts.booked + lift(1)))
@@ -156,7 +156,7 @@ class SqlActionSpec extends Spec {
           import ctx._
           case class Timeslot(id: Int, booked: Int)
           val timeslotId = 123
-          val q = quote {
+          val q          = quote {
             query[Timeslot]
               .filter(tsl => tsl.id == lift(timeslotId))
               .update(ts => ts.booked -> (ts.booked + lift(1)))

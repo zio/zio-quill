@@ -52,7 +52,7 @@ trait PostgresDialect
   private[getquill] val preparedStatementId = new AtomicInteger
 
   override def prepareForProbing(string: String) = {
-    var i = 0
+    var i     = 0
     val query = string.flatMap(x =>
       if (x != '?') s"$x"
       else {
@@ -188,7 +188,7 @@ trait PostgresDialect
             val setColumns = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
             // The columns that go inside ps(name, id, id1) i.e. stmt"name, id, id1"
             val asColumns = valuesColumns.toList.mkStmt(", ")
-            val output =
+            val output    =
               stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(
                   stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})"
                 )}) AS ${colsId.token}($asColumns) WHERE ${specialPropertyTokenizer.token(replacedWhere)}"
@@ -207,7 +207,7 @@ trait PostgresDialect
             val columnsAndValues = columnsAndValuesTogether(assignments)
             val setColumns       = columnsAndValues.map { case (column, value) => stmt"$column = ${value}" }.mkStmt(", ")
             val asColumns        = valuesColumns.toList.mkStmt(", ")
-            val output =
+            val output           =
               stmt"UPDATE ${table.token} AS ${tableAlias.token} SET $setColumns FROM (VALUES ${ValuesClauseToken(
                   stmt"(${valuesLifts.toList.map(v => v: External).mkStmt(", ")})"
                 )}) AS ${colsId.token}($asColumns)"

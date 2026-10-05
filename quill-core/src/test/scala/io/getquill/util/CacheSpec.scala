@@ -15,8 +15,8 @@ class CacheSpec extends Spec {
   "caches hits" in {
     val cache = new Cache[Int, Value]
 
-    val value = new Value
-    var calls = 0
+    val value  = new Value
+    var calls  = 0
     def _value = {
       calls += 1
       Some(value)
@@ -31,7 +31,7 @@ class CacheSpec extends Spec {
   "caches misses" in {
     val cache = new Cache[Int, Value]
 
-    var calls = 0
+    var calls  = 0
     def _value = {
       calls += 1
       None
@@ -46,8 +46,8 @@ class CacheSpec extends Spec {
   "expires keys" in {
     val cache = new Cache[Int, Value]
 
-    val value = new Value
-    var calls = 0
+    val value  = new Value
+    var calls  = 0
     def _value = {
       calls += 1
       Some(value)

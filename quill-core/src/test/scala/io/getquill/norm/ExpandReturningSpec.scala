@@ -89,7 +89,7 @@ class ExpandReturningSpec extends Spec {
     val q = quote(query[Person].insertValue(lift(Person("Joe", 123))))
 
     "should expand tuples with plain record" in {
-      val qi = quote(q.returning(p => (p.name, p.age)))
+      val qi  = quote(q.returning(p => (p.name, p.age)))
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) { case (ast, stmt) =>
           fail("Should not use this method for the returning clause")
@@ -98,7 +98,7 @@ class ExpandReturningSpec extends Spec {
       ret mustBe ReturnRecord
     }
     "should expand case classes with plain record" in {
-      val qi = quote(q.returning(p => Foo(p.name, p.age)))
+      val qi  = quote(q.returning(p => Foo(p.name, p.age)))
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) { case (ast, stmt) =>
           fail("Should not use this method for the returning clause")
@@ -107,7 +107,7 @@ class ExpandReturningSpec extends Spec {
       ret mustBe ReturnRecord
     }
     "should expand whole record with plain record (converted to tuple in parser)" in {
-      val qi = quote(q.returning(p => p))
+      val qi  = quote(q.returning(p => p))
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) { case (ast, stmt) =>
           fail("Should not use this method for the returning clause")
@@ -124,7 +124,7 @@ class ExpandReturningSpec extends Spec {
     val q = quote(query[Person].insertValue(lift(Person("Joe", 123))))
 
     "should expand tuples" in {
-      val qi = quote(q.returning(p => (p.name, p.age)))
+      val qi  = quote(q.returning(p => (p.name, p.age)))
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) { case (ast, stmt) =>
           Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
@@ -132,7 +132,7 @@ class ExpandReturningSpec extends Spec {
       ret mustBe ReturnColumns(List("name", "age"))
     }
     "should expand case classes" in {
-      val qi = quote(q.returning(p => Foo(p.name, p.age)))
+      val qi  = quote(q.returning(p => Foo(p.name, p.age)))
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) { case (ast, stmt) =>
           Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string
@@ -140,7 +140,7 @@ class ExpandReturningSpec extends Spec {
       ret mustBe ReturnColumns(List("name", "age"))
     }
     "should expand case classes (converted to tuple in parser)" in {
-      val qi = quote(q.returning(p => p))
+      val qi  = quote(q.returning(p => p))
       val ret =
         ExpandReturning.applyMap(qi.ast.asInstanceOf[Returning]) { case (ast, stmt) =>
           Expand(ctx, ast, stmt, mi, Literal, ExecutionType.Unknown).string

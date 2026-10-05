@@ -22,14 +22,14 @@ class SparkDialectSpec extends Spec {
 
   "translate" - {
     "query" in {
-      val ast = query[Test].ast
+      val ast             = query[Test].ast
       val (norm, stmt, _) =
         SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty)(Literal)
       norm mustEqual ast
       stmt.toString mustEqual "SELECT x.i AS i, x.j AS j, x.s AS s FROM Test x"
     }
     "non-query" in {
-      val ast = sql"SELECT 1".ast
+      val ast             = sql"SELECT 1".ast
       val (norm, stmt, _) =
         SparkDialect.translate(ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty)(Literal)
       norm mustEqual ast

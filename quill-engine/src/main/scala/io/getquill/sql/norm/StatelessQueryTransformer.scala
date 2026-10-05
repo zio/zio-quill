@@ -34,7 +34,7 @@ trait StatelessQueryTransformer {
 
   protected def apply(q: SqlQuery, level: QueryLevel): SqlQuery =
     q match {
-      case p: TopInfixQuery => p
+      case p: TopInfixQuery   => p
       case q: FlattenSqlQuery =>
         expandNested(q, level)
       case SetOperationSqlQuery(a, op, b) =>

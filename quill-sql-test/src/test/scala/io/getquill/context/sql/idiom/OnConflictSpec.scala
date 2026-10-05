@@ -44,7 +44,7 @@ trait OnConflictSpec extends Spec {
   // even be created so clearly the variable name itself must be dropped and only the column reference should be used
   def `cols target - update + infix`(ins: Quoted[Insert[TestEntity]]) = quote {
     ins.onConflictUpdate(_.i, _.s)(
-      (t, e) => t.l -> sql"foo(${t.l}, ${e.l})".as[Long],
+      (t, e) => t.l    -> sql"foo(${t.l}, ${e.l})".as[Long],
       (tt, ee) => tt.l -> sql"bar(${tt.l}, ${ee.l})".as[Long]
     )
   }

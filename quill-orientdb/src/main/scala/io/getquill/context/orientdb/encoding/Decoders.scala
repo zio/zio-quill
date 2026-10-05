@@ -46,7 +46,7 @@ trait Decoders extends CollectionDecoders {
     decoder((index, row, session) => row.field[java.math.BigDecimal](row.fieldNames()(index)))
   implicit val booleanDecoder: Decoder[Boolean] =
     decoder((index, row, session) => row.field[Boolean](row.fieldNames()(index)))
-  implicit val intDecoder: Decoder[Int] = decoder((index, row, session) => row.field[Int](row.fieldNames()(index)))
+  implicit val intDecoder: Decoder[Int]     = decoder((index, row, session) => row.field[Int](row.fieldNames()(index)))
   implicit val shortDecoder: Decoder[Short] =
     decoder((index, row, session) => row.field[Short](row.fieldNames()(index)))
   implicit val byteDecoder: Decoder[Byte] = decoder((index, row, session) => row.field[Byte](row.fieldNames()(index)))

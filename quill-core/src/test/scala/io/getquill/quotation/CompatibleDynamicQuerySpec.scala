@@ -12,7 +12,7 @@ class CompatibleDynamicQuerySpec extends Spec {
   "implicit classes" - {
     "query" in {
       val q: Quoted[Query[TestEntity]] = qr1
-      val d = {
+      val d                            = {
         val d = q.dynamic
         (d: DynamicQuery[TestEntity])
       }
@@ -20,7 +20,7 @@ class CompatibleDynamicQuerySpec extends Spec {
     }
     "entity query" in {
       val q: Quoted[EntityQuery[TestEntity]] = qr1
-      val d = {
+      val d                                  = {
         val d = q.dynamic
         (d: DynamicEntityQuery[TestEntity])
       }
@@ -28,7 +28,7 @@ class CompatibleDynamicQuerySpec extends Spec {
     }
     "action" in {
       val q: Quoted[Action[TestEntity]] = qr1.insert(_.i -> 1)
-      val d = {
+      val d                             = {
         val d = q.dynamic
         (d: DynamicAction[Action[TestEntity]])
       }
@@ -36,7 +36,7 @@ class CompatibleDynamicQuerySpec extends Spec {
     }
     "insert" in {
       val q: Quoted[Insert[TestEntity]] = qr1.insert(_.i -> 1)
-      val d = {
+      val d                             = {
         val d = q.dynamic
         (d: DynamicInsert[TestEntity])
       }
@@ -44,7 +44,7 @@ class CompatibleDynamicQuerySpec extends Spec {
     }
     "update" in {
       val q: Quoted[Update[TestEntity]] = qr1.update(_.i -> 1)
-      val d = {
+      val d                             = {
         val d = q.dynamic
         (d: DynamicUpdate[TestEntity])
       }

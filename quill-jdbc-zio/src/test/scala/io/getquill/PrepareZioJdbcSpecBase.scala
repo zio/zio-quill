@@ -44,7 +44,7 @@ trait PrepareZioJdbcSpecBase extends ProductSpec with ZioProxySpec {
     prepareStatement: QCIO[PreparedStatement]
   )(extractor: (ResultSet, Connection) => T)(implicit runtime: Implicit[DataSource]) =
     (for {
-      conn <- ZIO.service[Connection]
+      conn   <- ZIO.service[Connection]
       result <- prepareStatement.provideEnvironment(ZEnvironment(conn)).acquireReleaseWithAuto { stmt =>
                   ZIO.attempt(stmt.executeQuery()).acquireReleaseWithAuto { rs =>
                     ZIO.attempt(ResultSetExtractor(rs, stmt.getConnection, extractor))

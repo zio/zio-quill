@@ -45,7 +45,7 @@ trait ZioPrepareContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
     (for {
       conn <- ZIO.service[Session]
       stmt <- ZIO.attempt(conn.prepareStatement(sql))
-      ps <- ZIO.attempt {
+      ps   <- ZIO.attempt {
               val (params, ps) = prepare(stmt, conn)
               logger.logQuery(sql, params)
               ps

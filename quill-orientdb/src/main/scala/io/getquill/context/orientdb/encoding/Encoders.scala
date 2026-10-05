@@ -36,7 +36,7 @@ trait Encoders extends CollectionEncoders {
   implicit def mappedEncoder[I, O](implicit mapped: MappedEncoding[I, O], encoder: Encoder[O]): Encoder[I] =
     OrientDBEncoder(mappedBaseEncoder(mapped, encoder.encoder))
 
-  implicit val stringEncoder: Encoder[String] = encoder { (index, value, row) => row.insert(index, value); row }
+  implicit val stringEncoder: Encoder[String]         = encoder { (index, value, row) => row.insert(index, value); row }
   implicit val bigDecimalEncoder: Encoder[BigDecimal] = encoder { (index, value, row) =>
     row.insert(index, value.bigDecimal); row
   }

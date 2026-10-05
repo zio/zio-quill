@@ -30,7 +30,7 @@ class ProductJdbcSpec extends ProductSpec {
     case class Foo(id: Long, description: String, sku: Long)
 
     "Single insert with inlined free variable" in {
-      val prd = Product(0L, "test1", 1L)
+      val prd      = Product(0L, "test1", 1L)
       val inserted = testContext.run {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(r => r)
       }
@@ -42,7 +42,7 @@ class ProductJdbcSpec extends ProductSpec {
 
     "Single insert with free variable and explicit quotation" in {
       val prd = Product(0L, "test2", 2L)
-      val q1 = quote {
+      val q1  = quote {
         product.insert(_.sku -> lift(prd.sku), _.description -> lift(prd.description)).returning(_.id)
       }
       val inserted        = testContext.run(q1)

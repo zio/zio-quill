@@ -606,7 +606,7 @@ class QuotationSpec extends Spec {
         "batch" in {
           val list   = List(1, 2)
           val delete = quote((i: Int) => qr1.filter(_.i == i).delete)
-          val q = quote {
+          val q      = quote {
             liftQuery(list).foreach(i => delete(i))
           }
           quote(unquote(q)).ast mustEqual
@@ -2123,7 +2123,7 @@ class QuotationSpec extends Spec {
     val i  = -1
     val q1 = quote(qr1.filter(_.s == "aa"))
     val q2 = quote(qr1.filter(_.s == "bb"))
-    val q =
+    val q  =
       if (i > 0) q1
       else q2
 

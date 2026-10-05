@@ -55,7 +55,7 @@ trait ObjectGen {
   def objectName: Option[String]
   def surroundByObject(innerCode: String) =
     objectName match {
-      case None => innerCode
+      case None                   => innerCode
       case Some(objectNameActual) =>
         s"""
 object ${objectNameActual} {
@@ -78,7 +78,7 @@ trait PackageGen {
   def codeWrapper: CodeWrapper
   def surroundByPackage(innerCode: String) =
     codeWrapper match {
-      case NoWrapper => innerCode
+      case NoWrapper                  => innerCode
       case PackageHeader(packageName) => {
         val out =
           if (packagePrefix.trim != "") s"package ${packagePrefix}.${packageName}\n\n"

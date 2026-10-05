@@ -107,7 +107,7 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
           val isSubselect       = inContext.isSubselect(p)
           val propsAlreadyFixed = renameables.forall(_ == Renameable.Fixed)
           val isPropertyRenamed = p.prevName.isDefined
-          val renameable =
+          val renameable        =
             if (isPropertyRenamed || isSubselect || propsAlreadyFixed)
               Renameable.Fixed
             else

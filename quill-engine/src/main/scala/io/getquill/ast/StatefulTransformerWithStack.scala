@@ -5,7 +5,7 @@ object StatefulTransformerWithStack {
     def ast: Option[Ast]
   }
   object History {
-    case object Root extends History { val ast = None }
+    case object Root                             extends History { val ast = None }
     case class Child(clause: Ast, prev: History) extends History {
       def ast = Some(clause)
     }
@@ -164,7 +164,7 @@ trait StatefulTransformerWithStack[T] {
 
   def apply(eq: Query)(implicit parent: History): (Query, StatefulTransformerWithStack[T]) =
     eq match {
-      case e: Entity => (e, this)
+      case e: Entity       => (e, this)
       case Filter(a, b, c) =>
         val (at, att) = apply(a)(History(eq))
         val (ct, ctt) = att.apply(c)(History(eq))
@@ -276,7 +276,7 @@ trait StatefulTransformerWithStack[T] {
     e match {
       case e: Constant => (e, this)
       case NullValue   => (e, this)
-      case Tuple(a) =>
+      case Tuple(a)    =>
         val (at, att) = apply(a)(s => (u => s.apply(u)(History(e))))
         (Tuple(at), att)
       case CaseClass(n, a) =>
@@ -319,7 +319,7 @@ trait StatefulTransformerWithStack[T] {
 
   def apply(e: OnConflict.Target)(implicit parent: History): (OnConflict.Target, StatefulTransformerWithStack[T]) =
     e match {
-      case OnConflict.NoTarget => (e, this)
+      case OnConflict.NoTarget      => (e, this)
       case OnConflict.Properties(a) =>
         val (at, att) = apply(a)(_.apply)
         (OnConflict.Properties(at), att)
@@ -327,7 +327,7 @@ trait StatefulTransformerWithStack[T] {
 
   def apply(e: OnConflict.Action)(implicit parent: History): (OnConflict.Action, StatefulTransformerWithStack[T]) =
     e match {
-      case OnConflict.Ignore => (e, this)
+      case OnConflict.Ignore    => (e, this)
       case OnConflict.Update(a) =>
         val (at, att) = apply(a)(_.apply)
         (OnConflict.Update(at), att)

@@ -19,13 +19,13 @@ trait QueryResultTypeSpec extends ProductSpec {
   val unionAll   = quote(query[Product].unionAll(query[Product]))
   val union      = quote(query[Product].union(query[Product]))
 
-  val minExists    = quote(query[Product].map(_.sku).min)
-  val minNonExists = quote(query[Product].filter(_.id > 1000).map(_.sku).min)
-  val maxExists    = quote(query[Product].map(_.sku).max)
-  val maxNonExists = quote(query[Product].filter(_.id > 1000).map(_.sku).max)
-  val avgExists    = quote(query[Product].map(_.sku).avg)
-  val avgNonExists = quote(query[Product].filter(_.id > 1000).map(_.sku).avg)
-  val productSize  = quote(query[Product].size)
+  val minExists        = quote(query[Product].map(_.sku).min)
+  val minNonExists     = quote(query[Product].filter(_.id > 1000).map(_.sku).min)
+  val maxExists        = quote(query[Product].map(_.sku).max)
+  val maxNonExists     = quote(query[Product].filter(_.id > 1000).map(_.sku).max)
+  val avgExists        = quote(query[Product].map(_.sku).avg)
+  val avgNonExists     = quote(query[Product].filter(_.id > 1000).map(_.sku).avg)
+  val productSize      = quote(query[Product].size)
   val parametrizedSize = quote { (id: Long) =>
     query[Product].filter(_.id == id).size
   }

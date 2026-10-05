@@ -40,7 +40,7 @@ class EncodingDslMacro(val c: MacroContext) {
       case None =>
         t.tpe.baseType(c.symbolOf[Product]) match {
           case NoType => fail("Encoder", t.tpe)
-          case _ =>
+          case _      =>
             q"${c.prefix}.${TermName(s"${method}CaseClass")}($v)"
         }
     }
@@ -53,7 +53,7 @@ class EncodingDslMacro(val c: MacroContext) {
   private def withAnyValParam[R](tpe: Type)(f: Symbol => R): Option[R] =
     tpe.baseType(c.symbolOf[AnyVal]) match {
       case NoType => None
-      case _ =>
+      case _      =>
         primaryConstructor(tpe).map(_.paramLists.flatten).collect { case param :: Nil =>
           f(param)
         }

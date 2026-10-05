@@ -36,7 +36,7 @@ object EnableTraceNone extends EnableTrace {
 object ConfigList {
   sealed trait HList[+H]
   final case class ::[+H, +T <: HList[_]](head: H, tail: T) extends HList[H]
-  sealed trait HNil extends HList[Nothing] {
+  sealed trait HNil                                         extends HList[Nothing] {
     def ::[H](h: H): HList[H] = ConfigList.::[H, HNil](h, this)
   }
   case object HNil extends HNil

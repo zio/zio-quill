@@ -18,8 +18,8 @@ class DefaultJdbcTyper(
 
   def unresolvedType(jdbcType: Int, tag: Option[ClassTag[_]]): Option[ClassTag[_]] =
     strategy match {
-      case AssumeString => Some(classTag[String])
-      case SkipColumn   => None
+      case AssumeString     => Some(classTag[String])
+      case SkipColumn       => None
       case ThrowTypingError =>
         throw new TypingError(
           s"Could not resolve jdbc type: ${jdbcType}" + tag.map(t => s" class: `${t}`.").getOrElse("")
@@ -32,7 +32,7 @@ class DefaultJdbcTyper(
 
     jdbcType match {
       case CHAR | VARCHAR | LONGVARCHAR | NCHAR | NVARCHAR | LONGNVARCHAR => Some(classTag[String])
-      case NUMERIC =>
+      case NUMERIC                                                        =>
         numericPreference match {
           case PreferPrimitivesWhenPossible if (jdbcTypeInfo.size <= MaxIntDigits)  => Some(classTag[Int])
           case PreferPrimitivesWhenPossible if (jdbcTypeInfo.size <= MaxLongDigits) => Some(classTag[Long])

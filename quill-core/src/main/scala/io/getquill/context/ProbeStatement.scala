@@ -44,7 +44,7 @@ object ProbeStatement {
       .getOrElseUpdate(tpe, resolveContext(tpe), 30.seconds)
       .map(_.probe(statement))
       .foreach {
-        case Success(_) =>
+        case Success(_)  =>
         case Failure(ex) =>
           c.error(s"Query probing failed. Reason: '$ex'")
       }

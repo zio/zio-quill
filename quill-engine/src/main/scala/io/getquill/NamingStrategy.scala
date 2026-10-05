@@ -138,7 +138,7 @@ object CamelCase extends CamelCase
 
 trait PluralizedTableNames extends NamingStrategy {
   override def default(s: String) = s
-  override def table(s: String) =
+  override def table(s: String)   =
     if (s.endsWith("s")) s
     else s + "s"
 }

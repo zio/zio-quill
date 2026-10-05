@@ -72,7 +72,7 @@ trait PeopleReturningSpec extends Spec with BeforeAndAfterEach {
       query[Contact].filter(p => p.firstName == "Joe").update(p => p.age -> (p.age + 1)).returningMany(p => p.lastName)
     }
     val expect = people.filter(_.firstName == "Joe").map(_.lastName)
-    val get = quote {
+    val get    = quote {
       query[Contact]
     }
     val result = people.map(p => if (p.firstName == "Joe") p.copy(age = p.age + 1) else p)
@@ -83,7 +83,7 @@ trait PeopleReturningSpec extends Spec with BeforeAndAfterEach {
       query[Contact].filter(p => p.firstName == "Joe").delete.returningMany(p => p)
     }
     val expect = people.filter(p => p.firstName == "Joe")
-    val get = quote {
+    val get    = quote {
       query[Contact]
     }
     val result = people.filterNot(p => p.firstName == "Joe")
@@ -103,7 +103,7 @@ trait PeopleReturningSpec extends Spec with BeforeAndAfterEach {
         )
     }
     val expect = List("A", "B")
-    val get = quote {
+    val get    = quote {
       query[Contact]
     }
     val result = people.map(p => if (p.firstName == "Joe") p.copy(age = p.age + 1) else p)

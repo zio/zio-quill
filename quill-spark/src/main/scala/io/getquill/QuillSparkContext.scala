@@ -161,7 +161,7 @@ trait QuillSparkContext extends Context[SparkDialect, Literal] with Encoders wit
   }
 
   private[getquill] def prepareString(string: String, prepare: Prepare)(implicit spark: SQLContext) = {
-    var dsId = 0
+    var dsId              = 0
     val withSubstitutions =
       prepare(Nil, ())._2.foldLeft(string) {
         case (string, DatasetBinding(ds)) =>

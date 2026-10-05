@@ -30,7 +30,7 @@ trait TranspileConfigSummoning {
     val enableTraceTpe         = c.typecheck(tq"io.getquill.norm.EnableTrace", c.TYPEmode).tpe
     val enableTrace            = c.inferImplicitValue(enableTraceTpe).orElse(q"io.getquill.norm.EnableTraceNone")
     val enableTraceSummonedTpe = c.typecheck(enableTrace).tpe
-    val traceMemberOpt =
+    val traceMemberOpt         =
       enableTraceSummonedTpe.members.find(_.name.toString == "Trace").map(_.typeSignatureIn(enableTraceSummonedTpe))
     traceMemberOpt match {
       case Some(value) =>
@@ -49,7 +49,7 @@ trait TranspileConfigSummoning {
     val disablePhaseTpe         = c.typecheck(tq"io.getquill.norm.DisablePhase", c.TYPEmode).tpe
     val disablePhase            = c.inferImplicitValue(disablePhaseTpe).orElse(q"io.getquill.norm.DisablePhaseNone")
     val disablePhaseSummonedTpe = c.typecheck(disablePhase).tpe
-    val phaseMemberOpt =
+    val phaseMemberOpt          =
       disablePhaseSummonedTpe.members.find(_.name.toString == "Phase").map(_.typeSignatureIn(disablePhaseSummonedTpe))
     phaseMemberOpt match {
       case Some(value) =>

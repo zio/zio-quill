@@ -57,7 +57,7 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
   private def expandQueryWithDecoder(quoted: Tree, method: ContextMethod, decoder: Tree, topLevelQuat: Quat) = {
     val extractedAst = extractAst(quoted)
     val ast          = Map(extractedAst, Ident("x", extractedAst.quat), Ident("x", extractedAst.quat))
-    val invocation =
+    val invocation   =
       method match {
         case StreamQuery(UsesExplicitFetch(size)) =>
           q"""
@@ -135,9 +135,9 @@ class QueryMacro(val c: MacroContext) extends ContextMacro {
   private def expandQueryWithMeta[T](quoted: Tree, method: ContextMethod, topLevelQuat: Quat)(implicit
     t: WeakTypeTag[T]
   ) = {
-    val metaTpe = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
-    val meta    = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
-    val ast     = extractAst(c.typecheck(q"${c.prefix}.quote($meta.expand($quoted))"))
+    val metaTpe    = c.typecheck(tq"${c.prefix}.QueryMeta[$t]", c.TYPEmode).tpe
+    val meta       = c.inferImplicitValue(metaTpe).orElse(q"${c.prefix}.materializeQueryMeta[$t]")
+    val ast        = extractAst(c.typecheck(q"${c.prefix}.quote($meta.expand($quoted))"))
     val invocation =
       method match {
         case StreamQuery(UsesExplicitFetch(size)) =>

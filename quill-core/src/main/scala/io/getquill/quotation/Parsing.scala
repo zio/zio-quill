@@ -96,9 +96,9 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   private def patMatchParser(tupleTree: Tree, fieldsTree: Tree, bodyTree: Tree) = {
-    val tuple  = astParser(tupleTree)
-    val fields = astParser(fieldsTree)
-    val body   = astParser(bodyTree)
+    val tuple                     = astParser(tupleTree)
+    val fields                    = astParser(fieldsTree)
+    val body                      = astParser(bodyTree)
     def property(path: List[Int]) =
       path.foldLeft(tuple) { case (t, i) =>
         Property(t, s"_${i + 1}")
@@ -146,13 +146,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
-    case q"$pack.unquote[$t]($quoted)" => astParser(quoted)
+    case q"$pack.unquote[$t]($quoted)"              => astParser(quoted)
     case t if (t.tpe <:< c.weakTypeOf[Quoted[Any]]) =>
       unquote[Ast](t) match {
         case Some(ast) if (!IsDynamic(ast)) =>
           t match {
             case t: c.universe.Block => ast // expand quote(quote(body)) locally
-            case t =>
+            case t                   =>
               Rebind(c)(t, ast, astParser(_)) match {
                 case Some(ast) => ast
                 case None      => QuotedReference(t, ast)
@@ -463,8 +463,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     // TODO Check to see that all these conditions work
     case t: ValDef =>
       identClean(Ident(t.name.decodedName.toString, inferQuat(t.symbol.typeSignature)))
-    case id @ c.universe.Ident(TermName(name)) => identClean(Ident(name, inferQuat(id.symbol.typeSignature)))
-    case t @ q"$cls.this.$i"                   => identClean(Ident(i.decodedName.toString, inferQuat(t.symbol.typeSignature)))
+    case id @ c.universe.Ident(TermName(name))                                     => identClean(Ident(name, inferQuat(id.symbol.typeSignature)))
+    case t @ q"$cls.this.$i"                                                       => identClean(Ident(i.decodedName.toString, inferQuat(t.symbol.typeSignature)))
     case t @ c.universe.Bind(TermName(name), c.universe.Ident(termNames.WILDCARD)) =>
       identClean(
         Ident(name, inferQuat(t.symbol.typeSignature))
@@ -851,7 +851,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     isTypeCaseClass(c.weakTypeTag[T].tpe)
 
   private def firstConstructorParamList[T: WeakTypeTag] = {
-    val tpe = c.weakTypeTag[T].tpe
+    val tpe        = c.weakTypeTag[T].tpe
     val paramLists = tpe.decls.collect {
       case m: MethodSymbol if m.isConstructor => m.paramLists.map(_.map(_.name))
     }
@@ -859,13 +859,13 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   }
 
   val valueParser: Parser[Ast] = Parser[Ast] {
-    case q"null"                             => NullValue
-    case q"scala.Some.apply[$t]($v)"         => OptionSome(astParser(v))
-    case q"scala.Option.apply[$t]($v)"       => OptionApply(astParser(v))
-    case q"scala.None"                       => OptionNone(Quat.Null)
-    case q"scala.Option.empty[$t]"           => OptionNone(inferQuat(t.tpe))
-    case t @ Literal(c.universe.Constant(v)) => Constant(v, inferQuat(t.tpe))
-    case q"((..$v))" if (v.size > 1)         => Tuple(v.map(astParser(_)))
+    case q"null"                                                                  => NullValue
+    case q"scala.Some.apply[$t]($v)"                                              => OptionSome(astParser(v))
+    case q"scala.Option.apply[$t]($v)"                                            => OptionApply(astParser(v))
+    case q"scala.None"                                                            => OptionNone(Quat.Null)
+    case q"scala.Option.empty[$t]"                                                => OptionNone(inferQuat(t.tpe))
+    case t @ Literal(c.universe.Constant(v))                                      => Constant(v, inferQuat(t.tpe))
+    case q"((..$v))" if (v.size > 1)                                              => Tuple(v.map(astParser(_)))
     case q"new $ccTerm(..$v)" if (isCaseClass(c.WeakTypeTag(ccTerm.tpe.erasure))) => {
       val values = v.map(astParser(_))
       val params = firstConstructorParamList(c.WeakTypeTag(ccTerm.tpe.erasure))
@@ -948,8 +948,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         .flatten
 
     returnAfterInsertType match {
-      case Some(returnType) if (returnType =:= typeOf[ReturningClauseSupported]) => Some(ReturningClauseSupported)
-      case Some(returnType) if (returnType =:= typeOf[OutputClauseSupported])    => Some(OutputClauseSupported)
+      case Some(returnType) if (returnType =:= typeOf[ReturningClauseSupported])      => Some(ReturningClauseSupported)
+      case Some(returnType) if (returnType =:= typeOf[OutputClauseSupported])         => Some(OutputClauseSupported)
       case Some(returnType) if (returnType =:= typeOf[ReturningSingleFieldSupported]) =>
         Some(ReturningSingleFieldSupported)
       case Some(returnType) if (returnType =:= typeOf[ReturningMultipleFieldSupported]) =>
@@ -983,7 +983,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
                 case _              => false
               }) =>
           case Property(_, _) =>
-          case other =>
+          case other          =>
             c.fail(
               s"${currentIdiom.map(n => s"The dialect ${n} only allows").getOrElse("Unspecified dialects only allow")} single a single property or multiple properties in case classes / tuples in 'returning' clauses ${other}."
             )
@@ -992,7 +992,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       case ReturningSingleFieldSupported =>
         returnBody match {
           case Property(_, _) =>
-          case other =>
+          case other          =>
             c.fail(
               s"${currentIdiom.map(n => s"The dialect ${n} only allows").getOrElse("Unspecified dialects only allow")} single, auto-incrementing columns in 'returning' clauses."
             )
@@ -1010,7 +1010,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     // Verify that the idiom supports this type of returning clause
     idiomReturnCapability match {
       case Some(ReturningMultipleFieldSupported) | Some(ReturningClauseSupported) | Some(OutputClauseSupported) =>
-      case Some(ReturningSingleFieldSupported) =>
+      case Some(ReturningSingleFieldSupported)                                                                  =>
         c.fail(
           s"The '${clauseType}' clause is not supported by the ${currentIdiom.getOrElse("specified")} idiom.\n" +
             s"You can use 'returningGenerated' with this idiom but only for a single return-value."
@@ -1119,7 +1119,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
         val newBody =
           tpe match {
             case q"(($newAlias) => $newBody)" => newBody
-            case _ =>
+            case _                            =>
               c.fail("Could not process whole-record 'returning' clause. Consider trying to return individual columns.")
           }
         astParser(newBody)

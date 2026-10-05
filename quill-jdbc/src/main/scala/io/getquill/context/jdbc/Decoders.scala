@@ -44,7 +44,7 @@ trait Decoders {
   implicit val sqlTimeDecoder: Decoder[java.sql.Time]           = decoder(_.getTime)
   implicit val sqlTimestampDecoder: Decoder[java.sql.Timestamp] = decoder(_.getTimestamp)
 
-  implicit val stringDecoder: Decoder[String] = decoder(_.getString)
+  implicit val stringDecoder: Decoder[String]         = decoder(_.getString)
   implicit val bigDecimalDecoder: Decoder[BigDecimal] =
     decoder((index, row, session) => row.getBigDecimal(index))
   implicit val byteDecoder: Decoder[Byte]             = decoder(_.getByte)
@@ -54,7 +54,7 @@ trait Decoders {
   implicit val floatDecoder: Decoder[Float]           = decoder(_.getFloat)
   implicit val doubleDecoder: Decoder[Double]         = decoder(_.getDouble)
   implicit val byteArrayDecoder: Decoder[Array[Byte]] = decoder(_.getBytes)
-  implicit val dateDecoder: Decoder[util.Date] =
+  implicit val dateDecoder: Decoder[util.Date]        =
     decoder((index, row, session) => new util.Date(row.getTimestamp(index, Calendar.getInstance(dateTimeZone)).getTime))
 }
 

@@ -323,7 +323,7 @@ class BooleanLiteralSupportSpec extends Spec {
       // See:
       //  - Discord question: https://discord.com/channels/632150470000902164/632150470000902166/1153978338168291369
       //  - Discord answer: https://discord.com/channels/632150470000902164/632150470000902166/1154004784806891571
-      val isScala212 = io.getquill.Versions.scala.startsWith("2.12")
+      val isScala212    = io.getquill.Versions.scala.startsWith("2.12")
       val expectedQuery =
         if (isScala212)
           "SELECT t.s, t.i, t.l, t.o, t.b FROM TestEntity t WHERE NOT (1 = 1)"

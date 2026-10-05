@@ -82,7 +82,7 @@ trait DynamicQueryDsl {
 
   implicit def dynamicUnquote[T](d: DynamicQuery[T]): Query[T] = macro DynamicQueryDslMacro.dynamicUnquote
 
-  implicit def toQuoted[T](q: DynamicQuery[T]): Quoted[Query[T]] = q.q
+  implicit def toQuoted[T](q: DynamicQuery[T]): Quoted[Query[T]]             = q.q
   implicit def toQuoted[T](q: DynamicEntityQuery[T]): Quoted[EntityQuery[T]] =
     q.q
   implicit def toQuoted[T <: DslAction[_]](q: DynamicAction[T]): Quoted[T] = q.q
@@ -484,12 +484,12 @@ trait DynamicQueryDsl {
     def onConflictIgnore(
       targets: (Quoted[E] => Quoted[Any])*
     ): DynamicInsert[E] = {
-      val v = splice[E](Ident("v", Quat.Generic))
+      val v          = splice[E](Ident("v", Quat.Generic))
       val properties =
         targets.toList.map { f =>
           f(v).ast match {
             case p: Property => p
-            case p =>
+            case p           =>
               fail(s"Invalid ignore column: $p")
           }
         }

@@ -49,8 +49,8 @@ trait ScalaFutureIOMonad extends IOMonad {
     ec: ExecutionContext
   ): Result[T] =
     io match {
-      case FromTry(v) => Future.fromTry(v)
-      case Run(f)     => f(ec)
+      case FromTry(v)           => Future.fromTry(v)
+      case Run(f)               => f(ec)
       case seq @ Sequence(_, _) =>
         flatten(seq)
       case TransformWith(a, fA) =>

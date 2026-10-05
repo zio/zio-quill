@@ -47,7 +47,7 @@ class UdtEncodingMacro(val c: MacroContext) {
 
   def udtEncoder[T](implicit t: WeakTypeTag[T]): Tree = {
     val (typeDefs, params, body) = encodeUdt(t.tpe)
-    val swapin =
+    val swapin                   =
       c.untypecheck {
         q"""
            ${buildUdtMeta(t.tpe)}
@@ -64,7 +64,7 @@ class UdtEncodingMacro(val c: MacroContext) {
 
   def udtEncodeMapper[T](implicit t: WeakTypeTag[T]): Tree = {
     val (typeDefs, params, body) = encodeUdt(t.tpe)
-    val swapin =
+    val swapin                   =
       c.untypecheck {
         q"""
            ${buildUdtMeta(t.tpe)}
@@ -139,7 +139,7 @@ class UdtEncodingMacro(val c: MacroContext) {
     // The `session` variable represents CassandraSession which will either be `this` (if it is CassandraClusterSessionContext)
     // or it will be `CassandraZioSession` otherwise. Either way, it should have the `udtValueOf` method.
     // It is passed in via the context.encoder (i.e. $prefix.encoder) variable
-    val trees = ListBuffer[Tree](q"val udt = session.udtValueOf(meta.name, meta.keyspace)")
+    val trees              = ListBuffer[Tree](q"val udt = session.udtValueOf(meta.name, meta.keyspace)")
     val (typeDefs, params) = udtFields(udtType).map { case (name, field, tpe, mapper, absType, absTypeDef, tag) =>
       val params   = ListBuffer.empty[Tree]
       val typeDefs = ListBuffer.empty[TypeDef]

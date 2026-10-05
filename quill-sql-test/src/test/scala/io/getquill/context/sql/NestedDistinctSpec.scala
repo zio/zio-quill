@@ -668,7 +668,7 @@ class NestedDistinctSpec extends Spec {
 
         val norm = quote(query[Emb])
         val mod  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
+        val q    = quote {
           norm
             .join(mod)
             .on((norm, mod) => norm.name == mod.name)
@@ -861,7 +861,7 @@ class NestedDistinctSpec extends Spec {
       // Try parent and embedded children with same name, schema on parent
       "schema on parent should not override children" in {
         implicit val parentSchema = schemaMeta[Parent]("ParentEnt", _.name -> "theName")
-        val q = quote {
+        val q                     = quote {
           query[Emb].map(e => Parent("Joe", e, e)).distinct.map(p => p.emb1)
         }
         ctx.run(q).string mustEqual "SELECT e.emb1name AS name, e.emb1id AS id FROM (SELECT DISTINCT 'Joe' AS name, e.name AS emb1name, e.id AS emb1id, e.name AS emb2name, e.id AS emb2id FROM Emb e) AS e"
@@ -869,7 +869,7 @@ class NestedDistinctSpec extends Spec {
 
       "schema on parent should not override children - from grandparent ad-hoc cc" in {
         implicit val parentSchema = schemaMeta[Parent]("ParentEnt", _.name -> "theName")
-        val q = quote {
+        val q                     = quote {
           query[Parent].map(p => GrandParent("GJoe", p)).distinct.map(p => (p.par.emb1, p.par.name))
         }
         ctx.run(q).string mustEqual "SELECT p.paremb1name AS name, p.paremb1id AS id, p.partheName AS _2 FROM (SELECT DISTINCT 'GJoe' AS name, p.theName AS partheName, p.name AS paremb1name, p.id AS paremb1id, p.name AS paremb2name, p.id AS paremb2id FROM ParentEnt p) AS p"
@@ -878,7 +878,7 @@ class NestedDistinctSpec extends Spec {
       // Schema on child should propagate to children
       "schema on children should behave correctly when inside parent" in {
         implicit val childSchema = schemaMeta[Emb]("ChildEnt", _.name -> "theName")
-        val q = quote {
+        val q                    = quote {
           query[Emb].map(e => Parent("Joe", e, e)).distinct.map(p => p.emb1)
         }
         ctx.run(q).string mustEqual "SELECT e.emb1theName AS theName, e.emb1id AS id FROM (SELECT DISTINCT 'Joe' AS name, e.theName AS emb1theName, e.id AS emb1id, e.theName AS emb2theName, e.id AS emb2id FROM ChildEnt e) AS e"
@@ -888,7 +888,7 @@ class NestedDistinctSpec extends Spec {
       "schema on one of children should not override the other child or the parent" in {
         val norms = quote(query[Emb])
         val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
+        val q     = quote {
           norms
             .join(mods)
             .on((norm, mod) => norm.name == mod.name)
@@ -913,7 +913,7 @@ class NestedDistinctSpec extends Spec {
       "schema on the other one children should not override the other child or the parent" in {
         val norms = quote(query[Emb])
         val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
+        val q     = quote {
           mods
             .join(norms)
             .on((mod, norm) => norm.name == mod.name)
@@ -938,7 +938,7 @@ class NestedDistinctSpec extends Spec {
       "schema on both of the children can be the same" in {
         val norms = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
         val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theName"))
-        val q = quote {
+        val q     = quote {
           mods
             .join(norms)
             .on((mod, norm) => norm.name == mod.name)
@@ -963,7 +963,7 @@ class NestedDistinctSpec extends Spec {
       "schema on both of the children can be different" in {
         val norms = quote(querySchema[Emb]("CustomEmb", _.name -> "theFirstName"))
         val mods  = quote(querySchema[Emb]("CustomEmb", _.name -> "theSecondName"))
-        val q = quote {
+        val q     = quote {
           mods
             .join(norms)
             .on((mod, norm) => norm.name == mod.name)

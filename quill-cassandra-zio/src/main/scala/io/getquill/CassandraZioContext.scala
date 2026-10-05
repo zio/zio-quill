@@ -97,7 +97,7 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
       for {
         csession <- ZStream.service[CassandraZioSession]
         rs       <- ZStream.fromZIO(execute(cql, prepare, csession, fetchSize))
-        row <- ZStream.unfoldChunkZIO(rs) { rs =>
+        row      <- ZStream.unfoldChunkZIO(rs) { rs =>
                  // keep taking pages while chunk sizes are non-zero
                  page(rs).flatMap { chunk =>
                    (chunk.nonEmpty, rs.hasMorePages) match {
@@ -151,7 +151,7 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
   def executeBatchAction(groups: List[BatchGroup])(info: ExecutionInfo, dc: Runner): CIO[Unit] = simpleBlocking {
     for {
       env <- ZIO.service[CassandraZioSession]
-      _ <- {
+      _   <- {
         val batchGroups =
           groups.flatMap { case BatchGroup(cql, prepare, _) =>
             prepare
@@ -164,8 +164,8 @@ class CassandraZioContext[+N <: NamingStrategy](val naming: N)
 
   private[getquill] def prepareRowAndLog(cql: String, prepare: Prepare = identityPrepare): CIO[PrepareRow] =
     for {
-      env     <- ZIO.environment[CassandraZioSession]
-      csession = env.get[CassandraZioSession]
+      env            <- ZIO.environment[CassandraZioSession]
+      csession        = env.get[CassandraZioSession]
       boundStatement <- {
         ZIO
           .fromFuture(implicit ec => csession.prepareAsync(cql))

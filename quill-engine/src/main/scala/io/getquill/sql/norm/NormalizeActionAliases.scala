@@ -5,7 +5,7 @@ import io.getquill.norm.BetaReduction
 
 object NormalizeFilteredActionAliases {
   private[getquill] def chooseAlias(entityName: String, batchAlias: Option[String]) = {
-    val lowerEntityName = entityName.toLowerCase
+    val lowerEntityName        = entityName.toLowerCase
     val possibleEntityNameChar =
       if (lowerEntityName.length > 0 && lowerEntityName.take(1).matches("[a-z]"))
         Some(lowerEntityName.take(1))

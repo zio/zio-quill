@@ -16,7 +16,7 @@ trait QuatUnliftable {
 
   implicit val quatProductUnliftable: Unliftable[Quat.Product] = Unliftable[Quat.Product] {
     // On JVM, a Quat must be serialized and then lifted from the serialized state i.e. as a FromSerialized using JVM (due to 64KB method limit)
-    case q"$pack.Quat.Product.fromSerialized(${str: String})" => Quat.Product.fromSerialized(str)
+    case q"$pack.Quat.Product.fromSerialized(${str: String})"                                                                                           => Quat.Product.fromSerialized(str)
     case q"$pack.Quat.Product.WithRenamesCompact.apply(${name: String}, ${tpe: Quat.Product.Type})(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)" =>
       Quat.Product.WithRenamesCompact(name, tpe)(unliftStrings(fields): _*)(unliftQuats(values): _*)(
         unliftStrings(renamesFrom): _*
@@ -30,7 +30,7 @@ trait QuatUnliftable {
 
   implicit val quatUnliftable: Unliftable[Quat] = Unliftable[Quat] {
     // On JVM, a Quat must be serialized and then lifted from the serialized state i.e. as a FromSerialized using JVM (due to 64KB method limit)
-    case q"$pack.Quat.fromSerialized(${str: String})" => Quat.fromSerialized(str)
+    case q"$pack.Quat.fromSerialized(${str: String})"                                                                                                   => Quat.fromSerialized(str)
     case q"$pack.Quat.Product.WithRenamesCompact.apply(${name: String}, ${tpe: Quat.Product.Type})(..$fields)(..$values)(..$renamesFrom)(..$renamesTo)" =>
       Quat.Product.WithRenamesCompact(name, tpe)(unliftStrings(fields): _*)(unliftQuats(values): _*)(
         unliftStrings(renamesFrom): _*

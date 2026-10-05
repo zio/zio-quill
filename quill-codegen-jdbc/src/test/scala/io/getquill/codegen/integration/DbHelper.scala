@@ -29,7 +29,7 @@ object DbHelper {
     }.flatten.orThrow
 
   def syncDbRun(rawSql: String, ds: DataSource): Try[Unit] = {
-    val databaseType = getDatabaseType(ds)
+    val databaseType  = getDatabaseType(ds)
     val createSchemas =
       """
         |CREATE SCHEMA IF NOT EXISTS Alpha;

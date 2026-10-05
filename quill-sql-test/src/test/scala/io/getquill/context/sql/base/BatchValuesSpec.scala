@@ -22,7 +22,7 @@ trait BatchValuesSpec extends Spec with BeforeAndAfterEach {
     implicit val meta = insertMeta[Product](_.id)
     val products      = makeProducts(22)
     val batchSize     = 5
-    def opExt = quote { (transform: Insert[Product] => Insert[Product]) =>
+    def opExt         = quote { (transform: Insert[Product] => Insert[Product]) =>
       liftQuery(products).foreach(p => transform(query[Product].insertValue(p)))
     }
     def op = quote {
@@ -38,7 +38,7 @@ trait BatchValuesSpec extends Spec with BeforeAndAfterEach {
     val products    = productsOriginal.map(p => p.copy(id = 0))
     val expectedIds = productsOriginal.map(_.id)
     val batchSize   = 10
-    def op = quote {
+    def op          = quote {
       liftQuery(products).foreach(p => query[Product].insertValue(p).returningGenerated(p => p.id))
     }
     def get    = quote(query[Product])
@@ -48,7 +48,7 @@ trait BatchValuesSpec extends Spec with BeforeAndAfterEach {
   object `Ex 3 - Batch Insert Mixed` {
     val products  = makeProducts(20)
     val batchSize = 40
-    def op = quote {
+    def op        = quote {
       liftQuery(products).foreach(p =>
         query[Product].insert(_.id -> p.id, _.description -> lift("BlahBlah"), _.sku -> p.sku)
       )

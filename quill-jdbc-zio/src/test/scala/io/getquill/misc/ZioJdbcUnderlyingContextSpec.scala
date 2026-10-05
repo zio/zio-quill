@@ -41,7 +41,7 @@ class ZioJdbcUnderlyingContextSpec extends ZioProxySpec {
     "success - stream" in {
       import testContext.underlying._
       (for {
-        _ <- testContext.underlying.run(qr1.delete)
+        _   <- testContext.underlying.run(qr1.delete)
         seq <- testContext.underlying.transaction {
                  for {
                    _ <- testContext.underlying.run(qr1.insert(_.i -> 33))

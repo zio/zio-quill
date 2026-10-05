@@ -32,18 +32,18 @@ object ReifyStatement {
       liftingSize: Int
     ): (String, List[External]) =
       workList match {
-        case Nil => sqlResult.mkString("") -> liftingResult.toList
+        case Nil          => sqlResult.mkString("") -> liftingResult.toList
         case head :: tail =>
           head match {
             case StringToken(s2)            => apply(tail, sqlResult += s2, liftingResult, liftingSize)
             case SetContainsToken(a, op, b) => apply(stmt"$a $op ($b)" +: tail, sqlResult, liftingResult, liftingSize)
-            case ScalarLiftToken(lift) =>
+            case ScalarLiftToken(lift)      =>
               apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += lift, liftingSize + 1)
             case ScalarTagToken(tag) =>
               apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += tag, liftingSize + 1)
             case Statement(tokens)       => apply(tokens.foldRight(tail)(_ +: _), sqlResult, liftingResult, liftingSize)
             case ValuesClauseToken(stmt) => apply(stmt +: tail, sqlResult, liftingResult, liftingSize)
-            case _: QuotationTagToken =>
+            case _: QuotationTagToken    =>
               throw new UnsupportedOperationException("Quotation Tags must be resolved before a reification.")
           }
       }
@@ -57,7 +57,7 @@ object ReifyStatement {
         .foldLeft(ListBuffer.empty[Token]) {
           case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
             lift.value.asInstanceOf[Iterable[Any]].toList match {
-              case Nil => tokens += emptySetContainsToken(a)
+              case Nil    => tokens += emptySetContainsToken(a)
               case values =>
                 val liftings = values.map(v =>
                   ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))
@@ -105,18 +105,18 @@ object ReifyStatementWithInjectables {
       liftingResult: ListBuffer[External],
       liftingSize: Int
     ): (String, List[External]) = workList match {
-      case Nil => sqlResult.mkString("") -> liftingResult.toList
+      case Nil          => sqlResult.mkString("") -> liftingResult.toList
       case head :: tail =>
         head match {
           case StringToken(s2)            => apply(tail, sqlResult += s2, liftingResult, liftingSize)
           case SetContainsToken(a, op, b) => apply(stmt"$a $op ($b)" +: tail, sqlResult, liftingResult, liftingSize)
-          case ScalarLiftToken(lift) =>
+          case ScalarLiftToken(lift)      =>
             apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += lift, liftingSize + 1)
           case ScalarTagToken(tag) =>
             apply(tail, sqlResult += liftingPlaceholder(liftingSize), liftingResult += tag, liftingSize + 1)
           case Statement(tokens)       => apply(tokens.foldRight(tail)(_ +: _), sqlResult, liftingResult, liftingSize)
           case ValuesClauseToken(stmt) => apply(stmt +: tail, sqlResult, liftingResult, liftingSize)
-          case _: QuotationTagToken =>
+          case _: QuotationTagToken    =>
             throw new UnsupportedOperationException("Quotation Tags must be resolved before a reification.")
         }
     }
@@ -136,7 +136,7 @@ object ReifyStatementWithInjectables {
         // Look up the right uuid:String to get the right <some-field> for ((p:Person) => ScalarLift(p.<some-field>))
         injectables.get(v.tag.uid) match {
           case Some(value) => value
-          case None =>
+          case None        =>
             throw new IllegalArgumentException(
               s"No insert-values entity found for the id: ${v.tag.uid}. Existing injectable values are: ${injectables}"
             )
@@ -154,9 +154,9 @@ object ReifyStatementWithInjectables {
         // using the uuid of the tag. Then plug in the row-value i.e. `Person` to get ScalarLift(p.<field-value>))
         case tag: ScalarTagToken => resolveInjectableValue(tag, value)
         // Not supported in Scala2-Quill, don't really care
-        case v: QuotationTagToken => v
-        case v: StringToken       => v
-        case v: ScalarLiftToken   => v
+        case v: QuotationTagToken         => v
+        case v: StringToken               => v
+        case v: ScalarLiftToken           => v
         case ValuesClauseToken(statement) =>
           ValuesClauseToken(Statement(statement.tokens.map(plugScalarTags(_, value))))
         case Statement(tokens) =>
@@ -185,7 +185,7 @@ object ReifyStatementWithInjectables {
             tokens ++= Interleave(pluggedClauses, separators)
           case (tokens, SetContainsToken(a, op, ScalarLiftToken(lift: ScalarQueryLift))) =>
             lift.value.asInstanceOf[Iterable[Any]].toList match {
-              case Nil => tokens += emptySetContainsToken(a)
+              case Nil    => tokens += emptySetContainsToken(a)
               case values =>
                 val liftings = values.map(v =>
                   ScalarLiftToken(ScalarValueLift(lift.name, External.Source.Parser, v, lift.encoder, lift.quat))

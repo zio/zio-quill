@@ -35,7 +35,7 @@ object ZioJdbc {
         for {
           blockingExecutor <- ZIO.blockingExecutor
           ds               <- ZIO.service[DataSource]
-          r <- ZioJdbc
+          r                <- ZioJdbc
                  .scopedBestEffort(ZIO.attempt(ds.getConnection))
                  .refineToOrDie[SQLException]
                  .onExecutor(blockingExecutor)

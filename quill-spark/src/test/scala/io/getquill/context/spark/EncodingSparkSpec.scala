@@ -142,7 +142,7 @@ class EncodingSparkSpec extends Spec {
     }
     "undefined" in {
       val v: Option[Double] = None
-      val q = quote {
+      val q                 = quote {
         entities.filter(_.o8.exists(lift(v).contains(_))).map(_.o8)
       }
       testContext.run(q).collect.toList mustEqual List.empty

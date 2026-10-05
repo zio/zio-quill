@@ -27,7 +27,7 @@ object IdiomaticApp extends ZIOAppDefault {
   case class DataService(queryService: QueryService) {
     import queryService.quill._
     import queryService.quill
-    def getPeople(): ZIO[Any, Throwable, List[Person]] = quill.run(queryService.people)
+    def getPeople(): ZIO[Any, Throwable, List[Person]]                   = quill.run(queryService.people)
     def getPeopleByName(name: String): ZIO[Any, Throwable, List[Person]] =
       quill.run(queryService.peopleByName(lift(name)))
   }

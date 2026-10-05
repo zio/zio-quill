@@ -1010,8 +1010,8 @@ class SqlIdiomSpec extends Spec {
       "nested" in {
         val q = quote {
           for {
-            a <- query[TestEntity]
-            b <- query[TestEntity2] if a.i == b.i
+            a          <- query[TestEntity]
+            b          <- query[TestEntity2] if a.i == b.i
             (c, inner) <- {
               val outer = 1
               query[TestEntity3].filter(t => t.i == outer).map { c =>

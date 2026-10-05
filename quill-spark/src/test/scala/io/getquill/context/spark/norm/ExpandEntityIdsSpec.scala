@@ -191,7 +191,7 @@ class ExpandEntityIdsSpec extends Spec {
     }
     "entities inside tuples with alternative element - true entity" in {
       val ds = Seq(TestHolderOtherData(ent, ent.s)).toDS
-      val q = quote {
+      val q  = quote {
         for {
           a <- liftQuery(ds)
         } yield a
@@ -200,7 +200,7 @@ class ExpandEntityIdsSpec extends Spec {
     }
     "entities inside tuples with alternative element - true entity with join" in {
       val ds = Seq(TestHolderOtherData(ent, ent.s)).toDS
-      val q = quote {
+      val q  = quote {
         for {
           a <- liftQuery(ds)
           b <- qr2 if (a.ta.i + 1) == b.j

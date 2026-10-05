@@ -230,8 +230,8 @@ trait MirrorIdiomBase extends Idiom {
       case FunctionApply(function, values)                    => stmt"${scopedTokenizer(function)}.apply(${values.token})"
     }
 
-  private final val `!=`: Statement = stmt"!="
-  private final val `==`: Statement = stmt"=="
+  private final val `!=`: Statement                    = stmt"!="
+  private final val `==`: Statement                    = stmt"=="
   private final val _operatorTokenizer: Tokenizer[Any] = Tokenizer[Any] {
     case EqualityOperator.`_!=` => `!=`
     case EqualityOperator.`_==` => `==`
@@ -260,11 +260,11 @@ trait MirrorIdiomBase extends Idiom {
     }
 
   implicit final val valueTokenizer: Tokenizer[Value] = Tokenizer[Value] {
-    case Constant(v: String, _) => stmt""""${v.token}""""
-    case Constant((), _)        => stmt"{}"
-    case Constant(v, _)         => stmt"${v.toString.token}"
-    case NullValue              => stmt"null"
-    case Tuple(values)          => stmt"(${values.token})"
+    case Constant(v: String, _)  => stmt""""${v.token}""""
+    case Constant((), _)         => stmt"{}"
+    case Constant(v, _)          => stmt"${v.toString.token}"
+    case NullValue               => stmt"null"
+    case Tuple(values)           => stmt"(${values.token})"
     case CaseClass(name, values) =>
       stmt"${name.token}(${values.map { case (k, v) => s"${k.token}: ${v.token}" }.mkString(", ").token})"
   }
@@ -288,10 +288,10 @@ trait MirrorIdiomBase extends Idiom {
 
   implicit final def actionTokenizer(implicit externalTokenizer: Tokenizer[External]): Tokenizer[AstAction] =
     Tokenizer[AstAction] {
-      case Update(query, assignments)    => stmt"${query.token}.update(${assignments.token})"
-      case Insert(query, assignments)    => stmt"${query.token}.insert(${assignments.token})"
-      case Delete(query)                 => stmt"${query.token}.delete"
-      case Returning(query, alias, body) => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
+      case Update(query, assignments)             => stmt"${query.token}.update(${assignments.token})"
+      case Insert(query, assignments)             => stmt"${query.token}.insert(${assignments.token})"
+      case Delete(query)                          => stmt"${query.token}.delete"
+      case Returning(query, alias, body)          => stmt"${query.token}.returning((${alias.token}) => ${body.token})"
       case ReturningGenerated(query, alias, body) =>
         stmt"${query.token}.returningGenerated((${alias.token}) => ${body.token})"
       case Foreach(query, alias, body) => stmt"${query.token}.foreach((${alias.token}) => ${body.token})"

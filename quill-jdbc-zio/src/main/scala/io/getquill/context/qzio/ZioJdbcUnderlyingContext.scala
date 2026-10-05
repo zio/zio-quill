@@ -110,7 +110,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
     for {
       conn          <- ZIO.service[Connection]
       autoCommitPrev = conn.getAutoCommit
-      r <- ZIO
+      r             <- ZIO
              .acquireReleaseWith(sqlEffect(conn))(conn => ZIO.succeed(conn.setAutoCommit(autoCommitPrev))) { conn =>
                sqlEffect(conn.setAutoCommit(false)).flatMap(_ => f)
              }
@@ -189,7 +189,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
       for {
         connection         <- ZIO.service[Connection]
         previousAutoCommit <- ZIO.attempt(connection.getAutoCommit)
-        _ <- ZIO.acquireRelease(ZIO.attempt(connection.setAutoCommit(false))) { _ =>
+        _                  <- ZIO.acquireRelease(ZIO.attempt(connection.setAutoCommit(false))) { _ =>
                ZIO.succeed(connection.setAutoCommit(previousAutoCommit))
              }
         ps <- scopedBestEffort(ZIO.attempt(prepareStatement(connection)))
@@ -202,7 +202,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
           for {
             (conn, rs) <- executeQuery
             iter        = new ResultSetIterator(rs, conn, extractor)
-            outStream = fetchSize match {
+            outStream   = fetchSize match {
                           // TODO Assuming chunk size is fetch size. Not sure if this is optimal.
                           //      Maybe introduce some switches to control this?
                           case Some(size) => ZStream.fromIterator(iter, size)
@@ -220,7 +220,7 @@ abstract class ZioJdbcUnderlyingContext[+Dialect <: SqlIdiom, +Naming <: NamingS
     }
 
   // Generally these are not used in the ZIO context but have implementations in case they are needed
-  override def wrap[T](t: => T): ZIO[Connection, SQLException, T] = QCIO(t)
+  override def wrap[T](t: => T): ZIO[Connection, SQLException, T]                                                = QCIO(t)
   override def push[A, B](result: ZIO[Connection, SQLException, A])(f: A => B): ZIO[Connection, SQLException, B] =
     result.map(f)
   override def seq[A](f: List[ZIO[Connection, SQLException, A]]): ZIO[Connection, SQLException, List[A]] =

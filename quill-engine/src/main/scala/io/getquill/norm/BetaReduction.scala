@@ -45,7 +45,7 @@ case class BetaReduction(map: IMap[Ast, Ast], typeBehavior: TypeBehavior, emptyB
     ast match {
 
       case ast if map.contains(ast) =>
-        val rep = BetaReduction(map - ast - map(ast), typeBehavior, emptyBehavior)(map(ast))
+        val rep    = BetaReduction(map - ast - map(ast), typeBehavior, emptyBehavior)(map(ast))
         val output =
           rep match {
             // If we are ignoring types, just do the replacement. Need to do this if we are doing renames since a

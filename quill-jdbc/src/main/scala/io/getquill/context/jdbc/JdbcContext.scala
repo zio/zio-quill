@@ -105,7 +105,7 @@ abstract class JdbcContext[+Dialect <: SqlIdiom, +Naming <: NamingStrategy]
   def transaction[T](f: => T) =
     currentConnection.value match {
       case Some(_) => f // already in transaction
-      case None =>
+      case None    =>
         withConnection { conn =>
           currentConnection.withValue(Some(conn)) {
             val wasAutoCommit = conn.getAutoCommit
