@@ -115,7 +115,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "@VERSION@"
+  "dev.zio" %% "quill-spark" % "@VERSION@"
 )
 ```
 
@@ -317,7 +317,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -345,7 +345,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -372,7 +372,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -394,7 +394,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -417,7 +417,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -441,7 +441,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -626,7 +626,7 @@ testContext.run(jsonAstQuery.insertValue(lift(joeRow)))
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -657,7 +657,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -687,7 +687,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -711,7 +711,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -737,7 +737,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -767,7 +767,7 @@ Quill supports Oracle version 12c and up although due to licensing restrictions,
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -800,7 +800,7 @@ just add the below dependency and replace the `doobie.quill` package with `io.ge
 
 In order to use this feature, add the following dependency.
 ```
-libraryDependencies += "io.getquill" %% "quill-doobie" % "4.6.1-SNAPSHOT"
+libraryDependencies += "dev.zio" %% "quill-doobie" % "4.6.1-SNAPSHOT"
 ```
 
 The examples below require the following imports.
@@ -937,7 +937,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "@VERSION@"
+  "dev.zio" %% "quill-finagle-mysql" % "@VERSION@"
 )
 ```
 
@@ -978,7 +978,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "@VERSION@"
+  "dev.zio" %% "quill-finagle-postgres" % "@VERSION@"
 )
 ```
 
@@ -1006,7 +1006,7 @@ ctx.binaryParams=false
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "@VERSION@"
+  "dev.zio" %% "quill-cassandra" % "@VERSION@"
 )
 ```
 
@@ -1095,7 +1095,7 @@ More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/i
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "@VERSION@"
+  "dev.zio" %% "quill-cassandra-zio" % "@VERSION@"
 )
 ```
 
@@ -1105,7 +1105,7 @@ libraryDependencies ++= Seq(
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-pekko" % "@VERSION@"
+  "dev.zio" %% "quill-cassandra-pekko" % "@VERSION@"
 )
 ```
 
@@ -1148,7 +1148,7 @@ quill-test-datastax-java-driver {
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "@VERSION@"
+  "dev.zio" %% "quill-orientdb" % "@VERSION@"
 )
 ```
 
