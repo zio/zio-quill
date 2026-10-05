@@ -54,7 +54,7 @@ be extended in the future for Cassandra as well as others.
 You can import the Code Generator using maven:
 ````xml
 <dependency>
-  <groupId>io.getquill</groupId>
+  <groupId>dev.zio</groupId>
   <artifactId>quill-codegen-jdbc_2.13</artifactId>
   <version>3.10.0</version>
 </dependency>
@@ -62,7 +62,7 @@ You can import the Code Generator using maven:
 
 Or using sbt:
 ````scala
-libraryDependencies += "io.getquill" %% "quill-codegen-jdbc" % "@VERSION@"
+libraryDependencies += "dev.zio" %% "quill-codegen-jdbc" % "@VERSION@"
 ````
 
 ## SimpleJdbcCodegen

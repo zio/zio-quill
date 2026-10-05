@@ -42,7 +42,7 @@ Add the following to build.sbt:
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.getquill"          %% "quill-jdbc-zio" % "@VERSION@",
+  "dev.zio"          %% "quill-jdbc-zio" % "@VERSION@",
   "org.postgresql"       %  "postgresql"     % "42.3.1"
 )
 ```
