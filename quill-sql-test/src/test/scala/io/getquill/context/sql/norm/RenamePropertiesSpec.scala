@@ -351,7 +351,8 @@ class RenamePropertiesSpec extends Spec {
 
         testContext
           .run(q)
-          .string mustEqual "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
+          .string mustEqual
+          "SELECT t3.id, t3.configurationId, t3.name, st.id, st.name FROM Table3 t3 INNER JOIN (SELECT c.id, c.name FROM configuration c INNER JOIN settings st ON st.settings_id = c.id WHERE st.active) AS st ON st.id = t3.configurationId"
       }
     }
 

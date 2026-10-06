@@ -39,9 +39,8 @@ sealed trait CodegenTestCases {
   protected def generate(dbPrefix: ConfigPrefix, basePath: String): Future[Seq[Path]]
   protected def pathList(implicit dbPrefix: ConfigPrefix) =
     List("io", "getquill", "codegen", "generated", dbPrefix.packagePath)
-  protected def path(implicit dbPrefix: ConfigPrefix, basePath: String) =
-    (basePath +: pathList :+ testName).mkString("/")
-  protected def `package`(implicit dbPrefix: ConfigPrefix) = (pathList :+ s"`${testName}`").mkString(".")
+  protected def path(implicit dbPrefix: ConfigPrefix, basePath: String) = (basePath +: pathList :+ testName).mkString("/")
+  protected def `package`(implicit dbPrefix: ConfigPrefix)              = (pathList :+ s"`${testName}`").mkString(".")
 }
 
 object CodegenTestCases {

@@ -385,19 +385,21 @@ class CqlIdiomSpec extends Spec {
     }
     "assignment" in {
       val a: Ast = Assignment(Ident("a"), Ident("b"), Ident("c"))
-      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe ((
-        a,
-        stmt"b = c",
-        ExecutionType.Unknown
-      ))
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe
+        ((
+          a,
+          stmt"b = c",
+          ExecutionType.Unknown
+        ))
     }
     "assignmentDual" in {
       val a: Ast = AssignmentDual(Ident("a1"), Ident("a2"), Ident("b"), Ident("c"))
-      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe ((
-        a,
-        stmt"b = c",
-        ExecutionType.Unknown
-      ))
+      translate(a: Ast, Quat.Unknown, ExecutionType.Unknown, IdiomContext.Empty) mustBe
+        ((
+          a,
+          stmt"b = c",
+          ExecutionType.Unknown
+        ))
     }
     "aggregation" in {
       val t = implicitly[Tokenizer[AggregationOperator]]

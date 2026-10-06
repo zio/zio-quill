@@ -1105,9 +1105,11 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     (ident == originalBody, actionType.tpe.dealias) match {
       // Note, tuples are also case classes so this also matches for tuples
       case (true, ClassTypeRefMatch(cls, List(arg)))
-          if (cls == asClass[DslInsert[_]] || cls == asClass[DslUpdate[_]] || cls == asClass[
-            DslDelete[_]
-          ]) && isTypeCaseClass(arg) =>
+          if (cls == asClass[DslInsert[_]] || cls == asClass[DslUpdate[_]] ||
+            cls ==
+            asClass[
+              DslDelete[_]
+            ]) && isTypeCaseClass(arg) =>
         val elements = flatten(q"${TermName(ident.name)}", value("Decoder", arg))
         if (elements.size == 0) c.fail("Case class in the 'returning' clause has no values")
 

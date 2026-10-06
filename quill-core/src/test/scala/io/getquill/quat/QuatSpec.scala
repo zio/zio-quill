@@ -302,9 +302,10 @@ class QuatSpec extends Spec {
         q
       }
       // back here
-      func.ast.quat mustEqual Quat
-        .Product("T", "name" -> Quat.Value, "isRussian" -> Quat.BooleanValue)
-        .withType(Quat.Product.Type.Abstract)
+      func.ast.quat mustEqual
+        Quat
+          .Product("T", "name" -> Quat.Value, "isRussian" -> Quat.BooleanValue)
+          .withType(Quat.Product.Type.Abstract)
     }
     "structural with bool indirect" in {
       type Bool = Boolean

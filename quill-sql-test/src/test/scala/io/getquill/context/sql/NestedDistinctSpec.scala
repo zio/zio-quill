@@ -872,7 +872,8 @@ class NestedDistinctSpec extends Spec {
         val q                     = quote {
           query[Parent].map(p => GrandParent("GJoe", p)).distinct.map(p => (p.par.emb1, p.par.name))
         }
-        ctx.run(q).string mustEqual "SELECT p.paremb1name AS name, p.paremb1id AS id, p.partheName AS _2 FROM (SELECT DISTINCT 'GJoe' AS name, p.theName AS partheName, p.name AS paremb1name, p.id AS paremb1id, p.name AS paremb2name, p.id AS paremb2id FROM ParentEnt p) AS p"
+        ctx.run(q).string mustEqual
+          "SELECT p.paremb1name AS name, p.paremb1id AS id, p.partheName AS _2 FROM (SELECT DISTINCT 'GJoe' AS name, p.theName AS partheName, p.name AS paremb1name, p.id AS paremb1id, p.name AS paremb2name, p.id AS paremb2id FROM ParentEnt p) AS p"
       }
 
       // Schema on child should propagate to children

@@ -124,9 +124,10 @@ class SheathLeafClausesSpec extends Spec {
         }
 
         val c = quote {
-          (query[Person].map(p => Wrap.Age(p.age)).map(e => Wrap.Int.U(e.age)) union query[Person]
-            .map(p => Wrap.Int.X(p.age + 123))
-            .map(e => Wrap.Int.U(e.x))).map(e => e.u).max
+          (query[Person].map(p => Wrap.Age(p.age)).map(e => Wrap.Int.U(e.age)) union
+            query[Person]
+              .map(p => Wrap.Int.X(p.age + 123))
+              .map(e => Wrap.Int.U(e.x))).map(e => e.u).max
         }
         ctx.run(q).string mustEqual ctx.run(c).string
         SheathLeafClauses.apply(q.ast) mustEqual c.ast
@@ -155,9 +156,10 @@ class SheathLeafClausesSpec extends Spec {
       }
       "(map(=>node).groupBy.map) unionAll (map(=>node).groupBy.map)" in {
         val q = quote {
-          query[Person].groupBy(p => p.age).map(ap => ap._2.max) ++ query[Person]
-            .groupBy(p => p.age)
-            .map(ap => ap._2.max)
+          query[Person].groupBy(p => p.age).map(ap => ap._2.max) ++
+            query[Person]
+              .groupBy(p => p.age)
+              .map(ap => ap._2.max)
         }
         ctx.run(q).string mustEqual "(SELECT MAX(p.*) FROM person p GROUP BY p.age) UNION ALL (SELECT MAX(p1.*) FROM person p1 GROUP BY p1.age)"
       }
@@ -166,9 +168,10 @@ class SheathLeafClausesSpec extends Spec {
         val q = quote {
           query[Person]
             .groupBy(p => Wrap.Age(p.age))
-            .map(ap => ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max) ++ query[Person]
-            .groupBy(p => p.age)
-            .map(ap => ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max)
+            .map(ap => ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max) ++
+            query[Person]
+              .groupBy(p => p.age)
+              .map(ap => ap._2.map(p => Wrap.Age(p.age)).map(p => p.age).max)
         }
         ctx.run(q).string mustEqual "(SELECT MAX(p.age) FROM person p GROUP BY p.age) UNION ALL (SELECT MAX(p2.age) FROM person p2 GROUP BY p2.age)"
       }

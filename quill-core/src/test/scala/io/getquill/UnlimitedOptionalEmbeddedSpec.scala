@@ -64,7 +64,8 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
 
   "meta" - {
     "update" in {
-      materializeUpdateMeta[OptEmd].expand.toString mustEqual "(q, value) => q.update(" +
+      materializeUpdateMeta[OptEmd].expand.toString mustEqual
+        "(q, value) => q.update(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +
         "v => v.e1.e1.e2.map((v) => v.value) -> value.e1.e1.e2.map((v) => v.value), " +
         "v => v.e1.e2.map((v) => v.e1.value) -> value.e1.e2.map((v) => v.e1.value), " +
@@ -75,7 +76,8 @@ class UnlimitedOptionalEmbeddedSpec extends Spec {
         "v => v.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))) -> value.e2.map((v) => v.e2.map((v) => v.e2.map((v) => v.value))))"
     }
     "insert" in {
-      materializeInsertMeta[OptEmd].expand.toString mustEqual "(q, value) => q.insert(" +
+      materializeInsertMeta[OptEmd].expand.toString mustEqual
+        "(q, value) => q.insert(" +
         "v => v.e1.e1.e1.value -> value.e1.e1.e1.value, " +
         "v => v.e1.e1.e2.map((v) => v.value) -> value.e1.e1.e2.map((v) => v.value), " +
         "v => v.e1.e2.map((v) => v.e1.value) -> value.e1.e2.map((v) => v.e1.value), " +

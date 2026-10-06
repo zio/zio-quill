@@ -28,9 +28,10 @@ class ZioMockSpec extends AnyFreeSpec with MockitoSugar { // with AsyncMockitoSu
         rowIndex < data.length
       }
 
-      when(rs.getString(any[Int])) thenAnswer ((i: Int) => {
-        getIndex(i).asInstanceOf[String]
-      })
+      when(rs.getString(any[Int])) thenAnswer
+        ((i: Int) => {
+          getIndex(i).asInstanceOf[String]
+        })
 
       when(rs.getInt(any[Int])) thenAnswer ((i: Int) => { getIndex(i).asInstanceOf[Int] })
 

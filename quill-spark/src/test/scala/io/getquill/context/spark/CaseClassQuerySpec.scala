@@ -342,8 +342,7 @@ class CaseClassQuerySpec extends Spec {
   "Simple Join Nested Objects Explicit Union Distinct with Filters" in {
     val q = quote {
       (for {
-        p <-
-          (peopleEntries.filter(_.age == 55) ++ peopleEntries.filter(_.age == 33) ++ peopleEntries.filter(_.age <= 33))
+        p <- (peopleEntries.filter(_.age == 55) ++ peopleEntries.filter(_.age == 33) ++ peopleEntries.filter(_.age <= 33))
         a <- addressEntries if p.addressFk == a.id
       } yield (p, a)).distinct
     }
@@ -489,9 +488,10 @@ class CaseClassQuerySpec extends Spec {
         p.firstReverse + "-" + unquote(statefulStringsUdf)
       )
     }
-    testContext.run(q2).collect() should contain theSameElementsAs (Seq(
-      ContactSimplifiedRenamed("Bert", "James", "two-four")
-    ))
+    testContext.run(q2).collect() should contain theSameElementsAs
+      (Seq(
+        ContactSimplifiedRenamed("Bert", "James", "two-four")
+      ))
   }
 
   "Two Level Select - Filtered Second Part" in {
@@ -559,8 +559,8 @@ class CaseClassQuerySpec extends Spec {
       for {
         a <- addressEntries if a.id > 1
         p <- (
-               peopleEntries.filter(_.age > 33) unionAll peopleEntries.filter(_.firstName != "Bert")
-             ) if (a.id == p.addressFk)
+          peopleEntries.filter(_.age > 33) unionAll peopleEntries.filter(_.firstName != "Bert")
+        ) if (a.id == p.addressFk)
       } yield (p, a)
     }
 
@@ -577,13 +577,13 @@ class CaseClassQuerySpec extends Spec {
       for {
         a <- addressEntries if a.id > 1
         p <- (
-               peopleEntries
-                 .filter(_.age > 33)
-                 .map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk)) unionAll
-                 peopleEntries
-                   .filter(_.firstName != "Bert")
-                   .map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk))
-             ) if (a.id == p.addressFk)
+          peopleEntries
+            .filter(_.age > 33)
+            .map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk)) unionAll
+            peopleEntries
+              .filter(_.firstName != "Bert")
+              .map(p => ContactSimplifiedWithAddress(p.firstName, p.lastName, p.addressFk))
+        ) if (a.id == p.addressFk)
       } yield (p, a)
     }
 

@@ -111,9 +111,10 @@ sealed trait Quat {
   def shortString: String = this match {
     case p @ Quat.Product(fields) =>
       s"${if (p.tpe == Quat.Product.Type.Abstract) "~" else ""}${p.name}(${fields.map { case (k, v) =>
-          k + (v match {
-            case other => ":" + other.shortString
-          })
+          k +
+            (v match {
+              case other => ":" + other.shortString
+            })
         }.mkString(",")})${(if (this.renames.isEmpty)
                               ""
                             else

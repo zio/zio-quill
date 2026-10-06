@@ -66,8 +66,7 @@ object VerifySqlQuery {
     val aliases = query.from.flatMap(this.aliases).map(IdentName(_)) :+ IdentName("*") :+ IdentName("?")
 
     def verifyAst(ast: Ast) = {
-      val freeVariables =
-        (FreeVariables(ast) -- aliases).toList
+      val freeVariables = (FreeVariables(ast) -- aliases).toList
       checkIllegalIdents(ast)
       freeVariables match {
         case Nil  => None

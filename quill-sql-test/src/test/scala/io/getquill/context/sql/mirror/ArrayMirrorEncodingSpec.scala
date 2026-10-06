@@ -17,10 +17,12 @@ class ArrayMirrorEncodingSpec extends ArrayEncodingBaseSpec {
     val insertStr = ctx.run(q.insertValue(lift(e))).string
     val selectStr = ctx.run(q).string
 
-    insertStr mustEqual "INSERT INTO ArraysTestEntity (texts,decimals,bools,bytes,shorts,ints,longs,floats," +
+    insertStr mustEqual
+      "INSERT INTO ArraysTestEntity (texts,decimals,bools,bytes,shorts,ints,longs,floats," +
       "doubles,timestamps,dates) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
-    selectStr mustEqual "SELECT x.texts, x.decimals, x.bools, x.bytes, x.shorts, x.ints, x.longs, x.floats, " +
+    selectStr mustEqual
+      "SELECT x.texts, x.decimals, x.bools, x.bytes, x.shorts, x.ints, x.longs, x.floats, " +
       "x.doubles, x.timestamps, x.dates FROM ArraysTestEntity x"
   }
 

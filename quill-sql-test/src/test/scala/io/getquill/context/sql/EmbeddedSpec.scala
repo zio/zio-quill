@@ -53,7 +53,8 @@ class EmbeddedSpec extends Spec {
       val q = quote {
         query[Emb].map(e => Parent(1, e)).distinct.map(p => Grandparent(2, p)).distinct.map(g => (3, g)).distinct
       }
-      ctx.run(q).string mustEqual "SELECT DISTINCT 3 AS _1, p.idG, p.paridP AS idP, p.paremb1a AS a, p.paremb1b AS b FROM (SELECT DISTINCT 2 AS idG, p.idP AS paridP, p.emb1a AS paremb1a, p.emb1b AS paremb1b FROM (SELECT DISTINCT 1 AS idP, e.a AS emb1a, e.b AS emb1b FROM Emb e) AS p) AS p"
+      ctx.run(q).string mustEqual
+        "SELECT DISTINCT 3 AS _1, p.idG, p.paridP AS idP, p.paremb1a AS a, p.paremb1b AS b FROM (SELECT DISTINCT 2 AS idG, p.idP AS paridP, p.emb1a AS paremb1a, p.emb1b AS paremb1b FROM (SELECT DISTINCT 1 AS idP, e.a AS emb1a, e.b AS emb1b FROM Emb e) AS p) AS p"
     }
   }
 

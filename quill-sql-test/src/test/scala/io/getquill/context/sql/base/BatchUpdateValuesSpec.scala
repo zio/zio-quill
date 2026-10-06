@@ -111,8 +111,9 @@ trait BatchUpdateValuesSpec extends Spec with BeforeAndAfterEach {
       liftQuery(updateData: List[Contact]).foreach(ps =>
         query[Contact]
           .filter(p =>
-            p.firstName == ps.firstName && (p.firstName == lift("Joe") || liftQuery(List("Dale", "Caboose"))
-              .contains(p.firstName))
+            p.firstName == ps.firstName &&
+              (p.firstName == lift("Joe") || liftQuery(List("Dale", "Caboose"))
+                .contains(p.firstName))
           )
           .updateValue(ps)
       )

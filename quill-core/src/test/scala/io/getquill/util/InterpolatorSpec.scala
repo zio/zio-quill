@@ -53,80 +53,83 @@ and bar $small""".generateString() mustEqual (
   val large = Large(123, vars(0), vars(1), vars(2), vars(3), vars(4), vars(5), vars(6), vars(7), vars(8), vars(9))
 
   "traces large objects on multiple line - single" in {
-    trace"large object: $large".generateString() mustEqual ((
-      """large object:
-        ||  Large(
-        ||    123,
-        ||    "",
-        ||    "Test",
-        ||    "TestTest",
-        ||    "TestTestTest",
-        ||    "TestTestTestTest",
-        ||    "TestTestTestTestTest",
-        ||    "TestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTestTest"
-        ||  )
-        |""".stripMargin,
-      0
-    ))
+    trace"large object: $large".generateString() mustEqual
+      ((
+        """large object:
+          ||  Large(
+          ||    123,
+          ||    "",
+          ||    "Test",
+          ||    "TestTest",
+          ||    "TestTestTest",
+          ||    "TestTestTestTest",
+          ||    "TestTestTestTestTest",
+          ||    "TestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTestTestTest"
+          ||  )
+          |""".stripMargin,
+        0
+      ))
   }
 
   "traces large objects on multiple line - single - custom indent" in {
-    trace"%2 large object: $large".generateString() mustEqual ((
-      """    large object:
-        |    |  Large(
-        |    |    123,
-        |    |    "",
-        |    |    "Test",
-        |    |    "TestTest",
-        |    |    "TestTestTest",
-        |    |    "TestTestTestTest",
-        |    |    "TestTestTestTestTest",
-        |    |    "TestTestTestTestTestTest",
-        |    |    "TestTestTestTestTestTestTest",
-        |    |    "TestTestTestTestTestTestTestTest",
-        |    |    "TestTestTestTestTestTestTestTestTest"
-        |    |  )
-        |""".stripMargin,
-      2
-    ))
+    trace"%2 large object: $large".generateString() mustEqual
+      ((
+        """    large object:
+          |    |  Large(
+          |    |    123,
+          |    |    "",
+          |    |    "Test",
+          |    |    "TestTest",
+          |    |    "TestTestTest",
+          |    |    "TestTestTestTest",
+          |    |    "TestTestTestTestTest",
+          |    |    "TestTestTestTestTestTest",
+          |    |    "TestTestTestTestTestTestTest",
+          |    |    "TestTestTestTestTestTestTestTest",
+          |    |    "TestTestTestTestTestTestTestTestTest"
+          |    |  )
+          |""".stripMargin,
+        2
+      ))
   }
 
   "traces large objects on multiple line - multi" in {
-    trace"large object: $large and $large".generateString() mustEqual ((
-      """large object:
-        ||  Large(
-        ||    123,
-        ||    "",
-        ||    "Test",
-        ||    "TestTest",
-        ||    "TestTestTest",
-        ||    "TestTestTestTest",
-        ||    "TestTestTestTestTest",
-        ||    "TestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTestTest"
-        ||  )
-        ||and
-        ||  Large(
-        ||    123,
-        ||    "",
-        ||    "Test",
-        ||    "TestTest",
-        ||    "TestTestTest",
-        ||    "TestTestTestTest",
-        ||    "TestTestTestTestTest",
-        ||    "TestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTest",
-        ||    "TestTestTestTestTestTestTestTestTest"
-        ||  )
-        |""".stripMargin,
-      0
-    ))
+    trace"large object: $large and $large".generateString() mustEqual
+      ((
+        """large object:
+          ||  Large(
+          ||    123,
+          ||    "",
+          ||    "Test",
+          ||    "TestTest",
+          ||    "TestTestTest",
+          ||    "TestTestTestTest",
+          ||    "TestTestTestTestTest",
+          ||    "TestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTestTestTest"
+          ||  )
+          ||and
+          ||  Large(
+          ||    123,
+          ||    "",
+          ||    "Test",
+          ||    "TestTest",
+          ||    "TestTestTest",
+          ||    "TestTestTestTest",
+          ||    "TestTestTestTestTest",
+          ||    "TestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTestTest",
+          ||    "TestTestTestTestTestTestTestTestTest"
+          ||  )
+          |""".stripMargin,
+        0
+      ))
   }
 
   "should log to print stream" - {

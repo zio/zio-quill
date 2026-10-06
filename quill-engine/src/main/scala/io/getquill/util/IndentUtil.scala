@@ -11,6 +11,5 @@ object IndentUtil {
     def prefix: String = indentOf(i)
   }
 
-  private def indentOf(num: Int): String =
-    (0 to num).map(_ => "").mkString("  ")
+  private def indentOf(num: Int): String = (0 to num).map(_ => "").mkString("  ")
 }

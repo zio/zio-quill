@@ -51,7 +51,8 @@ class SimplifyNullChecks(equalityBehavior: EqualityBehavior) extends StatelessTr
       case IfExistElseNull(cond, IfExistElseNull(innerCond, innerThen)) =>
         apply(If(IsNotNullCheck(cond) +&&+ IsNotNullCheck(innerCond), innerThen, NullValue))
 
-      case OptionIsDefined(Optional(a)) +&&+ OptionIsDefined(Optional(b)) +&&+ (exp @ (Optional(a1) `== or !=` Optional(
+      case OptionIsDefined(Optional(a)) +&&+ OptionIsDefined(Optional(b)) +&&+
+          (exp @ (Optional(a1) `== or !=` Optional(
             b1
           ))) if (a == a1 && b == b1 && equalityBehavior == AnsiEquality) =>
         apply(exp)

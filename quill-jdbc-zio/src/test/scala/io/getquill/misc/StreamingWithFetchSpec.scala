@@ -23,8 +23,7 @@ class StreamingWithFetchSpec extends ZioProxySpec with BeforeAndAfter {
     ()
   }
   "streaming with fetch should work" - {
-    def produceEntities(num: Int) =
-      (1 to num).map(i => Person("Joe" + i, i)).toList
+    def produceEntities(num: Int) = (1 to num).map(i => Person("Joe" + i, i)).toList
 
     "with entities == 1/2 * fetch size" in {
       val entities = produceEntities(5)

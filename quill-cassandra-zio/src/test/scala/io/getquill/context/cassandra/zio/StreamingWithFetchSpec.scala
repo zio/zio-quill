@@ -15,8 +15,7 @@ class StreamingWithFetchSpec extends ZioCassandraSpec with QueryResultTypeCassan
   }
 
   "streaming with fetch should work" - {
-    def produceEntities(num: Int) =
-      (1 to num).map(i => OrderTestEntity(i, i)).toList
+    def produceEntities(num: Int) = (1 to num).map(i => OrderTestEntity(i, i)).toList
 
     "with entities less than fetch size" in {
       val entities = produceEntities(3)

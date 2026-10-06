@@ -109,8 +109,7 @@ object Messages {
     )
   }
 
-  def tracesEnabled(tt: TraceType): Boolean =
-    (traceEnabled && traces.contains(tt)) || tt == TraceType.Warning
+  def tracesEnabled(tt: TraceType): Boolean = (traceEnabled && traces.contains(tt)) || tt == TraceType.Warning
 
   def enableTrace(
     color: Boolean = true,
