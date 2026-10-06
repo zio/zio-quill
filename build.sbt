@@ -10,7 +10,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 inThisBuild(
   List(
-    organization := "io.getquill",
+    organization := "dev.zio",
     homepage     := Some(url("https://zio.dev/zio-quill")),
     licenses     := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
     developers   := List(
@@ -107,8 +107,8 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
             "CI_SNAPSHOT_RELEASE" -> "publish",
             "PGP_PASSPHRASE"      -> "${{ secrets.PGP_PASSPHRASE }}",
             "PGP_SECRET"          -> "${{ secrets.PGP_SECRET }}",
-            "SONATYPE_PASSWORD"   -> "${{ secrets.GETQUILL_SONATYPE_TOKEN_PASSWORD }}",
-            "SONATYPE_USERNAME"   -> "${{ secrets.GETQUILL_SONATYPE_TOKEN_USER }}"
+            "SONATYPE_PASSWORD"   -> "${{ secrets.SONATYPE_PASSWORD }}",
+            "SONATYPE_USERNAME"   -> "${{ secrets.SONATYPE_USERNAME }}"
           )
         )): _*
       )

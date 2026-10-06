@@ -130,7 +130,7 @@ jobs:
       env:
         CI_SNAPSHOT_RELEASE: publish
         PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-        SONATYPE_PASSWORD: ${{ secrets.GETQUILL_SONATYPE_TOKEN_PASSWORD }}
+        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         CI_RELEASE: publishSigned
-        SONATYPE_USERNAME: ${{ secrets.GETQUILL_SONATYPE_TOKEN_USER }}
+        SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         PGP_SECRET: ${{ secrets.PGP_SECRET }}
