@@ -51,8 +51,11 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
     )
   }.value,
   // Tests run as part of the build via `build/build.sh`, so there are no separate test jobs
-  ciTestJobs  := Seq.empty,
-  ciBuildJobs := Def.setting {
+  ciTestJobs := Seq.empty,
+  // The pull-request-only `docs` job must not be part of the `ci` aggregate: it is skipped on pushes and releases, and
+  // a skipped job anywhere in the chain makes the `release` job (which needs `ci`) skip as well.
+  ciPullRequestApprovalJobs := Seq("lint", "build"),
+  ciBuildJobs               := Def.setting {
     Seq(
       Job(
         id = "build",
