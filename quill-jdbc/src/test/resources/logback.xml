@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <logger name="io.getquill" level="INFO" />
+    <logger name="zio.quill" level="INFO" />
     <logger name="com.zaxxer.hikari" level="INFO" />
     <logger name="io.netty" level="ERROR" />
     <root level="WARN">

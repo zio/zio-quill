@@ -1,0 +1,18 @@
+package zio.quill.context.orientdb.encoding
+
+import zio.quill.context.orientdb.OrientDBSessionContext
+import scala.jdk.CollectionConverters._
+
+trait CollectionEncoders {
+  this: OrientDBSessionContext[_] =>
+
+  implicit def listEncoder[T]: Encoder[List[T]] = encoder { (index, value, row) =>
+    row.insert(index, value.asJava); row
+  }
+  implicit def setEncoder[T]: Encoder[Set[T]] = encoder { (index, value, row) =>
+    row.insert(index, value.asJava); row
+  }
+  implicit def mapEncoder[K, V]: Encoder[Map[K, V]] = encoder { (index, value, row) =>
+    row.insert(index, value.asJava); row
+  }
+}

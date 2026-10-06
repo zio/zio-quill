@@ -10,7 +10,7 @@ The QDSL allows the user to write plain Scala code, leveraging Scala's syntax an
 For this documentation, a special type of context that acts as a [mirror](contexts.md#mirror-context) is used:
 
 ```scala
-import io.getquill._
+import zio.quill._
 
 val ctx = new SqlMirrorContext(MirrorSqlDialect, Literal)
 ```
@@ -1885,11 +1885,11 @@ val b =
 performIO(a) == performIO(b)
 ```
 
-The IO monad has an interface similar to `Future`; please refer to [the class](https://github.com/getquill/quill/blob/master/quill-core/src/main/scala/io/getquill/monad/IOMonad.scala#L39) for more information regarding the available operations.
+The IO monad has an interface similar to `Future`; please refer to [the class](https://github.com/getquill/quill/blob/master/quill-core/src/main/scala/zio/quill/monad/IOMonad.scala#L39) for more information regarding the available operations.
 
 The return type of `performIO` varies according to the context. For instance, async contexts return `Future`s while JDBC returns values synchronously.
 
-***NOTE***: Avoid using the variable name `io` since it conflicts with Quill's package `io.getquill`, otherwise you will get the following error.
+***NOTE***: Avoid using the variable name `io` since it conflicts with Quill's package `zio.quill`, otherwise you will get the following error.
 ```
 recursive value io needs type
 ```

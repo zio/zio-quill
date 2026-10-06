@@ -238,7 +238,7 @@ import extras._ /* importing the > operator among other things */
 
 run(query[Person].filter(p => p.bornOn > lift(myDate)))
 ```
-> Note that in ProtoQuill you should import `io.getquill.extras._` since they are now global.
+> Note that in ProtoQuill you should import `zio.quill.extras._` since they are now global.
 
 #### Using Ordered
 
@@ -308,7 +308,7 @@ You can also MappedEncoding to define instances that convert to/from the target 
 ```scala
 import java.util.UUID
 import ctx._                      // - Import MappedEncoding from the context 
-// import io.getquill.MappedEncoding - (or import MappedEncoding directly)
+// import zio.quill.MappedEncoding - (or import MappedEncoding directly)
 
 implicit val encodeUUID = MappedEncoding[UUID, String](_.toString)
 implicit val decodeUUID = MappedEncoding[String, UUID](UUID.fromString(_))
