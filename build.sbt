@@ -649,7 +649,7 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "6.3.1" exclude ("org.slf4j", "*"),
+    "com.zaxxer"              % "HikariCP"                % "6.3.3" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "26.7.0"      % Test,
     "com.h2database"          % "h2"                      % "2.5.252"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.14"     % Test,
