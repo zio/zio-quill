@@ -245,7 +245,7 @@ jobs:
     - name: Cache Dependencies
       uses: coursier/cache-action@v8.1.1
     - name: Setup NodeJs
-      uses: actions/setup-node@v7.1.0
+      uses: actions/setup-node@v7.0.0
       with:
         node-version: 24.12.0
         registry-url: https://registry.npmjs.org
