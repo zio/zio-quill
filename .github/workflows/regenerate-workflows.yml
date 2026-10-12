@@ -51,7 +51,7 @@ jobs:
         java-version: '17'
         check-latest: true
     - name: Setup SBT
-      uses: sbt/setup-sbt@v1.5.7
+      uses: sbt/setup-sbt@v1.5.11
     - name: Cache Dependencies
       uses: coursier/cache-action@v8.1.1
     - name: Regenerate GitHub workflow files
