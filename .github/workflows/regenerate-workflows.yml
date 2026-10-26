@@ -53,7 +53,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Regenerate GitHub workflow files
       run: sbt --no-colors ciGenerateGithubWorkflow
     - name: Commit and push the regenerated files if changed

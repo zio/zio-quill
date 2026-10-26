@@ -51,7 +51,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Build modules
       run: |-
         read -r SCALA_VERSION MODULE <<< "${{ matrix.build }}"
@@ -80,7 +80,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Check if the README file is up to date
       run: sbt --no-colors docs/checkReadme
     - name: Check website build process
@@ -103,7 +103,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Check if the site workflow is up to date
       run: sbt --no-colors ciCheckGithubWorkflow
     - name: Check scalafmt
@@ -132,7 +132,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Generate Readme
       run: sbt --no-colors docs/generateReadme
     - name: Generate Token
@@ -207,7 +207,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Release
       run: |-
         sbt --no-colors ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
@@ -243,7 +243,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Setup NodeJs
       uses: actions/setup-node@v7.0.0
       with:
