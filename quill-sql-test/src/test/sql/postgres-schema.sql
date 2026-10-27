@@ -165,3 +165,12 @@ CREATE TABLE Address(
     zip int,
     otherExtraInfo VARCHAR(255)
 );
+
+
+CREATE TABLE Contact_Snake(
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    age int,
+    address_fk int,
+    extra_info VARCHAR(255)
+)

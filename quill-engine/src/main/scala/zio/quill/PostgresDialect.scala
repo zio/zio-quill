@@ -63,20 +63,16 @@ trait PostgresDialect
     s"PREPARE p${preparedStatementId.incrementAndGet.toString.token} AS $query"
   }
 
-  private[quill] case class ReplaceReturningAlias(batchAlias: String) extends StatelessTransformer {
-    override def apply(e: ast.Action): ast.Action =
-      e match {
-        case Returning(action, alias, property) =>
-          val newAlias    = alias.copy(name = batchAlias)
-          val newProperty = BetaReduction(property, alias -> newAlias)
-          Returning(action, newAlias, newProperty)
-        case ReturningGenerated(action, alias, property) =>
-          val newAlias    = alias.copy(name = batchAlias)
-          val newProperty = BetaReduction(property, alias -> newAlias)
-          ReturningGenerated(action, newAlias, newProperty)
-        case _ => super.apply(e)
-      }
-  }
+  // In a batch update, RETURNING must name the updated table: the VALUES alias only holds the inputs, so its columns
+  // differ from the updated row whenever SET uses an expression, and lack every column that SET does not assign.
+  // An unfiltered update only gets a table alias when ConcatableBatchUpdate adds a VALUES clause.
+  private def updatedTableAlias(action: ast.Update, batchAlias: String): Option[String] =
+    action match {
+      case Update(Filter(_: Entity, tableAlias, _), _)                                                => Some(tableAlias.name)
+      case Update(table: Entity, _) if ReplaceLiftings.of(action)(batchAlias, List.empty)._3.nonEmpty =>
+        Some(NormalizeFilteredActionAliases.chooseAlias(table.name, Some(batchAlias)))
+      case _ => None
+    }
 
   override protected def actionTokenizer(insertEntityTokenizer: Tokenizer[Entity])(implicit
     astTokenizer: Tokenizer[Ast],
@@ -91,15 +87,14 @@ trait PostgresDialect
       // which we don't want. We want it to just be:
       //   INSERT ... RETURNING property
 
-      case returning @ ReturningAction(action: ast.Update, alias, prop) if (idiomContext.queryType.isBatch) =>
+      case returning @ ReturningAction(action: ast.Update, _, _) if (idiomContext.queryType.isBatch) =>
         val batchAlias =
           idiomContext.queryType.batchAlias.getOrElse {
             throw new IllegalArgumentException(
               s"Batch alias not found in the action: ${idiomContext.queryType} but it is a batch context. This should not be possible."
             )
           }
-        val returningNew = ReplaceReturningAlias(batchAlias)(returning).asInstanceOf[ReturningAction]
-        stmt"${(action: Ast).token} RETURNING ${tokenizeReturningClause(returningNew, Some(returningNew.alias.name))}"
+        stmt"${(action: Ast).token} RETURNING ${tokenizeReturningClause(returning, updatedTableAlias(action, batchAlias))}"
 
       case ConcatableBatchUpdate(output) =>
         output
