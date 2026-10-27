@@ -85,4 +85,20 @@ class PostgresDialectSpec extends OnConflictSpec {
     }
   }
 
+  "keep querySchema column names in OnConflict" - `onConflict with querySchema` { i =>
+    "cols target - update with custom names" in {
+      object CustomNaming extends NamingStrategy {
+        override def column(s: String): String = s match {
+          case "l" => "ll"
+          case _   => default(s)
+        }
+        override def default(s: String): String = s
+      }
+      val ctx = new SqlMirrorContext(PostgresDialect, CustomNaming) with TestEntities
+
+      ctx.run(`cols target - update`(i)).string mustEqual
+        "INSERT INTO TestEntity AS t (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET l = ((t.l + EXCLUDED.l) / 2), s = EXCLUDED.s"
+    }
+  }
+
 }
