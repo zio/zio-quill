@@ -23,7 +23,8 @@ trait OnConflictSupport {
 
     val customAstTokenizer =
       Tokenizer.withFallback[Ast](self.astTokenizer(_, strategy, idiomContext)) {
-        case Property(_: OnConflict.Excluded, value) => stmt"EXCLUDED.${value.token}"
+        case Property.Opinionated(_: OnConflict.Excluded, value, renameable, _) =>
+          stmt"EXCLUDED.${tokenizeColumn(strategy, value, renameable).token}"
 
         // At first glance it might be hard to understand why this is doing `case OnConflict.Existing(a) => stmt"${entityAlias}"`
         // but consider that this is a situation where multiple aliases are used in multiple update clauses e.g. the `tt` in the below example
