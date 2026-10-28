@@ -51,8 +51,11 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
     )
   }.value,
   // Tests run as part of the build via `build/build.sh`, so there are no separate test jobs
-  ciTestJobs  := Seq.empty,
-  ciBuildJobs := Def.setting {
+  ciTestJobs := Seq.empty,
+  // The pull-request-only `docs` job must not be part of the `ci` aggregate: it is skipped on pushes and releases, and
+  // a skipped job anywhere in the chain makes the `release` job (which needs `ci`) skip as well.
+  ciPullRequestApprovalJobs := Seq("lint", "build"),
+  ciBuildJobs               := Def.setting {
     Seq(
       Job(
         id = "build",
@@ -321,7 +324,7 @@ lazy val `quill-engine` =
         "com.lihaoyi"                  %% "pprint"        % "0.9.3",
         "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.2"
       ),
-      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
+      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;zio.quill.Model;zio.quill.ScalarTag;zio.quill.QuotationTag"
     )
     .enablePlugins(MimaPlugin)
 
@@ -403,7 +406,7 @@ lazy val `quill-codegen-jdbc` =
 //        val dbs     = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
 //        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
 //        r.run(
-//          "io.getquill.codegen.integration.CodegenTestCaseRunner",
+//          "zio.quill.codegen.integration.CodegenTestCaseRunner",
 //          classPath,
 //          fileDir.getAbsolutePath +: dbs,
 //          s
@@ -537,7 +540,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.7" % "provided",
+        "org.postgresql" % "postgresql" % "42.7.14" % "provided",
         "dev.zio"       %% "zio-json"   % "0.7.44"
       ),
       Test / testGrouping := {
@@ -625,7 +628,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.56"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.57"
       )
     )
     .dependsOn(
@@ -646,10 +649,10 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "6.3.1" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "9.4.0"       % Test,
+    "com.zaxxer"              % "HikariCP"                % "7.1.0" exclude ("org.slf4j", "*"),
+    "com.mysql"               % "mysql-connector-j"       % "26.10.0"     % Test,
     "com.h2database"          % "h2"                      % "2.5.252"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.7"      % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.14"     % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.50.3.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
@@ -687,17 +690,17 @@ def excludePaths(paths: Seq[String]) = {
         def keepFilter(path: String) = {
           val keep =
             path.matches(regex) ||
-              path.contains("io/getquill/context/sql/base") ||
-              path.contains("io/getquill/context/sql/ProductSpec") ||
+              path.contains("zio/quill/context/sql/base") ||
+              path.contains("zio/quill/context/sql/ProductSpec") ||
               path.contains("TestContext") ||
               path.contains("package.scala") ||
               path.contains("oracle.scala") ||
-              path.contains("io/getquill/UpperCaseNonDefault") ||
-              path.contains("io/getquill/base") ||
-              path.contains("io/getquill/TestEntities") ||
-              path.contains("io/getquill/context/sql/TestEncoders") ||
-              path.contains("io/getquill/context/sql/TestDecoders") ||
-              path.contains("io/getquill/context/sql/encoding/ArrayEncodingBaseSpec") ||
+              path.contains("zio/quill/UpperCaseNonDefault") ||
+              path.contains("zio/quill/base") ||
+              path.contains("zio/quill/TestEntities") ||
+              path.contains("zio/quill/context/sql/TestEncoders") ||
+              path.contains("zio/quill/context/sql/TestDecoders") ||
+              path.contains("zio/quill/context/sql/encoding/ArrayEncodingBaseSpec") ||
               path.contains("EncodingSpec")
           if (keep) println(s"KEEPING: ${path}")
           keep

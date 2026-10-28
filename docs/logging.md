@@ -21,7 +21,7 @@ queries to the specified file.
 For a file that looks like this:
 ```
 // Example.scala
-package io.getquill
+package zio.quill
 
 object Example {
   case class Person(id: Int, name: String, age: Int)
@@ -37,7 +37,7 @@ object Example {
 The following log will be produced:
 ```sql
 
--- file: /home/me/quill-example/src/main/scala/io/getquill/Example.scala:9:19
+-- file: /home/me/quill-example/src/main/scala/zio/quill/Example.scala:9:19
 -- time: 2022-04-14T23:18:19.533
 
  SELECT
@@ -50,7 +50,7 @@ The following log will be produced:
 ;
 
 
--- file: /home/me/quill-example/src/main/scala/io/getquill/Example.scala:10:22
+-- file: /home/me/quill-example/src/main/scala/zio/quill/Example.scala:10:22
 -- time: 2022-04-14T23:18:19.9
 
  SELECT
@@ -93,12 +93,12 @@ sbt -Dquill.macro.log.pretty=true
 
 Before:
 ```
-[info] /home/me/project/src/main/scala/io/getquill/MySqlTestPerson.scala:20:18: SELECT p.id, p.name, p.age, a.ownerFk, a.street, a.state, a.zip FROM Person p INNER JOIN Address a ON a.ownerFk = p.id
+[info] /home/me/project/src/main/scala/zio/quill/MySqlTestPerson.scala:20:18: SELECT p.id, p.name, p.age, a.ownerFk, a.street, a.state, a.zip FROM Person p INNER JOIN Address a ON a.ownerFk = p.id
 ```
 
 After:
 ```
-[info] /home/me/project/src/main/scala/io/getquill/MySqlTestPerson.scala:20:18:
+[info] /home/me/project/src/main/scala/zio/quill/MySqlTestPerson.scala:20:18:
 [info]   | SELECT
 [info]   |   p.id,
 [info]   |   p.name,
