@@ -177,7 +177,6 @@ jobs:
     needs:
     - lint
     - build
-    - docs
     if: always()
     steps:
     - name: Report Failed CI
