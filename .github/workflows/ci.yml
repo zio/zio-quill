@@ -43,7 +43,7 @@ jobs:
       with:
         fetch-depth: '0'
     - name: Setup Scala
-      uses: actions/setup-java@v6.0.1
+      uses: actions/setup-java@v6.1.0
       with:
         distribution: corretto
         java-version: '17'
@@ -51,7 +51,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Build modules
       run: |-
         read -r SCALA_VERSION MODULE <<< "${{ matrix.build }}"
@@ -72,7 +72,7 @@ jobs:
       with:
         fetch-depth: '0'
     - name: Setup Scala
-      uses: actions/setup-java@v6.0.1
+      uses: actions/setup-java@v6.1.0
       with:
         distribution: corretto
         java-version: '17'
@@ -80,7 +80,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Check if the README file is up to date
       run: sbt --no-colors docs/checkReadme
     - name: Check website build process
@@ -95,7 +95,7 @@ jobs:
       with:
         fetch-depth: '0'
     - name: Setup Scala
-      uses: actions/setup-java@v6.0.1
+      uses: actions/setup-java@v6.1.0
       with:
         distribution: corretto
         java-version: '17'
@@ -103,7 +103,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Check if the site workflow is up to date
       run: sbt --no-colors ciCheckGithubWorkflow
     - name: Check scalafmt
@@ -124,7 +124,7 @@ jobs:
     - name: Install libuv
       run: sudo apt-get update && sudo apt-get install -y libuv1-dev
     - name: Setup Scala
-      uses: actions/setup-java@v6.0.1
+      uses: actions/setup-java@v6.1.0
       with:
         distribution: corretto
         java-version: '17'
@@ -132,7 +132,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Generate Readme
       run: sbt --no-colors docs/generateReadme
     - name: Generate Token
@@ -199,7 +199,7 @@ jobs:
     - name: Install libuv
       run: sudo apt-get update && sudo apt-get install -y libuv1-dev
     - name: Setup Scala
-      uses: actions/setup-java@v6.0.1
+      uses: actions/setup-java@v6.1.0
       with:
         distribution: corretto
         java-version: '17'
@@ -207,7 +207,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Release
       run: |-
         sbt --no-colors ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
@@ -235,7 +235,7 @@ jobs:
     - name: Install libuv
       run: sudo apt-get update && sudo apt-get install -y libuv1-dev
     - name: Setup Scala
-      uses: actions/setup-java@v6.0.1
+      uses: actions/setup-java@v6.1.0
       with:
         distribution: corretto
         java-version: '17'
@@ -243,11 +243,11 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.1.1
+      uses: coursier/cache-action@v8.2.0
     - name: Setup NodeJs
-      uses: actions/setup-node@v7.0.0
+      uses: actions/setup-node@v7.1.0
       with:
-        node-version: 24.12.0
+        node-version: 24.22.1
         registry-url: https://registry.npmjs.org
     - name: Publish Docs to NPM Registry
       run: sbt --no-colors docs/publishToNpm
