@@ -47,9 +47,24 @@ jobs:
       if: ${{ github.event_name == 'pull_request_target' }}
       run: |
         set -euo pipefail
+        protected=$(gh api "repos/$GH_REPO/branches/$BASE" \
+          --jq '.protection.required_status_checks.contexts | length')
+        ruleset=$(gh api "repos/$GH_REPO/rules/branches/$BASE" \
+          --jq '[.[] | select(.type == "required_status_checks")] | length')
+        if [ $((protected + ruleset)) -gt 0 ]; then
+          echo "$BASE requires status checks, enabling auto-merge"
+          gh pr merge --auto --squash "$PR"
+          exit 0
+        fi
+        echo "$BASE has no required status checks, waiting for CI before merging"
         while true; do
-          checks=$(gh pr checks "$PR" --json name,bucket \
-            --jq '[.[] | select(.name != "auto-merge" and .name != "auto-approve-bot-prs")]' 2>/dev/null || true)
+          if ! checks=$(gh pr checks "$PR" --json name,bucket \
+            --jq '[.[] | select(.name != "auto-merge" and .name != "auto-approve-bot-prs")]' 2>&1); then
+            case "$checks" in
+              *"no checks reported"*) checks='[]' ;;
+              *) echo "$checks" >&2; exit 1 ;;
+            esac
+          fi
           checks=${checks:-[]}
           total=$(jq length <<< "$checks")
           pending=$(jq '[.[] | select(.bucket == "pending")] | length' <<< "$checks")
@@ -70,6 +85,7 @@ jobs:
         GH_TOKEN: ${{ steps.generate-token.outputs.token || secrets.GITHUB_TOKEN }}
         GH_REPO: ${{ github.repository }}
         PR: ${{ github.event.number }}
+        BASE: ${{ github.event.pull_request.base.ref }}
     - name: Backfill auto-merge for existing bot PRs
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: |
