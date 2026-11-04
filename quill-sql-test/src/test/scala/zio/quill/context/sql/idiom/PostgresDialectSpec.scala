@@ -101,4 +101,19 @@ class PostgresDialectSpec extends OnConflictSpec {
     }
   }
 
+  "quotes PostgreSQL reserved keywords used as table names or query aliases (#2914)" in {
+    case class User(id: Int, username: String, email: String)
+    case class Post(id: Int, title: String, content: String, userId: Int)
+    val email = "alice@example.com"
+    val q     = quote {
+      for {
+        user <- query[User]
+        if user.email == lift(email)
+        post <- query[Post]
+        if post.userId == user.id
+      } yield post
+    }
+    ctx.run(q).string mustEqual
+      "SELECT post.id, post.title, post.content, post.userId FROM \"User\" \"user\", Post post WHERE \"user\".email = ? AND post.userId = \"user\".id"
+  }
 }
