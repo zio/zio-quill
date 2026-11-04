@@ -300,4 +300,15 @@ class MetaDslSpec extends Spec {
       }
     }
   }
+
+  "generated meta anonymous classes include override modifier" in {
+    import scala.reflect.runtime.universe.reify
+    reify(materializeSchemaMeta[TestEntity]).tree.toString.contains("override def entity") mustEqual true
+    reify(schemaMeta[TestEntity]("test_entity", _.i -> "ii")).tree.toString.contains("override def entity") mustEqual true
+    val queryTree = reify(materializeQueryMeta[TestEntity]).tree.toString
+    queryTree.contains("override def expand") mustEqual true
+    queryTree.contains("override val extract") mustEqual true
+    reify(materializeInsertMeta[TestEntity]).tree.toString.contains("override def expand") mustEqual true
+    reify(materializeUpdateMeta[TestEntity]).tree.toString.contains("override def expand") mustEqual true
+  }
 }

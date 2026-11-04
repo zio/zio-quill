@@ -15,7 +15,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           private[this] val _entity = ${c.prefix}.quote {
             ${c.prefix}.querySchema[$t]($entity, ..$columns)
           }
-          def entity = _entity
+          override def entity = _entity
         }
       """
     }
@@ -25,8 +25,8 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
       q"""
         new ${c.prefix}.QueryMeta[$t] {
           private[this] val _expand = $expand
-          def expand = _expand
-          val extract =
+          override def expand = _expand
+          override val extract =
             (r: ${c.prefix}.ResultRow, s: ${c.prefix}.Session) => $extract(implicitly[${c.prefix}.QueryMeta[$r]].extract(r, s))
         }
       """
@@ -43,8 +43,8 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
     q"""
       new ${c.prefix}.QueryMeta[$t] {
         private[this] val _expanded = ${expandQuery[T](value)}
-        def expand = _expanded
-        val extract = ${extract[T](value)}
+        override def expand = _expanded
+        override val extract = ${extract[T](value)}
       }
     """
   }
@@ -61,7 +61,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
           new ${c.prefix}.SchemaMeta[$t] {
             private[this] val _entity =
               ${c.prefix}.quote(${c.prefix}.impliedQuerySchema[$t](${t.tpe.typeSymbol.name.decodedName.toString}))
-            def entity = _entity
+            override def entity = _entity
           }
         """
     } else {
@@ -168,7 +168,7 @@ class MetaDslMacro(val c: MacroContext) extends ValueComputation {
         new ${c.prefix}.${TypeName(method.capitalize + "Meta")}[$t] {
           private[this] val _expand =
             ${c.prefix}.quote((q: zio.quill.EntityQuery[$t], value: $t) => q.${TermName(method)}(..$assignments))
-          def expand = _expand
+          override def expand = _expand
         }
       """
     }

@@ -15,9 +15,9 @@ class UdtMetaDslMacro(val c: MacroContext) {
          new ${c.prefix}.UdtMeta[$t] {
            private[this] val (nm, ks) = zio.quill.context.cassandra.util.UdtMetaUtils.parse($path)
            private[this] val map = Map[String, String](..$pairs)
-           def name = nm
-           def keyspace = ks
-           def alias(col: String) = map.get(col)
+           override def name = nm
+           override def keyspace = ks
+           override def alias(col: String) = map.get(col)
          }
        """
     }
