@@ -28,6 +28,27 @@ trait PostgresDialect
 
   override protected def productAggregationToken: ProductAggregationToken = ProductAggregationToken.VariableDotStar
 
+  override protected def tokenizeTable(strategy: NamingStrategy, table: String, renameable: Renameable) =
+    PostgresDialect.quoteIfReserved(super.tokenizeTable(strategy, table, renameable))
+
+  override protected def tokenizeColumn(strategy: NamingStrategy, column: String, renameable: Renameable) =
+    PostgresDialect.quoteIfReserved(super.tokenizeColumn(strategy, column, renameable))
+
+  override protected def tokenizeColumnAlias(strategy: NamingStrategy, column: String) =
+    PostgresDialect.quoteIfReserved(super.tokenizeColumnAlias(strategy, column))
+
+  override protected def tokenizeTableAlias(strategy: NamingStrategy, table: String) =
+    PostgresDialect.quoteIfReserved(super.tokenizeTableAlias(strategy, table))
+
+  override protected def tokenizeIdentName(strategy: NamingStrategy, name: String) =
+    PostgresDialect.quoteIfReserved(super.tokenizeIdentName(strategy, name))
+
+  override private[quill] def makeProductAggregationToken(id: String) =
+    productAggregationToken match {
+      case ProductAggregationToken.Star            => stmt"*"
+      case ProductAggregationToken.VariableDotStar => stmt"${PostgresDialect.quoteIfReserved(id).token}.*"
+    }
+
   override def astTokenizer(implicit
     astTokenizer: Tokenizer[Ast],
     strategy: NamingStrategy,
@@ -215,7 +236,118 @@ trait PostgresDialect
   }
 }
 
-object PostgresDialect extends PostgresDialect
+object PostgresDialect extends PostgresDialect {
+
+  private[quill] val postgresReservedKeywords: Set[String] = Set(
+    "all",
+    "analyse",
+    "analyze",
+    "and",
+    "any",
+    "array",
+    "as",
+    "asc",
+    "asymmetric",
+    "authorization",
+    "binary",
+    "both",
+    "case",
+    "cast",
+    "check",
+    "collate",
+    "collation",
+    "column",
+    "concurrently",
+    "constraint",
+    "create",
+    "cross",
+    "current_catalog",
+    "current_date",
+    "current_role",
+    "current_schema",
+    "current_time",
+    "current_timestamp",
+    "current_user",
+    "default",
+    "deferrable",
+    "desc",
+    "distinct",
+    "do",
+    "else",
+    "end",
+    "except",
+    "false",
+    "fetch",
+    "for",
+    "foreign",
+    "freeze",
+    "from",
+    "full",
+    "grant",
+    "group",
+    "having",
+    "ilike",
+    "in",
+    "initially",
+    "inner",
+    "intersect",
+    "into",
+    "is",
+    "isnull",
+    "join",
+    "lateral",
+    "leading",
+    "left",
+    "like",
+    "limit",
+    "localtime",
+    "localtimestamp",
+    "natural",
+    "not",
+    "notnull",
+    "null",
+    "offset",
+    "on",
+    "only",
+    "or",
+    "order",
+    "outer",
+    "overlaps",
+    "placing",
+    "primary",
+    "references",
+    "returning",
+    "right",
+    "select",
+    "session_user",
+    "similar",
+    "some",
+    "symmetric",
+    "table",
+    "tablesample",
+    "then",
+    "to",
+    "trailing",
+    "true",
+    "union",
+    "unique",
+    "user",
+    "using",
+    "variadic",
+    "verbose",
+    "when",
+    "where",
+    "window",
+    "with"
+  )
+
+  private[quill] def quoteIfReserved(identifier: String) = {
+    val isReserved = postgresReservedKeywords.contains(identifier.toLowerCase)
+    val isQuoted   = identifier.startsWith("\"") && identifier.endsWith("\"")
+    if (isReserved && !isQuoted) s""""$identifier"""" else identifier
+  }
+
+}
 
 case class ReplaceAssignmentAliases(newAlias: Ident) extends StatelessTransformer {
   override def apply(e: Assignment): Assignment =
