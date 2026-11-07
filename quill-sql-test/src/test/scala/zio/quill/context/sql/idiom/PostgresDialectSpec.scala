@@ -3,6 +3,7 @@ package zio.quill.context.sql.idiom
 import zio.quill.Literal
 import zio.quill.NamingStrategy
 import zio.quill.PostgresDialect
+import zio.quill.SnakeCase
 import zio.quill.SqlMirrorContext
 import zio.quill.TestEntities
 
@@ -10,6 +11,14 @@ class PostgresDialectSpec extends OnConflictSpec {
 
   val ctx = new SqlMirrorContext(PostgresDialect, Literal) with TestEntities
   import ctx._
+
+  private object CustomLColumnNaming extends NamingStrategy {
+    override def column(s: String): String = s match {
+      case "l" => "ll"
+      case _   => default(s)
+    }
+    override def default(s: String): String = s
+  }
 
   "applies explicit casts" - {
     "toLong" in {
@@ -71,33 +80,57 @@ class PostgresDialectSpec extends OnConflictSpec {
 
   "apply naming strategy OnConflict" - `onConflict with query and schemaMeta` { i =>
     "cols target - update with custom names" in {
-      object CustomNaming extends NamingStrategy {
-        override def column(s: String): String = s match {
-          case "l" => "ll"
-          case _   => default(s)
-        }
-        override def default(s: String): String = s
-      }
-      val ctx = new SqlMirrorContext(PostgresDialect, CustomNaming) with TestEntities
+      val customCtx = new SqlMirrorContext(PostgresDialect, CustomLColumnNaming) with TestEntities
 
-      ctx.run(`cols target - update`(i)).string mustEqual
+      customCtx.run(`cols target - update`(i)).string mustEqual
         "INSERT INTO TestEntity AS t (s,i,ll,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET ll = ((t.ll + EXCLUDED.ll) / 2), s = EXCLUDED.s"
     }
   }
 
   "keep querySchema column names in OnConflict" - `onConflict with querySchema` { i =>
     "cols target - update with custom names" in {
-      object CustomNaming extends NamingStrategy {
-        override def column(s: String): String = s match {
-          case "l" => "ll"
-          case _   => default(s)
-        }
-        override def default(s: String): String = s
-      }
-      val ctx = new SqlMirrorContext(PostgresDialect, CustomNaming) with TestEntities
+      val customCtx = new SqlMirrorContext(PostgresDialect, CustomLColumnNaming) with TestEntities
 
-      ctx.run(`cols target - update`(i)).string mustEqual
+      customCtx.run(`cols target - update`(i)).string mustEqual
         "INSERT INTO TestEntity AS t (s,i,l,o,b) VALUES (?, ?, ?, ?, ?) ON CONFLICT (i,s) DO UPDATE SET l = ((t.l + EXCLUDED.l) / 2), s = EXCLUDED.s"
+    }
+  }
+
+  "quotes PostgreSQL reserved keywords (#2914)" - {
+    case class User(id: Int, username: String, email: String)
+    case class Post(id: Int, title: String, content: String, userId: Int)
+    case class AuditEntry(id: Int, user: String, order: Int)
+
+    "table names and for-comprehension aliases" in {
+      val email = "alice@example.com"
+      val q     = quote {
+        for {
+          user <- query[User]
+          if user.email == lift(email)
+          post <- query[Post]
+          if post.userId == user.id
+        } yield post
+      }
+      ctx.run(q).string mustEqual
+        "SELECT post.id, post.title, post.content, post.userId FROM \"User\" \"user\", Post post WHERE \"user\".email = ? AND post.userId = \"user\".id"
+    }
+
+    "reserved column names and SnakeCase table names" in {
+      val snakeCtx = new SqlMirrorContext(PostgresDialect, SnakeCase)
+      import snakeCtx._
+      val q = quote {
+        query[AuditEntry].filter(order => order.user == "admin").map(order => order.order)
+      }
+      snakeCtx.run(q).string mustEqual
+        "SELECT \"order\".\"order\" FROM audit_entry \"order\" WHERE \"order\".\"user\" = 'admin'"
+    }
+
+    "product aggregation count on reserved alias" in {
+      val q = quote {
+        query[User].filter(user => user.username == "bob").size
+      }
+      ctx.run(q).string mustEqual
+        "SELECT COUNT(\"user\".*) FROM \"User\" \"user\" WHERE \"user\".username = 'bob'"
     }
   }
 
