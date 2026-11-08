@@ -51,7 +51,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.2.0
+      uses: coursier/cache-action@v9.0.1
     - name: Build modules
       run: |-
         read -r SCALA_VERSION MODULE <<< "${{ matrix.build }}"
@@ -80,7 +80,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.2.0
+      uses: coursier/cache-action@v9.0.1
     - name: Check if the README file is up to date
       run: sbt --no-colors docs/checkReadme
     - name: Check website build process
@@ -103,7 +103,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.2.0
+      uses: coursier/cache-action@v9.0.1
     - name: Check if the site workflow is up to date
       run: sbt --no-colors ciCheckGithubWorkflow
     - name: Check scalafmt
@@ -132,7 +132,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.2.0
+      uses: coursier/cache-action@v9.0.1
     - name: Generate Readme
       run: sbt --no-colors docs/generateReadme
     - name: Generate Token
@@ -207,7 +207,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.2.0
+      uses: coursier/cache-action@v9.0.1
     - name: Release
       run: |-
         sbt --no-colors ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
@@ -243,7 +243,7 @@ jobs:
     - name: Setup SBT
       uses: sbt/setup-sbt@v1.5.7
     - name: Cache Dependencies
-      uses: coursier/cache-action@v8.2.0
+      uses: coursier/cache-action@v9.0.1
     - name: Setup NodeJs
       uses: actions/setup-node@v7.1.0
       with:
@@ -280,11 +280,12 @@ jobs:
       with:
         app_id: ${{ secrets.APP_ID }}
         app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
+        github_repo: zio/zio
     - name: notify the main repo about the new release of docs package
       run: |
         PACKAGE_NAME=$(cat docs/package.json | grep '"name"' | awk -F'"' '{print $4}')
         PACKAGE_VERSION=$(npm view $PACKAGE_NAME version)
-        curl -L \
+        curl -sSL --fail-with-body \
           -X POST \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: token $NOTIFY_TOKEN"\
