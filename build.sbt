@@ -65,7 +65,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
         strategy = Some(
           Strategy(
             matrix = Map(
-              "build" -> ("3.3.x base" :: (for {
+              "build" -> ("3.x base" :: (for {
                 scala  <- List("2.12.x", "2.13.x")
                 module <- List("db", "codegen", "bigdata")
               } yield s"$scala $module"))
@@ -122,7 +122,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
         (job.steps.init :+ Step.SingleStep(
           name = "Release",
           run = Some(
-            Seq("2.12.x", "2.13.x", "3.3.x")
+            Seq("2.12.x", "2.13.x", "3.x")
               .map(v => s"sbt --no-colors ++$v -Dquill.scala.version=$v -Dquill.macro.log=false ci-release")
               .mkString("\n")
           ),

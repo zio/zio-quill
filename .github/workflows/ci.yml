@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         build:
-        - 3.3.x base
+        - 3.x base
         - 2.12.x db
         - 2.12.x codegen
         - 2.12.x bigdata
@@ -213,7 +213,7 @@ jobs:
       run: |-
         sbt --no-colors ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
         sbt --no-colors ++2.13.x -Dquill.scala.version=2.13.x -Dquill.macro.log=false ci-release
-        sbt --no-colors ++3.3.x -Dquill.scala.version=3.3.x -Dquill.macro.log=false ci-release
+        sbt --no-colors ++3.x -Dquill.scala.version=3.x -Dquill.macro.log=false ci-release
       env:
         CI_SNAPSHOT_RELEASE: publish
         PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
