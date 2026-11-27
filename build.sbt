@@ -753,8 +753,11 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
   javacOptions := Seq("-source", "11", "-target", "11"),
+  // Scala 3.8+ only targets Java 17 and later
+  scalacOptions += {
+    if (scalaBinaryVersion.value == "3") "-release:17" else "-release:11"
+  },
   scalacOptions ++= Seq(
-    "-release:11",
     "-encoding",
     "UTF-8",
     "-feature",
