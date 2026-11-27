@@ -3,24 +3,141 @@ import com.jsuereth.sbtpgp.PgpKeys.publishSigned
 
 import scala.collection.immutable.ListSet
 
+import zio.sbt.ZioSbtCiPlugin.{releaseJobs, CacheDependencies, Checkout, SetupJava, SetupSBT}
+import zio.sbt.githubactions.{Condition, Job, Step, Strategy}
+
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 inThisBuild(
   List(
-    organization := "io.getquill",
+    organization := "dev.zio",
     homepage     := Some(url("https://zio.dev/zio-quill")),
     licenses     := List(("Apache License 2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))),
-    developers := List(
+    developers   := List(
       Developer("fwbrasil", "Flavio W. Brasil", "", url("https://github.com/fwbrasil")),
       Developer("deusaquilus", "Alexander Ioffe", "", url("https://github.com/deusaquilus"))
     ),
     scmInfo := Some(
       ScmInfo(url("https://github.com/zio/zio-quill"), "git:git@github.com:zio/zio-quill.git")
     ),
+    publishTo := {
+      val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+      if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+      else localStaging.value
+    },
     scalafmtCheck     := true,
     scalafmtSbtCheck  := true,
     scalafmtOnCompile := !insideCI.value
-  )
+  ) ++ ciSettings
+)
+
+lazy val ciSettings: Seq[Setting[_]] = Seq(
+  ciEnabledBranches := Seq("master"),
+  // See:
+  //  - https://stackoverflow.com/a/73708006
+  //  - https://stackoverflow.com/questions/73465937/apache-spark-3-3-0-breaks-on-java-17-with-cannot-access-class-sun-nio-ch-direct
+  ciWorkflowEnv := Map(
+    "JDK_JAVA_OPTIONS" -> "-Xms6G -Xmx6G -XX:+UseG1GC --add-exports java.base/sun.nio.ch=ALL-UNNAMED"
+  ),
+  ciLintJobs := Def.setting {
+    Seq(
+      Job(
+        id = "lint",
+        name = "Lint",
+        steps = Seq(Checkout.value, SetupJava("17"), SetupSBT, CacheDependencies) ++
+          ciCheckGithubWorkflowSteps.value ++
+          Seq(Step.SingleStep(name = "Check scalafmt", run = Some("sbt --no-colors scalafmtCheckAll")))
+      )
+    )
+  }.value,
+  // Tests run as part of the build via `build/build.sh`, so there are no separate test jobs
+  ciTestJobs := Seq.empty,
+  // The pull-request-only `docs` job must not be part of the `ci` aggregate: it is skipped on pushes and releases, and
+  // a skipped job anywhere in the chain makes the `release` job (which needs `ci`) skip as well.
+  ciPullRequestApprovalJobs := Seq("lint", "build"),
+  ciBuildJobs               := Def.setting {
+    Seq(
+      Job(
+        id = "build",
+        name = "Build ${{ matrix.build }}",
+        // Each entry is "<scala version> <module>". For Scala 3 only the `base` modules are built; for
+        // the other Scala versions `base` is already covered by the 3.x build.
+        strategy = Some(
+          Strategy(
+            matrix = Map(
+              "build" -> ("3.3.x base" :: (for {
+                scala  <- List("2.12.x", "2.13.x")
+                module <- List("db", "codegen", "bigdata")
+              } yield s"$scala $module"))
+            ),
+            failFast = false
+          )
+        ),
+        steps = Seq(
+          Checkout.value,
+          SetupJava("17"),
+          SetupSBT,
+          CacheDependencies,
+          Step.SingleStep(
+            name = "Build modules",
+            run = Some(
+              """read -r SCALA_VERSION MODULE <<< "${{ matrix.build }}"
+                |export SCALA_VERSION
+                |echo "SCALA_VERSION='$SCALA_VERSION'"
+                |./build/build.sh "$MODULE"""".stripMargin
+            ),
+            env = Map(
+              "POSTGRES_PASSWORD" -> "postgres",
+              "MYSQL_PASSWORD"    -> "root"
+            )
+          )
+        )
+      ),
+      // Replaces the former `site.yml` pull request check: the README must be up to date and the website must build.
+      // `rm -rf website` is needed because `docs/checkReadme` runs mdoc, which creates `website/docs`, and
+      // `installWebsite` skips scaffolding when the website directory already exists.
+      Job(
+        id = "docs",
+        name = "Docs",
+        condition = Some(Condition.Expression("github.event_name == 'pull_request'")),
+        steps = Seq(
+          Checkout.value,
+          SetupJava("17"),
+          SetupSBT,
+          CacheDependencies,
+          Step.SingleStep(name = "Check if the README file is up to date", run = Some("sbt --no-colors docs/checkReadme")),
+          Step.SingleStep(
+            name = "Check website build process",
+            run = Some("rm -rf website; sbt --no-colors docs/clean; sbt --no-colors docs/buildWebsite")
+          )
+        )
+      )
+    )
+  }.value,
+  // By default sbt-ci-release uses `+publishSigned` / `+publish`, which publishes for all configured Scala
+  // versions; Quill publishes one Scala version at a time instead.
+  ciReleaseJobs := Def.setting {
+    releaseJobs.value.map { job =>
+      job.withSteps(
+        (job.steps.init :+ Step.SingleStep(
+          name = "Release",
+          run = Some(
+            Seq("2.12.x", "2.13.x", "3.3.x")
+              .map(v => s"sbt --no-colors ++$v -Dquill.scala.version=$v -Dquill.macro.log=false ci-release")
+              .mkString("\n")
+          ),
+          env = Map(
+            "CI_RELEASE"          -> "publishSigned",
+            "CI_SNAPSHOT_RELEASE" -> "publish",
+            "PGP_PASSPHRASE"      -> "${{ secrets.PGP_PASSPHRASE }}",
+            "PGP_SECRET"          -> "${{ secrets.PGP_SECRET }}",
+            "SONATYPE_PASSWORD"   -> "${{ secrets.SONATYPE_PASSWORD }}",
+            "SONATYPE_USERNAME"   -> "${{ secrets.SONATYPE_USERNAME }}"
+          )
+        )): _*
+      )
+    }
+  }.value
 )
 
 val CodegenTag = Tags.Tag("CodegenTag")
@@ -88,7 +205,7 @@ def isScala2 = {
 }
 
 lazy val filteredModules = {
-  val modulesStr = sys.props.get("modules")
+  val modulesStr    = sys.props.get("modules")
   val moduleStrings =
     ListSet(
       modulesStr
@@ -165,7 +282,7 @@ lazy val `quill-util` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        ("org.scalameta" %% "scalafmt-core" % "3.9.4")
+        ("org.scalameta" %% "scalafmt-core" % "3.9.10")
           .excludeAll(
             ({
               if (isScala3)
@@ -200,14 +317,14 @@ lazy val `quill-engine` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                  % "config"        % "1.4.4",
-        "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
+        "com.typesafe"                  % "config"        % "1.4.10",
+        "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.6",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.6",
         "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.2"
       ),
-      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;io.getquill.Model;io.getquill.ScalarTag;io.getquill.QuotationTag"
+      coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;zio.quill.Model;zio.quill.ScalarTag;zio.quill.QuotationTag"
     )
     .enablePlugins(MimaPlugin)
 
@@ -216,11 +333,11 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                % "config"        % "1.4.4",
+        "com.typesafe"                % "config"        % "1.4.10",
         "dev.zio"                    %% "zio-logging"   % "2.5.1",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
-        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
+        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6"
       ),
       Test / fork := true
     )
@@ -289,7 +406,7 @@ lazy val `quill-codegen-jdbc` =
 //        val dbs     = Seq("testH2DB", "testMysqlDB", "testPostgresDB", "testSqliteDB", "testSqlServerDB", "testOracleDB")
 //        println(s"Running code generation for DBs: ${dbs.mkString(", ")}")
 //        r.run(
-//          "io.getquill.codegen.integration.CodegenTestCaseRunner",
+//          "zio.quill.codegen.integration.CodegenTestCaseRunner",
 //          classPath,
 //          fileDir.getAbsolutePath +: dbs,
 //          s
@@ -423,7 +540,7 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.7" % "provided",
+        "org.postgresql" % "postgresql" % "42.7.14" % "provided",
         "dev.zio"       %% "zio-json"   % "0.7.44"
       ),
       Test / testGrouping := {
@@ -511,7 +628,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.42"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.58"
       )
     )
     .dependsOn(
@@ -532,11 +649,11 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "6.3.1" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "9.4.0"       % Test,
-    "com.h2database"          % "h2"                      % "2.3.232"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.7"      % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.50.3.0"    % Test,
+    "com.zaxxer"              % "HikariCP"                % "7.1.0" exclude ("org.slf4j", "*"),
+    "com.mysql"               % "mysql-connector-j"       % "26.10.0"     % Test,
+    "com.h2database"          % "h2"                      % "2.5.252"     % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.14"     % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.54.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -573,17 +690,17 @@ def excludePaths(paths: Seq[String]) = {
         def keepFilter(path: String) = {
           val keep =
             path.matches(regex) ||
-              path.contains("io/getquill/context/sql/base") ||
-              path.contains("io/getquill/context/sql/ProductSpec") ||
+              path.contains("zio/quill/context/sql/base") ||
+              path.contains("zio/quill/context/sql/ProductSpec") ||
               path.contains("TestContext") ||
               path.contains("package.scala") ||
               path.contains("oracle.scala") ||
-              path.contains("io/getquill/UpperCaseNonDefault") ||
-              path.contains("io/getquill/base") ||
-              path.contains("io/getquill/TestEntities") ||
-              path.contains("io/getquill/context/sql/TestEncoders") ||
-              path.contains("io/getquill/context/sql/TestDecoders") ||
-              path.contains("io/getquill/context/sql/encoding/ArrayEncodingBaseSpec") ||
+              path.contains("zio/quill/UpperCaseNonDefault") ||
+              path.contains("zio/quill/base") ||
+              path.contains("zio/quill/TestEntities") ||
+              path.contains("zio/quill/context/sql/TestEncoders") ||
+              path.contains("zio/quill/context/sql/TestDecoders") ||
+              path.contains("zio/quill/context/sql/encoding/ArrayEncodingBaseSpec") ||
               path.contains("EncodingSpec")
           if (keep) println(s"KEEPING: ${path}")
           keep
@@ -599,8 +716,8 @@ def excludePaths(paths: Seq[String]) = {
 }
 
 val scala_v_12 = "2.12.20"
-val scala_v_13 = "2.13.16"
-val scala_v_30 = "3.3.6"
+val scala_v_13 = "2.13.18"
+val scala_v_30 = "3.3.9"
 
 val scalaCollectionCompatVersion = "2.13.0"
 
@@ -705,9 +822,7 @@ lazy val docs = project
       `quill-orientdb`,
       `quill-doobie`
     ),
-    projectStage                          := ProjectStage.ProductionReady,
-    checkArtifactBuildProcessWorkflowStep := None,
-    docsPublishBranch                     := "master",
+    projectStage := ProjectStage.ProductionReady,
     readmeBanner :=
       """|<p align="center">
          |  <img src="https://raw.githubusercontent.com/getquill/quill/master/quill.png">
