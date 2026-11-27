@@ -25,6 +25,10 @@ trait OnConflictSpec extends Spec {
     `onConflict with schemaMeta`(fun)
     `onConflict with querySchema`(fun)
   }
+  def `onConflict with query and schemaMeta`(fun: Quoted[Insert[TestEntity]] => Unit) = {
+    `onConflict with query`(fun)
+    `onConflict with schemaMeta`(fun)
+  }
 
   def del = quote(query[TestEntity].delete)
 

@@ -178,13 +178,64 @@ class BatchUpdateValuesMirrorSpec extends BatchUpdateValuesSpec {
       """UPDATE Contact AS p SET firstName = ps.firstName1, lastName = ps.lastName, age = ps.age
         |FROM (VALUES (?, ?, ?, ?), (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age)
         |WHERE p.firstName = ps.firstName
-        |RETURNING ps.age
+        |RETURNING p.age
         |""".collapseSpace,
       """UPDATE Contact AS p SET firstName = ps.firstName1, lastName = ps.lastName, age = ps.age
         |FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age)
         |WHERE p.firstName = ps.firstName
-        |RETURNING ps.age
+        |RETURNING p.age
         |""".collapseSpace
+    )
+  }
+
+  "Ex 4 - Returning Multiple (Snake Case)" in {
+    val context = new SqlMirrorContext(PostgresDialect, SnakeCase)
+    import context._
+
+    import `Ex 4 - Returning Multiple (Snake Case)`._
+    context.run(update, 2).tripleBatchMulti.map(_._1.collapseSpace) mustEqual List(
+      """UPDATE contact_snake AS p SET first_name = ps.firstName1, last_name = ps.lastName, age = ps.age
+        |FROM (VALUES (?, ?, ?, ?), (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age)
+        |WHERE p.first_name = ps.firstName
+        |RETURNING p.last_name, p.age
+        |""".collapseSpace,
+      """UPDATE contact_snake AS p SET first_name = ps.firstName1, last_name = ps.lastName, age = ps.age
+        |FROM (VALUES (?, ?, ?, ?)) AS ps(firstName, firstName1, lastName, age)
+        |WHERE p.first_name = ps.firstName
+        |RETURNING p.last_name, p.age
+        |""".collapseSpace
+    )
+  }
+
+  "Ex 4 - Returning Updated Values (Snake Case)" in {
+    val context = new SqlMirrorContext(PostgresDialect, SnakeCase)
+    import context._
+
+    import `Ex 4 - Returning Updated Values (Snake Case)`._
+    context.run(update, 2).tripleBatchMulti.map(_._1.collapseSpace) mustEqual List(
+      """UPDATE contact_snake AS p SET last_name = p.last_name || 'U'
+        |FROM (VALUES (?), (?)) AS ps(firstName)
+        |WHERE p.first_name = ps.firstName
+        |RETURNING p.last_name, p.age
+        |""".collapseSpace,
+      """UPDATE contact_snake AS p SET last_name = p.last_name || 'U'
+        |FROM (VALUES (?)) AS ps(firstName)
+        |WHERE p.first_name = ps.firstName
+        |RETURNING p.last_name, p.age
+        |""".collapseSpace
+    )
+  }
+
+  "Ex 4 - Returning without a VALUES clause" in {
+    val context = new SqlMirrorContext(PostgresDialect, SnakeCase)
+    import context._
+
+    import `Ex 1 - Simple Contact`._
+    val update = quote {
+      liftQuery(updateData: List[Contact]).foreach(ps => query[Contact].update(_.age -> 1).returning(_.lastName))
+    }
+    context.run(update, 2).tripleBatchMulti.map(_._1).distinct mustEqual List(
+      "UPDATE contact SET age = 1 RETURNING last_name"
     )
   }
 
