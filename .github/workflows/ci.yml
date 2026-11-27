@@ -152,12 +152,12 @@ jobs:
             - After each release, I will update the version in the installation section.
             - After any changes to the "docs/index.md" file, I will update the README.md file accordingly.
         branch: zio-sbt-website/update-readme
-        base: ${{ github.event.repository.default_branch }}
-        commit-message: Update README.md
         token: ${{ steps.generate-token.outputs.token }}
         delete-branch: true
         title: Update README.md
         add-paths: README.md
+        base: ${{ github.event.repository.default_branch }}
+        commit-message: Update README.md
     - name: Approve PR
       if: ${{ steps.cpr.outputs.pull-request-number }}
       run: gh pr review "$PR_URL" --approve
@@ -212,11 +212,11 @@ jobs:
         sbt --no-colors ++3.x -Dquill.scala.version=3.x -Dquill.macro.log=false ci-release
       env:
         CI_SNAPSHOT_RELEASE: publish
-        PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         CI_RELEASE: publishSigned
         SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         PGP_SECRET: ${{ secrets.PGP_SECRET }}
+        PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+        SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
   release-docs:
     name: Release Docs
     runs-on: ubuntu-latest
