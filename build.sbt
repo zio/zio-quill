@@ -65,10 +65,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
         strategy = Some(
           Strategy(
             matrix = Map(
-              "build" -> ("3.x base" :: (for {
-                scala  <- List("2.12.x", "2.13.x")
-                module <- List("db", "codegen", "bigdata")
-              } yield s"$scala $module"))
+              "build" -> ("3.x base" :: List("db", "codegen", "bigdata").map(module => s"2.13.x $module"))
             ),
             failFast = false
           )
@@ -122,7 +119,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
         (job.steps.init :+ Step.SingleStep(
           name = "Release",
           run = Some(
-            Seq("2.12.x", "2.13.x", "3.x")
+            Seq("2.13.x", "3.x")
               .map(v => s"sbt --no-colors ++$v -Dquill.scala.version=$v -Dquill.macro.log=false ci-release")
               .mkString("\n")
           ),
@@ -715,7 +712,6 @@ def excludePaths(paths: Seq[String]) = {
   })
 }
 
-val scala_v_12 = "2.12.20"
 val scala_v_13 = "2.13.18"
 val scala_v_30 = "3.9.0"
 
@@ -730,7 +726,7 @@ lazy val loggingSettings = Seq(
 lazy val basicSettings = excludeFilterSettings ++ Seq(
   Test / testOptions += Tests.Argument("-oI"),
   scalaVersion       := scala_v_13,
-  crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
+  crossScalaVersions := Seq(scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
     "org.scalatest"           %% "scalatest"               % "3.2.20" % Test,
     "org.scala-lang.modules"  %% "scala-collection-compat" % scalaCollectionCompatVersion,
@@ -773,16 +769,6 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, 13)) =>
         Seq("-Ypatmat-exhaust-depth", "40")
-      case Some((2, 12)) =>
-        Seq(
-          // "-Xfatal-warnings",
-          "-Xlint:-unused,_",
-          "-Xfuture",
-          "-deprecation",
-          "-Yno-adapted-args",
-          "-Ywarn-unused:imports",
-          "-Ycache-macro-class-loader:last-modified"
-        )
       case _ => Seq.empty
     }
   },
@@ -803,6 +789,7 @@ lazy val noPublishSettings = Seq(
 
 lazy val docs = project
   .in(file("zio-quill-docs"))
+  .settings(scalaVersion := scala_v_13)
   .enablePlugins(WebsitePlugin)
   .settings(coverageEnabled := false)
   .settings(
