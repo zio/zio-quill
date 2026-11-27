@@ -9,9 +9,9 @@ Contexts represent the database and provide an execution interface for queries.
 
 Quill provides a mirror context for testing purposes. Instead of running the query, the mirror context returns a structure with the information that would be used to run the query. There are three mirror context instances:
 
-- `io.getquill.MirrorContext`: Mirrors the quotation AST
-- `io.getquill.SqlMirrorContext`: Mirrors the SQL query
-- `io.getquill.CassandraMirrorContext`: Mirrors the CQL query
+- `zio.quill.MirrorContext`: Mirrors the quotation AST
+- `zio.quill.SqlMirrorContext`: Mirrors the SQL query
+- `zio.quill.CassandraMirrorContext`: Mirrors the CQL query
 
 ## Dependent contexts
 
@@ -115,7 +115,7 @@ Quill provides a fully type-safe way to use Spark's highly-optimized SQL engine.
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-spark" % "@VERSION@"
+  "dev.zio" %% "quill-spark" % "@VERSION@"
 )
 ```
 
@@ -138,7 +138,7 @@ implicit val sqlContext = session.sqlContext
 import sqlContext.implicits._      // Also needed...
 
 // Import the Quill Spark Context
-import io.getquill.QuillSparkContext._
+import zio.quill.QuillSparkContext._
 ```
 
 > Note Unlike the other modules, the Spark context is a companion object. Also, it does not depend on a spark session.
@@ -245,12 +245,12 @@ The SQL dialect parameter defines the specific database dialect to be used. Some
 
 Quill has five built-in dialects:
 
-- `io.getquill.H2Dialect`
-- `io.getquill.MySQLDialect`
-- `io.getquill.PostgresDialect`
-- `io.getquill.SqliteDialect`
-- `io.getquill.SQLServerDialect`
-- `io.getquill.OracleDialect`
+- `zio.quill.H2Dialect`
+- `zio.quill.MySQLDialect`
+- `zio.quill.PostgresDialect`
+- `zio.quill.SqliteDialect`
+- `zio.quill.SQLServerDialect`
+- `zio.quill.OracleDialect`
 
 ### Naming strategy
 
@@ -258,14 +258,14 @@ The naming strategy parameter defines the behavior when translating identifiers 
 
 |           strategy                  |          example              |
 |-------------------------------------|-------------------------------|
-| `io.getquill.naming.Literal`        | some_ident  -> some_ident     |
-| `io.getquill.naming.Escape`         | some_ident  -> "some_ident"   |
-| `io.getquill.naming.UpperCase`      | some_ident  -> SOME_IDENT     |
-| `io.getquill.naming.LowerCase`      | SOME_IDENT  -> some_ident     |
-| `io.getquill.naming.SnakeCase`      | someIdent   -> some_ident     |
-| `io.getquill.naming.CamelCase`      | some_ident  -> someIdent      |
-| `io.getquill.naming.MysqlEscape`    | some_ident  -> \`some_ident\` |
-| `io.getquill.naming.PostgresEscape` | $some_ident -> $some_ident    |
+| `zio.quill.naming.Literal`        | some_ident  -> some_ident     |
+| `zio.quill.naming.Escape`         | some_ident  -> "some_ident"   |
+| `zio.quill.naming.UpperCase`      | some_ident  -> SOME_IDENT     |
+| `zio.quill.naming.LowerCase`      | SOME_IDENT  -> some_ident     |
+| `zio.quill.naming.SnakeCase`      | someIdent   -> some_ident     |
+| `zio.quill.naming.CamelCase`      | some_ident  -> someIdent      |
+| `zio.quill.naming.MysqlEscape`    | some_ident  -> \`some_ident\` |
+| `zio.quill.naming.PostgresEscape` | $some_ident -> $some_ident    |
 
 Multiple transformations can be defined using `NamingStrategy()`. For instance, the naming strategy
 
@@ -317,7 +317,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -345,7 +345,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -372,7 +372,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -394,7 +394,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -417,7 +417,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -441,7 +441,7 @@ available for this situation [here](https://stackoverflow.com/questions/1074869/
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc" % "@VERSION@"
 )
 ```
 
@@ -503,7 +503,7 @@ Here is an example of how this can be done.
 ```scala
 def conn: Connection = _ // If you are starting with a connection object
 
-import io.getquill.context.ZioJdbc._
+import zio.quill.context.ZioJdbc._
 // Import encoders/decoders of the underlying context. Do not import quote/run/prepare methods to avoid conflicts.
 import MyZioContext.underlying.{ quote => _, run => _, prepare => _,  _ }
 
@@ -518,7 +518,7 @@ When working with a normal context, `onDataSource` is not available or necessary
 ```scala
 val ds: DataSource = _
 
-import io.getquill.context.ZioJdbc._
+import zio.quill.context.ZioJdbc._
 // Import encoders/decoders of the underlying context. Do not import quote/run/prepare methods to avoid conflicts.
 import MyZioContext.underlying.{ quote => _, run => _, prepare => _,  _ }
 
@@ -532,7 +532,7 @@ MyZioContext.underlying.run(people).onDataSource.provide(Has(ds))
 
 #### DAO helper
 
-One additional useful pattern is to use `import io.getquill.context.qzio.ImplicitSyntax.Implicit` to provide
+One additional useful pattern is to use `import zio.quill.context.qzio.ImplicitSyntax.Implicit` to provide
 an implicit DataSource to one or multiple `run(qry)` calls in a context. This is very useful when creating
 DAO patterns that will reuse a DataSource many times:
 
@@ -548,7 +548,7 @@ case class MyQueryService(ds: DataSource with Closeable) { // I.e. our DAO
 ```
 
 
-More examples of a Quill-JDBC-ZIO app [quill-jdbc-zio/src/test/scala/io/getquill/examples](https://github.com/getquill/quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples).
+More examples of a Quill-JDBC-ZIO app [quill-jdbc-zio/src/test/scala/zio/quill/examples](https://github.com/getquill/quill/tree/master/quill-jdbc-zio/src/test/scala/zio/quill/examples).
 
 
 #### streaming
@@ -626,7 +626,7 @@ testContext.run(jsonAstQuery.insertValue(lift(joeRow)))
 ```
 libraryDependencies ++= Seq(
   "mysql" % "mysql-connector-java" % "8.0.17",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -657,7 +657,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.postgresql" % "postgresql" % "42.2.8",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -687,7 +687,7 @@ ctx.connectionTimeout=30000
 ```
 libraryDependencies ++= Seq(
   "org.xerial" % "sqlite-jdbc" % "3.28.0",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -711,7 +711,7 @@ ctx.jdbcUrl=jdbc:sqlite:/path/to/db/file.db
 ```
 libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -737,7 +737,7 @@ ctx.dataSource.user=sa
 ```
 libraryDependencies ++= Seq(
   "com.microsoft.sqlserver" % "mssql-jdbc" % "7.4.1.jre8",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -767,7 +767,7 @@ Quill supports Oracle version 12c and up although due to licensing restrictions,
 ```
 libraryDependencies ++= Seq(
   "com.oracle.jdbc" % "ojdbc8" % "18.3.0.0.0",
-  "io.getquill" %% "quill-jdbc-zio" % "@VERSION@"
+  "dev.zio" %% "quill-jdbc-zio" % "@VERSION@"
 )
 ```
 
@@ -795,19 +795,19 @@ Quill 3.16.5 and above supports Doobie starting 1.0.0-RC1. You can use quill quo
 Quill provides statement construction and type mapping, and doobie takes care of statement execution.
 
 > Note that if you are migrating from the original `doobie-quill` integration (e.g. [here](https://search.maven.org/search?q=a:doobie-quill_2.12))
-just add the below dependency and replace the `doobie.quill` package with `io.getquill.doobie`.
-(If you are using the package provided by kubukoz (i.e. [here](https://github.com/polyvariant/doobie-quill)), then replace `org.polyvariant` with `io.getquill.doobie`.)
+just add the below dependency and replace the `doobie.quill` package with `zio.quill.doobie`.
+(If you are using the package provided by kubukoz (i.e. [here](https://github.com/polyvariant/doobie-quill)), then replace `org.polyvariant` with `zio.quill.doobie`.)
 
 In order to use this feature, add the following dependency.
 ```
-libraryDependencies += "io.getquill" %% "quill-doobie" % "4.6.1-SNAPSHOT"
+libraryDependencies += "dev.zio" %% "quill-doobie" % "4.6.1-SNAPSHOT"
 ```
 
 The examples below require the following imports.
 
 ```
-import io.getquill.{ idiom => _, _ }
-import io.getquill.DoobieContext
+import zio.quill.{ idiom => _, _ }
+import zio.quill.DoobieContext
 ```
 
 We can now construct a `DoobieContext` for our back-end database and import its members, as we would with a traditional Quill context. The options are `H2`, `MySQL`, `Oracle`, `Postgres`, `SQLite`, and `SQLServer`.
@@ -937,7 +937,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-mysql" % "@VERSION@"
+  "dev.zio" %% "quill-finagle-mysql" % "@VERSION@"
 )
 ```
 
@@ -978,7 +978,7 @@ The body of `transaction` can contain calls to other methods and multiple `run` 
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-finagle-postgres" % "@VERSION@"
+  "dev.zio" %% "quill-finagle-postgres" % "@VERSION@"
 )
 ```
 
@@ -1006,7 +1006,7 @@ ctx.binaryParams=false
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra" % "@VERSION@"
+  "dev.zio" %% "quill-cassandra" % "@VERSION@"
 )
 ```
 
@@ -1054,7 +1054,7 @@ run(people)
   .provide(Has(session))
 ```
 
-Various methods in the `io.getquill.CassandraZioSession` can assist in simplifying it's creation, for example, you can
+Various methods in the `zio.quill.CassandraZioSession` can assist in simplifying it's creation, for example, you can
 provide a `Config` object instead of a `CassandraZioSession` like this:
 
 ```scala
@@ -1073,7 +1073,7 @@ If you are using a Plain Scala app, you will need to manually run it e.g. using 
 
 #### DAO helper
 
-One additional useful pattern is to use `import io.getquill.context.qzio.ImplicitSyntax.Implicit` to provide
+One additional useful pattern is to use `import zio.quill.context.qzio.ImplicitSyntax.Implicit` to provide
 an implicit CassandraZioSession to one or multiple `run(qry)` calls in a context. This is very useful when creating
 DAO patterns that will reuse a CassandraZioSession many times:
 
@@ -1089,13 +1089,13 @@ case class MyQueryService(cs: CassandraZioSession) {
 ```
 
 
-More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples](https://github.com/getquill/quill/tree/master/quill-cassandra-zio/src/test/scala/io/getquill/context/cassandra/zio/examples).
+More examples of a Quill-Cassandra-ZIO app [quill-cassandra-zio/src/test/scala/zio/quill/context/cassandra/zio/examples](https://github.com/getquill/quill/tree/master/quill-cassandra-zio/src/test/scala/zio/quill/context/cassandra/zio/examples).
 
 #### sbt dependencies
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-zio" % "@VERSION@"
+  "dev.zio" %% "quill-cassandra-zio" % "@VERSION@"
 )
 ```
 
@@ -1105,7 +1105,7 @@ libraryDependencies ++= Seq(
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-cassandra-pekko" % "@VERSION@"
+  "dev.zio" %% "quill-cassandra-pekko" % "@VERSION@"
 )
 ```
 
@@ -1117,7 +1117,7 @@ See [Pekko Cassandra](https://pekko.apache.org/docs/pekko-connectors/current/cas
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.pekko.cassandra.CassandraSessionSettings
 import org.apache.pekko.stream.connectors.cassandra.scaladsl.{CassandraSession, CassandraSessionRegistry}
-import io.getquill.CassandraAlpakkaContext
+import zio.quill.CassandraAlpakkaContext
 
 val system: ActorSystem = ???
 val pekkoSessionSettings = CassandraSessionSettings("quill-test.pekko.cassandra")
@@ -1148,7 +1148,7 @@ quill-test-datastax-java-driver {
 
 ```
 libraryDependencies ++= Seq(
-  "io.getquill" %% "quill-orientdb" % "@VERSION@"
+  "dev.zio" %% "quill-orientdb" % "@VERSION@"
 )
 ```
 
