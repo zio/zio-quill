@@ -3,6 +3,7 @@ package zio.quill.context.cassandra.ops
 import zio.quill._
 import zio.quill.base.Spec
 import zio.quill.context.cassandra.mirrorContext
+import zio.quill.context.mirror.Row
 
 class CassandraOpsSpec extends Spec {
 
@@ -33,6 +34,12 @@ class CassandraOpsSpec extends Spec {
         }
         mirrorContext.run(q).string mustEqual
           "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP 9223372036854775807"
+      }
+      "lifted timestamp" in {
+        val ts     = 1764000000000000L
+        val mirror = mirrorContext.run(query[TestEntity].insert(_.s -> "s").usingTimestamp(lift(ts)))
+        mirror.string mustEqual "INSERT INTO TestEntity (s) VALUES ('s') USING TIMESTAMP ?"
+        mirror.prepareRow mustEqual Row(ts)
       }
       "ttl" in {
         val q = quote {
