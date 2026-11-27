@@ -719,7 +719,7 @@ val scalaCollectionCompatVersion = "2.14.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.5.38" % Test
+    "ch.qos.logback" % "logback-classic" % "1.6.8" % Test
   )
 )
 
