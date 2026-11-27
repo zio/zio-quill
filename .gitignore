@@ -47,3 +47,4 @@ project/.bloop/
 .vscode
 .history
 metals.sbt
+website/docs/

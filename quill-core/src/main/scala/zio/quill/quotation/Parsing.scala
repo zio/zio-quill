@@ -131,7 +131,7 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
   val liftParser: Parser[Lift] = Parser[Lift] {
 
     case q"$pack.liftScalar[$t]($value)($encoder)" =>
-      ScalarValueLift(value.toString, External.Source.Parser, value, encoder, inferQuat(q"$t".tpe))
+      ScalarValueLift(value.toString, External.Source.Parser, ascribeLiteral(value), encoder, inferQuat(q"$t".tpe))
     case q"$pack.liftCaseClass[$t]($value)" =>
       CaseClassValueLift(value.toString, value.toString, value, inferQuat(q"$t".tpe))
 
@@ -144,6 +144,14 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
       ScalarValueLift(value.toString, External.Source.Parser, value, q"null", inferQuat(q"$t".tpe))
     case q"$pack.liftQuery[$t, $u]($value)" => ScalarQueryLift(value.toString, value, q"null", inferQuat(q"$t".tpe))
   }
+
+  // Since Scala 2.13.18 (https://github.com/scala/bug/issues/13208), `c.untypecheck` turns a widened literal such as `10000L` back into
+  // the `10000` the user wrote, which then retypes as an Int. The ascription keeps the widened type.
+  private def ascribeLiteral(value: Tree): Tree =
+    value match {
+      case Literal(_) => q"($value: ${value.tpe.widen})"
+      case _          => value
+    }
 
   val quotedAstParser: Parser[Ast] = Parser[Ast] {
     case q"$pack.unquote[$t]($quoted)"              => astParser(quoted)
