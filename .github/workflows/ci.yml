@@ -36,9 +36,6 @@ jobs:
       matrix:
         build:
         - 3.x base
-        - 2.12.x db
-        - 2.12.x codegen
-        - 2.12.x bigdata
         - 2.13.x db
         - 2.13.x codegen
         - 2.13.x bigdata
@@ -211,7 +208,6 @@ jobs:
       uses: coursier/cache-action@v9.0.1
     - name: Release
       run: |-
-        sbt --no-colors ++2.12.x -Dquill.scala.version=2.12.x -Dquill.macro.log=false ci-release
         sbt --no-colors ++2.13.x -Dquill.scala.version=2.13.x -Dquill.macro.log=false ci-release
         sbt --no-colors ++3.x -Dquill.scala.version=3.x -Dquill.macro.log=false ci-release
       env:
