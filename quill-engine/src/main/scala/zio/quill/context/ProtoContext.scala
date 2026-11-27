@@ -91,7 +91,7 @@ object ExecutionType {
   case object Unknown extends ExecutionType
 }
 
-trait ProtoStreamContext[Dialect <: zio.quill.idiom.Idiom, +Naming <: NamingStrategy] extends RowContext {
+trait ProtoStreamContext[+Dialect <: zio.quill.idiom.Idiom, +Naming <: NamingStrategy] extends RowContext {
   type PrepareRow
   type ResultRow
 
