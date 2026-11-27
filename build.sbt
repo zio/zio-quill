@@ -317,8 +317,8 @@ lazy val `quill-engine` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                  % "config"        % "1.4.4",
-        "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.5",
+        "com.typesafe"                  % "config"        % "1.4.10",
+        "com.typesafe.scala-logging"   %% "scala-logging" % "3.9.6",
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.3",
@@ -333,11 +333,11 @@ lazy val `quill-core` =
     .settings(commonSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "com.typesafe"                % "config"        % "1.4.4",
+        "com.typesafe"                % "config"        % "1.4.10",
         "dev.zio"                    %% "zio-logging"   % "2.5.1",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
-        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
+        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6"
       ),
       Test / fork := true
     )
@@ -628,7 +628,7 @@ lazy val `quill-orientdb` =
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
-        "com.orientechnologies" % "orientdb-graphdb" % "3.2.57"
+        "com.orientechnologies" % "orientdb-graphdb" % "3.2.58"
       )
     )
     .dependsOn(
@@ -649,11 +649,11 @@ lazy val `quill-test-kit` =
 
 lazy val jdbcTestingLibraries = Seq(
   libraryDependencies ++= Seq(
-    "com.zaxxer"              % "HikariCP"                % "6.3.1" exclude ("org.slf4j", "*"),
-    "com.mysql"               % "mysql-connector-j"       % "26.7.0"      % Test,
+    "com.zaxxer"              % "HikariCP"                % "7.1.0" exclude ("org.slf4j", "*"),
+    "com.mysql"               % "mysql-connector-j"       % "26.10.0"     % Test,
     "com.h2database"          % "h2"                      % "2.5.252"     % Test,
     "org.postgresql"          % "postgresql"              % "42.7.14"     % Test,
-    "org.xerial"              % "sqlite-jdbc"             % "3.50.3.0"    % Test,
+    "org.xerial"              % "sqlite-jdbc"             % "3.54.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
     "org.mockito"            %% "mockito-scala-scalatest" % "1.17.14"     % Test
@@ -716,8 +716,8 @@ def excludePaths(paths: Seq[String]) = {
 }
 
 val scala_v_12 = "2.12.20"
-val scala_v_13 = "2.13.16"
-val scala_v_30 = "3.3.6"
+val scala_v_13 = "2.13.18"
+val scala_v_30 = "3.3.9"
 
 val scalaCollectionCompatVersion = "2.13.0"
 

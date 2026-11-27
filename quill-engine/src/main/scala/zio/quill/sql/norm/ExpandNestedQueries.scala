@@ -116,6 +116,13 @@ object ExpandNestedQueries extends StatelessQueryTransformer {
           // If it is a sub-select or a renamed property, do not apply the strategy to the property
           if (isSubselect)
             Property.Opinionated(inner, path.mkString, renameable, Visibility.Visible)
+          // If the property's root ident is not in any FROM context, it belongs to a
+          // correlated subquery scope (inner or outer). Leave it unchanged — it will be
+          // properly resolved when that subquery gets its own ExpandNestedQueries pass
+          // during tokenization. Without this, multi-level paths like _2.score get
+          // incorrectly truncated to just score. See #335.
+          else if (inContext.contextReferenceType(p).isEmpty)
+            p
           else
             Property.Opinionated(inner, path.last, renameable, Visibility.Visible)
 
