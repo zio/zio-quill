@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS Task(
     tsk VARCHAR(255)
 );
 
-CREATE TABLE TimeEntity(
+CREATE TABLE IF NOT EXISTS TimeEntity(
     sqlDate        DATE,                     -- java.sql.Date
     sqlTime        TIME,                     -- java.sql.Time
     sqlTimestamp   TIMESTAMP,                -- java.sql.Timestamp
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     v6 INTEGER,
     v7 BIGINT,
     v8 FLOAT,
-    v9 DOUBLE PRECISIOn,
+    v9 DOUBLE PRECISION,
     v10 BYTEA,
     v11 TIMESTAMP,
     v12 VARCHAR(255),
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS EncodingTestEntity(
     o6 INTEGER,
     o7 BIGINT,
     o8 FLOAT,
-    o9 DOUBLE PRECISIOn,
+    o9 DOUBLE PRECISION,
     o10 BYTEA,
     o11 TIMESTAMP,
     o12 VARCHAR(255),
@@ -99,19 +99,19 @@ CREATE TABLE IF NOT EXISTS Product(
     sku BIGINT
 );
 
-CREATE TABLE IF NOT EXISTS Contact(
-    firstName VARCHAR(255),
-    lastName VARCHAR(255),
-    age int,
-    addressFk int,
-    extraInfo VARCHAR(255)
-);
-
-CREATE TABLE IF NOT EXISTS Address(
-    id int,
-    street VARCHAR(255),
-    zip int,
-    otherExtraInfo VARCHAR(255)
+CREATE TABLE IF NOT EXISTS ArraysTestEntity (
+    texts VARCHAR(255) ARRAY,
+    decimals   DECIMAL(5,2) ARRAY,
+    bools      BOOLEAN ARRAY,
+    bytes      TINYINT ARRAY,
+    shorts     SMALLINT ARRAY,
+    ints       INT ARRAY,
+    longs      BIGINT ARRAY,
+    floats     FLOAT ARRAY,
+    doubles    DOUBLE PRECISION ARRAY,
+    timestamps TIMESTAMP ARRAY,
+    dates      DATE ARRAY,
+    uuids      UUID ARRAY
 );
 
 CREATE TABLE IF NOT EXISTS Contact(
