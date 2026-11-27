@@ -32,8 +32,8 @@ time docker compose exec -T sqlserver bash -c ". setup_db_scripts.sh && setup_sq
 
 # Can't do absolute paths here so need to do relative
 mkdir sqlline/
-curl 'https://repo1.maven.org/maven2/sqlline/sqlline/1.12.0/sqlline-1.12.0-jar-with-dependencies.jar' -o 'sqlline/sqlline.jar'
-curl 'https://repo1.maven.org/maven2/com/oracle/ojdbc/ojdbc8/19.3.0.0/ojdbc8-19.3.0.0.jar' -o 'sqlline/ojdbc.jar'
+curl -fsSL --retry 5 'https://repo1.maven.org/maven2/sqlline/sqlline/1.12.0/sqlline-1.12.0-jar-with-dependencies.jar' -o 'sqlline/sqlline.jar'
+curl -fsSL --retry 5 'https://repo1.maven.org/maven2/com/oracle/ojdbc/ojdbc8/19.3.0.0/ojdbc8-19.3.0.0.jar' -o 'sqlline/ojdbc.jar'
 
 echo "### Running Setup for oracle ###"
 time setup_oracle 127.0.0.1 11521 sqlline
