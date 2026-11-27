@@ -63,7 +63,7 @@ docker compose run --rm sbt sbt test
 
 Run specific test:
 ```bash
-docker compose run --rm sbt sbt "test-only io.getquill.context.sql.SqlQuerySpec"
+docker compose run --rm sbt sbt "test-only zio.quill.context.sql.SqlQuerySpec"
 ```
 
 Run all tests in specific sub-project:
@@ -73,7 +73,7 @@ docker compose run --rm sbt sbt "project quill-jdbc-zio" test
 
 Run specific test in specific sub-project:
 ```bash
-docker compose run --rm sbt sbt "project quill-sqlJVM" "test-only io.getquill.context.sql.SqlQuerySpec"
+docker compose run --rm sbt sbt "project quill-sqlJVM" "test-only zio.quill.context.sql.SqlQuerySpec"
 ```
 
 ### Debugging tests
@@ -86,7 +86,7 @@ docker compose run --service-ports --rm sbt
 change it port to 15005.
 3. In sbt command line run tests with `test` or test specific spec by passing full name to `test-only`:
 ```bash
-> test-only io.getquill.context.sql.SqlQuerySpec
+> test-only zio.quill.context.sql.SqlQuerySpec
 ```
 
 ## Pull Request
@@ -215,7 +215,7 @@ and select `Application`. Then enter the following settings:
 ```
 Main Class: scala.tools.nsc.Main
 VM Options: -Dscala.usejavacp=true
-Program Arguments: -cp io.getquill.MySqlTest.scala /home/me/projects/quill/quill-sql/src/main/scala/io/getquill/MySqlTest.scala
+Program Arguments: -cp zio.quill.MySqlTest.scala /home/me/projects/quill/quill-sql/src/main/scala/zio/quill/MySqlTest.scala
 Use classpath of module: quill-sql
 Before launch:
 Build, no error check (make sure to set this since you will frequently want to debug the macros even if the build fails)
@@ -234,7 +234,7 @@ It should look like this:
 > ```
 > Also, instead of specifying the path segment `/home/me/projects/quill/` you can use `$ProjectFileDir$`
 
-Then create a file `quill-sql/src/main/scala/io/getquill/MySqlTest.scala` that has the code you wish to debug.
+Then create a file `quill-sql/src/main/scala/zio/quill/MySqlTest.scala` that has the code you wish to debug.
 For example:
 ```scala
 object MySqlTest {

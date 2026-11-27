@@ -8,7 +8,7 @@
 		</encoder>
 	</appender>
 
-	<!-- <logger name="io.getquill" level="DEBUG" /> -->
+	<!-- <logger name="zio.quill" level="DEBUG" /> -->
 
 	<root level="WARN">
 		<appender-ref ref="STDOUT" />
