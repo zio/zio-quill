@@ -145,8 +145,8 @@ trait Parsing extends ValueComputation with QuatMaking with MacroUtilBase {
     case q"$pack.liftQuery[$t, $u]($value)" => ScalarQueryLift(value.toString, value, q"null", inferQuat(q"$t".tpe))
   }
 
-  // Since Scala 2.13.18 (https://github.com/scala/bug/issues/13208), `c.untypecheck` turns a widened literal such as `10000L` back into
-  // the `10000` the user wrote, which then retypes as an Int. The ascription keeps the widened type.
+  // `c.untypecheck` turns a widened literal such as `10000L` back into the `10000` the user wrote, which then retypes as an Int.
+  // The ascription keeps the widened type.
   private def ascribeLiteral(value: Tree): Tree =
     value match {
       case Literal(_) => q"($value: ${value.tpe.widen})"
