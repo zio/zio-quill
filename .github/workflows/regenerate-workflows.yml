@@ -19,7 +19,7 @@ jobs:
     continue-on-error: false
     permissions:
       contents: write
-    if: ${{ (((github.event.pull_request.user.login == 'dependabot[bot]') || (github.event.pull_request.user.login == 'renovate[bot]')) || (github.event.pull_request.user.login == 'zio-scala-steward[bot]')) && (github.event.pull_request.head.repo.full_name == github.repository) }}
+    if: ${{ ((((github.event.pull_request.user.login == 'dependabot[bot]') || (github.event.pull_request.user.login == 'renovate[bot]')) || (github.event.pull_request.user.login == 'zio-scala-steward[bot]')) || (github.event.pull_request.user.login == 'zio-assistant[bot]')) && (github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
     - name: Check App Token
       id: check-app-token
