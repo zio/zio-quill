@@ -541,7 +541,7 @@ lazy val `quill-jdbc-zio` =
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.7.15" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.45"
+        "dev.zio"       %% "zio-json"   % "0.9.2"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
