@@ -64,10 +64,6 @@ export -f docker_stats
 
 export SBT_ARGS="++$SCALA_VERSION"
 
-if [[ $SCALA_VERSION == 2.12* ]]; then
-    export SBT_ARGS="$SBT_ARGS coverage"
-fi
-
 function wait_for_databases() {
     show_mem
 
@@ -243,12 +239,6 @@ fi
 show_mem
 echo "Tests completed. Shutting down"
 time docker compose down
-# for 2.12 publish coverage
-if [[ $SCALA_VERSION == 2.12* ]]; then
-    echo "Coverage"
-    time sbt $SBT_ARGS coverageReport coverageAggregate
-    pip install --user codecov && codecov
-fi
 show_mem
 
 sleep 10
