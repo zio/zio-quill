@@ -133,27 +133,37 @@ function setup_sqlserver() {
     /opt/mssql-tools/bin/sqlcmd -S $1 -U SA -P "QuillRocks!" -d quill_test -i $2
 }
 
-# Do a simple netcat poll to make sure the oracle database is ready.
-# All internal database creation and schema setup scripts are handled
-# by the container and docker compose steps.
+# Poll with a real query: the listener accepts connections (ORA-12528)
+# before the database instance is open.
 
 function setup_oracle() {
-    while ! nc -z $1 1521; do
+    local classpath="$3/sqlline.jar:$3/ojdbc.jar"
+    local url="jdbc:oracle:thin:@$1:$2:xe"
+
+    for attempt in $(seq 60); do
+        java -cp "$classpath" 'sqlline.SqlLine' \
+          -u "$url" \
+          -n quill_test -p 'QuillRocks!' \
+          -e 'SELECT 1 FROM dual;' \
+          --showWarnings=false > /dev/null 2>&1 && break
+        if [ "$attempt" -eq 60 ]; then
+            echo "Oracle did not accept connections"
+            return 1
+        fi
         echo "Waiting for Oracle"
-        sleep 2;
-    done;
-    sleep 2;
+        sleep 5
+    done
 
     echo "Running Oracle Setup Script"
-    java -cp '/sqlline/sqlline.jar:/sqlline/ojdbc.jar' 'sqlline.SqlLine' \
-      -u 'jdbc:oracle:thin:@oracle:1521:xe' \
+    java -cp "$classpath" 'sqlline.SqlLine' \
+      -u "$url" \
       -n quill_test -p 'QuillRocks!' \
       -f "$ORACLE_SCRIPT" \
       --showWarnings=false
 
     echo "Extending Oracle Expirations"
-    java -cp '/sqlline/sqlline.jar:/sqlline/ojdbc.jar' 'sqlline.SqlLine' \
-      -u 'jdbc:oracle:thin:@oracle:1521:xe' \
+    java -cp "$classpath" 'sqlline.SqlLine' \
+      -u "$url" \
       -n quill_test -p 'QuillRocks!' \
       -e "alter profile DEFAULT limit PASSWORD_REUSE_TIME unlimited; alter profile DEFAULT limit PASSWORD_LIFE_TIME  unlimited; alter profile DEFAULT limit PASSWORD_GRACE_TIME unlimited;" \
       --showWarnings=false
