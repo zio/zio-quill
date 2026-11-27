@@ -42,13 +42,13 @@ Add the following to build.sbt:
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.getquill"          %% "quill-jdbc-zio" % "@VERSION@",
+  "dev.zio"          %% "quill-jdbc-zio" % "@VERSION@",
   "org.postgresql"       %  "postgresql"     % "42.3.1"
 )
 ```
 
 You can find this code (with some more examples) complete with a docker-provided Postgres database [here](https://github.com/deusaquilus/zio-quill-gettingstarted).
-A variety of other examples using Quill with ZIO are available in the [examples](https://github.com/zio/zio-quill/tree/master/quill-jdbc-zio/src/test/scala/io/getquill/examples) folder.
+A variety of other examples using Quill with ZIO are available in the [examples](https://github.com/zio/zio-quill/tree/master/quill-jdbc-zio/src/test/scala/zio/quill/examples) folder.
 
 ## Choosing a Module
 
