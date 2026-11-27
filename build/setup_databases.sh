@@ -35,20 +35,8 @@ mkdir sqlline/
 curl 'https://repo1.maven.org/maven2/sqlline/sqlline/1.12.0/sqlline-1.12.0-jar-with-dependencies.jar' -o 'sqlline/sqlline.jar'
 curl 'https://repo1.maven.org/maven2/com/oracle/ojdbc/ojdbc8/19.3.0.0/ojdbc8-19.3.0.0.jar' -o 'sqlline/ojdbc.jar'
 
-echo "### Starting to Wait for Oracle ###"
-while ! nc -z 127.0.0.1 11521; do
-    echo "Waiting for Oracle"
-    sleep 2;
-done;
-
-echo "Running Oracle Setup Script"
-java -cp 'sqlline/sqlline.jar:sqlline/ojdbc.jar' 'sqlline.SqlLine' \
-  -u 'jdbc:oracle:thin:@localhost:11521:xe' \
-  -n quill_test -p 'QuillRocks!' \
-  -f "$ORACLE_SCRIPT" \
-  --showWarnings=false
-
-sleep 2;
+echo "### Running Setup for oracle ###"
+time setup_oracle 127.0.0.1 11521 sqlline
 
 echo "Oracle Setup Complete"
 
