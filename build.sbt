@@ -65,7 +65,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
         strategy = Some(
           Strategy(
             matrix = Map(
-              "build" -> ("3.3.x base" :: (for {
+              "build" -> ("3.x base" :: (for {
                 scala  <- List("2.12.x", "2.13.x")
                 module <- List("db", "codegen", "bigdata")
               } yield s"$scala $module"))
@@ -122,7 +122,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
         (job.steps.init :+ Step.SingleStep(
           name = "Release",
           run = Some(
-            Seq("2.12.x", "2.13.x", "3.3.x")
+            Seq("2.12.x", "2.13.x", "3.x")
               .map(v => s"sbt --no-colors ++$v -Dquill.scala.version=$v -Dquill.macro.log=false ci-release")
               .mkString("\n")
           ),
@@ -717,7 +717,7 @@ def excludePaths(paths: Seq[String]) = {
 
 val scala_v_12 = "2.12.20"
 val scala_v_13 = "2.13.18"
-val scala_v_30 = "3.3.9"
+val scala_v_30 = "3.9.0"
 
 val scalaCollectionCompatVersion = "2.14.0"
 
@@ -753,8 +753,11 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     baseDirectory.value / "src" / "test" / "resources"
   ),
   javacOptions := Seq("-source", "11", "-target", "11"),
+  // Scala 3.8+ only targets Java 17 and later
+  scalacOptions += {
+    if (scalaBinaryVersion.value == "3") "-release:17" else "-release:11"
+  },
   scalacOptions ++= Seq(
-    "-release:11",
     "-encoding",
     "UTF-8",
     "-feature",
