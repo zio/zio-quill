@@ -322,7 +322,7 @@ lazy val `quill-engine` =
         ("com.github.takayahilton"     %% "sql-formatter" % "1.2.1").cross(CrossVersion.for3Use2_13),
         "io.suzaku"                    %% "boopickle"     % "1.5.0",
         "com.lihaoyi"                  %% "pprint"        % "0.9.3",
-        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.2"
+        "com.github.ben-manes.caffeine" % "caffeine"      % "3.2.4"
       ),
       coverageExcludedPackages := "<empty>;.*AstPrinter;.*Using;zio.quill.Model;zio.quill.ScalarTag;zio.quill.QuotationTag"
     )
@@ -334,7 +334,7 @@ lazy val `quill-core` =
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.10",
-        "dev.zio"                    %% "zio-logging"   % "2.5.1",
+        "dev.zio"                    %% "zio-logging"   % "2.5.5",
         "dev.zio"                    %% "zio"           % Version.zio,
         "dev.zio"                    %% "zio-streams"   % Version.zio,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6"
@@ -510,8 +510,8 @@ lazy val `quill-doobie` =
     .settings(jdbcTestingSettings: _*)
     .settings(
       libraryDependencies ++= Seq(
-        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC9",
-        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC9" % Test
+        "org.tpolecat" %% "doobie-core"     % "1.0.0-RC12",
+        "org.tpolecat" %% "doobie-postgres" % "1.0.0-RC12" % Test
       )
     )
     .dependsOn(
@@ -540,8 +540,8 @@ lazy val `quill-jdbc-zio` =
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
-        "org.postgresql" % "postgresql" % "42.7.14" % "provided",
-        "dev.zio"       %% "zio-json"   % "0.7.44"
+        "org.postgresql" % "postgresql" % "42.7.15" % "provided",
+        "dev.zio"       %% "zio-json"   % "0.7.45"
       ),
       Test / testGrouping := {
         (Test / definedTests).value map { test =>
@@ -652,7 +652,7 @@ lazy val jdbcTestingLibraries = Seq(
     "com.zaxxer"              % "HikariCP"                % "7.1.0" exclude ("org.slf4j", "*"),
     "com.mysql"               % "mysql-connector-j"       % "26.10.0"     % Test,
     "com.h2database"          % "h2"                      % "2.5.252"     % Test,
-    "org.postgresql"          % "postgresql"              % "42.7.14"     % Test,
+    "org.postgresql"          % "postgresql"              % "42.7.15"     % Test,
     "org.xerial"              % "sqlite-jdbc"             % "3.54.1.0"    % Test,
     "com.microsoft.sqlserver" % "mssql-jdbc"              % "7.4.1.jre11" % Test,
     "com.oracle.ojdbc"        % "ojdbc8"                  % "19.3.0.0"    % Test,
@@ -719,11 +719,11 @@ val scala_v_12 = "2.12.20"
 val scala_v_13 = "2.13.18"
 val scala_v_30 = "3.9.0"
 
-val scalaCollectionCompatVersion = "2.13.0"
+val scalaCollectionCompatVersion = "2.14.0"
 
 lazy val loggingSettings = Seq(
   libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.5.18" % Test
+    "ch.qos.logback" % "logback-classic" % "1.5.38" % Test
   )
 )
 
@@ -732,7 +732,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
   scalaVersion       := scala_v_13,
   crossScalaVersions := Seq(scala_v_12, scala_v_13, scala_v_30),
   libraryDependencies ++= Seq(
-    "org.scalatest"           %% "scalatest"               % "3.2.19" % Test,
+    "org.scalatest"           %% "scalatest"               % "3.2.20" % Test,
     "org.scala-lang.modules"  %% "scala-collection-compat" % scalaCollectionCompatVersion,
     "com.google.code.findbugs" % "jsr305"                  % "3.0.2"  % Provided // just to avoid warnings during compilation
   ) ++ {
