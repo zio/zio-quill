@@ -606,6 +606,8 @@ lazy val `quill-cassandra-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
+val pekkoVersion = "1.7.1"
+
 lazy val `quill-cassandra-pekko` =
   (project in file("quill-cassandra-pekko"))
     .settings(commonSettings *)
@@ -613,7 +615,8 @@ lazy val `quill-cassandra-pekko` =
       Test / fork := true,
       libraryDependencies ++= Seq(
         "org.apache.pekko" %% "pekko-connectors-cassandra" % "1.3.0",
-        "org.apache.pekko" %% "pekko-testkit"              % "1.7.1" % Test
+        "org.apache.pekko" %% "pekko-stream"               % pekkoVersion,
+        "org.apache.pekko" %% "pekko-testkit"              % pekkoVersion % Test
       )
     )
     .dependsOn(`quill-cassandra` % "compile->compile;test->test")
