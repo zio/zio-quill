@@ -31,7 +31,7 @@ inThisBuild(
   ) ++ ciSettings
 )
 
-lazy val ciSettings: Seq[Setting[_]] = Seq(
+lazy val ciSettings: Seq[Setting[?]] = Seq(
   ciEnabledBranches := Seq("master"),
   // See:
   //  - https://stackoverflow.com/a/73708006
@@ -131,7 +131,7 @@ lazy val ciSettings: Seq[Setting[_]] = Seq(
             "SONATYPE_PASSWORD"   -> "${{ secrets.SONATYPE_PASSWORD }}",
             "SONATYPE_USERNAME"   -> "${{ secrets.SONATYPE_USERNAME }}"
           )
-        )): _*
+        )) *
       )
     }
   }.value
@@ -208,7 +208,7 @@ lazy val filteredModules = {
       modulesStr
         .getOrElse("nocodegen")
         .split(",")
-        .map(_.trim): _*
+        .map(_.trim) *
     )
 
   println(s"SBT =:> Matching Modules ${moduleStrings} from argument value: '${modulesStr}''")
@@ -244,7 +244,7 @@ lazy val filteredModules = {
     val modules =
       moduleStrings
         .map(matchModules)
-        .flatMap(seq => ListSet(seq: _*))
+        .flatMap(seq => ListSet(seq *))
 
     if (isScala213) {
       println("SBT =:> Compiling 2.13 Modules Only")
@@ -263,7 +263,7 @@ lazy val filteredModules = {
 
 lazy val `quill` =
   (project in file("."))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       publishArtifact      := false,
       publish / skip       := true,
@@ -271,11 +271,11 @@ lazy val `quill` =
       publishSigned / skip := true,
       crossScalaVersions   := Nil // https://www.scala-sbt.org/1.x/docs/Cross-Build.html#Cross+building+a+project+statefully
     )
-    .aggregate(filteredModules.map(_.project).toSeq: _*)
+    .aggregate(filteredModules.map(_.project).toSeq *)
 
 lazy val `quill-util` =
   (project in file("quill-util"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
@@ -291,7 +291,7 @@ lazy val `quill-util` =
                 )
               else
                 Seq.empty
-            }): _*
+            }) *
           )
           .cross(CrossVersion.for3Use2_13)
       ) ++ {
@@ -311,7 +311,7 @@ lazy val `quill-util` =
 
 lazy val `quill-engine` =
   project
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                  % "config"        % "1.4.10",
@@ -327,7 +327,7 @@ lazy val `quill-engine` =
 
 lazy val `quill-core` =
   project
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       libraryDependencies ++= Seq(
         "com.typesafe"                % "config"        % "1.4.10",
@@ -343,7 +343,7 @@ lazy val `quill-core` =
 
 lazy val `quill-sql` =
   project
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .dependsOn(
       `quill-engine` % "compile->compile",
       `quill-core`   % "compile->compile"
@@ -352,8 +352,8 @@ lazy val `quill-sql` =
 
 lazy val `quill-sql-test` =
   project
-    .settings(commonSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-sql`,
       `quill-core`     % "test->test",
@@ -363,13 +363,13 @@ lazy val `quill-sql-test` =
 
 lazy val `quill-codegen` =
   (project in file("quill-codegen"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .dependsOn(`quill-core` % "compile->compile;test->test")
 
 lazy val `quill-codegen-jdbc` =
   (project in file("quill-codegen-jdbc"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingLibraries: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingLibraries *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
@@ -381,7 +381,7 @@ lazy val `quill-codegen-jdbc` =
 
 //lazy val `quill-codegen-tests` =
 //  (project in file("quill-codegen-tests"))
-//    .settings(commonSettings: _*)
+//    .settings(commonSettings*)
 //    .settings(
 //      publish / skip                         := true,
 //      libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
@@ -425,8 +425,8 @@ val debugMacro =
 
 lazy val `quill-jdbc` =
   (project in file("quill-jdbc"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
     .dependsOn(
       `quill-sql`      % "compile->compile",
       `quill-core`     % "test->test",
@@ -436,9 +436,9 @@ lazy val `quill-jdbc` =
 
 lazy val `quill-jdbc-test-h2` =
   (project in file("quill-jdbc-test-h2"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-jdbc`     % "compile->compile;test->test",
       `quill-test-kit` % "test->test"
@@ -447,9 +447,9 @@ lazy val `quill-jdbc-test-h2` =
 
 lazy val `quill-jdbc-test-mysql` =
   (project in file("quill-jdbc-test-mysql"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-jdbc`     % "compile->compile;test->test",
       `quill-test-kit` % "test->test"
@@ -458,9 +458,9 @@ lazy val `quill-jdbc-test-mysql` =
 
 lazy val `quill-jdbc-test-oracle` =
   (project in file("quill-jdbc-test-oracle"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-jdbc`     % "compile->compile;test->test",
       `quill-test-kit` % "test->test"
@@ -469,9 +469,9 @@ lazy val `quill-jdbc-test-oracle` =
 
 lazy val `quill-jdbc-test-postgres` =
   (project in file("quill-jdbc-test-postgres"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-jdbc`     % "compile->compile;test->test",
       `quill-test-kit` % "test->test"
@@ -480,9 +480,9 @@ lazy val `quill-jdbc-test-postgres` =
 
 lazy val `quill-jdbc-test-sqlite` =
   (project in file("quill-jdbc-test-sqlite"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-jdbc`     % "compile->compile;test->test",
       `quill-test-kit` % "test->test"
@@ -491,9 +491,9 @@ lazy val `quill-jdbc-test-sqlite` =
 
 lazy val `quill-jdbc-test-sqlserver` =
   (project in file("quill-jdbc-test-sqlserver"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-jdbc`     % "compile->compile;test->test",
       `quill-test-kit` % "test->test"
@@ -503,8 +503,8 @@ lazy val `quill-jdbc-test-sqlserver` =
 ThisBuild / libraryDependencySchemes += "org.typelevel" %% "cats-effect" % "always"
 lazy val `quill-doobie` =
   (project in file("quill-doobie"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
     .settings(
       libraryDependencies ++= Seq(
         "org.tpolecat" %% "doobie-core"     % "1.0.0-RC12",
@@ -519,7 +519,7 @@ lazy val `quill-doobie` =
 
 lazy val `quill-zio` =
   (project in file("quill-zio"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
@@ -532,15 +532,15 @@ lazy val `quill-zio` =
 
 lazy val `quill-jdbc-zio` =
   (project in file("quill-jdbc-zio"))
-    .settings(commonSettings: _*)
-    .settings(jdbcTestingSettings: _*)
+    .settings(commonSettings *)
+    .settings(jdbcTestingSettings *)
     .settings(
       libraryDependencies ++= Seq(
         // Needed for PGObject in JsonExtensions but not necessary if user is not using postgres
         "org.postgresql" % "postgresql" % "42.7.15" % "provided",
         "dev.zio"       %% "zio-json"   % "1.1.3"
       ),
-      Test / testGrouping := {
+      Test / testGrouping := Def.uncached {
         (Test / definedTests).value map { test =>
           if (test.name endsWith "IntegrationSpec")
             Tests.Group(
@@ -566,7 +566,7 @@ lazy val `quill-jdbc-zio` =
 
 lazy val `quill-spark` =
   (project in file("quill-spark"))
-    .settings(commonNoLogSettings: _*)
+    .settings(commonNoLogSettings *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq("org.apache.spark" %% "spark-sql" % "3.4.0"),
@@ -581,7 +581,7 @@ lazy val `quill-spark` =
 
 lazy val `quill-cassandra` =
   (project in file("quill-cassandra"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
@@ -594,7 +594,7 @@ lazy val `quill-cassandra` =
 
 lazy val `quill-cassandra-zio` =
   (project in file("quill-cassandra-zio"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
@@ -608,7 +608,7 @@ lazy val `quill-cassandra-zio` =
 
 lazy val `quill-cassandra-pekko` =
   (project in file("quill-cassandra-pekko"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
@@ -621,7 +621,7 @@ lazy val `quill-cassandra-pekko` =
 
 lazy val `quill-orientdb` =
   (project in file("quill-orientdb"))
-    .settings(commonSettings: _*)
+    .settings(commonSettings *)
     .settings(
       Test / fork := true,
       libraryDependencies ++= Seq(
@@ -636,8 +636,8 @@ lazy val `quill-orientdb` =
 
 lazy val `quill-test-kit` =
   (project in file("quill-test-kit"))
-    .settings(commonSettings: _*)
-    .settings(noPublishSettings: _*)
+    .settings(commonSettings *)
+    .settings(noPublishSettings *)
     .dependsOn(
       `quill-sql`,
       `quill-core` % "test->test"
@@ -745,9 +745,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
       case _            => Seq.empty
     }
   },
-  Test / unmanagedClasspath ++= Seq(
-    baseDirectory.value / "src" / "test" / "resources"
-  ),
+  Test / unmanagedClasspath ++= (Test / resourceDirectory).value.classpath(using fileConverter.value),
   javacOptions := Seq("-source", "11", "-target", "11"),
   // Scala 3.8+ only targets Java 17 and later
   scalacOptions += {
@@ -773,6 +771,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     }
   },
   Global / concurrentRestrictions += Tags.limit(Tags.Test, 1),
+  Test / testForkedParallel                        := false,
   scoverage.ScoverageKeys.coverageMinimumStmtTotal := 96,
   scoverage.ScoverageKeys.coverageFailOnMinimum    := false
 )
