@@ -495,12 +495,12 @@ class SqlIdiomSpec extends Spec {
             "SELECT a.s, a.i, a.l, a.o, a.b FROM TestEntity a LEFT JOIN TestEntity2 b ON a.s = b.s LEFT JOIN TestEntity2 b1 ON a.s = b1.s"
         }
         "with flatMap" - {
-          "left" ignore {
-            // TODO flatten left flatMaps
+          "left" in {
             val q = quote {
               qr1.flatMap(a => qr2).leftJoin(qr3).on((b, c) => b.s == c.s).map(_._1)
             }
-            testContext.run(q).string mustEqual ""
+            testContext.run(q).string mustEqual
+              "SELECT b.s, b.i, b.l, b.o FROM (SELECT x.s, x.i, x.l, x.o FROM TestEntity a, TestEntity2 x) AS b LEFT JOIN TestEntity3 c ON b.s = c.s"
           }
           "right" in {
             val q = quote {
