@@ -771,6 +771,7 @@ lazy val basicSettings = excludeFilterSettings ++ Seq(
     }
   },
   Global / concurrentRestrictions += Tags.limit(Tags.Test, 1),
+  Test / testForkedParallel                        := false,
   scoverage.ScoverageKeys.coverageMinimumStmtTotal := 96,
   scoverage.ScoverageKeys.coverageFailOnMinimum    := false
 )
