@@ -65,6 +65,7 @@ export -f docker_stats
 export SBT_ARGS="++$SCALA_VERSION"
 
 function wait_for_databases() {
+    local parallel_sbt="${1:-sbt -Dmodules=base $SBT_ARGS test}"
     show_mem
 
     #sbt scalafmtAll
@@ -72,7 +73,7 @@ function wait_for_databases() {
 
     # Start sbt compilation and database setup in parallel
     echo "build.sh =:> Base Compile in wait_for_databases"
-    sbt -Dmodules=base $SBT_ARGS  test & COMPILE=$!
+    $parallel_sbt & COMPILE=$!
     ./build/setup_databases.sh & SETUP=$!
 
     # Wait on database setup. If it has failed then kill compilation process and exit with error
@@ -162,7 +163,7 @@ function base_build() {
     echo "build.sh =:> Base Build Specified"
     export JAVA_OPTS="-Dquill.macro.log=false -Dquill.scala.version=$SCALA_VERSION -Xms4g -Xmx4g -Xss10m -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation "
     echo "build.sh =:> Starting Base Build Primary"
-    sbt "sbt -Dmodules=base $SBT_ARGS test"
+    sbt -Dmodules=base $SBT_ARGS test
 }
 
 function db_build() {
@@ -175,7 +176,8 @@ function db_build() {
 
 function codegen_build() {
     echo "build.sh =:> Codegen Build Specified"
-    wait_for_databases
+    # The base tests already run in the db build
+    wait_for_databases "sbt -Dmodules=codegen $SBT_ARGS Test/compile"
     echo "build.sh =:> Starting Codegen Build Primary"
     sbt -Dmodules=codegen $SBT_ARGS test
 }
@@ -215,7 +217,7 @@ find ~/.cache/sbt-build/ -type d || true
 
 if [[ $modules == "base" ]]; then
     echo "build.sh =:> Build Script: Doing Base Build"
-    db_build
+    base_build
 elif [[ $modules == "db" ]]; then
     echo "build.sh =:> Build Script: Doing Base + Database Build"
     db_build
