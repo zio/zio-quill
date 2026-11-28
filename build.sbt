@@ -606,7 +606,7 @@ lazy val `quill-cassandra-zio` =
     .dependsOn(`quill-zio` % "compile->compile;test->test")
     .enablePlugins(MimaPlugin)
 
-val pekkoVersion = "1.7.1"
+val pekkoVersion = "2.0.0"
 
 lazy val `quill-cassandra-pekko` =
   (project in file("quill-cassandra-pekko"))
