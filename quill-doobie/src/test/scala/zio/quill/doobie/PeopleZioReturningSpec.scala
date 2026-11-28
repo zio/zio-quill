@@ -2,8 +2,8 @@ package zio.quill.doobie
 
 import cats.effect._
 import cats.syntax.all._
-import doobie._
-import doobie.implicits._
+import org.typelevel.doobie._
+import org.typelevel.doobie.implicits._
 import zio.quill._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
